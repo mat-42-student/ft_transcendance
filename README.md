@@ -1,16 +1,4 @@
 #ft_transcendance
-##Table des matières
-
-    ##Description
-    ##Modules
-        ###Backend Django
-        ###Base de données PostgreSQL
-        ###Gestion des utilisateurs
-        ###Authentification 42 et 2FA
-        ###Chat en temps réel
-        ###ELK (ElasticSearch, Logstash, Kibana)
-        ###Monitoring
-        ###Jeu en ligne côté serveur
 
 ##Description
 ft_transcendance est un projet web complet basé sur une architecture moderne. Il combine plusieurs technologies pour offrir une application robuste, sécurisée et évolutive. Le projet inclut un backend puissant, une gestion avancée des utilisateurs, des fonctionnalités de chat en temps réel, et un jeu multi-joueurs en ligne, le tout supervisé par un système de monitoring et de logging complet.
