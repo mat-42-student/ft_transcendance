@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx
+    depends_on:
+      - api
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/frontend
+      - ./nginx/RVP.conf:/etc/nginx/conf.d/RVP.conf
+    networks:
+      - nginx-network
+
+  postgres:
+    image: postgres
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data:/var/lib/posgresql/data
+    environment:
+      POSTGRES_DB: transcendance
+      POSTGRES_USER: toto
+      POSTGRES_PASSWORD: test
+    networks:
+      - nginx-network
+
+  api:
+    container_name: django
+    build:
+      context: django
+      dockerfile: Dockerfile
+    volumes:
+      - ./django/code/api:/code
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+    networks:
+      - nginx-network
+
+    
+volumes:
+  postgres_data:
+
+networks:
+  nginx-network:
+    driver: bridge
+

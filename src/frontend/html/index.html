@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple API Request</title>
+    <script>
+        function callAPI() {
+            fetch('http://localhost:3000/api/test/') // Remplacez l'URL par celle de votre API Django
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    alert('API Response: ' + JSON.stringify(data));
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert('API Error: ' + error);
+                });
+        }
+    </script>
+</head>
+<body>
+    <h1>Appel d'API Simple fait chier</h1>
+    <button onclick="callAPI()">Envoyer une requête à l'API</button>
+</body>
+</html>
