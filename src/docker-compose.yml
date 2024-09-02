@@ -5,7 +5,8 @@ services:
       dockerfile: Dockerfile
     image: nginx
     depends_on:
-      - api
+      - apitest
+      - pong
     ports:
       - "3000:443"
     volumes:
@@ -26,8 +27,8 @@ services:
     networks:
       - db-network
 
-  api:
-    container_name: django
+  apitest:
+    container_name: apitest
     build:
       context: django
       dockerfile: Dockerfile
@@ -40,6 +41,22 @@ services:
     networks:
       - nginx-network
       - db-network
+
+  pong:
+    container_name: pong
+    build:
+      context: pong
+      dockerfile: Dockerfile
+    volumes:
+      - ./pong/:/code
+    depends_on:
+      - postgres
+    expose:
+      - "8006"
+    networks:
+      - nginx-network
+      - db-network
+
 
 volumes:
   postgres_data:
