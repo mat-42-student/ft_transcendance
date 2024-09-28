@@ -1,0 +1,112 @@
+import json
+from asyncio import create_task
+from .Game import Game
+from .const import RESET, RED, YELLOW, LEFT, RIGHT
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
+
+
+class PongConsumer(AsyncJsonWebsocketConsumer):
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.nb_players = 0
+        self.in_game = False
+        self.master = False
+        self.game = None
+        self.side = None
+        self.player_id = None
+        self.connected = False
+        self.game_id = None
+        self.player_id = None
+
+    async def connect(self):
+        print("Incoming ws")
+        self.game_id = self.scope["url_route"]["kwargs"]["game_id"]
+        self.player_id = self.scope["url_route"]["kwargs"]["player_id"]
+        self.room_group_name = f"game_{self.game_id}"
+        self.connected = True
+
+        # Join room group
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        await self.accept()
+        print("Nouvelle connexion WebSocket ouverte")
+
+
+    async def disconnect(self, close_code):
+        self.connected = False
+        if self.master:
+            self.game = None
+        await self.channel_layer.group_send(
+            self.room_group_name, {"type": "get.disconnect", "from": self.player_id}
+        )
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+        print(f"{RED}Connexion WebSocket fermée{RESET}")
+
+    # Receive message from WebSocket : immediate publishing to lobby
+    async def receive(self, text_data):
+        # print(f"receive:{RED}{text_data}{RESET}")
+        # message = json.loads(text_data)
+        # Send message to room group
+        await self.channel_layer.group_send(
+            self.room_group_name, {"type": "handle.message", "message": text_data}
+        )
+
+    async def handle_message(self, data):
+        print(f"handle:{RED}{data}{RESET}")
+        data = json.loads(data["message"])
+
+        if data["action"] == "move":
+            return await self.moveplayer(data)
+        if data["action"] == "info":
+            return await self.send(json.dumps(data))
+        if data["action"] == "init":
+            return await self.launch_game(data)
+        if data["action"] == "wannaplay!":
+            return await self.wannaplay(data["from"])
+
+    async def get_disconnect(self, event):
+        user = event["from"]
+        await self.send(text_data=json.dumps({"message": f"{user} has left"}))
+
+    async def wannaplay(self, player):
+        if self.in_game :
+            return
+        self.nb_players += 1
+        print(f"{self.player_id} wannaplay on channel {self.room_group_name}. Currently {self.nb_players} players in lobby")
+        if self.nb_players == 2:
+            self.master = True
+            print(f"{YELLOW}Found two players. Master is {self.player_id}{RESET}")
+            self.game = Game(self.game_id, self.player_id, player)
+            json_data = json.dumps({
+                "action" : "init",
+                "dir" : self.game.ball_spd,
+                "lplayer": self.game.players[LEFT].name,
+                "rplayer": self.game.players[RIGHT].name,
+                "lpos":self.game.players[LEFT].pos,
+                "rpos":self.game.players[RIGHT].pos
+            })
+            await self.channel_layer.group_send(
+                self.room_group_name, {"type": "handle.message", "message": json_data}
+            )
+
+    async def launch_game(self, data):
+        self.in_game = True
+        self.side = LEFT if self.master else RIGHT # master player == player[0] == left player
+        data.update({ "side": str(self.side) })
+        try:
+            await self.send(json.dumps(data))
+        except:
+            pass
+        if self.master:
+            create_task(self.game.play(self))
+
+    async def moveplayer(self, message):
+        if self.master: # transmit move to game engine
+            self.game.set_player_move(int(message["from"]), int(message["key"]))
+        # players handle their own moves client-side, we only transmit the moves to the opposing player.
+        if message["from"] != str(self.side):
+            try:
+                await self.send(message)
+            except:
+                pass
+        return

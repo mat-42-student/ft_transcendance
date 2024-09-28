@@ -12,11 +12,9 @@
     <h1>Let's Pong</h1>
 	<h2>Game #<span id="game_id"></span></h2>
     <div id="settings">
-        <label for="game_id_input">n° de la game à joindre</label>
-        <input type="text" id="game_id_input" size="2" value="1">
-        <label for="player_id_input">Nom du joueur</label>
-        <input type="text" size="16" id="player_id_input">
-        <button onclick="launchSocket()">GO</button>
+        <input type="text" size="16" id="lplayer_name">
+        <button onclick="localGame()">Local Game</button>
+        <input type="text" size="16" id="rplayer_name">
     </div>
     <div id="game_div" hidden="true">
         <span id="lplayer">X</span> <span id="lscore">0</span> VS 
@@ -27,6 +25,6 @@
             <div id="ball"></div>
         </div>
     </div>
-    <script src="wsgame.js"></script>
+    <script src="localgame.js"></script>
 </body>
 </html>
