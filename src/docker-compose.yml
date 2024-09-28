@@ -1,11 +1,12 @@
 services:
   nginx:
+    container_name: nginx
     build:
       context: nginx
       dockerfile: Dockerfile
     image: nginx
     depends_on:
-      - api
+      - apitest
     ports:
       - "3000:443"
     volumes:
@@ -14,6 +15,7 @@ services:
       - nginx-network
 
   postgres:
+    container_name: posgresql
     image: postgres
     expose:
       - "5432"
@@ -25,9 +27,14 @@ services:
       POSTGRES_PASSWORD: test
     networks:
       - db-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d transcendance -U toto"]
+      interval: 3s
+      timeout: 2s
+      retries: 5
 
-  api:
-    container_name: django
+  apitest:
+    container_name: apitest
     build:
       context: django
       dockerfile: Dockerfile
@@ -41,6 +48,35 @@ services:
       - nginx-network
       - db-network
 
+  redis:
+    container_name: redis
+    image: redis
+    expose:
+      - 6379
+    networks:
+      - redis-network
+    
+  # pong:
+  #   container_name: pong
+  #   build:
+  #     context: _Pong
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - PYTHONUNBUFFERED=1  # debug print() will be part of the logs Alleluia
+  #   volumes:
+  #     - ./_Pong/:/code
+  #   depends_on:
+  #     redis:
+  #       condition: service_started
+  #     postgres:
+  #       condition: service_healthy
+  #   expose:
+  #     - "8006"
+  #   networks:
+  #     - nginx-network
+  #     - db-network
+  #     - redis-network
+
 volumes:
   postgres_data:
 
@@ -48,4 +84,6 @@ networks:
   nginx-network:
     driver: bridge
   db-network:
+    driver: bridge
+  redis-network:
     driver: bridge
