@@ -1,7 +1,7 @@
 import json
 from asyncio import create_task
 from .Game import Game
-from .const import RESET, RED, YELLOW, LEFT, RIGHT
+from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 
@@ -34,7 +34,8 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
 
     async def disconnect(self, close_code):
         self.connected = False
-        if self.master:
+        if self.master and self.game:
+            self.game.over = True
             self.game = None
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "get.disconnect", "from": self.player_id}
@@ -65,8 +66,14 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
             return await self.wannaplay(data["from"])
 
     async def get_disconnect(self, event):
+        print(f"{GREEN}Ici {self.player_id}, disco:{event}{RESET}")
+        self.connected = False
+        if self.master and self.game:
+            self.game.over = True
+            self.game = None
         user = event["from"]
-        await self.send(text_data=json.dumps({"message": f"{user} has left"}))
+        await self.send(text_data=json.dumps({"action": "disconnect", "from": user}))
+        await self.disconnect(0)
 
     async def wannaplay(self, player):
         if self.in_game :

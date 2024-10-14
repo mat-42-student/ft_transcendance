@@ -15,12 +15,14 @@ class Player:
 
     def set_move(self, move):
         self.move = int(move)
-        if (self.move < 0 and self.pos <= 0):
-            self.move = 0
-        if (self.move > 0 and self.pos + PADWIDTH >= HEIGHT):
-            self.move = 0
 
     def move_paddle(self):
+        if (self.move < 0 and self.pos <= 0):
+            self.move = 0
+            return
+        if (self.move > 0 and self.pos + PADWIDTH >= HEIGHT):
+            self.move = 0
+            return
         self.pos += self.move * 2
 
     def score_up(self):

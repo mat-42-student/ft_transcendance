@@ -9,6 +9,7 @@ let playing = false;
 let KeyStillDown = false;
 let key;
 let socket;
+let raf;
 let pad = [], move = [], ball = [];
 move[LEFT_PLAYER] = move[RIGHT_PLAYER] = 0;
 let ball_dx = 0;
@@ -85,9 +86,15 @@ function onMessage(e) {
         document.getElementById("rplayer").innerText = data.rplayer
         playing = true;
         console.log('PLAY !')
-        requestAnimationFrame(play);
+        raf = requestAnimationFrame(play);
         return;
     }
+    if (data.action == "disconnect") {
+        alert("disconnexion occured");
+        cancelAnimationFrame(raf);
+        document.getElementById("settings").hidden = false;
+        document.getElementById("game_div").hidden = true;
+        }
 };
 
 function onError(e) {
