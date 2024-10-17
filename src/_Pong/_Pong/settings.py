@@ -25,14 +25,14 @@ SECRET_KEY = 'django-insecure-4km45i&y$i697xd4csxg&v18q%!g_*2=1t7li($&2acii-&$e_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
 INSTALLED_APPS = [
     'game',
-    'daphne',
+    'uvicorn',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

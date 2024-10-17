@@ -53,7 +53,7 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def handle_message(self, data):
-        print(f"handle:{RED}{data}{RESET}")
+        # print(f"handle:{RED}{data}{RESET}")
         data = json.loads(data["message"])
 
         if data["action"] == "move":

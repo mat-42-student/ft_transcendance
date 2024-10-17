@@ -12,24 +12,25 @@
     <h1>Let's Pong</h1>
 	<h2>Game #<span id="game_id"></span></h2>
     <div id="settings">
-        <label for="game_id_input">n° de la game à joindre</label>
-        <input type="text" id="game_id_input" size="2" value="1">
-        <label for="player_id_input">Nom du joueur</label>
-        <input type="text" size="16" id="player_id_input">
-        <button onclick="launchSocket()">GO</button>
+        <input type="text" size="16" id="lplayer_name">
+        <label for="diff">Difficulty:</label>
+        <select name="diff" id="diff">
+            <option value="2.5">Easy </option>
+            <option value="2.7">Normal</option>
+            <option value="3.1">Hard</option>
+            <option value="10">The wall</option>
+        </select>     
+        <button onclick="localGame()">Play vs CPU</button>
     </div>
     <div id="game_div" hidden="true">
         <span id="lplayer">X</span> <span id="lscore">0</span> VS 
         <span id="rplayer">Y</span> <span id="rscore">0</span>
         <div id="pong_field">
-            <!-- <img id="player1" src="pad.png" class="paddle">
-            <img id="player2" src="pad.png" class="paddle"> -->
-            <img id="ball" src="ball.png">
             <div id="player1" class="paddle"></div>
             <div id="player2" class="paddle"></div>
-            <!-- <div id="ball"></div> -->
+            <img id="ball" src="ball.png">
         </div>
     </div>
-    <script src="wsgame.js"></script>
+    <script src="localCPU.js"></script>
 </body>
 </html>

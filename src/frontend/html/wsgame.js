@@ -1,5 +1,5 @@
 const PADWIDTH = 100;
-const RADIUS = 10;
+const RADIUS = 20;
 const LEFT_PLAYER = 0;
 const RIGHT_PLAYER = 1;
 let field = document.getElementById("pong_field");
@@ -10,8 +10,9 @@ let KeyStillDown = false;
 let key;
 let socket;
 let raf;
-let pad = [], move = [], ball = [];
+let pad = [], move = [], ball = [], size = [];
 move[LEFT_PLAYER] = move[RIGHT_PLAYER] = 0;
+size[LEFT_PLAYER] = size[RIGHT_PLAYER] = PADWIDTH;
 let ball_dx = 0;
 let ball_dy = 0;
 let lpad = document.getElementById("player1");
@@ -38,8 +39,8 @@ function launchSocket() {
     document.getElementById("game_div").hidden = false;
     player_name = document.getElementById("player_id_input").value;
     game_id = document.getElementById("game_id_input").value;
-    console.log("Joining wss://localhost:3000/game/" + game_id + "/" + player_name + "/")
-    socket = new WebSocket("wss://localhost:3000/game/" + game_id + "/" + player_name + "/");
+    console.log("Joining wss://" + window.location.hostname + ":3000/game/" + game_id + "/" + player_name + "/")
+    socket = new WebSocket("wss://" + window.location.hostname + ":3000/game/" + game_id + "/" + player_name + "/");
     socket.onopen = onOpen;
     socket.onmessage = onMessage;
     socket.onerror = onError;
@@ -68,8 +69,12 @@ function onMessage(e) {
         ball_dy = data.ball_dir[1];
         pad[LEFT_PLAYER] = data.lpos;
         pad[RIGHT_PLAYER] = data.rpos;
+        size[LEFT_PLAYER] = data.size[LEFT_PLAYER];
+        size[RIGHT_PLAYER] = data.size[RIGHT_PLAYER];
         document.getElementById("lscore").innerText = data.lscore;
         document.getElementById("rscore").innerText = data.rscore;
+        document.getElementById("player1").style.height = size[LEFT_PLAYER] + 'px';
+        document.getElementById("player2").style.height = size[RIGHT_PLAYER] + 'px';
     }
     if (data.action =="move") {
         move[data.from] = data.key;
@@ -90,7 +95,6 @@ function onMessage(e) {
         return;
     }
     if (data.action == "disconnect") {
-        alert("disconnexion occured");
         cancelAnimationFrame(raf);
         document.getElementById("settings").hidden = false;
         document.getElementById("game_div").hidden = true;

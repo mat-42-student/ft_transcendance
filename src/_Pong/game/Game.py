@@ -2,7 +2,7 @@ from random import randint, choice
 from time import time
 from json import dumps
 from asyncio import sleep as asleep
-from .const import LEFT, RIGHT, HEIGHT, WIDTH, PADWIDTH, RADIUS
+from .const import LEFT, RIGHT, HEIGHT, WIDTH, PADWIDTH, RADIUS, MAX_SCORE
 
 class Player:
 
@@ -11,23 +11,24 @@ class Player:
         self.id = id
         self.score = 0
         self.pos = (HEIGHT - PADWIDTH) / 2
+        self.pad = PADWIDTH
         self.move = 0
 
-    def set_move(self, move):
-        self.move = int(move)
+    # def set_move(self, move):
+    #     self.move = int(move)
 
-    def move_paddle(self):
+    def move_paddle(self, speed):
         if (self.move < 0 and self.pos <= 0):
             self.move = 0
             return
-        if (self.move > 0 and self.pos + PADWIDTH >= HEIGHT):
+        if (self.move > 0 and self.pos + self.pad >= HEIGHT):
             self.move = 0
             return
-        self.pos += self.move * 2
+        self.pos += (self.move * 3 * speed)
 
     def score_up(self):
-        self.score = self.score +1
-        if self.score == 100:
+        self.score = self.score + 1
+        if self.score == MAX_SCORE:
             return 1
 
 class Game:
@@ -44,10 +45,14 @@ class Game:
         self.ball_spd = [self.random_neg_or_not_number(2, 5),
                          self.random_neg_or_not_number(2, 5)]
 
-    def reset_ball(self):
+    def reset_values(self):
         self.ball_pos = [WIDTH / 2, HEIGHT / 2]
-        self.ball_spd = [self.random_neg_or_not_number(2, 5),
-                         self.random_neg_or_not_number(2, 5)]
+        self.ball_spd = [self.random_neg_or_not_number(3, 4),
+                         self.random_neg_or_not_number(3, 4)]
+        for player in self.players:
+            player.pad = PADWIDTH
+            player.pos = (HEIGHT - PADWIDTH) / 2
+        self.speed = 1
 
     '''Must have a < b'''
     def random_neg_or_not_number(self, a, b) -> int:
@@ -61,34 +66,37 @@ class Game:
         self.ball_pos[0] += self.ball_spd[0] * self.speed
         self.ball_pos[1] += self.ball_spd[1] * self.speed
         # top / bottom collision
-        if (self.ball_pos[1] - RADIUS <= 0 or self.ball_pos[1] + RADIUS >= HEIGHT):
+        if (self.ball_pos[1] <= 0 or self.ball_pos[1] + RADIUS >= HEIGHT):
             self.ball_spd[1] *= -1
         # left / right collision
-        if (self.ball_pos[0] - RADIUS <= 20):
+        if (self.ball_pos[0] <= 20):
             await self.side_collision(LEFT, wsh)
         if (self.ball_pos[0] + RADIUS >= WIDTH - 20):
             await self.side_collision(RIGHT, wsh)
 
-    # add ball radius !
     async def side_collision(self, side, wsh):
         # check paddle collision
-        if self.players[side].pos < self.ball_pos[1] < self.players[side].pos + PADWIDTH :
+        if self.players[side].pos < self.ball_pos[1] < self.players[side].pos + self.players[side].pad :
             self.ball_spd[0] *= -1
+            self.speed += 0.2
+            if self.players[side].pad > 10:
+                self.players[side].pad -= 10
             return
-        # if ball go through score and check endmatch
+        # if ball go through, score and check endmatch
         if self.players[1 - side].score_up():
             self.over = True
-        self.reset_ball()
+        # if the match continues, reset the values and move on to the next point.
+        self.reset_values()
         await wsh.channel_layer.group_send(
             wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
         )
 
     def set_player_move(self, id, move):
-        self.players[id].set_move(move)
+        self.players[id].move = int(move)
 
     def move_players(self):
         for player in self.players:
-            player.move_paddle()
+            player.move_paddle(self.speed)
 
     def get_game_state(self):
         return dumps({
@@ -97,6 +105,7 @@ class Game:
             "ball_dir": self.ball_spd,
             "lpos": self.players[0].pos,
             "rpos": self.players[1].pos,
+            "size": [self.players[0].pad, self.players[1].pad],
             "lscore": self.players[0].score,
             "rscore": self.players[1].score,
         })

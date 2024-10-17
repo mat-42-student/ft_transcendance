@@ -9,16 +9,15 @@ let lpad = document.getElementById("player1");
 let rpad = document.getElementById("player2");
 let ball_div = document.getElementById("ball");
 
-let playing, raf;
+let playing, raf, difficulty;
 let side = 0, ball_dx, ball_dy, ball_x = field.offsetWidth / 2, ball_y = field.offsetHeight / 2;
-let winner, speed;
-let pad = [], move = [], score = [], keyStillDown = [], nick = [];
+let winner, speed, keyStillDown;
+let pad = [], move = [], score = [], nick = [], size = [];
 nick[LEFT_PLAYER] = generateRandomNick();
-nick[RIGHT_PLAYER] = generateRandomNick();
+nick[RIGHT_PLAYER] = "CPU";
 
 /////////////////////////// On load ///////////////////////////
 document.getElementById("lplayer_name").value = nick[LEFT_PLAYER];
-document.getElementById("rplayer_name").value = nick[RIGHT_PLAYER];
 
 /////////////////////////// Events part ///////////////////////////
 
@@ -31,34 +30,22 @@ field.addEventListener('click', () => {
 field.addEventListener('keydown', keydown)
 field.addEventListener('keyup', keyup)
 
-function getSide(key) {
-    if (key === 'q' || key === 'z')
-        return 0;
-    else if (key === '9' || key === '3')
-        return 1;
-    return null;
-}
-
 function keydown(event) {
     key = event.key;
-    side = getSide(key);
-    // console.log('side' + side);
-    if (side === null || keyStillDown[side])
+    if (keyStillDown)
         return;
-    keyStillDown[side] = key;
-    if (key === 'q' || key === '9')
-        move[side] = -1;
-    else if (key === 'z' || key === '3')
-        move[side] = 1;
+    keyStillDown = key;
+    if (key === 'q')
+        move[0] = -1;
+    else if (key === 'z')
+        move[0] = 1;
 }
 
 function keyup(event) {
-    key = event.key;
-    side = getSide(key)
-    if (side === null || event.key !== keyStillDown[side])
+    if (event.key !== keyStillDown)
         return
-    keyStillDown[side] = false
-    move[side] = 0;
+    keyStillDown = false
+    move[0] = 0;
 }
 
 /////////////////////////// Utils ///////////////////////////
@@ -85,53 +72,64 @@ function localGame() {
     document.getElementById("game_div").hidden = false;
     init();
     document.getElementById("lplayer_name").value = nick[LEFT_PLAYER];
-    document.getElementById("rplayer_name").value = nick[RIGHT_PLAYER];
     document.getElementById("lplayer").innerText = nick[LEFT_PLAYER];
     document.getElementById("rplayer").innerText = nick[RIGHT_PLAYER];
     document.getElementById("lscore").innerText = 0;
     document.getElementById("rscore").innerText = 0;
-    
+    difficulty = document.getElementById("diff").value;
+    console.log(difficulty);
     raf = requestAnimationFrame(play);
 }
 
 function init() {
-    resetBall();
+    resetValues();
     playing = true;
-    pad[LEFT_PLAYER] = pad[RIGHT_PLAYER] = field.offsetHeight / 2 ;
     move[LEFT_PLAYER] = move[RIGHT_PLAYER] = score[LEFT_PLAYER] = score[RIGHT_PLAYER] = 0;
-    keyStillDown[LEFT_PLAYER] = keyStillDown[RIGHT_PLAYER] = false;    
+    size[LEFT_PLAYER] = size[RIGHT_PLAYER] = PADWIDTH;
+    keyStillDown = false;    
 }
 
-function resetBall() {
+function resetValues() {
     ball_x = field.offsetWidth / 2;
     ball_y = field.offsetHeight / 2;
     ball_dx = randomInRange(3, 4);
     ball_dy = randomInRange(3, 4);
     speed = 1;
+    size[LEFT_PLAYER] = size[RIGHT_PLAYER] = PADWIDTH;
+    pad[LEFT_PLAYER] = pad[RIGHT_PLAYER] = (field.offsetHeight - PADWIDTH) / 2 ;
+    document.getElementById("player1").style.height = size[LEFT_PLAYER] + 'px';
+    document.getElementById("player2").style.height = size[RIGHT_PLAYER] + 'px';
+}
+
+function cpuMove() {
+    move[RIGHT_PLAYER] = ball_y > (pad[RIGHT_PLAYER] + size[RIGHT_PLAYER] /2) ? 1 : -1;
 }
 
 function movePaddles() {
-    // console.log("leftpad:" + pad[LEFT_PLAYER]);
+    cpuMove();
     if (move[LEFT_PLAYER]) {
         pad[LEFT_PLAYER] += move[LEFT_PLAYER] * 2 * speed;
         if (pad[LEFT_PLAYER] < 0)
             pad[LEFT_PLAYER] = 0;
-        if (pad[LEFT_PLAYER] + PADWIDTH > field.offsetHeight)
-            pad[LEFT_PLAYER] = field.offsetHeight - PADWIDTH;
+        if (pad[LEFT_PLAYER] + size[LEFT_PLAYER] > field.offsetHeight)
+            pad[LEFT_PLAYER] = field.offsetHeight - size[LEFT_PLAYER];
     }
     if (move[RIGHT_PLAYER]) {
-        pad[RIGHT_PLAYER] += move[RIGHT_PLAYER] * 2 * speed;
+        if (difficulty == 10)
+            pad[RIGHT_PLAYER] = ball_y - size[RIGHT_PLAYER] / 2;
+        else
+            pad[RIGHT_PLAYER] += move[RIGHT_PLAYER] * difficulty * speed;
         if (pad[RIGHT_PLAYER] < 0)
             pad[RIGHT_PLAYER] = 0;
-        if (pad[RIGHT_PLAYER] + PADWIDTH > field.offsetHeight)
-            pad[RIGHT_PLAYER] = field.offsetHeight - PADWIDTH;
+        if (pad[RIGHT_PLAYER] + size[RIGHT_PLAYER] > field.offsetHeight)
+            pad[RIGHT_PLAYER] = field.offsetHeight - size[RIGHT_PLAYER];
     }
     lpad.style.top = pad[LEFT_PLAYER] + 'px';
     rpad.style.top = pad[RIGHT_PLAYER] + 'px';
 }
 
 function moveBall() {
-    // Move
+    // Move ball
     ball_x = ball_x + ball_dx * speed;
     ball_y = ball_y +  ball_dy * speed;
     // Check top / bottom collision
@@ -148,7 +146,11 @@ function moveBall() {
 
 function side_collision(side) {
     // check paddle collision
-    if (pad[side] <= ball_y && ball_y <= pad[side] + PADWIDTH) {
+    if (pad[side] <= ball_y && ball_y <= pad[side] + size[side]) {
+        if (size[side] > 10)
+            size[side] -= 10;
+        document.getElementById("player1").style.height = size[LEFT_PLAYER] + 'px';
+        document.getElementById("player2").style.height = size[RIGHT_PLAYER] + 'px';
         ball_dx = -ball_dx;
         speed += 0.3;
         return;
@@ -164,11 +166,11 @@ function scoreup(side) {
         endgame();
         return;
     }
-    resetBall();
+    resetValues();
 }
 
 function endgame() {
-    winner = score[LEFT_PLAYER] >= 10 ? LEFT_PLAYER : RIGHT_PLAYER;
+    winner = score[LEFT_PLAYER] >= SCORE_MAX ? LEFT_PLAYER : RIGHT_PLAYER;
     alert(`GAME OVER\nLe gagnant est ${nick[winner]}!`);
     cancelAnimationFrame(raf);
     document.getElementById("lscore").innerText = document.getElementById("rscore").innerText = 0;
