@@ -2,7 +2,8 @@ from random import randint, choice
 from time import time
 from json import dumps
 from asyncio import sleep as asleep
-from .const import LEFT, RIGHT, HEIGHT, WIDTH, PADWIDTH, RADIUS, MAX_SCORE
+from .const import LEFT, RIGHT, HEIGHT, WIDTH, PADWIDTH, RADIUS, FPS, MAX_SCORE, GREEN, RED, RESET
+from .models import Salon
 
 class Player:
 
@@ -40,7 +41,7 @@ class Game:
         self.speed = 1
         self.players.append(Player(id1, id1))
         self.players.append(Player(id2, id2))
-        print(f"New game {game_id} launched : {self.players[0].name} vs {self.players[1].name}")
+        print(f"{GREEN}New game {game_id} launched : **{self.players[0].name}** vs {self.players[1].name}{RESET}")
         self.ball_pos = [WIDTH / 2, HEIGHT / 2]
         self.ball_spd = [self.random_neg_or_not_number(2, 5),
                          self.random_neg_or_not_number(2, 5)]
@@ -111,30 +112,39 @@ class Game:
         })
 
     async def play(self, wsh):
-        target_fps = 60
-        fps = 0
-        frame_duration = 1 / target_fps  # Durée par frame en secondes (environ 0.01667)
+        target_fps = FPS
+        frame_duration = 1 / target_fps
 
         last_frame_time = time()
-
         while not self.over:
             current_time = time()
             elapsed_time = current_time - last_frame_time
             if elapsed_time < frame_duration:
                 await asleep(frame_duration - elapsed_time)
-            fps += 1
-            if (fps >= 60):
-                fps = 0
             await wsh.channel_layer.group_send(
                 wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
             )
-
-            # await wsh.publish(self.get_game_state())
-            last_frame_time = time()
-
             self.move_players()
             await self.move_ball(wsh)
-        self.end_game()
+            last_frame_time = time()
+        await self.end_game()
+        await wsh.channel_layer.group_send(
+            wsh.room_group_name, {"type": "get.disconnect", "from": "server"}
+        )
     
-    def end_game(self):
-        print(f"Game over {self.players[0].name}:{self.players[0].score} - {self.players[1].name}:{self.players[1].score}")
+    async def end_game(self):
+        self.over = True
+        print(f"{RED}Game #{self.id} over : {self.players[0].name}:{self.players[0].score} - {self.players[1].score}:{self.players[1].name}{RESET}")
+
+    async def save_score(self):
+        winner = LEFT if self.players[0].score > self.players[1].score else RIGHT
+        try:
+            salon = await Salon.objects.aget(id = self.id)
+
+            salon.score1 = self.players[0].score
+            salon.score2 = self.players[1].score
+            salon.winner = self.players[winner]
+
+            await salon.asave()
+        except Salon.DoesNotExist:
+            print(f"{RED}Room #{self.id} not found.{RESET}")

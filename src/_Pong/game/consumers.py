@@ -15,39 +15,20 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         self.game = None
         self.side = None
         self.player_id = None
-        self.connected = False
         self.game_id = None
         self.player_id = None
 
     async def connect(self):
-        print("Incoming ws")
         self.game_id = self.scope["url_route"]["kwargs"]["game_id"]
         self.player_id = self.scope["url_route"]["kwargs"]["player_id"]
         self.room_group_name = f"game_{self.game_id}"
-        self.connected = True
 
         # Join room group
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
-        print("Nouvelle connexion WebSocket ouverte")
-
-
-    async def disconnect(self, close_code):
-        self.connected = False
-        if self.master and self.game:
-            self.game.over = True
-            self.game = None
-        await self.channel_layer.group_send(
-            self.room_group_name, {"type": "get.disconnect", "from": self.player_id}
-        )
-        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-        print(f"{RED}Connexion WebSocket fermée{RESET}")
 
     # Receive message from WebSocket : immediate publishing to lobby
     async def receive(self, text_data):
-        # print(f"receive:{RED}{text_data}{RESET}")
-        # message = json.loads(text_data)
-        # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "handle.message", "message": text_data}
         )
@@ -65,24 +46,14 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         if data["action"] == "wannaplay!":
             return await self.wannaplay(data["from"])
 
-    async def get_disconnect(self, event):
-        print(f"{GREEN}Ici {self.player_id}, disco:{event}{RESET}")
-        self.connected = False
-        if self.master and self.game:
-            self.game.over = True
-            self.game = None
-        user = event["from"]
-        await self.send(text_data=json.dumps({"action": "disconnect", "from": user}))
-        await self.disconnect(0)
-
     async def wannaplay(self, player):
         if self.in_game :
             return
         self.nb_players += 1
-        print(f"{self.player_id} wannaplay on channel {self.room_group_name}. Currently {self.nb_players} players in lobby")
+        # print(f"{self.player_id} wannaplay on channel {self.room_group_name}. Currently {self.nb_players} players in lobby")
         if self.nb_players == 2:
             self.master = True
-            print(f"{YELLOW}Found two players. Master is {self.player_id}{RESET}")
+            # print(f"{YELLOW}Found two players. Master is {self.player_id}{RESET}")
             self.game = Game(self.game_id, self.player_id, player)
             json_data = json.dumps({
                 "action" : "init",
@@ -117,3 +88,29 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
             except:
                 pass
         return
+
+    async def disconnect(self, close_code):
+        if self.master and self.game:
+            self.endgame_by_disconnection(self.player_id)
+        await self.channel_layer.group_send(
+            self.room_group_name, {"type": "get.disconnect", "from": self.player_id}
+        )
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+        # print(f"{RED}Connexion WebSocket fermée par {self.player_id}{RESET}")
+
+    async def get_disconnect(self, event):
+        # print(f"{GREEN}Ici {self.player_id}, disco:{event}{RESET}")
+        user = event["from"]
+        if self.master and self.game:
+            self.endgame_by_disconnection(user)
+        await self.send(text_data=json.dumps({"action": "disconnect", "from": user}))
+        await self.disconnect(0)
+
+    def endgame_by_disconnection(self, user):
+        if self.game.over:
+            return
+        if self.nb_players > 0:
+            self.game.players[0].score = 1 if self.player_id != user else 0
+            self.game.players[1].score = 1 - self.game.players[0].score
+            self.game.over = True
+        self.game = None
