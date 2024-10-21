@@ -2,7 +2,7 @@ import json
 from asyncio import create_task
 from .Game import Game
 from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT
-from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from channels.generic.websocket import AsyncJsonWebsocketConsumer # type: ignore
 
 
 class PongConsumer(AsyncJsonWebsocketConsumer):

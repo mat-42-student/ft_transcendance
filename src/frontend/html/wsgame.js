@@ -19,8 +19,11 @@ let lpad = document.getElementById("player1");
 let rpad = document.getElementById("player2");
 let ball_div = document.getElementById("ball");
 
+/////////////////////////// onLoad ///////////////////////////
 
-/////////////////////////// Socket part ///////////////////////////
+document.getElementById("player_id_input").value = generateRandomNick();
+
+/////////////////////////// Utils part ///////////////////////////
 
 function generateRandomNick() {
     const adjectives = ["Shadow", "Steady", "Mighty", "Funny", "Hidden", "Normal"];
@@ -32,11 +35,17 @@ function generateRandomNick() {
     return randomAdj + randomNoun + Math.floor(Math.random() * 1000);
 }
 
-document.getElementById("player_id_input").value = generateRandomNick();
+function changeDisplay() {
+    document.getElementById("settings").hidden = !document.getElementById("settings").hidden;
+    document.getElementById("game_div").hidden = !document.getElementById("game_div").hidden;
+}
+
+/////////////////////////// Socket part ///////////////////////////
 
 function launchSocket() {
-    document.getElementById("settings").hidden = true;
-    document.getElementById("game_div").hidden = false;
+    // document.getElementById("settings").hidden = true;
+    // document.getElementById("game_div").hidden = false;
+    changeDisplay();
     player_name = document.getElementById("player_id_input").value;
     game_id = document.getElementById("game_id_input").value;
     console.log("Joining wss://" + window.location.hostname + ":3000/game/" + game_id + "/" + player_name + "/")
@@ -95,9 +104,9 @@ function onMessage(e) {
         return;
     }
     if (data.action == "disconnect") {
+        socket.close();
         cancelAnimationFrame(raf);
-        document.getElementById("settings").hidden = false;
-        document.getElementById("game_div").hidden = true;
+        changeDisplay();
         }
 };
 
@@ -167,11 +176,11 @@ function movePaddles() {
     rpad.style.top = pad[RIGHT_PLAYER] + 'px';
 }
 
-function side_collision(side) {
-    // check paddle collision
-    if (pad[side] <= ball[1] && ball[1] <= pad[side] + PADWIDTH)
-        ball_dx = -ball_dx;
-}
+// function side_collision(side) {
+//     // check paddle collision
+//     if (pad[side] <= ball[1] && ball[1] <= pad[side] + PADWIDTH)
+//         ball_dx = -ball_dx;
+// }
 
 function moveBall() {
     // // Move
