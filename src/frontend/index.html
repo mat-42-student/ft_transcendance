@@ -6,9 +6,16 @@
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
 	<link rel="icon" type="image/png" href="./ressources/pong_favicon.png">
     <link rel="stylesheet" href="./css/pong.css">
+    <link rel="stylesheet" href="./css/games.css"> <!-- Optionnel si tu veux ajouter du style -->
     <title>Pong me till dawn</title>
 </head>
 <body>
+    <h1>Sélectionnez un Mode de Jeu</h1>
+    <button onclick="modeSelection('matchmaking', 1)">Matchmaking 1 vs 1</button>
+    <button onclick="modeSelection('tournament', 5)">Tournoi</button>
+    <button onclick="modeSelection('training')">Entraînement</button>
+    <button onclick="sendPostRequest()">Create User</button>
+
     <h1>Let's Pong</h1>
 	<h2>Game #<span id="game_id"></span></h2>
     <div id="settings">
@@ -31,5 +38,9 @@
         </div>
     </div>
     <script src="./js/wsgame.js"></script>
+    <script src="./script/create_user.js"></script>
+    <script type="module" src="./script/requestGet.js"></script>
+    <script src="./script/games.js"></script>
 </body>
 </html>
+

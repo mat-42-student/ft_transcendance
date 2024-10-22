@@ -1,12 +1,13 @@
+
 services:
   nginx:
     container_name: nginx
     build:
       context: nginx
       dockerfile: Dockerfile
-    image: nginx
     depends_on:
       - pong
+      - apitest
     ports:
       - "3000:443"
     volumes:
@@ -33,21 +34,6 @@ services:
       timeout: 2s
       retries: 5
 
-  # apitest:
-  #   container_name: apitest
-  #   build:
-  #     context: django
-  #     dockerfile: Dockerfile
-  #   volumes:
-  #     - ./django/code/api:/code
-  #   depends_on:
-  #     - postgres
-  #   expose:
-  #     - "8000"
-  #   networks:
-  #     - nginx-network
-  #     - db-network
-
   redis:
     container_name: redis
     image: redis
@@ -72,6 +58,20 @@ services:
         condition: service_healthy
     expose:
       - "8006"
+
+  apitest:
+    container_name: apitest
+    build:
+      context: matchmaking
+      dockerfile: Dockerfile
+    environment:
+      DJANGO_SETTINGS_MODULE: matchmaking.settings
+    volumes:
+      - ./matchmaking:/code
+    depends_on:
+      - postgres
+    expose:
+      - "8000:8000"
     networks:
       - nginx-network
       - db-network

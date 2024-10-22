@@ -1,0 +1,79 @@
+/* Style global pour le corps de la page */
+body {
+    font-family: 'Courier New', Courier, monospace; /* Police rétro pour rappeler Pong */
+    background-color: black; /* Fond noir pour un style arcade classique */
+    color: white; /* Texte en blanc pour un contraste élevé */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; /* Utiliser toute la hauteur de la fenêtre */
+    margin: 0; /* Supprimer les marges par défaut */
+    text-align: center; /* Centrer le texte */
+}
+
+/* Style pour le conteneur du lobby */
+#lobbyContainer {
+    max-width: 500px;
+    width: 100%;
+    padding: 20px;
+    border: 2px solid white; /* Bordure blanche pour un look classique */
+    border-radius: 10px;
+    background-color: black; /* Fond noir pour s'harmoniser avec le reste de la page */
+    color: white;
+    text-align: center;
+    position: absolute; /* Positionnement absolu pour centrer le lobby */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Style pour le titre du lobby */
+#lobbyContainer h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+/* Style pour la liste des joueurs */
+.players {
+    margin-bottom: 20px;
+}
+
+.player {
+    background-color: #444; /* Couleur de fond gris foncé pour différencier les joueurs */
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+}
+
+/* Style pour le statut */
+.status p {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+/* Style pour le bouton de démarrage */
+button {
+    background-color: white; /* Fond blanc pour rappeler les palettes de Pong */
+    color: black; /* Texte noir pour le contraste */
+    border: none; /* Enlever les bordures par défaut */
+    padding: 15px 30px; /* Espacement interne pour les boutons */
+    font-size: 1em; /* Taille de la police */
+    cursor: not-allowed; /* Curseur désactivé par défaut */
+    border-radius: 5px; /* Coins légèrement arrondis */
+    transition: background-color 0.3s; /* Transition douce pour le survol */
+}
+
+/* Style pour le bouton activé */
+button:enabled {
+    cursor: pointer; /* Changer le curseur pour indiquer un bouton cliquable */
+}
+
+button:hover:enabled {
+    background-color: grey; /* Changer de couleur pour indiquer l'interaction */
+}
+
+/* Classe pour masquer les éléments */
+.hidden {
+    display: none;
+}
