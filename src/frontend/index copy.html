@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modes de Jeu</title>
+    <link rel="stylesheet" href="./css/games.css"> <!-- Optionnel si tu veux ajouter du style -->
+</head>
+<body>
+    <h1>Sélectionnez un Mode de Jeu</h1>
+    <button onclick="modeSelection('matchmaking', 30)">Matchmaking 1 vs 1</button>
+    <button onclick="modeSelection('tournament', 12)">Tournoi</button>
+    <button onclick="modeSelection('training')">Entraînement</button>
+    <button onclick="sendPostRequest()">Create User</button>
+
+</body>
+    <script src="./script/create_user.js"></script>
+    <script type="module" src="./script/requestGet.js"></script>
+    <script src="./script/games.js"></script>
+</html>
+

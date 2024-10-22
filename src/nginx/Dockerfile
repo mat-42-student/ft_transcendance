@@ -1,6 +1,6 @@
 FROM nginx
 
-RUN apt update -y && apt upgrade -y && apt install openssl
+RUN apt update -y && apt upgrade -y && apt install openssl -y
 
 RUN mkdir -p /etc/nginx/ssl && openssl req -x509 -nodes -out /etc/nginx/ssl/ft_tr.crt -keyout /etc/nginx/ssl/ft_tr.key -subj "/C=FR/CN=localhost"
 
