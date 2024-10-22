@@ -4,27 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
-	<link rel="icon" type="image/png" href="./pong_favicon.png">
-    <link rel="stylesheet" href="pong.css">
+	<link rel="icon" type="image/png" href="./ressources/pong_favicon.png">
+    <link rel="stylesheet" href="./css/pong.css">
     <title>Pong me till dawn</title>
 </head>
 <body>
     <h1>Let's Pong</h1>
 	<h2>Game #<span id="game_id"></span></h2>
     <div id="settings">
-        <input type="text" size="16" id="lplayer_name">
-        <button onclick="localGame()">local Game</button>
-        <input type="text" size="16" id="rplayer_name">
+        <label for="game_id_input">n° de la game à joindre</label>
+        <input type="text" id="game_id_input" size="2" value="1">
+        <label for="player_id_input">Nom du joueur</label>
+        <input type="text" size="16" id="player_id_input">
+        <button onclick="launchSocket()">GO</button>
     </div>
     <div id="game_div" hidden="true">
         <span id="lplayer">X</span> <span id="lscore">0</span> VS 
         <span id="rplayer">Y</span> <span id="rscore">0</span>
         <div id="pong_field">
+            <!-- <img id="player1" src="pad.png" class="paddle">
+            <img id="player2" src="pad.png" class="paddle"> -->
+            <img id="ball" src="./ressources/ball.png">
             <div id="player1" class="paddle"></div>
             <div id="player2" class="paddle"></div>
-            <img id="ball" src="ball.png">
+            <!-- <div id="ball"></div> -->
         </div>
     </div>
-    <script src="localgame.js"></script>
+    <script src="./js/wsgame.js"></script>
 </body>
 </html>

@@ -9,14 +9,13 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        self.player_id = None
+        self.game_id = None
         self.nb_players = 0
         self.in_game = False
         self.master = False
         self.game = None
         self.side = None
-        self.player_id = None
-        self.game_id = None
-        self.player_id = None
 
     async def connect(self):
         self.game_id = self.scope["url_route"]["kwargs"]["game_id"]
@@ -41,31 +40,31 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
             return await self.moveplayer(data)
         if data["action"] == "info":
             return await self.send(json.dumps(data))
-        if data["action"] == "init":
-            return await self.launch_game(data)
+        # if data["action"] == "init":
+        #     return await self.launch_game(data)
         if data["action"] == "wannaplay!":
             return await self.wannaplay(data["from"])
 
     async def wannaplay(self, player):
-        if self.in_game :
-            return
         self.nb_players += 1
-        # print(f"{self.player_id} wannaplay on channel {self.room_group_name}. Currently {self.nb_players} players in lobby")
-        if self.nb_players == 2:
-            self.master = True
-            # print(f"{YELLOW}Found two players. Master is {self.player_id}{RESET}")
-            self.game = Game(self.game_id, self.player_id, player)
-            json_data = json.dumps({
-                "action" : "init",
-                "dir" : self.game.ball_spd,
-                "lplayer": self.game.players[LEFT].name,
-                "rplayer": self.game.players[RIGHT].name,
-                "lpos":self.game.players[LEFT].pos,
-                "rpos":self.game.players[RIGHT].pos
-            })
-            await self.channel_layer.group_send(
-                self.room_group_name, {"type": "handle.message", "message": json_data}
-            )
+        print(f"{self.player_id} wannaplay on channel {self.room_group_name}. Currently {self.nb_players} players in lobby")
+        if self.nb_players != 2 or self.in_game:
+            return
+
+        self.master = True
+        print(f"{YELLOW}Found two players. Master is {self.player_id}{RESET}")
+        self.game = Game(self.game_id, self.player_id, player)
+        json_data = json.dumps({
+            "action" : "init",
+            "dir" : self.game.ball_spd,
+            "lplayer": self.game.players[LEFT].name,
+            "rplayer": self.game.players[RIGHT].name,
+            "lpos":self.game.players[LEFT].pos,
+            "rpos":self.game.players[RIGHT].pos
+        })
+        await self.channel_layer.group_send(
+            self.room_group_name, {"type": "launch.game", "message": json_data}
+        )
 
     async def launch_game(self, data):
         self.in_game = True
@@ -93,12 +92,12 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         if self.master and self.game:
             self.endgame_by_disconnection(self.player_id)
         await self.channel_layer.group_send(
-            self.room_group_name, {"type": "get.disconnect", "from": self.player_id}
+            self.room_group_name, {"type": "make.disconnect", "from": self.player_id}
         )
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
         # print(f"{RED}Connexion WebSocket fermée par {self.player_id}{RESET}")
 
-    async def get_disconnect(self, event):
+    async def make_disconnect(self, event):
         # print(f"{GREEN}Ici {self.player_id}, disco:{event}{RESET}")
         user = event["from"]
         if self.master and self.game:
