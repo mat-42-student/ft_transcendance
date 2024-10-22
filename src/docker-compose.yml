@@ -6,8 +6,8 @@ services:
       context: nginx
       dockerfile: Dockerfile
     depends_on:
+      - matchmaking
       - pong
-      - apitest
     ports:
       - "3000:443"
     volumes:
@@ -56,11 +56,13 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
+      matchmaking:
+        condition: service_started
     expose:
       - "8006"
 
-  apitest:
-    container_name: apitest
+  matchmaking:
+    container_name: matchmaking
     build:
       context: matchmaking
       dockerfile: Dockerfile

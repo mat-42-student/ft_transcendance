@@ -6,11 +6,7 @@ import sys
 
 def main():
     """Run administrative tasks."""
-<<<<<<<< HEAD:src/_Pong/manage.py
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', '_Pong.settings')
-========
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'matchmaking.settings')
->>>>>>>> origin/matchmaking:src/matchmaking/manage.py
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

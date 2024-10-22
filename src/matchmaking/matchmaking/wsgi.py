@@ -15,10 +15,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-<<<<<<<< HEAD:src/_Pong/_Pong/wsgi.py
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', '_Pong.settings')
-========
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'matchmaking.settings')
->>>>>>>> origin/matchmaking:src/matchmaking/matchmaking/wsgi.py
 
 application = get_wsgi_application()

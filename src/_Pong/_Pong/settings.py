@@ -24,11 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-<<<<<<<< HEAD:src/_Pong/_Pong/settings.py
 SECRET_KEY = 'django-insecure-4km45i&y$i697xd4csxg&v18q%!g_*2=1t7li($&2acii-&$e_'
-========
-SECRET_KEY = 'django-insecure-k^yw982$m!331%$9)krnpi=32#-&vgm9qom02)&x+hfnspah09'
->>>>>>>> origin/matchmaking:src/matchmaking/matchmaking/settings.py
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -41,23 +37,14 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-<<<<<<<< HEAD:src/_Pong/_Pong/settings.py
     'game',
     'uvicorn',
-========
-    'daphne',
->>>>>>>> origin/matchmaking:src/matchmaking/matchmaking/settings.py
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-<<<<<<<< HEAD:src/_Pong/_Pong/settings.py
-========
-    'Selectmode',
-    'rest_framework',
->>>>>>>> origin/matchmaking:src/matchmaking/matchmaking/settings.py
 ]
 
 MIDDLEWARE = [
@@ -70,11 +57,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-<<<<<<<< HEAD:src/_Pong/_Pong/settings.py
 ROOT_URLCONF = '_Pong.urls'
-========
-ROOT_URLCONF = 'matchmaking.urls'
->>>>>>>> origin/matchmaking:src/matchmaking/matchmaking/settings.py
 
 TEMPLATES = [
     {
@@ -92,32 +75,18 @@ TEMPLATES = [
     },
 ]
 
-<<<<<<<< HEAD:src/_Pong/_Pong/settings.py
 WSGI_APPLICATION = '_Pong.wsgi.application'
 ASGI_APPLICATION = "_Pong.asgi.application"
-========
-ASGI_APPLICATION = 'matchmaking.asgi.application'
-REDIS_URL = "redis://redis:6379/1"
 
->>>>>>>> origin/matchmaking:src/matchmaking/matchmaking/settings.py
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
             "hosts": [("redis", 6379)],
-<<<<<<<< HEAD:src/_Pong/_Pong/settings.py
             "capacity": 1000,
         },
     },
 }
-========
-        },
-    },
-}
-
-WSGI_APPLICATION = 'matchmaking.wsgi.application'
-
->>>>>>>> origin/matchmaking:src/matchmaking/matchmaking/settings.py
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases

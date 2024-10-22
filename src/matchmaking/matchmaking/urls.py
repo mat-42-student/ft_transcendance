@@ -22,12 +22,6 @@ from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
-<<<<<<<< HEAD:src/_Pong/_Pong/urls.py
-    path("chat/", include("game.urls")),
-    path("admin/", admin.site.urls),
-]
-========
     path('admin/', admin.site.urls),
     path('api/', include('Selectmode.urls')),
 ]
->>>>>>>> origin/matchmaking:src/matchmaking/matchmaking/urls.py
