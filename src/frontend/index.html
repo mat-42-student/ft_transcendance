@@ -7,38 +7,35 @@
 	<link rel="icon" type="image/png" href="./ressources/pong_favicon.png">
     <link rel="stylesheet" href="./css/games.css"> <!-- Optionnel si tu veux ajouter du style -->
     <link rel="stylesheet" href="./css/pong.css">
+    <link rel="stylesheet" href="./css/global.css">
     <title>Pong me till dawn</title>
 </head>
-<body>
-    <h1>Sélectionnez un Mode de Jeu</h1>
-    <div id="settings">
-        <label for="player_id_input">Nom du joueur</label>
-        <br>
-        <input type="text" size="16" id="player_id_input">
-        <button onclick="sendPostRequest()">Create User</button>
-        <br>
-        <button onclick="modeSelection('matchmaking', 13)">Matchmaking 1 vs 1</button>
-        <button onclick="modeSelection('tournament', 19)">Tournoi</button>
-        <br>
-        <button onclick="modeSelection('training')">1 vs 1 local</button>
-        <button onclick="modeSelection('cpu')">CPU</button>
-    </div>
 
-    <div id="game_div" hidden="true">
-        <span id="lplayer">X</span> <span id="lscore">0</span> VS 
-        <span id="rplayer">Y</span> <span id="rscore">0</span>
-        <div id="pong_field">
-            <!-- <img id="player1" src="pad.png" class="paddle">
-            <img id="player2" src="pad.png" class="paddle"> -->
-            <img id="ball" src="./ressources/ball.png">
-            <div id="player1" class="paddle"></div>
-            <div id="player2" class="paddle"></div>
-            <!-- <div id="ball"></div> -->
-        </div>
-    </div>
+<body>
+<header>
+	<h1>Coucou</h1>
+</header>
+
+	<main>
+    	<div id="game_div" hidden="true">
+    	    <span id="lplayer">X</span> <span id="lscore">0</span> VS 
+    	    <span id="rplayer">Y</span> <span id="rscore">0</span>
+    	    <div id="pong_field">
+    	        <!-- <img id="player1" src="pad.png" class="paddle">
+    	        <img id="player2" src="pad.png" class="paddle"> -->
+    	        <img id="ball" src="./ressources/ball.png">
+    	        <div id="player1" class="paddle"></div>
+    	        <div id="player2" class="paddle"></div>
+    	        <!-- <div id="ball"></div> -->
+    	    </div>
+    	</div>
+	</main>
+	<footer>
+		<h1>c'est ton footer</h1>
+	</footer>
     <script src="./js/wsgame.js"></script>
     <script src="./script/create_user.js"></script>
     <script type="module" src="./script/requestGet.js"></script>
-    <script src="./script/games.js"></script>
+    <script src="./script/matchmaking.js"></script>
 </body>
 </html>

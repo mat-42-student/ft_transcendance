@@ -56,8 +56,6 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
-      matchmaking:
-        condition: service_started
     expose:
       - "8006"
     networks:
@@ -71,11 +69,17 @@ services:
       context: matchmaking
       dockerfile: Dockerfile
     environment:
-      DJANGO_SETTINGS_MODULE: matchmaking.settings
+        PYTHONUNBUFFERED: 1  # Désactiver le buffering des sorties Python
+        DJANGO_SETTINGS_MODULE: matchmaking.settings
     volumes:
       - ./matchmaking:/code
     depends_on:
-      - postgres
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      pong:
+        condition: service_started
     expose:
       - "8000:8000"
     networks:
