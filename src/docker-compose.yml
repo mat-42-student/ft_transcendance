@@ -60,6 +60,10 @@ services:
         condition: service_started
     expose:
       - "8006"
+    networks:
+      - nginx-network
+      - db-network
+      - redis-network
 
   matchmaking:
     container_name: matchmaking

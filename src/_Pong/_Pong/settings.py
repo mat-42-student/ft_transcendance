@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -87,6 +88,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases

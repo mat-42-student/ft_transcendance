@@ -56,7 +56,7 @@ function sleep(ms) {
 // script.js
 
 function setupWebSocket(userid, game_mode) {
-    const socket = new WebSocket('wss://localhost:3000/ws/soloq/1vs1/');
+    const socket = new WebSocket('wss://localhost:3000/api/soloq/1vs1/');
     let socket1 = null
     let idsalon = null
 
@@ -104,7 +104,7 @@ function setupWebSocket(userid, game_mode) {
         {
             if (data.nbgame)
             {
-                socket1 = new WebSocket('wss://localhost:3000/ws/game/'+ data.nbgame + '/');
+                socket1 = new WebSocket('wss://localhost:3000/api/game/'+ data.nbgame + '/');
                 socket1.onopen = async function(e) {
                     console.log('[OPEN] Connexion établie socket1');
                     const info = {

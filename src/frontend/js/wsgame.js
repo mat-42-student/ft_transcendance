@@ -2,6 +2,7 @@ const PADWIDTH = 100;
 const RADIUS = 20;
 const LEFT_PLAYER = 0;
 const RIGHT_PLAYER = 1;
+
 let field = document.getElementById("pong_field");
 let game_id, player_name;
 let side = 0;

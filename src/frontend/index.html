@@ -5,26 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
 	<link rel="icon" type="image/png" href="./ressources/pong_favicon.png">
-    <link rel="stylesheet" href="./css/pong.css">
     <link rel="stylesheet" href="./css/games.css"> <!-- Optionnel si tu veux ajouter du style -->
+    <link rel="stylesheet" href="./css/pong.css">
     <title>Pong me till dawn</title>
 </head>
 <body>
     <h1>Sélectionnez un Mode de Jeu</h1>
-    <button onclick="modeSelection('matchmaking', 1)">Matchmaking 1 vs 1</button>
-    <button onclick="modeSelection('tournament', 5)">Tournoi</button>
-    <button onclick="modeSelection('training')">Entraînement</button>
-    <button onclick="sendPostRequest()">Create User</button>
-
-    <h1>Let's Pong</h1>
-	<h2>Game #<span id="game_id"></span></h2>
     <div id="settings">
-        <label for="game_id_input">n° de la game à joindre</label>
-        <input type="text" id="game_id_input" size="2" value="1">
         <label for="player_id_input">Nom du joueur</label>
+        <br>
         <input type="text" size="16" id="player_id_input">
-        <button onclick="launchSocket()">GO</button>
+        <button onclick="sendPostRequest()">Create User</button>
+        <br>
+        <button onclick="modeSelection('matchmaking', 13)">Matchmaking 1 vs 1</button>
+        <button onclick="modeSelection('tournament', 19)">Tournoi</button>
+        <br>
+        <button onclick="modeSelection('training')">1 vs 1 local</button>
+        <button onclick="modeSelection('cpu')">CPU</button>
     </div>
+
     <div id="game_div" hidden="true">
         <span id="lplayer">X</span> <span id="lscore">0</span> VS 
         <span id="rplayer">Y</span> <span id="rscore">0</span>
@@ -43,4 +42,3 @@
     <script src="./script/games.js"></script>
 </body>
 </html>
-

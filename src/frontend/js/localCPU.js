@@ -67,10 +67,10 @@ function randomInRange(a, b) {
 
 /////////////////////////// Game engine ///////////////////////////
 
-function localGame() {
+function localGameCPU() {
     document.getElementById("settings").hidden = true;
     document.getElementById("game_div").hidden = false;
-    init();
+    initCPU();
     document.getElementById("lplayer_name").value = nick[LEFT_PLAYER];
     document.getElementById("lplayer").innerText = nick[LEFT_PLAYER];
     document.getElementById("rplayer").innerText = nick[RIGHT_PLAYER];
@@ -81,15 +81,15 @@ function localGame() {
     raf = requestAnimationFrame(play);
 }
 
-function init() {
-    resetValues();
+function initCPU() {
+    resetValuesCPU();
     playing = true;
     move[LEFT_PLAYER] = move[RIGHT_PLAYER] = score[LEFT_PLAYER] = score[RIGHT_PLAYER] = 0;
     size[LEFT_PLAYER] = size[RIGHT_PLAYER] = PADWIDTH;
     keyStillDown = false;    
 }
 
-function resetValues() {
+function resetValuesCPU() {
     ball_x = field.offsetWidth / 2;
     ball_y = field.offsetHeight / 2;
     ball_dx = randomInRange(3, 4);
@@ -105,7 +105,7 @@ function cpuMove() {
     move[RIGHT_PLAYER] = ball_y > (pad[RIGHT_PLAYER] + size[RIGHT_PLAYER] /2) ? 1 : -1;
 }
 
-function movePaddles() {
+function movePaddlesCPU() {
     cpuMove();
     if (move[LEFT_PLAYER]) {
         pad[LEFT_PLAYER] += move[LEFT_PLAYER] * 2 * speed;
@@ -128,7 +128,7 @@ function movePaddles() {
     rpad.style.top = pad[RIGHT_PLAYER] + 'px';
 }
 
-function moveBall() {
+function moveBallCPU() {
     // Move ball
     ball_x = ball_x + ball_dx * speed;
     ball_y = ball_y +  ball_dy * speed;
@@ -137,14 +137,14 @@ function moveBall() {
         ball_dy = -ball_dy;
     // Check left / right collision
     if (ball_x <= 20)
-        side_collision(LEFT_PLAYER);
+        side_collisionCPU(LEFT_PLAYER);
     else if (ball_x + RADIUS >= field.offsetWidth - 20)
-        side_collision(RIGHT_PLAYER);
+        side_collisionCPU(RIGHT_PLAYER);
     ball_div.style.left = ball_x + 'px'
     ball_div.style.top = ball_y + 'px'
 }
 
-function side_collision(side) {
+function side_collisionCPU(side) {
     // check paddle collision
     if (pad[side] <= ball_y && ball_y <= pad[side] + size[side]) {
         if (size[side] > 10)

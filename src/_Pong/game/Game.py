@@ -129,7 +129,7 @@ class Game:
             last_frame_time = time()
         await self.end_game()
         await wsh.channel_layer.group_send(
-            wsh.room_group_name, {"type": "get.disconnect", "from": "server"}
+            wsh.room_group_name, {"type": "make.disconnect", "from": "server"}
         )
     
     async def end_game(self):
