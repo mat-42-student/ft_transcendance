@@ -1,10 +1,10 @@
 /* Style global pour le corps de la page */
-body {
+main {
     font-family: 'Courier New', Courier, monospace; /* Police rétro pour rappeler Pong */
     background-color: black; /* Fond noir pour un style arcade classique */
     color: white; /* Texte en blanc pour un contraste élevé */
-    /* display: flex;
-    align-items: center; */
+    display: flex;
+    align-items: center;
     justify-content: center;
     height: 100vh; /* Utiliser toute la hauteur de la fenêtre */
     margin: 0; /* Supprimer les marges par défaut */
@@ -56,10 +56,9 @@ body {
 button {
     background-color: white; /* Fond blanc pour rappeler les palettes de Pong */
     color: black; /* Texte noir pour le contraste */
-    border: none; /* Enlever les bordures par défaut */
     width: 200px;
     height: 50px;
-    padding: 5px 5px; /* Espacement interne pour les boutons */
+    padding: 10px 10px; /* Espacement interne pour les boutons */
     font-size: 1em; /* Taille de la police */
     /* cursor: not-allowed; Curseur désactivé par défaut */
     border-radius: 5px; /* Coins légèrement arrondis */

@@ -1,0 +1,19 @@
+body {
+	border: 5px solid red;
+}
+
+main {
+	size: 75%;
+	margin: 1%;
+	border: 5px solid blue;
+}
+
+header{
+	size: 10%;
+	border: 5px solid orange;
+}
+
+footer{
+	size: 10%;
+	border: 5px solid yellow;
+}
