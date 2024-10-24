@@ -1,20 +1,21 @@
 //import { sendGetRequest } from './requestGet.js';
 
 function modeSelection(mode, userid) {
-        console.log("matchmaking");
     if (mode === 'matchmaking') {
         console.log("matchmaking");
+        changeMainHTML("../board.html", "./script/wsgame.js");
         setupWebSocket(userid,'2P');
-      //  sendGetRequest();
     }
     else if (mode === 'tournament')
     {
         console.log('tournament');
         setupWebSocket(userid, '4P')
     }
-    else {
-        // Traitement pour les autres modes si nécessaire
-        alert('Mode sélectionné : ' + mode);
+    else if (mode === '1v1') {
+        changeMainHTML("../board.html", "./script/local1v1.js")
+    }
+    else if (mode === 'cpu') {
+        changeMainHTML("../board.html", "./script/localCPU.js");
     }
 }
 
@@ -88,12 +89,10 @@ function setupWebSocket(userid, game_mode) {
             {
                 // wait dans un salon
             }
-
         }
         else if (data.winner == false)
         {
             alert('you are the looser !');
-
         }
         if (data.disconect == true && data.user == userid)
         {
@@ -104,49 +103,50 @@ function setupWebSocket(userid, game_mode) {
         {
             if (data.nbgame)
             {
-                socket1 = new WebSocket('wss://localhost:3000/api/game/'+ data.nbgame + '/');
-                socket1.onopen = async function(e) {
-                    console.log('[OPEN] Connexion établie socket1');
-                    const info = {
-                        action: 'send_data',
-                        payload: {
-                            userid: userid,
-                            score:  Math.floor(Math.random() * 11),  // * 11 car Math.random() génère un nombre entre 0 (inclus) et 1 (exclus)
-                            salonid: idsalon
-                        }
-                    };
-                    await socket1.send(JSON.stringify(info));
-                };
+                launchSocket(userid, data.nbgame, socket);
+                // socket1 = new WebSocket("wss://" + window.location.hostname + ":3000/game/" + data.nbgame + "/" + userid + "/");
+                // socket1.onopen = async function(e) {
+                //     console.log('[OPEN]Successful Connection to pong container');
+                //     const info = {
+                //         action: 'send_data',
+                //         payload: {
+                //             userid: userid,
+                //             score:  Math.floor(Math.random() * 11),  // * 11 car Math.random() génère un nombre entre 0 (inclus) et 1 (exclus)
+                //             salonid: idsalon
+                //         }
+                //     };
+                //     await socket1.send(JSON.stringify(info));
+                // };
 
-                socket1.onclose = async function(e)
-                {
-                    socket1.send(JSON.stringify({
-                        payload: {
-                            disconect: true
-                        }
-                   }));
-                    console.log('[CLOSE] Connexion fermée socket1');
-                }
+                // socket1.onclose = async function(e)
+                // {
+                //     socket1.send(JSON.stringify({
+                //         payload: {
+                //             disconect: true
+                //         }
+                //    }));
+                //     console.log('[CLOSE] Connexion fermée socket1');
+                // }
 
-                socket1.onmessage = async function(f)
-                {
-                    let data1 = JSON.parse(f.data);
-                    if (data1.endgame == true)
-                    {
-                        socket.send(JSON.stringify({
-                            action: 'send_data',
-                            payload: {
-                                endgame: true,
-                                mode: game_mode,
-                            }
-                        }));
-                    }
-                    console.log('[MESSAGE] Data reçue socket1:', data1);
-                    if (data1.disconect == true)
-                    {
-                        socket1.onclose();
-                    }
-                };
+                // socket1.onmessage = async function(f)
+                // {
+                //     let data1 = JSON.parse(f.data);
+                //     if (data1.endgame == true)
+                //     {
+                //         socket.send(JSON.stringify({
+                //             action: 'send_data',
+                //             payload: {
+                //                 endgame: true,
+                //                 mode: game_mode,
+                //             }
+                //         }));
+                //     }
+                //     console.log('[MESSAGE] Data reçue socket1:', data1);
+                //     if (data1.disconect == true)
+                //     {
+                //         socket1.onclose();
+                //     }
+                // };
             }
         }
 

@@ -1,29 +1,18 @@
-const PADWIDTH = 100;
-const RADIUS = 20;
-const LEFT_PLAYER = 0;
-const RIGHT_PLAYER = 1;
-const SCORE_MAX = 5;
+field = document.getElementById("pong_field");
+lpad = document.getElementById("player1");
+rpad = document.getElementById("player2");
+ball_div = document.getElementById("ball");
 
-let field = document.getElementById("pong_field");
-let lpad = document.getElementById("player1");
-let rpad = document.getElementById("player2");
-let ball_div = document.getElementById("ball");
-
-let playing, raf;
-let side = 0, ball_dx, ball_dy, ball_x = field.offsetWidth / 2, ball_y = field.offsetHeight / 2;
-let winner, speed;
-let pad = [], move = [], score = [], keyStillDown = [], nick = [];
-nick[LEFT_PLAYER] = generateRandomNick();
-nick[RIGHT_PLAYER] = generateRandomNick();
+playing, raf;
+side = 0, ball_dx, ball_dy, ball_x = field.offsetWidth / 2, ball_y = field.offsetHeight / 2;
+winner, speed;
 
 /////////////////////////// On load ///////////////////////////
-document.getElementById("lplayer_name").value = nick[LEFT_PLAYER];
-document.getElementById("rplayer_name").value = nick[RIGHT_PLAYER];
-
-/////////////////////////// Events part ///////////////////////////
-
 field.setAttribute('tabindex', '0'); // Make playground focusable
 field.focus();
+localGame();
+/////////////////////////// Events part ///////////////////////////
+
 field.addEventListener('click', () => {
   field.focus();
 });
@@ -61,53 +50,35 @@ function keyup(event) {
     move[side] = 0;
 }
 
-/////////////////////////// Utils ///////////////////////////
-
-function generateRandomNick() {
-    const adjectives = ["Shadow", "Steady", "Mighty", "Funny", "Hidden", "Normal"];
-    const nouns = ["Ficus", "Pidgin", "Rock", "Pillow", "Curtains", "Hobo"];
-
-    const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-
-    return randomAdj + randomNoun + Math.floor(Math.random() * 1000);
-}
-
-function randomInRange(a, b) {
-    let range = Math.random() < 0.5 ? [-b, -a] : [a, b];
-    return Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
-}
-
 /////////////////////////// Game engine ///////////////////////////
 
 function localGame() {
-    document.getElementById("settings").hidden = true;
-    document.getElementById("game_div").hidden = false;
     init();
-    document.getElementById("lplayer_name").value = nick[LEFT_PLAYER];
-    document.getElementById("rplayer_name").value = nick[RIGHT_PLAYER];
-    document.getElementById("lplayer").innerText = nick[LEFT_PLAYER];
-    document.getElementById("rplayer").innerText = nick[RIGHT_PLAYER];
-    document.getElementById("lscore").innerText = 0;
-    document.getElementById("rscore").innerText = 0;
+    // document.getElementById("lplayer").innerText = nick[LEFT_PLAYER];
+    // document.getElementById("rplayer").innerText = nick[RIGHT_PLAYER];
+    // document.getElementById("lscore").innerText = 0;
+    // document.getElementById("rscore").innerText = 0;
     
     raf = requestAnimationFrame(play);
 }
 
 function init() {
-    resetBall();
+    resetValues();
     playing = true;
-    pad[LEFT_PLAYER] = pad[RIGHT_PLAYER] = field.offsetHeight / 2 ;
     move[LEFT_PLAYER] = move[RIGHT_PLAYER] = score[LEFT_PLAYER] = score[RIGHT_PLAYER] = 0;
     keyStillDown[LEFT_PLAYER] = keyStillDown[RIGHT_PLAYER] = false;    
 }
 
-function resetBall() {
+function resetValues() {
     ball_x = field.offsetWidth / 2;
     ball_y = field.offsetHeight / 2;
     ball_dx = randomInRange(3, 4);
     ball_dy = randomInRange(3, 4);
     speed = 1;
+    size[LEFT_PLAYER] = size[RIGHT_PLAYER] = PADWIDTH;
+    pad[LEFT_PLAYER] = pad[RIGHT_PLAYER] = (field.offsetHeight - PADWIDTH) / 2 ;
+    document.getElementById("player1").style.height = size[LEFT_PLAYER] + 'px';
+    document.getElementById("player2").style.height = size[RIGHT_PLAYER] + 'px';
 }
 
 function movePaddles() {
@@ -116,15 +87,15 @@ function movePaddles() {
         pad[LEFT_PLAYER] += move[LEFT_PLAYER] * 2 * speed;
         if (pad[LEFT_PLAYER] < 0)
             pad[LEFT_PLAYER] = 0;
-        if (pad[LEFT_PLAYER] + PADWIDTH > field.offsetHeight)
-            pad[LEFT_PLAYER] = field.offsetHeight - PADWIDTH;
+        if (pad[LEFT_PLAYER] + size[LEFT_PLAYER] > field.offsetHeight)
+            pad[LEFT_PLAYER] = field.offsetHeight - size[LEFT_PLAYER];
     }
     if (move[RIGHT_PLAYER]) {
         pad[RIGHT_PLAYER] += move[RIGHT_PLAYER] * 2 * speed;
         if (pad[RIGHT_PLAYER] < 0)
             pad[RIGHT_PLAYER] = 0;
-        if (pad[RIGHT_PLAYER] + PADWIDTH > field.offsetHeight)
-            pad[RIGHT_PLAYER] = field.offsetHeight - PADWIDTH;
+        if (pad[RIGHT_PLAYER] + size[RIGHT_PLAYER] > field.offsetHeight)
+            pad[RIGHT_PLAYER] = field.offsetHeight - size[RIGHT_PLAYER];
     }
     lpad.style.top = pad[LEFT_PLAYER] + 'px';
     rpad.style.top = pad[RIGHT_PLAYER] + 'px';
@@ -138,9 +109,9 @@ function moveBall() {
     if (ball_y <= 0 || ball_y + RADIUS >= field.offsetHeight)
         ball_dy = -ball_dy;
     // Check left / right collision
-    if (ball_x <= 20)
+    if (ball_x <= 0)
         side_collision(LEFT_PLAYER);
-    else if (ball_x + RADIUS >= field.offsetWidth - 20)
+    else if (ball_x + RADIUS >= field.offsetWidth)
         side_collision(RIGHT_PLAYER);
     ball_div.style.left = ball_x + 'px'
     ball_div.style.top = ball_y + 'px'
@@ -148,7 +119,11 @@ function moveBall() {
 
 function side_collision(side) {
     // check paddle collision
-    if (pad[side] <= ball_y && ball_y <= pad[side] + PADWIDTH) {
+    if (pad[side] <= ball_y && ball_y <= pad[side] + size[side]) {
+        if (size[side] > 10)
+            size[side] -= 10;
+        document.getElementById("player1").style.height = size[LEFT_PLAYER] + 'px';
+        document.getElementById("player2").style.height = size[RIGHT_PLAYER] + 'px';
         ball_dx = -ball_dx;
         speed += 0.3;
         return;
@@ -164,18 +139,16 @@ function scoreup(side) {
         endgame();
         return;
     }
-    resetBall();
+    resetValues();
 }
 
 function endgame() {
-    winner = score[LEFT_PLAYER] >= 10 ? LEFT_PLAYER : RIGHT_PLAYER;
-    alert(`GAME OVER\nLe gagnant est ${nick[winner]}!`);
+    winner = score[LEFT_PLAYER] >= SCORE_MAX ? "Player 1" : "Player 2";
+    alert(`GAME OVER\nLe gagnant est ${winner}!`);
     cancelAnimationFrame(raf);
-    document.getElementById("lscore").innerText = document.getElementById("rscore").innerText = 0;
-    document.getElementById("game_div").hidden = true;
-    document.getElementById("settings").hidden = false;
     init();
     playing = false;
+    changeMainHTML("./matchmaking.html", null);
 }
 
 function play() {

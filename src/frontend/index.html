@@ -10,35 +10,24 @@
     <title>Pong me till dawn</title>
 </head>
 <body>
-    <h1>Sélectionnez un Mode de Jeu</h1>
-    <div id="settings">
-        <label for="player_id_input">Nom du joueur</label>
-        <br>
-        <input type="text" size="16" id="player_id_input">
-        <button onclick="sendPostRequest()">Create User</button>
-        <br>
-        <button onclick="modeSelection('matchmaking', 13)">Matchmaking 1 vs 1</button>
-        <button onclick="modeSelection('tournament', 19)">Tournoi</button>
-        <br>
-        <button onclick="modeSelection('training')">1 vs 1 local</button>
-        <button onclick="modeSelection('cpu')">CPU</button>
-    </div>
-
-    <div id="game_div" hidden="true">
-        <span id="lplayer">X</span> <span id="lscore">0</span> VS 
-        <span id="rplayer">Y</span> <span id="rscore">0</span>
-        <div id="pong_field">
-            <!-- <img id="player1" src="pad.png" class="paddle">
-            <img id="player2" src="pad.png" class="paddle"> -->
-            <img id="ball" src="./ressources/ball.png">
-            <div id="player1" class="paddle"></div>
-            <div id="player2" class="paddle"></div>
-            <!-- <div id="ball"></div> -->
+    <main>
+        <div id="settings">
+        <h1>Sélectionnez un Mode de Jeu</h1>
+            <label for="player_id_input">Nom du joueur</label>
+            <br>
+            <input type="text" size="16" id="player_id_input">
+            <button onclick="sendPostRequest()">Create User</button>
+            <br>
+            <button onclick="modeSelection('matchmaking', 13)">Matchmaking 1 vs 1</button>
+            <button onclick="modeSelection('tournament', 19)">Tournoi</button>
+            <br>
+            <button onclick="modeSelection('1v1')">1 vs 1 local</button>
+            <button onclick="modeSelection('cpu')">CPU</button>
         </div>
-    </div>
-    <script src="./js/wsgame.js"></script>
+    </main>
+    <script src="./script/constsAndFuncts.js"></script>
+    <script src="./script/games.js"></script>
     <script src="./script/create_user.js"></script>
     <script type="module" src="./script/requestGet.js"></script>
-    <script src="./script/games.js"></script>
 </body>
 </html>

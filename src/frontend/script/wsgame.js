@@ -1,15 +1,10 @@
-const PADWIDTH = 100;
-const RADIUS = 20;
-const LEFT_PLAYER = 0;
-const RIGHT_PLAYER = 1;
-
 let field = document.getElementById("pong_field");
 let game_id, player_name;
 let side = 0;
 let playing = false;
 let KeyStillDown = false;
 let key;
-let socket;
+let socket, matchmakingSocket;
 let raf;
 let pad = [], move = [], ball = [], size = [];
 move[LEFT_PLAYER] = move[RIGHT_PLAYER] = 0;
@@ -24,40 +19,23 @@ let ball_div = document.getElementById("ball");
 
 document.getElementById("player_id_input").value = generateRandomNick();
 
-/////////////////////////// Utils part ///////////////////////////
-
-function generateRandomNick() {
-    const adjectives = ["Shadow", "Steady", "Mighty", "Funny", "Hidden", "Normal"];
-    const nouns = ["Ficus", "Pidgin", "Rock", "Spring", "Curtains", "Hobo"];
-
-    const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-
-    return randomAdj + randomNoun + Math.floor(Math.random() * 1000);
-}
-
-function changeDisplay() {
-    document.getElementById("settings").hidden = !document.getElementById("settings").hidden;
-    document.getElementById("game_div").hidden = !document.getElementById("game_div").hidden;
-}
 
 /////////////////////////// Socket part ///////////////////////////
 
-function launchSocket() {
+function launchSocket(player_name, game_id, socket) {
     // document.getElementById("settings").hidden = true;
     // document.getElementById("game_div").hidden = false;
-    changeDisplay();
-    player_name = document.getElementById("player_id_input").value;
-    game_id = document.getElementById("game_id_input").value;
+    changeMainHTML("./board.html", null);
+    matchmakingSocket = socket;
     console.log("Joining wss://" + window.location.hostname + ":3000/game/" + game_id + "/" + player_name + "/")
     socket = new WebSocket("wss://" + window.location.hostname + ":3000/game/" + game_id + "/" + player_name + "/");
     socket.onopen = onOpen;
     socket.onmessage = onMessage;
     socket.onerror = onError;
+    socket.onclose = onClose;
 }
 
 function onOpen(e) {
-    console.log("SELF : Connexion WebSocket établie");
     socket.send(
         JSON.stringify(
             {
@@ -66,6 +44,17 @@ function onOpen(e) {
             }
         )
     );
+}
+
+function onClose() {
+    matchmakingSocket.send(JSON.stringify({
+        action: 'send_data',
+        payload: {
+            endgame: true,
+            mode: game_mode,
+        }
+    }));
+    changeMainHTML("./matchmaking.html", null)
 }
 
 function onMessage(e) {
@@ -100,15 +89,14 @@ function onMessage(e) {
         document.getElementById("lplayer").innerText = data.lplayer
         document.getElementById("rplayer").innerText = data.rplayer
         playing = true;
-        console.log('PLAY !')
         raf = requestAnimationFrame(play);
         return;
     }
     if (data.action == "disconnect") {
         socket.close();
         cancelAnimationFrame(raf);
-        changeDisplay();
-        }
+        // changeMainHTML();
+    }
 };
 
 function onError(e) {
