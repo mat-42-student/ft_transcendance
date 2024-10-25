@@ -7,27 +7,22 @@
 	<link rel="icon" type="image/png" href="./ressources/pong_favicon.png">
     <link rel="stylesheet" href="./css/games.css"> <!-- Optionnel si tu veux ajouter du style -->
     <link rel="stylesheet" href="./css/pong.css">
+    <link rel="stylesheet" href="./css/menu.css">
     <link rel="stylesheet" href="./css/global.css">
     <title>Pong me till dawn</title>
+    <script src="./script/constsAndFuncts.js"></script>
+    <script>inject_code_into_markup('menu.html', 'nav', null);</script>
 </head>
 <body>
+    <header>
+        <nav></nav>
+    </header>
     <main>
-        <div id="settings">
-        <h1>Sélectionnez un Mode de Jeu</h1>
-            <label for="player_id_input">Nom du joueur</label>
-            <br>
-            <input type="text" size="16" id="player_id_input">
-            <button onclick="sendPostRequest()">Create User</button>
-            <br>
-            <button onclick="modeSelection('matchmaking', 13)">Matchmaking 1 vs 1</button>
-            <button onclick="modeSelection('tournament', 19)">Tournoi</button>
-            <br>
-            <button onclick="modeSelection('1v1')">1 vs 1 local</button>
-            <button onclick="modeSelection('cpu')">CPU</button>
-        </div>
+        RIEN !
     </main>
-    <script src="./script/constsAndFuncts.js"></script>
-    <script src="./script/games.js"></script>
+    <footer>
+    </footer>
+    <script src="./script/matchmaking.js"></script>
     <script src="./script/create_user.js"></script>
     <script type="module" src="./script/requestGet.js"></script>
 </body>

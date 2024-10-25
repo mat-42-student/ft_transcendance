@@ -1,16 +1,15 @@
- * {
-    box-sizing: border-box;
-}
-
-
 #pong_field {
     position: absolute;
     width: 1000px;
     height: 600px;
-    background-image: linear-gradient(to right, black, grey, black);
-    /* background: linear-gradient(217deg, rgba(255,0,0,.3), rgba(255,0,0,0) 70.71%),
+    background: linear-gradient(217deg, rgba(255,0,0,.3), rgba(255,0,0,0) 70.71%),
     linear-gradient(127deg, rgba(0,255,0,.3), rgba(0,255,0,0) 70.71%),
-    linear-gradient(336deg, rgba(0,0,255,.3), rgba(0,0,255,0) 70.71%); */
+    linear-gradient(336deg, rgba(0,0,255,.3), rgba(0,0,255,0) 70.71%);
+    border: 0px;
+    outline: none;
+}
+
+#pong_field:focus {
     border: 0px;
 }
 

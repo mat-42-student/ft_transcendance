@@ -3,10 +3,10 @@ main {
     font-family: 'Courier New', Courier, monospace; /* Police rétro pour rappeler Pong */
     background-color: black; /* Fond noir pour un style arcade classique */
     color: white; /* Texte en blanc pour un contraste élevé */
-    display: flex;
+    /* display: flex; */
     align-items: center;
     justify-content: center;
-    height: 100vh; /* Utiliser toute la hauteur de la fenêtre */
+    height: 75vh; /* Utiliser toute la hauteur de la fenêtre */
     margin: 0; /* Supprimer les marges par défaut */
     text-align: center; /* Centrer le texte */
 }

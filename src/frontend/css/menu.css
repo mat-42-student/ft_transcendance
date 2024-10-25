@@ -1,0 +1,22 @@
+  ul.menu li {
+    padding: 15px 20px;          /* Espacement interne */
+    background-color: #444;      /* Couleur de fond sombre pour chaque item */
+    color: #eee;                 /* Texte clair */
+    text-align: center;          /* Centrer le texte */
+    border-radius: 5px;          /* Coins arrondis */
+    transition: background-color 0.3s ease; /* Transition pour hover */
+    display: inline;
+}
+  
+  ul.menu li:hover {
+    background-color: #555;      /* Couleur plus claire au survol */
+}
+  
+  /* Responsive : affichage horizontal en grand écran */
+@media (min-width: 768px) {
+    ul.menu {
+        display: flex;
+        flex-direction: row;       /* Menu horizontal */
+        justify-content: center;   /* Centrage du menu */
+    }
+}

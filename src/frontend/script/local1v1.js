@@ -148,7 +148,7 @@ function endgame() {
     cancelAnimationFrame(raf);
     init();
     playing = false;
-    changeMainHTML("./matchmaking.html", null);
+    inject_code_into_markup("./matchmaking.html", "main", null);
 }
 
 function play() {

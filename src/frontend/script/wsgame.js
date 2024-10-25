@@ -1,32 +1,19 @@
-let field = document.getElementById("pong_field");
-let game_id, player_name;
-let side = 0;
-let playing = false;
-let KeyStillDown = false;
-let key;
-let socket, matchmakingSocket;
-let raf;
-let pad = [], move = [], ball = [], size = [];
+/////////////////////////// onLoad ///////////////////////////
+let matchmakingSocket, socket;
+let ball = [];
+field = document.getElementById("pong_field");
+playing = false;
+KeyStillDown = false;
 move[LEFT_PLAYER] = move[RIGHT_PLAYER] = 0;
 size[LEFT_PLAYER] = size[RIGHT_PLAYER] = PADWIDTH;
-let ball_dx = 0;
-let ball_dy = 0;
-let lpad = document.getElementById("player1");
-let rpad = document.getElementById("player2");
-let ball_div = document.getElementById("ball");
-
-/////////////////////////// onLoad ///////////////////////////
-
-document.getElementById("player_id_input").value = generateRandomNick();
-
+lpad = document.getElementById("player1");
+rpad = document.getElementById("player2");
+ball_div = document.getElementById("ball");
 
 /////////////////////////// Socket part ///////////////////////////
 
-function launchSocket(player_name, game_id, socket) {
-    // document.getElementById("settings").hidden = true;
-    // document.getElementById("game_div").hidden = false;
-    changeMainHTML("./board.html", null);
-    matchmakingSocket = socket;
+function launchSocket(player_name, game_id, mmsocket) {
+    matchmakingSocket = mmsocket;
     console.log("Joining wss://" + window.location.hostname + ":3000/game/" + game_id + "/" + player_name + "/")
     socket = new WebSocket("wss://" + window.location.hostname + ":3000/game/" + game_id + "/" + player_name + "/");
     socket.onopen = onOpen;
@@ -54,7 +41,7 @@ function onClose() {
             mode: game_mode,
         }
     }));
-    changeMainHTML("./matchmaking.html", null)
+    inject_code_into_markup("./matchmaking.html", "main", null)
 }
 
 function onMessage(e) {
@@ -95,7 +82,6 @@ function onMessage(e) {
     if (data.action == "disconnect") {
         socket.close();
         cancelAnimationFrame(raf);
-        // changeMainHTML();
     }
 };
 
@@ -103,7 +89,7 @@ function onError(e) {
     console.error(e.message);
 };
 
-///////////////////////////  Events part ///////////////////////////
+/////////////////////////// Events part ///////////////////////////
 
 window.addEventListener('beforeunload', function(event) {
     if (socket) {
@@ -151,38 +137,11 @@ field.addEventListener('click', () => {
 /////////////////////////// Game display part ///////////////////////////
 
 function movePaddles() {
-    // pad[LEFT_PLAYER] += move[LEFT_PLAYER] * 2;
-    // if (pad[LEFT_PLAYER] < 0)
-    //     pad[LEFT_PLAYER] = 0;
-    // if (pad[LEFT_PLAYER] + PADWIDTH > field.offsetHeight)
-    //     pad[LEFT_PLAYER] = field.offsetHeight - PADWIDTH;
-    // pad[RIGHT_PLAYER] += move[RIGHT_PLAYER] * 2;
-    // if (pad[RIGHT_PLAYER] < 0)
-    //     pad[RIGHT_PLAYER] = 0;
-    // if (pad[RIGHT_PLAYER] + PADWIDTH > field.offsetHeight)
-    //     pad[RIGHT_PLAYER] = field.offsetHeight - PADWIDTH;
     lpad.style.top = pad[LEFT_PLAYER] + 'px';
     rpad.style.top = pad[RIGHT_PLAYER] + 'px';
 }
 
-// function side_collision(side) {
-//     // check paddle collision
-//     if (pad[side] <= ball[1] && ball[1] <= pad[side] + PADWIDTH)
-//         ball_dx = -ball_dx;
-// }
-
 function moveBall() {
-    // // Move
-    // ball[0] += ball_dx
-    // ball[1] += ball_dy
-    // // Check top / bottom collision
-    // if (ball[1] <= 0 || ball[1] + RADIUS >= field.height)
-    //     ball_dy = -ball_dy;
-    // // Check paddle left / right collision
-    // if (ball[0] <= 20)
-    //     side_collision(LEFT_PLAYER);
-    // if (ball[0] + RADIUS >= field.width - 20)
-    //     side_collision(RIGHT_PLAYER);
     ball_div.style.left = ball[0] + 'px'
     ball_div.style.top = ball[1] + 'px'
 }

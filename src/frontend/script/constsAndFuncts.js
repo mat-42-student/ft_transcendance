@@ -3,7 +3,7 @@ const RADIUS = 20;
 const LEFT_PLAYER = 0;
 const RIGHT_PLAYER = 1;
 const SCORE_MAX = 10;
-let field, lpad, rpad, ball_div , playing, raf, side, difficulty;
+let field, lpad, rpad, ball_div, playing, raf, side, difficulty;
 let ball_dx, ball_dy, ball_x, ball_y, winner, speed, keyStillCPUDown;
 let pad = [], move = [], score = [], keyStillDown = [], nick = [], size = [];
 
@@ -24,11 +24,11 @@ function randomInRange(a, b) {
     return Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
 }
 
-async function changeMainHTML(htmlfile, script) {
+async function inject_code_into_markup(htmlfile, markup, script) {
     try {
         const response = await fetch(htmlfile);
         const content = await response.text();
-        document.querySelector("main").innerHTML = content;
+        document.querySelector(markup).innerHTML = content;
     } catch (error) {
         console.error("Erreur lors du chargement du fichier :", error);
     }
