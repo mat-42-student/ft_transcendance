@@ -19,7 +19,7 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
 
     async def connect(self):
         self.game_id = self.scope["url_route"]["kwargs"]["game_id"]
-        self.player_id = self.scope["url_route"]["kwargs"]["player_id"]
+        # self.player_id = 
         self.room_group_name = f"game_{self.game_id}"
 
         # Join room group
@@ -33,7 +33,7 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def handle_message(self, data):
-        # print(f"handle:{RED}{data}{RESET}")
+        print(f"handle:{RED}{data}{RESET}")
         data = json.loads(data["message"])
 
         if data["action"] == "move":
@@ -47,6 +47,8 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
 
     async def wannaplay(self, player):
         self.nb_players += 1
+        if self.player_id is None:
+            self.player_id = player
         print(f"{self.player_id} wannaplay on channel {self.room_group_name}. Currently {self.nb_players} players in lobby")
         if self.nb_players != 2 or self.in_game:
             return
@@ -98,7 +100,7 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         # print(f"{RED}Connexion WebSocket fermée par {self.player_id}{RESET}")
 
     async def make_disconnect(self, event):
-        # print(f"{GREEN}Ici {self.player_id}, disco:{event}{RESET}")
+        print(f"{GREEN}Ici {self.player_id}, disco:{event}{RESET}")
         user = event["from"]
         if self.master and self.game:
             self.endgame_by_disconnection(user)

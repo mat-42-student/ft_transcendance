@@ -14,35 +14,38 @@ ball_div = document.getElementById("ball");
 
 function launchSocket(player_name, game_id, mmsocket) {
     matchmakingSocket = mmsocket;
-    console.log("Joining wss://" + window.location.hostname + ":3000/game/" + game_id + "/" + player_name + "/")
-    socket = new WebSocket("wss://" + window.location.hostname + ":3000/game/" + game_id + "/" + player_name + "/");
-    socket.onopen = onOpen;
+    console.log("Joining wss://" + window.location.hostname + ":3000/game/" + game_id + "/")
+    socket = new WebSocket("wss://" + window.location.hostname + ":3000/game/" + game_id + "/");
     socket.onmessage = onMessage;
     socket.onerror = onError;
-    socket.onclose = onClose;
-}
 
-function onOpen(e) {
-    socket.send(
-        JSON.stringify(
-            {
-                'from': player_name,
-                'action' :"wannaplay!",
+    socket.onopen = function(e) {
+        socket.send(
+            JSON.stringify(
+                {
+                    'from': player_name,
+                    'action' :"wannaplay!",
+                }
+            )
+        );
+    }
+    
+    socket.onclose = async function(e) {
+        console.log('ferme la');
+        await matchmakingSocket.send(JSON.stringify({
+            action: 'send_data',
+            payload: {
+                endgame: true,
+                mode: game_mode,
             }
-        )
-    );
+        }));
+        inject_code_into_markup("./matchmaking.html", "main", null)
+    }
 }
 
-function onClose() {
-    matchmakingSocket.send(JSON.stringify({
-        action: 'send_data',
-        payload: {
-            endgame: true,
-            mode: game_mode,
-        }
-    }));
-    inject_code_into_markup("./matchmaking.html", "main", null)
-}
+
+
+
 
 function onMessage(e) {
     data = JSON.parse(e.data);

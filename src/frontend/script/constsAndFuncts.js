@@ -9,15 +9,15 @@ let pad = [], move = [], score = [], keyStillDown = [], nick = [], size = [];
 
 /////////////////////////// Utils part ///////////////////////////
 
-function generateRandomNick() {
-    const adjectives = ["Shadow", "Steady", "Mighty", "Funny", "Hidden", "Normal"];
-    const nouns = ["Ficus", "Pidgin", "Rock", "Spring", "Curtains", "Hobo"];
+// function generateRandomNick() {
+//     const adjectives = ["Shadow", "Steady", "Mighty", "Funny", "Hidden", "Normal"];
+//     const nouns = ["Ficus", "Pidgin", "Rock", "Spring", "Curtains", "Hobo"];
 
-    const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+//     const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
+//     const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
 
-    return randomAdj + randomNoun + Math.floor(Math.random() * 1000);
-}
+//     return randomAdj + randomNoun + Math.floor(Math.random() * 1000);
+// }
 
 function randomInRange(a, b) {
     let range = Math.random() < 0.5 ? [-b, -a] : [a, b];
@@ -37,7 +37,10 @@ async function inject_code_into_markup(htmlfile, markup, script) {
 }
 
 function addScript(file) {
+    if (document.getElementById(file))
+        return ;
     const newScript = document.createElement('script');
     newScript.src = file;
+    newScript.id = file;
     document.body.appendChild(newScript);
 }

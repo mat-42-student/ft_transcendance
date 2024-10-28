@@ -1,7 +1,7 @@
 import json
 import redis.asyncio as aioredis
-from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.db import database_sync_to_async
+from channels.generic.websocket import AsyncWebsocketConsumer #type: ignore
+from channels.db import database_sync_to_async #type: ignore
 import django
 
 django.setup()

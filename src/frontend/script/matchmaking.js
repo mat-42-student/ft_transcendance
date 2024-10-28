@@ -1,15 +1,15 @@
 //import { sendGetRequest } from './requestGet.js';
 
-function modeSelection(mode, userid) {
+function modeSelection(mode) {
     if (mode === 'matchmaking') {
         console.log("matchmaking");
         inject_code_into_markup("../board.html", "main", "./script/wsgame.js");
-        setupWebSocket(userid,'2P');
+        setupWebSocket('2P');
     }
     else if (mode === 'tournament')
     {
         console.log('tournament');
-        setupWebSocket(userid, '4P')
+        setupWebSocket('4P')
     }
     else if (mode === '1v1') {
         inject_code_into_markup("../board.html", "main", "./script/local1v1.js")
@@ -56,7 +56,9 @@ function sleep(ms) {
 
 // script.js
 
-function setupWebSocket(userid, game_mode) {
+function setupWebSocket(game_mode) {
+    const userid = document.getElementById("idclient").value;
+    console.log(userid);
     const socket = new WebSocket('wss://localhost:3000/api/soloq/1vs1/');
     let idsalon = null
 
