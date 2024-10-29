@@ -3,7 +3,11 @@ from asyncio import create_task
 from .Game import Game
 from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT
 from channels.generic.websocket import AsyncJsonWebsocketConsumer # type: ignore
+from channels.db import database_sync_to_async #type: ignore
 
+import django
+django.setup()
+from .models import User, Salon, Mode
 
 class PongConsumer(AsyncJsonWebsocketConsumer):
 
@@ -33,7 +37,7 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def handle_message(self, data):
-        print(f"handle:{RED}{data}{RESET}")
+        # print(f"handle:{RED}{data}{RESET}")
         data = json.loads(data["message"])
 
         if data["action"] == "move":
@@ -45,10 +49,22 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         if data["action"] == "wannaplay!":
             return await self.wannaplay(data["from"])
 
+    @database_sync_to_async
+    def get_and_check_info_from_db(self, player):
+        # check si le player est vraiment dans le salon et si c'est le bon joueur par rappor a son JWT
+        # et recuperer le mode du salon
+        print(f"{RED}getAndCheck{RESET}")
+        print(f"{GREEN}game_id: {self.game_id}{RESET}")
+        self.salon = Salon.objects.get(id=self.game_id)
+        # self.mode = await Mode.objects.aget(salon=self.salon)
+        print(f"{YELLOW}{self.salon}{RESET}")
+        print(self.mode)
+
     async def wannaplay(self, player):
         self.nb_players += 1
         if self.player_id is None:
             self.player_id = player
+        await self.get_and_check_info_from_db(player)
         print(f"{self.player_id} wannaplay on channel {self.room_group_name}. Currently {self.nb_players} players in lobby")
         if self.nb_players != 2 or self.in_game:
             return

@@ -27,3 +27,5 @@ class Mode(models.Model):
         TOURNAMENT = '4P', 'tournament'
     mode = models.CharField(choices=Mode)
     salon = models.ManyToManyField("Salon", blank=True)
+
+

@@ -19,3 +19,16 @@ class Salon(models.Model):
     player = models.ManyToManyField("User", blank=True)
     score1 = models.IntegerField(blank=True, null=True)
     score2 = models.IntegerField(blank=True, null=True)
+
+class Mode(models.Model):
+    class Mode(models.TextChoices):
+        soloq = '2P', 'soloq'
+        TOURNAMENT = '4P', 'tournament'
+    mode = models.CharField(choices=Mode)
+    salon = models.ManyToManyField("Salon", blank=True)
+
+
+class Mescouilles(models.Model):
+    player = models.ManyToManyField("User", blank=True)
+    score1 = models.IntegerField(blank=True, null=True)
+    score2 = models.IntegerField(blank=True, null=True)
