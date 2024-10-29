@@ -10,6 +10,18 @@
     <link rel="stylesheet" href="./css/menu.css">
     <link rel="stylesheet" href="./css/global.css">
     <title>Pong me till dawn</title>
+
+	<script type="importmap">
+		{"imports": {
+            "three": "https://unpkg.com/three/build/three.module.js"
+        }}
+	</script>
+    <script type="module">
+        import PongEngine from './script/game3d/PongEngine.js'
+
+        customElements.define("pong-engine", PongEngine);
+    </script>
+
     <script src="./script/constsAndFuncts.js"></script>
     <script>inject_code_into_markup('menu.html', 'nav', null);</script>
 </head>
