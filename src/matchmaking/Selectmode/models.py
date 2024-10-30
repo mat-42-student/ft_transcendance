@@ -15,7 +15,6 @@ class User(models.Model):
     def __str__(self):
         return self.name
 
-
 class Salon(models.Model):
     player = models.ManyToManyField("User", blank=True)
     score1 = models.IntegerField(blank=True, null=True)
@@ -27,5 +26,3 @@ class Mode(models.Model):
         TOURNAMENT = '4P', 'tournament'
     mode = models.CharField(choices=Mode)
     salon = models.ManyToManyField("Salon", blank=True)
-
-
