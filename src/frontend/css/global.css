@@ -1,11 +1,13 @@
 body {
-	border: 5px solid red;
+	margin: 0;
+	color: white;
 }
+
 
 main {
 	/* size: 40%; */
 	margin: 1%;
-	border: 5px solid blue;
+	/* border: 5px solid blue; */
 }
 
 header{
@@ -15,5 +17,5 @@ header{
 
 footer{
 	size: 10%;
-	border: 5px solid yellow;
+	/* border: 5px solid yellow; */
 }

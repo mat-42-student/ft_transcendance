@@ -1,22 +1,45 @@
-  ul.menu li {
-    padding: 15px 20px;          /* Espacement interne */
-    background-color: #444;      /* Couleur de fond sombre pour chaque item */
+div.menu {
+    display: flex;
+    flex-direction: row;       /* Menu horizontal */
+    justify-content: center;   /* Centrage du menu */
+    flex-wrap: nowrap;
+    user-select: none;
+
+    font-family: sans-serif;
+}
+
+
+div.menu >* {
+    width: 100px;
+    height: 30px;
+    padding: 0;
+    margin: 10px;
+    display: inline;
+
+    border: 3px solid #292d4100;
+    background: #292d4160;     /* Couleur de fond sombre pour chaque item */
     color: #eee;                 /* Texte clair */
-    text-align: center;          /* Centrer le texte */
     border-radius: 5px;          /* Coins arrondis */
     transition: background-color 0.3s ease; /* Transition pour hover */
-    display: inline;
+
+    text-align: center;
+    vertical-align: auto;
+    box-shadow: 0 0 5px 1px #292d4160;
 }
-  
-  ul.menu li:hover {
-    background-color: #555;      /* Couleur plus claire au survol */
+
+div.menu >*:hover {
+    /* box-shadow: 0 0 5px 1px #a5b4ff; */
+    background: #292d41;
+    border-color: #405be0;
 }
-  
-  /* Responsive : affichage horizontal en grand écran */
-@media (min-width: 768px) {
-    ul.menu {
-        display: flex;
-        flex-direction: row;       /* Menu horizontal */
-        justify-content: center;   /* Centrage du menu */
-    }
+
+div.menu >*:active {
+    box-shadow: 0 0 10px 0px #ffffff;
+    background: black;
+    border-color: #ffffff;
+}
+
+div.menu a {
+    text-decoration: none;  /* Disable link underline */
+    line-height: 30px;   /* Needs to match div.menu >* height to center text */
 }
