@@ -19,9 +19,6 @@ export default class Engine extends HTMLElement {
 	/** @type {HTMLDivElement} */
 	debugOverlay;
 
-	/** @type {StateBase} */
-	state;
-
 
 	/**
 	 * @param {THREE.WebGLRendererParameters} rendererParameters
@@ -42,7 +39,6 @@ export default class Engine extends HTMLElement {
 
 		this.rendererParameters = structuredClone(rendererParameters);
 		this.rendererParameters["canvas"] = this.canvas;
-
 	}
 
 
@@ -57,6 +53,10 @@ export default class Engine extends HTMLElement {
 
 		this.resizeCallback = this.#onResize.bind(this);
 		this.#frameCallback = this.#onFrame.bind(this);
+
+		if (this.state === undefined) {
+			this.state = new StateBase();
+		}
 	}
 
 
@@ -108,6 +108,29 @@ export default class Engine extends HTMLElement {
 	}
 
 
+	get state() {
+		return this.#state;
+	}
+
+	set state(newState) {
+		if (newState === this.#state) {
+			console.warn("Trying to replace the State with the same object. Ignoring request.");
+			return;
+		}
+		else if (!(newState instanceof StateBase)) {
+			throw Error("Bad argument");
+		}
+
+		if (this.#state !== undefined) {
+			this.#state.exitState(this);
+		}
+		this.debugOverlay.innerHTML = '';
+		this.#state = newState;
+		newState.enterState(this);
+		console.log('Game: State replaced:', newState);
+	}
+
+
 	////////////////////////////////////////////////////////////////////////////
 	// MARK: #Private
 	////////////////////////////////////////////////////////////////////////////
@@ -124,6 +147,9 @@ export default class Engine extends HTMLElement {
 
 	/** @type {any} */
 	#frameCallback;
+
+	/** @type {StateBase} */
+	#state;
 
 
 	#onResize() {

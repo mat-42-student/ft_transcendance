@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import Engine from "../Engine.js";
 
 
@@ -7,19 +8,17 @@ export default class StateBase {
 
 	constructor() {}
 
-	
+
 	/** @param {Engine} engine */
-	enterState(engine) {}
-
-
-	/** 
-	 * @param {Engine} engine
-	 * @param {*} newStateType 
-	 * @returns {StateBase | null}
-	 */
-	exitState(engine, newStateType) {
-		// Return null to let the engine create the new state,
-		// or create it yourself and return it.
-		return null;
+	enterState(engine) {
+		engine.scene3.background = new THREE.Color(1,0,1);
+		
+		const p = document.createElement("div");
+		p.innerText = 'Warning: State is missing!';
+		engine.debugOverlay.appendChild(p);
 	}
+
+
+	/** @param {Engine} engine */
+	exitState(engine) {}
 }

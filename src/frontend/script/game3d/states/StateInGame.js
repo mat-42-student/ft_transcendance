@@ -21,20 +21,13 @@ export default class StateInGame extends StateBase {
 
 	/** @param {Engine} engine */
 	enterState(engine) {
-		super.enterState(engine);
 
 		//TODO
 	}
 
 
-	/** 
-	 * @param {Engine} engine
-	 * @param {*} newStateType 
-	 * @returns {StateBase | null}
-	 */
-	exitState(engine, newStateType) {
-		super.exitState(engine, newStateType);
+	/** @param {Engine} engine */
+	exitState(engine) {
 		//TODO
-		return null;
 	}
 }
