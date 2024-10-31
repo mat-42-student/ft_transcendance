@@ -1,8 +1,6 @@
 /* Style global pour le corps de la page */
 main {
-    font-family: 'Courier New', Courier, monospace; /* Police rétro pour rappeler Pong */
-    background-color: black; /* Fond noir pour un style arcade classique */
-    color: white; /* Texte en blanc pour un contraste élevé */
+	font-family: 'Courier New', Courier, monospace; /* Police rétro pour rappeler Pong */
     /* display: flex; */
     align-items: center;
     justify-content: center;

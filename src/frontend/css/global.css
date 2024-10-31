@@ -1,16 +1,13 @@
 body {
 	margin: 0;
-}
-
-* {
 	color: white;
 }
+
 
 main {
 	/* size: 40%; */
 	margin: 1%;
-	border: 5px solid blue;
-	opacity: 25%;
+	/* border: 5px solid blue; */
 }
 
 header{
@@ -20,5 +17,5 @@ header{
 
 footer{
 	size: 10%;
-	border: 5px solid yellow;
+	/* border: 5px solid yellow; */
 }

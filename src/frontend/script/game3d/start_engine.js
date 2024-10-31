@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import Engine from "./Engine.js";
 
+// Make it a Web Component
+customElements.define("general-purpose-engine", Engine);
+
 const engine = new Engine({
 	antialias: true,
 });

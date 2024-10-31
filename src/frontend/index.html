@@ -18,13 +18,7 @@
         }}
 	</script>
 
-    <script type="module">
-        import Engine from './script/game3d/Engine.js'
-        customElements.define("general-purpose-engine", Engine);
-    </script>
-
     <script src="./script/constsAndFuncts.js"></script>
-    <script>inject_code_into_markup('menu.html', 'nav', null);</script>
 </head>
 <body>
     <header>
@@ -39,6 +33,7 @@
     <script src="./script/matchmaking.js"></script>
     <script src="./script/create_user.js"></script>
     <script type="module" src="./script/requestGet.js"></script>
+    <script type="module" src="./script/router.js"></script>
     <script type="module" src="./script/game3d/start_engine.js"></script>
 </body>
 </html>
