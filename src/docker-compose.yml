@@ -38,7 +38,7 @@ services:
     container_name: redis
     image: redis
     expose:
-      - 6379
+      - "6379"
     networks:
       - redis-network
     
@@ -81,7 +81,7 @@ services:
       pong:
         condition: service_started
     expose:
-      - "8000:8000"
+      - "8000"
     networks:
       - nginx-network
       - db-network

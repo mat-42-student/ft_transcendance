@@ -57,6 +57,7 @@ function sleep(ms) {
 // script.js
 
 function setupWebSocket(game_mode) {
+    sendPostRequest();
     const userid = document.getElementById("idclient").value;
     console.log(userid);
     const socket = new WebSocket('wss://localhost:3000/api/soloq/1vs1/');
@@ -106,7 +107,7 @@ function setupWebSocket(game_mode) {
             if (data.nbgame)
             {
                 console.log("Contacting pong container");
-                launchSocket(userid, data.nbgame, socket);
+                launchSocket(userid, idsalon, socket);
                 // socket1 = new WebSocket("wss://" + window.location.hostname + ":3000/game/" + data.nbgame + "/" + userid + "/");
                 // socket1.onopen = async function(e) {
                 //     console.log('[OPEN]Successful Connection to pong container');

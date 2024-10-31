@@ -16,22 +16,20 @@ function launchSocket(player_name, game_id, mmsocket) {
     matchmakingSocket = mmsocket;
     console.log("Joining wss://" + window.location.hostname + ":3000/game/" + game_id + "/")
     socket = new WebSocket("wss://" + window.location.hostname + ":3000/game/" + game_id + "/");
-    socket.onmessage = onMessage;
-    socket.onerror = onError;
 
-    socket.onopen = function(e) {
-        socket.send(
-            JSON.stringify(
-                {
-                    'from': player_name,
-                    'action' :"wannaplay!",
-                }
-            )
+    socket.onerror = async function(e) {
+        console.error(e.message);
+    };
+
+    socket.onopen = async function(e) {
+        await socket.send(JSON.stringify({
+            'from': player_name,
+            'action' :"wannaplay!",
+            })
         );
-    }
+    };
     
     socket.onclose = async function(e) {
-        console.log('ferme la');
         await matchmakingSocket.send(JSON.stringify({
             action: 'send_data',
             payload: {
@@ -39,58 +37,50 @@ function launchSocket(player_name, game_id, mmsocket) {
                 mode: game_mode,
             }
         }));
-        inject_code_into_markup("./matchmaking.html", "main", null)
-    }
+        inject_code_into_markup("./matchmaking.html", "main", null);
+    };
+
+    socket.onmessage = async function (e) {
+        data = JSON.parse(e.data);
+        // if (data.action != "move")
+        console.log(data);
+        if (data.action == "info") {
+            ball[0] = data.ball[0];
+            ball[1] = data.ball[1];
+            ball_dx = data.ball_dir[0];
+            ball_dy = data.ball_dir[1];
+            pad[LEFT_PLAYER] = data.lpos;
+            pad[RIGHT_PLAYER] = data.rpos;
+            size[LEFT_PLAYER] = data.size[LEFT_PLAYER];
+            size[RIGHT_PLAYER] = data.size[RIGHT_PLAYER];
+            document.getElementById("lscore").innerText = data.lscore;
+            document.getElementById("rscore").innerText = data.rscore;
+            document.getElementById("player1").style.height = size[LEFT_PLAYER] + 'px';
+            document.getElementById("player2").style.height = size[RIGHT_PLAYER] + 'px';
+        }
+        if (data.action =="move") {
+            move[data.from] = data.key;
+            return;
+        }
+        if (!playing && data.action == "init") {
+            side = data.side;
+            ball_dx = data.dir[0];
+            ball_dy = data.dir[1];
+            document.getElementById("game_id").innerText = game_id
+            pad[LEFT_PLAYER] = data.lpos;
+            pad[RIGHT_PLAYER] = data.rpos;
+            document.getElementById("lplayer").innerText = data.lplayer
+            document.getElementById("rplayer").innerText = data.rplayer
+            playing = true;
+            raf = requestAnimationFrame(play);
+            return;
+        }
+        if (data.action == "disconnect") {
+            socket.close();
+            cancelAnimationFrame(raf);
+        }
+    };
 }
-
-
-
-
-
-function onMessage(e) {
-    data = JSON.parse(e.data);
-    // if (data.action != "move")
-    console.log(data);
-    if (data.action == "info") {
-        ball[0] = data.ball[0];
-        ball[1] = data.ball[1];
-        ball_dx = data.ball_dir[0];
-        ball_dy = data.ball_dir[1];
-        pad[LEFT_PLAYER] = data.lpos;
-        pad[RIGHT_PLAYER] = data.rpos;
-        size[LEFT_PLAYER] = data.size[LEFT_PLAYER];
-        size[RIGHT_PLAYER] = data.size[RIGHT_PLAYER];
-        document.getElementById("lscore").innerText = data.lscore;
-        document.getElementById("rscore").innerText = data.rscore;
-        document.getElementById("player1").style.height = size[LEFT_PLAYER] + 'px';
-        document.getElementById("player2").style.height = size[RIGHT_PLAYER] + 'px';
-    }
-    if (data.action =="move") {
-        move[data.from] = data.key;
-        return;
-    }
-    if (!playing && data.action == "init") {
-        side = data.side;
-        ball_dx = data.dir[0];
-        ball_dy = data.dir[1];
-        document.getElementById("game_id").innerText = game_id
-        pad[LEFT_PLAYER] = data.lpos;
-        pad[RIGHT_PLAYER] = data.rpos;
-        document.getElementById("lplayer").innerText = data.lplayer
-        document.getElementById("rplayer").innerText = data.rplayer
-        playing = true;
-        raf = requestAnimationFrame(play);
-        return;
-    }
-    if (data.action == "disconnect") {
-        socket.close();
-        cancelAnimationFrame(raf);
-    }
-};
-
-function onError(e) {
-    console.error(e.message);
-};
 
 /////////////////////////// Events part ///////////////////////////
 

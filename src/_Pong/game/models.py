@@ -3,6 +3,7 @@ from django.db import models
 # Create your models here.
 
 class User(models.Model):
+    db_table = 'user'
     class Mode(models.TextChoices):
         OFFLINE = 'Offline', 'offline'
         ONLINE = 'Online', 'online'
@@ -16,6 +17,15 @@ class User(models.Model):
         return self.name
 
 class Salon(models.Model):
+    db_table = 'salon'
     player = models.ManyToManyField("User", blank=True)
     score1 = models.IntegerField(blank=True, null=True)
     score2 = models.IntegerField(blank=True, null=True)
+
+class Mode(models.Model):
+    db_table = 'mode'
+    class Mode(models.TextChoices):
+        soloq = '2P', 'soloq'
+        TOURNAMENT = '4P', 'tournament'
+    mode = models.CharField(choices=Mode)
+    salon = models.ManyToManyField("Salon", blank=True)
