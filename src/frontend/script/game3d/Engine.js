@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import StateBase from './states/StateBase.js';
 
 
 export default class Engine extends HTMLElement {
@@ -17,6 +18,9 @@ export default class Engine extends HTMLElement {
 
 	/** @type {HTMLDivElement} */
 	debugOverlay;
+
+	/** @type {StateBase} */
+	state;
 
 
 	/**
@@ -52,10 +56,15 @@ export default class Engine extends HTMLElement {
 		this.#entityDestroyQueue = null;
 
 		this.resizeCallback = this.#onResize.bind(this);
+		this.#frameCallback = this.#onFrame.bind(this);
+	}
+
+
+	/** @param {function(Engine): void} initFunction  */
+	start(initFunction) {
+		initFunction(this);
 		window.addEventListener("resize", this.resizeCallback);
 		this.#onResize();
-
-		this.#frameCallback = this.#onFrame.bind(this);
 		requestAnimationFrame(this.#frameCallback);
 	}
 

@@ -1,0 +1,50 @@
+#bg-engine {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	z-index: -1;
+	overflow: hidden;
+}
+
+
+.engine {
+	position: relative;
+	height: 100%;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	background: #d5ae4c;
+	background: repeating-linear-gradient(135deg,
+	  #e5be5a 0px,
+	  #d5ae4c 50px,
+	  #997e3a 50px,
+	  #b39342 100px
+	);
+}
+
+
+.engine .engine-debug-overlay {
+    position: absolute;
+    left: 3em;
+    bottom: 3em;
+
+	padding: 0;
+	border: 1px solid #ffffffaa;
+	border-radius: 0.3em;
+
+	color: #c2c2c2;
+	background-color: #000000aa;
+	font-family: monospace;
+
+	user-select: none;
+}
+
+.engine .engine-debug-overlay:empty {
+	display: none;
+}
+
+.engine .engine-debug-overlay * {
+	padding: 1em;
+}
