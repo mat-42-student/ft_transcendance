@@ -16,6 +16,7 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         self.master = False
         self.game = None
         self.side = None
+        self.game_mode = None
 
     async def connect(self):
         self.game_id = self.scope["url_route"]["kwargs"]["game_id"]
@@ -35,6 +36,8 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         data = json.loads(data["message"])
         if data["action"] == "move":
             return await self.moveplayer(data)
+        if data["action"] == "init":
+            return await self.launch_game(data)
         if data["action"] == "info":
             return await self.send(json.dumps(data))
         if data["action"] == "wannaplay!":
@@ -47,8 +50,9 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         try:
             self.salon = await Salon.objects.aget(id=self.game_id)
             self.mode = await Mode.objects.aget(salon=self.salon)
+            self.game_mode = self.mode.mode
             print(f"{YELLOW}{self.salon}{RESET}")
-            # print(self.mode)
+            print(self.mode)
             return 1 
         except:
             print(f"{RED}No lobby matching id={self.game_id}{RESET}")
@@ -73,10 +77,11 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
             "lplayer": self.game.players[LEFT].name,
             "rplayer": self.game.players[RIGHT].name,
             "lpos":self.game.players[LEFT].pos,
-            "rpos":self.game.players[RIGHT].pos
+            "rpos":self.game.players[RIGHT].pos,
+            "mode":self.game_mode,
         })
         await self.channel_layer.group_send(
-            self.room_group_name, {"type": "launch.game", "message": json_data}
+            self.room_group_name, {"type": "handle.message", "message": json_data}
         )
 
     async def launch_game(self, data):

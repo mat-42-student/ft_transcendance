@@ -3,8 +3,8 @@ from Selectmode.models import User
 
 class UserSerializer(serializers.ModelSerializer):
 
-    mode = serializers.ChoiceField(choices=User.Mode.choices)
+	mode = serializers.ChoiceField(choices=User.Mode.choices)
 
-    class Meta:
-        model = User
-        fields =  "__all__"
+	class Meta:
+		model = User
+		fields = '__all__'

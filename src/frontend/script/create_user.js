@@ -8,7 +8,8 @@ function sendPostRequest(){
         name: "test1",
         mail: "test2@test.com",
         password: "pass",
-        mode: "Online"
+        mode: "Online",
+		play: false
     };
 
     // Requête POST pour créer un objet User
