@@ -98,7 +98,7 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
     async def moveplayer(self, message):
         if self.master: # transmit move to game engine
             self.game.set_player_move(int(message["from"]), int(message["key"]))
-        # players handle their own moves client-side, we only transmit the moves to the opposing player.
+        # players handle their own moves client-side, we only transmit the moves to the opposing player
         if message["from"] != str(self.side):
             try:
                 await self.send(message)
@@ -107,26 +107,24 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
 
     async def disconnect(self, close_code):
         if self.master and self.game:
-            self.endgame_by_disconnection(self.player_id)
+            self.endgame(self.player_id)
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "make.disconnect", "from": self.player_id}
         )
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-        # print(f"{RED}Connexion WebSocket fermée par {self.player_id}{RESET}")
 
     async def make_disconnect(self, event):
         print(f"{GREEN}Ici {self.player_id}, disco:{event}{RESET}")
         user = event["from"]
         if self.master and self.game:
-            self.endgame_by_disconnection(user)
+            self.endgame(user)
         await self.send(text_data=json.dumps({"action": "disconnect", "from": user}))
         await self.disconnect(0)
 
-    def endgame_by_disconnection(self, user):
-        if self.game.over:
-            return
-        if self.nb_players > 0:
+    def endgame(self, user):
+        if not self.game.over:
             self.game.players[0].score = 1 if self.player_id != user else 0
             self.game.players[1].score = 1 - self.game.players[0].score
             self.game.over = True
+        self.game.save_score()
         self.game = None

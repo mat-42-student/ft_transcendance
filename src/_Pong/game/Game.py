@@ -2,6 +2,7 @@ from random import randint, choice
 from time import time
 from json import dumps
 from asyncio import sleep as asleep
+# from asgiref.sync import database_sync_to_async
 from .const import LEFT, RIGHT, HEIGHT, WIDTH, PADWIDTH, RADIUS, FPS, MAX_SCORE, GREEN, RED, RESET
 from .models import Salon
 
@@ -136,15 +137,14 @@ class Game:
         self.over = True
         print(f"{RED}Game #{self.id} over : {self.players[0].name}:{self.players[0].score} - {self.players[1].score}:{self.players[1].name}{RESET}")
 
-    async def save_score(self):
-        winner = LEFT if self.players[0].score > self.players[1].score else RIGHT
+    # @database_sync_to_async
+    def save_score(self):
+        print("Saving score")
         try:
-            salon = await Salon.objects.aget(id = self.id)
-
+            salon = Salon.objects.get(id=self.id)
             salon.score1 = self.players[0].score
             salon.score2 = self.players[1].score
-            salon.winner = self.players[winner]
-
-            await salon.asave()
+            # salon.save()
+            print("Score saved")
         except Salon.DoesNotExist:
-            print(f"{RED}Room #{self.id} not found.{RESET}")
+            print(f"{RED}Lobby #{self.id} not found.{RESET}")
