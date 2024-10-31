@@ -1,4 +1,7 @@
+import * as THREE from 'three';
 import StateBase from "./StateBase.js";
+import Engine from '../Engine.js';
+import EntMatch from '../entities/EntMatch.js';
 
 
 export default class StateInGame extends StateBase {
@@ -14,20 +17,25 @@ export default class StateInGame extends StateBase {
 	ballPosition = {'x': 0, 'y': 0};
 	arenaSize = {'x': 2, 'y': 1};
 
-	constructor() {
+	#level;  get level() { return this.#level; }
+	#match;
+
+
+	constructor(newLevel) {
 		super();
+		this.#level = newLevel;
 	}
 
 
 	/** @param {Engine} engine */
 	enterState(engine) {
-
-		//TODO
+		this.#match = new EntMatch(engine);
+		engine.addEntity(this.#match);
 	}
 
 
 	/** @param {Engine} engine */
 	exitState(engine) {
-		//TODO
+		engine.queueDestroyEntity(this.#match);
 	}
 }

@@ -6,14 +6,11 @@ export default class StateBase {
 	playerUser = "Guest";
 
 
-	constructor() {}
-
-
 	/** @param {Engine} engine */
 	enterState(engine) {
-		engine.scene3.background = new THREE.Color(0,0,0);
+		engine.scene3.background = new THREE.Color(1,0,1);
 		engine.canvas.style.opacity = 0.5;
-		
+
 		const p = document.createElement("div");
 		p.innerText = 'Warning: State is missing!';
 		engine.debugOverlay.appendChild(p);

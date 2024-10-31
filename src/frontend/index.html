@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
 	<link rel="icon" type="image/png" href="./ressources/pong_favicon.png">
-    <link rel="stylesheet" href="./css/games.css"> <!-- Optionnel si tu veux ajouter du style -->
+    <link rel="stylesheet" href="./css/games.css">
     <link rel="stylesheet" href="./css/pong.css">
     <link rel="stylesheet" href="./css/menu.css">
     <link rel="stylesheet" href="./css/global.css">
@@ -30,6 +30,18 @@
     <footer>
     </footer>
     
+    <script type="module"> // this is what we get for mixing modules and regular scripts
+        import Engine from './script/game3d/Engine.js';
+        import StateBase from './script/game3d/states/StateBase.js';
+        import StateInGame from './script/game3d/states/StateInGame.js';
+        import StateIdle from './script/game3d/states/StateIdle.js';
+
+        window['imports'] = {};
+        window.imports.Engine = Engine;
+        window.imports.StateBase = StateBase;
+        window.imports.StateInGame = StateInGame;
+        window.imports.StateIdle = StateIdle;
+    </script>
     <script src="./script/matchmaking.js"></script>
     <script src="./script/create_user.js"></script>
     <script type="module" src="./script/requestGet.js"></script>

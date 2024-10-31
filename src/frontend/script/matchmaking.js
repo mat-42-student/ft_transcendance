@@ -15,7 +15,7 @@ function modeSelection(mode) {
         inject_code_into_markup("../board.html", "main", "./script/local1v1.js")
     }
     else if (mode === 'cpu') {
-        inject_code_into_markup("../board.html", "main", "./script/localCPU.js");
+        inject_code_into_markup("../playing.html", "main", "./script/localCPU.js");
     }
 }
 

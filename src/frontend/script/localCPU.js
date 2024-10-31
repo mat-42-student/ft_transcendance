@@ -1,33 +1,35 @@
-field = document.getElementById("pong_field");
-lpad = document.getElementById("player1");
-rpad = document.getElementById("player2");
-ball_div = document.getElementById("ball");
-
-side = 0, ball_x = field.offsetWidth / 2, ball_y = field.offsetHeight / 2;
-
 /////////////////////////// On load ///////////////////////////
-field.setAttribute('tabindex', '0'); // Make playground focusable
-field.focus();
+
+const engine = document.getElementById('bg-engine');
+
+side = 0;
+ball_x = 0;
+ball_y = 0;
+
+document.body.setAttribute('tabindex', '0'); // Make playground focusable
+document.body.focus();
+
 localGameCPU();
 
 /////////////////////////// Events part ///////////////////////////
 
-field.addEventListener('click', () => {
-  field.focus();
+engine.addEventListener('click', () => {
+  engine.focus();
 });
 
-field.addEventListener('keydown', keydown)
-field.addEventListener('keyup', keyup)
+document.body.addEventListener('keydown', keydown)
+document.body.addEventListener('keyup', keyup)
 
 function keydown(event) {
     key = event.key;
+    console.log('input', event);
     if (keyStillCPUDown)
         return;
     keyStillCPUDown = key;
     if (key === 'q')
-        move[0] = -1;
-    else if (key === 'z')
         move[0] = 1;
+    else if (key === 'z')
+        move[0] = -1;
 }
 
 function keyup(event) {
@@ -46,7 +48,7 @@ function generateRandomNick() {
     const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
     const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
 
-    return randomAdj + randomNoun + Math.floor(Math.random() * 1000);
+    return '[BOT] ' + randomAdj + randomNoun + Math.floor(Math.random() * 1000);
 }
 
 function randomInRange(a, b) {
@@ -64,76 +66,90 @@ function localGameCPU() {
 }
 
 function init() {
-    resetValues();
+    //TODO this will eventually pick from a list of backgrounds.
+    //     This placeholder is here to test that the data moves around correctly.
+    level = 'random level ' + Math.floor(randomInRange(0,10));
+
+    engine.state = new window.imports.StateInGame(level);
+
+    engine.state.adversaryUser = generateRandomNick();
+
+    startRound();
     playing = true;
     move[LEFT_PLAYER] = move[RIGHT_PLAYER] = score[LEFT_PLAYER] = score[RIGHT_PLAYER] = 0;
-    keyStillCPUDown = false;    
+    keyStillCPUDown = false;
 }
 
-function resetValues() {
-    ball_x = field.offsetWidth / 2;
-    ball_y = field.offsetHeight / 2;
-    ball_dx = randomInRange(3, 4);
-    ball_dy = randomInRange(3, 4);
-    speed = 1;
+function startRound() {
+    field_size = {x: 4, y: 3};
+
+    ball_x = 0;
+    ball_y = 0;
+    ball_dx = 1;
+    ball_dy = 1;
+    speed = 0.005;
     size[LEFT_PLAYER] = size[RIGHT_PLAYER] = PADWIDTH;
-    pad[LEFT_PLAYER] = pad[RIGHT_PLAYER] = (field.offsetHeight - PADWIDTH) / 2 ;
-    document.getElementById("player1").style.height = size[LEFT_PLAYER] + 'px';
-    document.getElementById("player2").style.height = size[RIGHT_PLAYER] + 'px';
+    pad[LEFT_PLAYER] = pad[RIGHT_PLAYER] = 0;
+}
+
+function copyValuesToEngine() {
+    engine.state.playerScore = 0;
+    engine.state.playerPaddleSize = size[LEFT_PLAYER];
+    engine.state.playerPaddlePosition = pad[LEFT_PLAYER];
+    
+    engine.state.adversaryScore = 0;
+    engine.state.adversaryPaddleSize = size[RIGHT_PLAYER];
+    engine.state.adversaryPaddlePosition = pad[RIGHT_PLAYER];
+
+    engine.state.arenaSize = field_size;
+    engine.state.ballPosition = {x: ball_x, y: ball_y};
 }
 
 function cpuMove() {
-    move[RIGHT_PLAYER] = ball_y > (pad[RIGHT_PLAYER] + size[RIGHT_PLAYER] /2) ? 1 : -1;
+    move[RIGHT_PLAYER] = ball_y > (pad[RIGHT_PLAYER]) ? 1 : -1;
 }
 
 function movePaddles() {
     cpuMove();
     if (move[LEFT_PLAYER]) {
+        const limit = field_size.y - size[LEFT_PLAYER] / 2;
         pad[LEFT_PLAYER] += move[LEFT_PLAYER] * 2 * speed;
-        if (pad[LEFT_PLAYER] < 0)
-            pad[LEFT_PLAYER] = 0;
-        if (pad[LEFT_PLAYER] + size[LEFT_PLAYER] > field.offsetHeight)
-            pad[LEFT_PLAYER] = field.offsetHeight - size[LEFT_PLAYER];
+        pad[LEFT_PLAYER] = clamp(pad[LEFT_PLAYER], -limit, limit);
     }
     if (move[RIGHT_PLAYER]) {
+        const limit = field_size.y - size[RIGHT_PLAYER] / 2;
         if (difficulty == 10)
             pad[RIGHT_PLAYER] = ball_y - size[RIGHT_PLAYER] / 2;
-        else
+        else {
             pad[RIGHT_PLAYER] += move[RIGHT_PLAYER] * difficulty * speed;
-        if (pad[RIGHT_PLAYER] < 0)
-            pad[RIGHT_PLAYER] = 0;
-        if (pad[RIGHT_PLAYER] + size[RIGHT_PLAYER] > field.offsetHeight)
-            pad[RIGHT_PLAYER] = field.offsetHeight - size[RIGHT_PLAYER];
+            pad[RIGHT_PLAYER] = clamp(pad[RIGHT_PLAYER], -limit, limit);
+        }
     }
-    lpad.style.top = pad[LEFT_PLAYER] + 'px';
-    rpad.style.top = pad[RIGHT_PLAYER] + 'px';
 }
 
 function moveBall() {
     // Move ball
     ball_x = ball_x + ball_dx * speed;
     ball_y = ball_y +  ball_dy * speed;
+
     // Check top / bottom collision
-    if (ball_y <= 0 || ball_y + RADIUS >= field.offsetHeight)
+    if (ball_y <= -(field_size.y/2) || ball_y >= field_size.y/2)
         ball_dy = -ball_dy;
     // Check left / right collision
-    if (ball_x <= 0)
+    if (ball_x <= -(field_size.x/2))
         side_collision(LEFT_PLAYER);
-    else if (ball_x + RADIUS >= field.offsetWidth)
+    else if (ball_x >= field_size.x/2)
         side_collision(RIGHT_PLAYER);
-    ball_div.style.left = ball_x + 'px'
-    ball_div.style.top = ball_y + 'px'
 }
 
 function side_collision(side) {
     // check paddle collision
-    if (pad[side] <= ball_y && ball_y <= pad[side] + size[side]) {
-        if (size[side] > 10)
-            size[side] -= 10;
-        document.getElementById("player1").style.height = size[LEFT_PLAYER] + 'px';
-        document.getElementById("player2").style.height = size[RIGHT_PLAYER] + 'px';
+    if ((pad[side] - size[side]/2 <= ball_y)
+        && (pad[side] + size[side]/2 >= ball_y)) {
+        if (size[side] > 0.1)
+            size[side] -= 0.1;
         ball_dx = -ball_dx;
-        speed += 0.3;
+        speed += 0.01;
         return;
     }
     scoreup(1 - side);
@@ -141,27 +157,30 @@ function side_collision(side) {
 
 function scoreup(side) {
     score[side]++;
-    document.getElementById("lscore").innerText = score[LEFT_PLAYER];
-    document.getElementById("rscore").innerText = score[RIGHT_PLAYER];
+    engine.state.playerScore = score[LEFT_PLAYER];
+    engine.state.adversaryScore = score[RIGHT_PLAYER];
     if (score[side] >= SCORE_MAX) {
         endgame();
         return;
     }
-    resetValues();
+    startRound();
 }
 
 function endgame() {
     winner = score[LEFT_PLAYER] >= SCORE_MAX ? "Player 1" : "CPU";
     alert(`GAME OVER\nLe gagnant est ${winner}!`);
     cancelAnimationFrame(raf);
-    init();
+    // init(); //REVIEW ??????????????
+    engine.state = new window.imports.StateIdle(engine.state);
     playing = false;
-    inject_code_into_markup("./matchmaking.html", "main", null);
+    window.location.hash = 'matchmaking.html';
 }
 
-function play() {
+function play(time) {
     movePaddles();
     moveBall();
+    copyValuesToEngine();
+    engine.frame(time);
     if (playing)
         requestAnimationFrame(play);
 }

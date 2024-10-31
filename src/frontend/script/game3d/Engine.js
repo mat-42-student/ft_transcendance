@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import Entity from "./Entity.js";
 import StateBase from './states/StateBase.js';
 
 
@@ -18,6 +19,10 @@ export default class Engine extends HTMLElement {
 
 	/** @type {HTMLDivElement} */
 	debugOverlay;
+
+	cameraTarget = {
+		pos: new THREE.Vector3(0,0,0),
+	};
 
 
 	/**
@@ -52,7 +57,6 @@ export default class Engine extends HTMLElement {
 		this.#entityDestroyQueue = null;
 
 		this.resizeCallback = this.#onResize.bind(this);
-		this.#frameCallback = this.#onFrame.bind(this);
 
 		if (this.state === undefined) {
 			this.state = new StateBase();
@@ -65,13 +69,11 @@ export default class Engine extends HTMLElement {
 		initFunction(this);
 		window.addEventListener("resize", this.resizeCallback);
 		this.#onResize();
-		requestAnimationFrame(this.#frameCallback);
 	}
 
 
 	disconnectedCallback() {
 		window.removeEventListener("resize", this.resizeCallback);
-		this.#frameCallback = null;
 
 		this.queueDestroyAllEntities();
 		this.#destroyEntitiesNow();
@@ -80,18 +82,18 @@ export default class Engine extends HTMLElement {
 	}
 
 
-	/** @param {ENGINE.Entity} entity */
+	/** @param {Entity} entity */
 	addEntity(entity) {
-		if (!(entity instanceof ENGINE.Entity)) throw Error("Bad argument");
+		if (!(entity instanceof Entity)) throw Error("Bad argument");
 
 		this.#entities.push(entity);
 		entity.onReady();
 	}
 
 
-	/** @param {ENGINE.Entity} entity */
+	/** @param {Entity} entity */
 	queueDestroyEntity(entity) {
-		if (!(entity instanceof ENGINE.Entity)) throw Error("Bad argument");
+		if (!(entity instanceof Entity)) throw Error("Bad argument");
 
 		if (this.#entityDestroyQueue === null) {
 			this.#entityDestroyQueue = new Set([entity]);
@@ -124,10 +126,41 @@ export default class Engine extends HTMLElement {
 		if (this.#state !== undefined) {
 			this.#state.exitState(this);
 		}
-		this.debugOverlay.innerHTML = '';
+
 		this.#state = newState;
+		this.debugOverlay.innerHTML = '';
+
+		{  // Show current state for debug, this will be deleted eventually.
+			const stateDebug = document.createElement("div");
+			stateDebug.textContent = 'Current state: ' + this.#state.constructor.name;
+			this.debugOverlay.appendChild(stateDebug);
+		}
+
 		newState.enterState(this);
 		console.log('Game: State replaced:', newState);
+	}
+
+
+	/** @param {DOMHighResTimeStamp} time */
+	frame(time) {
+		const delta = this.#clock.getDelta();
+
+		for (const entity of this.#entities) {
+			entity.onFrame(delta, time);
+		}
+
+		this.#destroyEntitiesNow();
+
+		//TODO smooth interpolation
+		this.camera3.position.set(
+			this.cameraTarget.pos.x,
+			this.cameraTarget.pos.y,
+			this.cameraTarget.pos.z
+		);
+		this.camera3.fov = this.cameraTarget.fov;
+		this.camera3.updateProjectionMatrix();
+
+		this.renderer3.render(this.scene3, this.camera3);
 	}
 
 
@@ -136,17 +169,14 @@ export default class Engine extends HTMLElement {
 	////////////////////////////////////////////////////////////////////////////
 
 
-	/** @type {Set<ENGINE.Entity>} */
+	/** @type {Set<Entity>} */
 	#entities;
 
-	/** @type {Set<ENGINE.Entity> | null = null} */
+	/** @type {Set<Entity> | null = null} */
 	#entityDestroyQueue;
 
 	/** @type {THREE.Clock} */
 	#clock;
-
-	/** @type {any} */
-	#frameCallback;
 
 	/** @type {StateBase} */
 	#state;
@@ -158,31 +188,14 @@ export default class Engine extends HTMLElement {
 
 		if (this.camera3 instanceof THREE.PerspectiveCamera) {
 			this.camera3.aspect = rect.width / rect.height;
-			this.camera3.updateProjectionMatrix();
+			// this.camera3.updateProjectionMatrix();
 		} else if (this.camera3 instanceof THREE.OrthographicCamera) {
 			// honestly i dont know if this is sufficient, all my testing uses perspective camera
-			this.camera3.updateProjectionMatrix();
+			// this.camera3.updateProjectionMatrix();
 		} else {
 			console.warn('Camera of unknown type.',
 				'Engine.#onResize() may need some work.');
 		}
-	}
-
-
-	/** @param {DOMHighResTimeStamp} time */
-	#onFrame(time) {
-		if (this.#frameCallback === null) return;
-
-		const delta = this.#clock.getDelta();
-
-		for (const entity of this.#entities) {
-			entity.onFrame(delta, time);
-		}
-
-		this.#destroyEntitiesNow();
-
-		this.renderer3.render(this.scene3, this.camera3);
-		requestAnimationFrame(this.#frameCallback);
 	}
 
 

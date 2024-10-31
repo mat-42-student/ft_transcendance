@@ -1,4 +1,4 @@
-const PADWIDTH = 100;
+const PADWIDTH = 1;
 const RADIUS = 20;
 const LEFT_PLAYER = 0;
 const RIGHT_PLAYER = 1;
@@ -43,4 +43,13 @@ function addScript(file) {
     newScript.src = file;
     newScript.id = file;
     document.body.appendChild(newScript);
+}
+
+
+function clamp(value, min, max) {
+    if (value < min)
+        return min;
+    else if (value > max)
+        return max;
+    return value;
 }
