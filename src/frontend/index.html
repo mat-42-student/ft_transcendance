@@ -14,7 +14,9 @@
 
 	<script type="importmap">
 		{"imports": {
-            "three": "https://unpkg.com/three/build/three.module.js"
+            "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+            "engine": "./script/game3d/engine.js",
+            "gameobjects" "./script/game3d/gameobjects/_exports.js"
         }}
 	</script>
 
@@ -29,19 +31,7 @@
     </main>
     <footer>
     </footer>
-    
-    <script type="module"> // this is what we get for mixing modules and regular scripts
-        import Engine from './script/game3d/Engine.js';
-        import StateBase from './script/game3d/states/StateBase.js';
-        import StateInGame from './script/game3d/states/StateInGame.js';
-        import StateIdle from './script/game3d/states/StateIdle.js';
 
-        window['imports'] = {};
-        window.imports.Engine = Engine;
-        window.imports.StateBase = StateBase;
-        window.imports.StateInGame = StateInGame;
-        window.imports.StateIdle = StateIdle;
-    </script>
     <script src="./script/matchmaking.js"></script>
     <script src="./script/create_user.js"></script>
     <script type="module" src="./script/requestGet.js"></script>
