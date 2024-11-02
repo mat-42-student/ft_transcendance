@@ -16,6 +16,8 @@
 	  #997e3a 50px,
 	  #b39342 100px
 	);
+
+	user-select: none;
 }
 
 
@@ -37,16 +39,18 @@
 	color: var(--engine-color);
 	background-color: var(--engine-color-bg);
 	font-family: monospace;
-
-	user-select: none;
 }
 
 #engine .engine-debug-box:empty {
-	display: none;
+	/* Set engine.isDebugModeOn=false to fully hide the debug box. */
+	width: 2em;
+	height: 2em;
+	opacity: 0.2;
 }
 
 #engine .engine-debug-box >* {
 	padding: 0;
+	padding-left: 1em;
 	margin: 1em 0.5em;
 	border-left: 3px solid var(--engine-color);
 }
@@ -58,4 +62,25 @@
 #engine .engine-debug-box .engine-debug-err {
 	border-left-color: var(--engine-color-err);
 	color: var(--engine-color-err);
+}
+
+
+#engine #engine-loading {
+	/* Positioning */
+	top: 0;
+	left: 0;
+	position: fixed;
+	width: 100%;
+
+	/* Text centering */
+	text-align: center;
+	line-height: 100vh;
+
+	/* Text style */
+	letter-spacing: 1em;
+	font-size: 3em;
+	font-family: monospace;
+	color: white;
+
+	background: #000000aa;
 }

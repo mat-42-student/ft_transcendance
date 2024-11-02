@@ -1,6 +1,1 @@
-import DebugBall from './DebugBall.js';
-
-
-export function initTheme() {
-	//TODO
-}
+export {default as Ball} from './DebugBall.js';

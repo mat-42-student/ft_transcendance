@@ -4,33 +4,46 @@ import engine from 'engine';
 
 export default {
 
-
-	isDebugMode: true,
+	/** General purpose flag that can be read by anyone.
+	 * Ideally any debug related visualization or feature remains in the code,
+	 * but is switched on/off based on this. */
+	isDebugModeOn: true,
 
 
 	// Readonly getters, because yes, i am that paranoid of accidentally replacing variables.
 	get scene() { return __scene; },
 	get camera() { return __camera; },
+	get renderer() { return __renderer; },
 	get html_debugBox() { return __html_debugBox; },
+
+
+	/** Hide or display the loading overlay.
+	 * @param {boolean} display */
+	set loading(display) { __html_loading.style.display = display ? null : 'none'; },
 
 
 	/**
 	 * Call this function only once per index.html load, or else 💥
-	 * @param {THREE.WebGLRendererParameters} rendererParameters
 	 */
-	initialize(rendererParameters) {
+	initialize() {
 		{  // Setup DOM elements
-			const html_container = document.createElement("div");
-			html_container.id = "engine";
-			document.body.insertBefore(html_container, document.body.firstChild);
+			__html_container = document.createElement("div");
+			__html_container.id = "engine";
+			document.body.insertBefore(__html_container, document.body.firstChild);
 
 			__html_canvas = document.createElement("canvas");
-			html_container.appendChild(__html_canvas);
+			__html_container.appendChild(__html_canvas);
+
+			__html_loading = document.createElement("div");
+			__html_loading.innerText = 'loading...';
+			__html_loading.id = 'engine-loading';
+			__html_container.appendChild(__html_loading);
+			engine.loading = false;
 
 			__html_debugBox = document.createElement("div");
 			__html_debugBox.classList.add("engine-debug-box");
-			if (engine.isDebugMode !== true) __html_debugBox.style.display = 'none';
-			html_container.appendChild(__html_debugBox);
+			if (engine.isDebugModeOn !== true) __html_debugBox.style.display = 'none';
+			__html_container.appendChild(__html_debugBox);
 		}
 
 		{  // Setup ThreeJS
@@ -40,8 +53,13 @@ export default {
 
 			__camera = new THREE.PerspectiveCamera();
 
-			rendererParameters.canvas = __html_canvas;
-			__renderer = new THREE.WebGLRenderer(rendererParameters);
+			__renderer = new THREE.WebGLRenderer({
+				canvas: __html_canvas,
+				antialias: true,
+				powerPreference: "high-performance",
+			});
+			__renderer.toneMapping = THREE.ACESFilmicToneMapping;
+			__renderer.toneMappingExposure = 1;
 
 			__clock = new THREE.Clock(true);
 
@@ -53,17 +71,24 @@ export default {
 
 	/** @param {DOMHighResTimeStamp} time requestAnimationFrame() can give this value. */
 	render(time) {
-		const delta = __clock.getDelta();
+		{  // Perform an update step
+			const delta = __clock.getDelta();
+			__paramsForAddDuringRender = {delta: delta, time: time};
 
-		//FIXME this is sus. everything is added in a frame. how does that affect traversal?
-		// do i need a queue? i could make it so any new objects never call their frame in this loop,
-		// and then __onObjectAddedToScene() forcefully calls it once in its place.
-		// could store a list of events, but this way execution order is consistent.
-		__scene.traverse((obj) => {
-			if ('onFrame' in obj) {
-				obj.onFrame(delta, time);
+			const updateQueue = [];
+
+			__scene.traverse((obj) => {
+				if ('onFrame' in obj) {
+					updateQueue.push(obj.onFrame.bind(obj));
+				}
+			});
+
+			for (const objectRenderFunction of updateQueue) {
+				objectRenderFunction(delta, time);
 			}
-		});
+
+			__paramsForAddDuringRender = null;
+		}
 
 		__camera.updateProjectionMatrix();
 		__renderer.render(__scene, __camera);
@@ -84,11 +109,25 @@ let __scene;
 let __clock;
 
 
+/** @type {HTMLDivElement} */
+let __html_container;
+
 /** @type {HTMLCanvasElement} */
 let __html_canvas;
 
 /** @type {HTMLDivElement} */
 let __html_debugBox;
+
+/** @type {HTMLDivElement} */
+let __html_loading;
+
+
+/**
+ * tracks if we are during a engine.render() call (null if not),
+ * and if so, stores the parameters to be passed to Object3D's onRender() methods.
+ * @type {null | {delta: number, time: DOMHighResTimeStamp}}
+ */
+let __paramsForAddDuringRender = null;
 
 
 function __onObjectAddedToScene(e) {
@@ -103,6 +142,18 @@ function __onObjectAddedToScene(e) {
 	if ('onAdded' in obj) {
 		obj.onAdded();
 	}
+
+	// engine.frame() will never call onFrame during the frame that something has been added in.
+	// So we call it manually here, to avoid the first frame not having an update.
+	// (That could be visible)
+	// Yes, this means the first frame has inconsistent execution order,
+	// compared to the next ones where the order is dictated by THREE.Object3D.traverse().
+	// (which i assume depends on the tree structure of Object3D's in the scene)
+	if (__paramsForAddDuringRender !== null) {
+		if ('onFrame' in obj) {
+			obj.onFrame(__paramsForAddDuringRender.delta, __paramsForAddDuringRender.time);
+		}
+	}
 }
 
 
@@ -110,15 +161,15 @@ function __onObjectRemovedFromScene(e) {
 	/** @type {THREE.Object3D} */
 	const obj = e.child;
 
-	// REVIEW what if threejs already does this?
-	if ('dispose' in obj) {
+	// you can opt out of auto dispose, if you need to 'reuse' your object3D.
+	if ('dispose' in obj && obj.noAutoDispose !== true) {
 		obj.dispose();
 	}
 }
 
 
 function __onResize() {
-	const rect = document.body.getBoundingClientRect();
+	const rect = __html_container.getBoundingClientRect();
 	__renderer.setSize(rect.width, rect.height);
 	__camera.aspect = rect.width / rect.height;
 }

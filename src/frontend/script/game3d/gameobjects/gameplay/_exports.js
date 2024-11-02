@@ -1,1 +1,1 @@
-export {Ball} from './Ball.js';
+export {default as Ball} from './Ball.js';
