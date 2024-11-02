@@ -2,12 +2,11 @@ import * as THREE from 'three';
 import engine from 'engine';
 
 
+const __DEBUG_MODE= true;
+
 export default {
 
-	/** General purpose flag that can be read by anyone.
-	 * Ideally any debug related visualization or feature remains in the code,
-	 * but is switched on/off based on this. */
-	isDebugModeOn: true,
+
 
 
 	// Readonly getters, because yes, i am that paranoid of accidentally replacing variables.
@@ -15,6 +14,10 @@ export default {
 	get camera() { return __camera; },
 	get renderer() { return __renderer; },
 	get html_debugBox() { return __html_debugBox; },
+	/** General purpose flag that can be read by anyone.
+	 * Ideally any debug related visualization or feature remains in the code,
+	 * but is switched on/off based on this. */
+	get DEBUG_MODE() { return __DEBUG_MODE; },
 
 
 	/** Hide or display the loading overlay.
@@ -42,7 +45,7 @@ export default {
 
 			__html_debugBox = document.createElement("div");
 			__html_debugBox.classList.add("engine-debug-box");
-			if (engine.isDebugModeOn !== true) __html_debugBox.style.display = 'none';
+			if (engine.DEBUG_MODE !== true) __html_debugBox.style.display = 'none';
 			__html_container.appendChild(__html_debugBox);
 		}
 

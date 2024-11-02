@@ -11,6 +11,10 @@ export default class SceneOriginHelper extends THREE.Group {
 	#axes;
 
 	onAdded() {
+		if (engine.DEBUG_MODE !== true) {
+			return;
+		}
+
 		this.#grid = new THREE.GridHelper(10, 10,
 			new THREE.Color("#555555"),
 			new THREE.Color("#333333")

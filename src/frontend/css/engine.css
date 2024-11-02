@@ -42,7 +42,7 @@
 }
 
 #engine .engine-debug-box:empty {
-	/* Set engine.isDebugModeOn=false to fully hide the debug box. */
+	/* Set engine.DEBUG_MODE=false to fully hide the debug box. */
 	width: 2em;
 	height: 2em;
 	opacity: 0.2;
