@@ -60,7 +60,7 @@ function setupWebSocket(game_mode) {
     sendPostRequest();
     const userid = document.getElementById("idclient").value;
     console.log(userid);
-    const socket = new WebSocket('wss://localhost:3000/api/soloq/1vs1/');
+    const socket = new WebSocket('wss://' +  window.location.hostname + ':3000/api/soloq/1vs1/');
     let idsalon = null
 
     socket.onopen = async function(e) {

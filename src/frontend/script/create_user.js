@@ -3,12 +3,13 @@
 // Données utilisateur à envoyer
 function sendPostRequest(){
 
-    const url = 'https://localhost:3000/api/users/';  // Remplacez par l'URL correcte de votre API
+    const url = 'https://' + window.location.hostname + ':3000/api/users/';  // Remplacez par l'URL correcte de votre API
     const userData = {
         name: "test1",
         mail: "test2@test.com",
         password: "pass",
-        mode: "Online"
+        mode: "Online",
+		play: false
     };
 
     // Requête POST pour créer un objet User
