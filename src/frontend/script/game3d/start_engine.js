@@ -23,6 +23,7 @@ engine.initialize();
 	engine.scene.add(thing3d);
 }
 
+//TODO limit framerate while not in focus?
 //TODO not sure if this is the part of the program responsible for calling frames
 requestAnimationFrame(frame);
 function frame(time) {
