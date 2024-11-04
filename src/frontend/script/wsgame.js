@@ -9,6 +9,13 @@ lpad = document.getElementById("player1");
 rpad = document.getElementById("player2");
 ball_div = document.getElementById("ball");
 
+field.setAttribute('tabindex', '0'); // Make playground focusable
+// Add event listeners for keydown
+field.addEventListener('keydown', keydown)
+field.addEventListener('keyup', keyup)
+field.focus();
+
+
 /////////////////////////// Socket part ///////////////////////////
 
 function launchSocket(player_name, game_id, mmsocket) {
@@ -91,13 +98,6 @@ window.addEventListener('beforeunload', function(event) {
         console.log("WebSocket closed due to page unload.");
     }
 });
-
-field.setAttribute('tabindex', '0'); // Make playground focusable
-field.focus();
-
-// Add event listeners for keydown
-field.addEventListener('keydown', keydown)
-field.addEventListener('keyup', keyup)
 
 function keydown(event) {
     if (KeyStillDown)

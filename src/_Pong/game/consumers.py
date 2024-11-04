@@ -117,14 +117,14 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         print(f"{GREEN}Ici {self.player_id}, disco:{event}{RESET}")
         user = event["from"]
         if self.master and self.game:
-            self.endgame(user)
+            await self.endgame(user)
         await self.send(text_data=json.dumps({"action": "disconnect", "from": user}))
         await self.disconnect(0)
 
-    def endgame(self, user):
+    async def endgame(self, user):
         if not self.game.over:
             self.game.players[0].score = 1 if self.player_id != user else 0
             self.game.players[1].score = 1 - self.game.players[0].score
             self.game.over = True
-        self.game.save_score()
+        await self.game.save_score()
         self.game = None
