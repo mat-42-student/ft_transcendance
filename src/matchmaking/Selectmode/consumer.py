@@ -61,56 +61,50 @@ class GamesConsumer(AsyncWebsocketConsumer):
             game = Mode.objects.filter(mode=f'{data.get('mode')}').latest('id')
             all_salon = game.salon.all()
             salon = all_salon.latest('id')
-            if (salon == None):
+            print(salon)
+            if (salon is None):
                 raise Salon.DoesNotExist()
-            nb_player_in_salon = salon.player.all().count()
-            if ((game.salon.count() >= max_salon and nb_player_in_salon >= max_player)):
+            if ((game.salon.count() >= max_salon and salon.player1 is not None and salon.player2 is not None)):
                 raise Mode.DoesNotExist()
-            elif(nb_player_in_salon >= max_player):
+            elif(salon.player1 is not None and salon.player2 is not None):
                 raise Salon.DoesNotExist()
             else:
-                salon.player.add(user)
+                salon.player2 = user
                 salon.save() 
         except Mode.DoesNotExist:
+            print('create a game')
             salon = Salon.objects.create()
             salon.save()
-            salon.player.add(user)
+            salon.player1 = user
             salon.save()
             game = Mode.objects.create(mode=f'{data.get('mode')}')
             game.save()
             game.salon.add(salon)
             game.save()
         except Salon.DoesNotExist:
+            print('create salon')
             salon = Salon.objects.create()
             salon.save()
-            salon.player.add(user)
+            salon.player1 = user
             salon.save()
             game.salon.add(salon)
             game.save()
 
 
         self.salonid = salon.id
-        salons = []
         all_salon = game.salon.all()
         id_last_salon = all_salon.latest('id')
-        for e in all_salon:
-            players = e.player.all()
 
-            sal = {
-                f'salon_{e.id}': [{f'player_{player.id}': player.id} for player in players]
-            }
-            salons.append(sal)
-
-        nb_player_in_salon = all_salon.latest('id').player.all().count()
 
         self.gameid = game.id
+        print(f'player1:{salon.player1} player2: {salon.player2}')
         data = {
             'id': self.gameid,
             'game_mode': game.mode,
             'id_salon': id_last_salon.id,
-            'salons': salons,
             'nb_salons': all_salon.count(),
-            'nb_player': nb_player_in_salon
+            'player1': salon.player1_id,
+            'player2': salon.player2
         }
         return (data)
     
@@ -119,7 +113,8 @@ class GamesConsumer(AsyncWebsocketConsumer):
             'group_size': event["group_size"],
             'nbgame': self.gameid,
             'start': True,
-            'userid': self.userid
+            'userid': self.userid,
+
         }))
 
     async def display_group_size(self, infos):
@@ -128,6 +123,9 @@ class GamesConsumer(AsyncWebsocketConsumer):
         nb_salon = infos.get('nb_salons')
         game_mode = infos.get('game_mode')
         salonid = infos.get('id_salon')
+        player1 = infos.get('player1')
+        player2 = infos.get('player2')
+        print(f'player1:{player1} player2: {player2}')
         await self.send(text_data=json.dumps({
             'user': self.userid,
             'group_size': group_size,
@@ -136,7 +134,7 @@ class GamesConsumer(AsyncWebsocketConsumer):
             'new_player': True,
             'start': False
         }))
-        if (group_size == 2 and ((nb_salon == 1 and game_mode == '2P') or (nb_salon == 2 and game_mode == '4P'))):
+        if (player1 is not None and player2 is not None and ((nb_salon == 1 and game_mode == '2P') or (nb_salon == 2 and game_mode == '4P'))):
 
             await self.channel_layer.group_send(self.room_group_name, {
                 "type": "send.message",
@@ -157,7 +155,7 @@ class GamesConsumer(AsyncWebsocketConsumer):
         gamefinish = salon.get(id=self.salonid)
 
         if (gamefinish.score1 is not None and gamefinish.score2 is not None):
-            if ((gamefinish.score1 >= gamefinish.score2 and gamefinish.player.all()[0].id == self.userid) or (gamefinish.score1 <= gamefinish.score2 and gamefinish.player.all()[1].id == self.userid)):
+            if ((gamefinish.score1 >= gamefinish.score2 and int(gamefinish.player1.id) == int(self.userid)) or (gamefinish.score1 <= gamefinish.score2 and int(gamefinish.player2.id) == int(self.userid))):
                 self.winner_room = f'channel_winner_{self.gameid}'
                 infos = {
                     'winner': True,
@@ -169,16 +167,18 @@ class GamesConsumer(AsyncWebsocketConsumer):
                 if (self.mode == '2P'):
                     infos['disconect'] = True
                 if (self.mode == '4P' ):
-                    if (salon.latest('id').player.count() >= 2 and salon.count() >= 3):
+                    if (salon.latest('id').player1 is not None and salon.latest('id').player2 is not None and salon.count() >= 3):
                         infos['disconect'] = True
                         return infos
-                    elif (salon.latest('id').player.count() >= 2 and salon.count() < 3):
+                    elif (salon.latest('id').player1 is None and salon.latest('id').player2 is None and salon.count() < 3):
                         gamefinish = Salon.objects.create()
+                        gamefinish.save()
+                        gamefinish.player1 = user
                         gamefinish.save()
                     else:
                         gamefinish = salon.latest('id')
-                    gamefinish.player.add(user)
-                    gamefinish.save()
+                        gamefinish.player2 = user
+                        gamefinish.save()
                     tournament.salon.add(gamefinish)
                     tournament.save()
                     self.salonid = gamefinish.id
@@ -186,7 +186,7 @@ class GamesConsumer(AsyncWebsocketConsumer):
                     infos['idsalon'] = self.salonid
 
 
-                    if (gamefinish.player.count() == 2):
+                    if (gamefinish.player1 is not None and gamefinish.player2 is not None):
                         infos['start'] = True
                         user.play = True
                         user.save()
@@ -216,9 +216,6 @@ class GamesConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json["payload"]
-        #if ('disconect' in message and message['disconect'] == True):
-        #    self.close()
-         #   return 
         if (message.get('user_id')):
             self.userid = message.get('user_id')
         if (message.get('mode') and not message.get('endgame')):
