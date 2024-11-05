@@ -1,4 +1,5 @@
 import game from './game.js'
+import PlayerBase from './PlayerBase.js';
 
 
 export default {
@@ -6,14 +7,27 @@ export default {
 	get boardSize() { return __boardSize; },
 	get boardEdges() { return __boardEdges; },
 	get isPlaying() { return __isPlaying; },
+	get focusedPlayerIndex() { return __focusedPlayerIndex; },
 
-	startPlaying(){
+
+	/** @type {Array<PlayerBase>} */
+	players,
+	ballPosition: { x: 0, y: 0 },
+
+
+	/**
+	 * @param {Array<PlayerBase>} playerObjects 2 expected.
+	 * @param {*} matchObject
+	 */
+	startPlaying(playerObjects, matchObject){
 		if (game.isPlaying) throw Error('Already playing');
 
 		//TODO
 
 		__isPlaying = true;
 	},
+
+
 
 	stopPlaying() {
 		if (!game.isPlaying) throw Error('Already not playing');
@@ -31,13 +45,20 @@ const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 180 / Math.PI;
 
 
-var __boardDiagonalRadians = 0.5;
-var __boardSize = {width: 0.2, height: 0.2};
-var __boardEdges = {top: 0.1, right: 0.1, bottom: -0.1, left: -0.1};
+let __boardDiagonalRadians = 0.5;
+let __boardSize = {width: 0.2, height: 0.2};
+let __boardEdges = {top: 0.1, right: 0.1, bottom: -0.1, left: -0.1};
 __setBoardDiagonal(45);  // Create actually valid default values.
 
+let __isPlaying = false;
 
-var __isPlaying = false;
+/**
+ * Index for game.players that chooses which of the two players is the 'active' one.
+ * Affects camera placement.
+ * May be -1, to indicate no focus. (local 1v1 or AI vs AI if that was ever a thing)
+ * This gives a "neutral" camera angle.
+ */
+let __focusedPlayerIndex = -1;
 
 
 /**
