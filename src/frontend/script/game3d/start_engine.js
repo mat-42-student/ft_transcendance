@@ -1,6 +1,7 @@
 import engine from 'engine';
 import * as THREE from 'three';
 import * as GAMEOBJECTS from 'gameobjects';
+import game from 'game/game';
 
 
 engine.initialize();
@@ -27,6 +28,7 @@ engine.initialize();
 //TODO not sure if this is the part of the program responsible for calling frames
 requestAnimationFrame(frame);
 function frame(time) {
+	game.onFrame(time);
 	engine.render(time);
 	requestAnimationFrame(frame);
 }

@@ -6,35 +6,34 @@ export default {
 
 	get boardSize() { return __boardSize; },
 	get boardEdges() { return __boardEdges; },
-	get isPlaying() { return __isPlaying; },
-	get focusedPlayerIndex() { return __focusedPlayerIndex; },
+	get isPlaying() { return __matchObject != null; },
 
 
-	/** @type {Array<PlayerBase>} */
-	players,
 	ballPosition: { x: 0, y: 0 },
 
+	usernames: ['No name', 'No name'],
+	paddlePositions: [0, 0],
+	paddleHeights: [0.2, 0.2],
+	scores: [0, 0],
 
-	/**
-	 * @param {Array<PlayerBase>} playerObjects 2 expected.
-	 * @param {*} matchObject
-	 */
-	startPlaying(playerObjects, matchObject){
+
+	startPlaying(matchObject) {
 		if (game.isPlaying) throw Error('Already playing');
-
-		//TODO
-
-		__isPlaying = true;
+		__matchObject = matchObject;
+		matchObject.startMatch();
+		if (level == null) throw Error("Forgot to initialize the level!!!");
 	},
 
+
+	onFrame(time) {
+		__matchObject.onFrame(time);
+	},
 
 
 	stopPlaying() {
 		if (!game.isPlaying) throw Error('Already not playing');
-
-		//TODO
-
-		__isPlaying = false;
+		__matchObject.stopMatch();
+		__matchObject = null;
 	},
 }
 
@@ -45,20 +44,14 @@ const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 180 / Math.PI;
 
 
+let __matchObject = null;
+
 let __boardDiagonalRadians = 0.5;
-let __boardSize = {width: 0.2, height: 0.2};
-let __boardEdges = {top: 0.1, right: 0.1, bottom: -0.1, left: -0.1};
+let __boardSize = { width: 0.2, height: 0.2 };
+let __boardEdges = { top: 0.1, right: 0.1, bottom: -0.1, left: -0.1 };
 __setBoardDiagonal(45);  // Create actually valid default values.
 
-let __isPlaying = false;
-
-/**
- * Index for game.players that chooses which of the two players is the 'active' one.
- * Affects camera placement.
- * May be -1, to indicate no focus. (local 1v1 or AI vs AI if that was ever a thing)
- * This gives a "neutral" camera angle.
- */
-let __focusedPlayerIndex = -1;
+let __level = null;
 
 
 /**
