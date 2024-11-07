@@ -20,6 +20,8 @@ class User(models.Model):
 
 class Salon(models.Model):
 	player = models.ManyToManyField("user", blank=True)
+	player1 = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE, related_name='player_left')
+	player2 = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE, related_name='player_right')
 	score1 = models.IntegerField(blank=True, null=True)
 	score2 = models.IntegerField(blank=True, null=True)
 

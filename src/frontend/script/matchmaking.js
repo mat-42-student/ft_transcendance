@@ -9,6 +9,7 @@ function modeSelection(mode) {
     else if (mode === 'tournament')
     {
         console.log('tournament');
+        inject_code_into_markup("../board.html", "main", "./script/wsgame.js");
         setupWebSocket('4P')
     }
     else if (mode === '1v1') {
