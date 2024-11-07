@@ -105,20 +105,16 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
             except:
                 pass
 
-    # async def normal_endgame(self, event):
-    # # maxscore was reached (and we are master here)
-    #     await self.game.save_score()
-    #     await self.channel_layer.group_send(
-    #         self.room_group_name, {"type": "disconnect.now", "from": "server (game over)"}
-    #     )
-
-    async def disconnect(self, close_code):
     # client wws was closed, sending disconnection to other client
+    async def disconnect(self, close_code):
+        who = "master" if self.master else "guest"
+        print(f"{RED}Player {self.player_id}({who}) has left{RESET}")
+        if self.master and not self.game.over: # game is ending because master left
+            print(f"{RED}Game #{self.game.id} over (player {self.player_id} left){RESET}")        
+            await self.disconnect_endgame(self.player_id)
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "disconnect.now", "from": self.player_id}
         )
-        who = "master" if self.master else "guest"
-        print(f"{RED}Player {self.player_id}({who}) has left{RESET}")
 
     async def disconnect_now(self, event):
     # If self.game.over, game was stopped beacuse maxscore has been reached

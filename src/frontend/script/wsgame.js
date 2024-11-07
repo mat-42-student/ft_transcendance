@@ -1,6 +1,7 @@
 /////////////////////////// onLoad ///////////////////////////
 let matchmakingSocket, socket;
 let ball = [];
+playing = false;
 field = document.getElementById("pong_field");
 KeyStillDown = false;
 move[LEFT_PLAYER] = move[RIGHT_PLAYER] = 0;
@@ -37,7 +38,7 @@ function launchSocket(player_name, game_id, mmsocket) {
     };
     
     socket.onclose = async function(e) {
-		console.log('game_mode (onclose):' + game_mode);
+		// console.log('game_mode (onclose):' + game_mode);
         await matchmakingSocket.send(JSON.stringify({
             action: 'send_data',
             payload: {
@@ -45,7 +46,9 @@ function launchSocket(player_name, game_id, mmsocket) {
                 'mode': game_mode,
             }
         }));
-        inject_code_into_markup("./matchmaking.html", "main", null);
+        window.location.hash = "#home.html";
+        window.location.hash = "#matchmaking.html";
+        // inject_code_into_markup("./home.html", "main", null);
     };
 
     socket.onmessage = async function(e) {
@@ -74,15 +77,18 @@ function launchSocket(player_name, game_id, mmsocket) {
             ball_dx = data.dir[0];
             ball_dy = data.dir[1];
 			game_mode = data.mode;
-			// console.log('game_mode (init):' + game_mode);
+			console.log('INIT : game_mode -> ' + game_mode);
             pad[LEFT_PLAYER] = data.lpos;
             pad[RIGHT_PLAYER] = data.rpos;
             document.getElementById("lplayer").innerText = data.lplayer;
             document.getElementById("rplayer").innerText = data.rplayer;
+            playing = true;
             raf = requestAnimationFrame(play);
             return;
         }
         if (data.action == "disconnect") {
+            console.log("DISCONNECTING");
+            playing = false;
             socket.close();
             cancelAnimationFrame(raf);
         }
@@ -140,7 +146,12 @@ function moveBall() {
 }
 
 function play() {
-    movePaddles();
-    moveBall();
-    requestAnimationFrame(play);
+    if (playing) {
+        console.log("rAFing...")
+        movePaddles();
+        moveBall();
+        requestAnimationFrame(play);
+    }
+    else
+        console.log("Not playing");
 }
