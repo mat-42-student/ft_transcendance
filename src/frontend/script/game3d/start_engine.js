@@ -1,8 +1,15 @@
 import engine from 'engine';
 import * as THREE from 'three';
 import * as GAMEOBJECTS from 'gameobjects';
-import game from 'game/game';
+import game from 'game';
 
+document.body.setAttribute('tabindex', '0'); // Make playground focusable
+document.body.focus();
+document.body.addEventListener('click', () => {
+  document.body.focus();
+});
+
+const __clock = new THREE.Clock(true);
 
 engine.initialize();
 
@@ -28,7 +35,8 @@ engine.initialize();
 //TODO not sure if this is the part of the program responsible for calling frames
 requestAnimationFrame(frame);
 function frame(time) {
-	game.onFrame(time);
-	engine.render(time);
+	const delta = __clock.getDelta();
+	game.onFrame(delta, time);
+	engine.render(delta, time);
 	requestAnimationFrame(frame);
 }

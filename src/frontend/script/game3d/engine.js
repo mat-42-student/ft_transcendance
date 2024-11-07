@@ -64,18 +64,18 @@ export default {
 			__renderer.toneMapping = THREE.ACESFilmicToneMapping;
 			__renderer.toneMappingExposure = 1;
 
-			__clock = new THREE.Clock(true);
-
 			window.addEventListener('resize', __onResize);
 			__onResize();
 		}
 	},
 
 
-	/** @param {DOMHighResTimeStamp} time requestAnimationFrame() can give this value. */
-	render(time) {
+	/**
+	 * @param {number} delta
+	 * @param {DOMHighResTimeStamp} time requestAnimationFrame() can give this value.
+	 */
+	render(delta, time) {
 		{  // Perform an update step
-			const delta = __clock.getDelta();
 			__paramsForAddDuringRender = {delta: delta, time: time};
 
 			const updateQueue = [];
@@ -107,9 +107,6 @@ let __renderer;
 
 /** @type {THREE.Scene} */
 let __scene;
-
-/** @type {THREE.Clock} */
-let __clock;
 
 
 /** @type {HTMLDivElement} */

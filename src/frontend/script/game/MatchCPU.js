@@ -1,11 +1,11 @@
 import game from "game";
-import MatchLocalBase from "./MatchLocalBase";
+import MatchLocalBase from "./MatchLocalBase.js";
 
 
 export default class MatchCPU extends MatchLocalBase {
 
-    constructor(localPlayerInfo) {
-        super(localPlayerInfo);
+    constructor(params) {
+        super(params);
         game.usernames[1] = MatchCPU.#generateRandomNick();
     }
 
@@ -15,8 +15,11 @@ export default class MatchCPU extends MatchLocalBase {
     }
 
 
-	onFrame(time) {
-        super.onFrame(time);
+	onFrame(delta, time) {
+        super.onFrame(delta, time);
+        if (this.canPlayersMove === true) {
+            this.movePlayer(1);
+        }
     }
 
 
