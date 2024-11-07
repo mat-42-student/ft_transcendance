@@ -50,7 +50,7 @@ function launchSocket(player_name, game_id, mmsocket) {
 
     socket.onmessage = async function(e) {
         data = JSON.parse(e.data);
-		console.log('data = ' + data);
+		// console.log('data = ' + data);
         if (data.action == "info") {
             ball[0] = data.ball[0];
             ball[1] = data.ball[1];
@@ -74,10 +74,9 @@ function launchSocket(player_name, game_id, mmsocket) {
             ball_dx = data.dir[0];
             ball_dy = data.dir[1];
 			game_mode = data.mode;
-            // document.getElementById("game_id").innerText = game_id
+			// console.log('game_mode (init):' + game_mode);
             pad[LEFT_PLAYER] = data.lpos;
             pad[RIGHT_PLAYER] = data.rpos;
-			console.log('game_mode (init):' + game_mode);
             document.getElementById("lplayer").innerText = data.lplayer;
             document.getElementById("rplayer").innerText = data.rplayer;
             raf = requestAnimationFrame(play);

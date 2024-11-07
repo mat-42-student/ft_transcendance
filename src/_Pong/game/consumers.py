@@ -26,7 +26,7 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
-    # Receive message from WebSocket : immediate publish into lobby
+    # Receive message from WebSocket (from client): immediate publish into lobby
     async def receive(self, text_data):
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "handle.message", "message": text_data}
@@ -44,9 +44,9 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
             return await self.wannaplay(data["from"])
 
     async def get_and_check_info_from_db(self, player):
-        # check from database if player (identified from his JWT) is in actual lobby
-        # then get lobby's mode
-        print(f"{GREEN}getAndCheck. game_id: {self.game_id}{RESET}")
+        # TODO : check from database if player (identified from his JWT) is in actual lobby
+        # DONE : then get lobby's mode
+        # print(f"{GREEN}getAndCheck. game_id: {self.game_id}{RESET}")
         try:
             self.salon = await Salon.objects.aget(id=self.game_id)
             self.mode = await Mode.objects.aget(salon=self.salon)
@@ -105,26 +105,40 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
             except:
                 pass
 
+    # async def normal_endgame(self, event):
+    # # maxscore was reached (and we are master here)
+    #     await self.game.save_score()
+    #     await self.channel_layer.group_send(
+    #         self.room_group_name, {"type": "disconnect.now", "from": "server (game over)"}
+    #     )
+
     async def disconnect(self, close_code):
-        if self.master and self.game:
-            self.endgame(self.player_id)
+    # client wws was closed, sending disconnection to other client
         await self.channel_layer.group_send(
-            self.room_group_name, {"type": "make.disconnect", "from": self.player_id}
+            self.room_group_name, {"type": "disconnect.now", "from": self.player_id}
         )
+        who = "master" if self.master else "guest"
+        print(f"{RED}Player {self.player_id}({who}) has left{RESET}")
+
+    async def disconnect_now(self, event):
+    # If self.game.over, game was stopped beacuse maxscore has been reached
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-
-    async def make_disconnect(self, event):
-        print(f"{GREEN}Ici {self.player_id}, disco:{event}{RESET}")
         user = event["from"]
-        if self.master and self.game:
-            await self.endgame(user)
+        print(f"{YELLOW}Disconnect_now from {user}{RESET}")
+        if self.master and self.game.over: # game ended normally
+            print(f"{RED}Game #{self.game.id} over (maxscore reached){RESET}")        
+            await self.game.save_score()
+        elif self.master and not self.game.over: # game is ending because one player left
+            print(f"{RED}Game #{self.game.id} over (player {user} left){RESET}")        
+            await self.disconnect_endgame(user)
+        # if self.player_id != user:
         await self.send(text_data=json.dumps({"action": "disconnect", "from": user}))
-        await self.disconnect(0)
+        # await self.disconnect(0)
 
-    async def endgame(self, user):
-        if not self.game.over:
-            self.game.players[0].score = 1 if self.player_id != user else 0
-            self.game.players[1].score = 1 - self.game.players[0].score
-            self.game.over = True
+    async def disconnect_endgame(self, user):
+        self.game.players[0].score = 10 if self.player_id != user else 0
+        self.game.players[1].score = 10 - self.game.players[0].score
+        self.game.over = True
+        print(f"{RED}Player {user} left")
         await self.game.save_score()
         self.game = None
