@@ -16,9 +16,9 @@ window.onhashchange = onChangePage;
 onChangePage();
 
 function onChangePage(){
-	if (window.location.hash === currentPath) {
-		return;  // Same page already, do nothing
-	}
+	// if (window.location.hash === currentPath) {
+	// 	return;  // Same page already, do nothing
+	// }
 
 	currentPath = window.location.hash;
 	if (currentPath.length >= 1 && currentPath[0] === '#') {

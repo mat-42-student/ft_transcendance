@@ -16,22 +16,24 @@ class User(models.Model):
 		return self.name
 
 	class Meta:
-		db_table = 'User'
+		db_table = 'user'
 
 class Salon(models.Model):
-	player = models.ManyToManyField("User", blank=True)
+	player = models.ManyToManyField("user", blank=True)
+	player1 = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE, related_name='player_left')
+	player2 = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE, related_name='player_right')
 	score1 = models.IntegerField(blank=True, null=True)
 	score2 = models.IntegerField(blank=True, null=True)
 
 	class Meta:
-		db_table = 'Salon'
+		db_table = 'salon'
 
 class Mode(models.Model):
 	class Mode(models.TextChoices):
 		soloq = '2P', 'soloq'
 		TOURNAMENT = '4P', 'tournament'
 	mode = models.CharField(choices=Mode)
-	salon = models.ManyToManyField("Salon", blank=True)
+	salon = models.ManyToManyField("salon", blank=True)
 
 	class Meta:
-		db_table = 'Mode'
+		db_table = 'mode'

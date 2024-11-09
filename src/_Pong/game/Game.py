@@ -2,8 +2,8 @@ from random import randint, choice
 from time import time
 from json import dumps
 from asyncio import sleep as asleep
-# from asgiref.sync import database_sync_to_async
-from .const import LEFT, RIGHT, HEIGHT, WIDTH, PADWIDTH, RADIUS, FPS, MAX_SCORE, GREEN, RED, RESET
+from channels.db import database_sync_to_async #type: ignore
+from .const import LEFT, RIGHT, HEIGHT, WIDTH, PADWIDTH, PADTHICKNESS, RADIUS, FPS, MAX_SCORE, GREEN, RED, RESET
 from .models import Salon
 
 class Player:
@@ -15,9 +15,6 @@ class Player:
         self.pos = (HEIGHT - PADWIDTH) / 2
         self.pad = PADWIDTH
         self.move = 0
-
-    # def set_move(self, move):
-    #     self.move = int(move)
 
     def move_paddle(self, speed):
         if (self.move < 0 and self.pos <= 0):
@@ -71,9 +68,9 @@ class Game:
         if (self.ball_pos[1] <= 0 or self.ball_pos[1] + RADIUS >= HEIGHT):
             self.ball_spd[1] *= -1
         # left / right collision
-        if (self.ball_pos[0] <= 20):
+        if (self.ball_pos[0] <= PADTHICKNESS):
             await self.side_collision(LEFT, wsh)
-        if (self.ball_pos[0] + RADIUS >= WIDTH - 20):
+        if (self.ball_pos[0] + RADIUS >= WIDTH - PADTHICKNESS):
             await self.side_collision(RIGHT, wsh)
 
     async def side_collision(self, side, wsh):
@@ -89,9 +86,9 @@ class Game:
             self.over = True
         # if the match continues, reset the values and move on to the next point.
         self.reset_values()
-        await wsh.channel_layer.group_send(
-            wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
-        )
+        # await wsh.channel_layer.group_send(
+        #     wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
+        # )
 
     def set_player_move(self, id, move):
         self.players[id].move = int(move)
@@ -128,23 +125,19 @@ class Game:
             self.move_players()
             await self.move_ball(wsh)
             last_frame_time = time()
-        await self.end_game()
         await wsh.channel_layer.group_send(
-            wsh.room_group_name, {"type": "make.disconnect", "from": "server"}
+            wsh.room_group_name, {"type": "disconnect.now", "from": "server"}
         )
     
-    async def end_game(self):
-        self.over = True
-        print(f"{RED}Game #{self.id} over : {self.players[0].name}:{self.players[0].score} - {self.players[1].score}:{self.players[1].name}{RESET}")
-
-    # @database_sync_to_async
+    @database_sync_to_async
     def save_score(self):
-        print("Saving score")
+        print("Saving score...")
         try:
             salon = Salon.objects.get(id=self.id)
             salon.score1 = self.players[0].score
             salon.score2 = self.players[1].score
-            # salon.save()
-            print("Score saved")
+            winner = self.players[0].name if salon.score1 > salon.score2 else self.players[1].name
+            salon.save()
+            print(f"{GREEN}Score saved. Winner is player {winner}. Score is {salon.score1} - {salon.score2}{RESET}")
         except Salon.DoesNotExist:
             print(f"{RED}Lobby #{self.id} not found.{RESET}")
