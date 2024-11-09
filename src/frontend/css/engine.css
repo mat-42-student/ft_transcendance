@@ -57,11 +57,14 @@
 
 #engine .engine-debug-box .engine-debug-warn {
 	border-left-color: var(--engine-color-warn);
+	/* color: var(--engine-color-warn); */
+	font-weight: bold;
 }
 
 #engine .engine-debug-box .engine-debug-err {
 	border-left-color: var(--engine-color-err);
 	color: var(--engine-color-err);
+	font-weight: bold;
 }
 
 

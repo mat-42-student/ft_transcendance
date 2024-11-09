@@ -25,5 +25,8 @@ function onChangePage(){
 		currentPath = currentPath.substring(1);
 	}
 	inject_code_into_markup(currentPath, 'main', null)
-	// console.log('Router: Switched to ', currentPath);
+
+	if (cancelCurrentGameFunction != null) {
+		cancelCurrentGameFunction();
+	}
 }

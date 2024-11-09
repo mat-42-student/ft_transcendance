@@ -25,12 +25,12 @@ engine.initialize();
 	engine.scene.add(thing3d);
 }
 
+
 //TODO limit framerate while not in focus?
-//TODO not sure if this is the part of the program responsible for calling frames
 requestAnimationFrame(frame);
 function frame(time) {
 	const delta = clock.getDelta();
-	// ...onFrame(delta, time); //TODO call frame on the active game
+	if (typeof gameFrame === 'function') gameFrame(delta, time);
 	engine.render(delta, time);
 	requestAnimationFrame(frame);
 }

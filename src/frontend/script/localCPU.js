@@ -1,24 +1,6 @@
-/////////////////////////// On load ///////////////////////////
+// MARK: Events
 
-const engine = document.getElementById('bg-engine');
-
-side = 0;
-ball_x = 0;
-ball_y = 0;
-
-document.body.setAttribute('tabindex', '0'); // Make playground focusable
-document.body.focus();
-
-localGameCPU();
-
-/////////////////////////// Events part ///////////////////////////
-
-engine.addEventListener('click', () => {
-  engine.focus();
-});
-
-document.body.addEventListener('keydown', keydown)
-document.body.addEventListener('keyup', keyup)
+import engine from "engine";
 
 function keydown(event) {
     key = event.key;
@@ -39,7 +21,7 @@ function keyup(event) {
     move[0] = 0;
 }
 
-/////////////////////////// Utils ///////////////////////////
+// MARK: Utils
 
 function generateRandomNick() {
     const adjectives = ["Shadow", "Steady", "Mighty", "Funny", "Hidden", "Normal"];
@@ -56,29 +38,47 @@ function randomInRange(a, b) {
     return Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
 }
 
-/////////////////////////// Game engine ///////////////////////////
+// MARK: Game engine
 
-function localGameCPU() {
-    init();
+export function startLocalGameCPU() {
+    if (playing == true) throw Error("Already playing??");
+    playing = true;
+    engine.loading = true;
+
+    side = 0;
+    ball_x = 0;
+    ball_y = 0;
+
+    document.body.setAttribute('tabindex', '0'); // Make playground focusable
+    document.body.focus();
+
+    document.body.addEventListener('click', () => {
+      document.body.focus();
+    });
+
+    document.body.addEventListener('keydown', keydown)
+    document.body.addEventListener('keyup', keyup)
+
     difficulty = 3.2;
-    // difficulty = document.getElementById("diff").value;
-    raf = requestAnimationFrame(play);
-}
 
-function init() {
     //TODO this will eventually pick from a list of backgrounds.
     //     This placeholder is here to test that the data moves around correctly.
     level = 'random level ' + Math.floor(randomInRange(0,10));
 
-    engine.state = new window.imports.StateInGame(level);
+    //TODO engine. ... actually load the level
 
-    engine.state.adversaryUser = generateRandomNick();
+    engine.gameState.playerNames[0] = '//TODO read player name here';
+    engine.gameState.playerNames[1] = generateRandomNick();
 
-    startRound();
-    playing = true;
     move[LEFT_PLAYER] = move[RIGHT_PLAYER] = score[LEFT_PLAYER] = score[RIGHT_PLAYER] = 0;
     keyStillCPUDown = false;
+
+    engine.loading = false;
+    startRound();
+    cancelCurrentGameFunction = () => { endgame(true); };
+    gameFrame = simulationFrame;
 }
+
 
 function startRound() {
     field_size = {x: 4, y: 3};
@@ -93,16 +93,19 @@ function startRound() {
 }
 
 function copyValuesToEngine() {
-    engine.state.playerScore = 0;
-    engine.state.playerPaddleSize = size[LEFT_PLAYER];
-    engine.state.playerPaddlePosition = pad[LEFT_PLAYER];
-    
-    engine.state.adversaryScore = 0;
-    engine.state.adversaryPaddleSize = size[RIGHT_PLAYER];
-    engine.state.adversaryPaddlePosition = pad[RIGHT_PLAYER];
+    engine.gameState.isPlaying = playing;
 
-    engine.state.arenaSize = field_size;
-    engine.state.ballPosition = {x: ball_x, y: ball_y};
+    engine.gameState.scores = score;
+
+    engine.gameState.paddleHeights = size;
+
+    engine.gameState.paddlePositions = pad;
+
+    engine.gameState.boardSize.width = field_size.x;
+    engine.gameState.boardSize.height = field_size.y;
+
+    engine.gameState.ballPosition.x = ball_x;
+    engine.gameState.ballPosition.y = ball_y;
 }
 
 function cpuMove() {
@@ -157,30 +160,32 @@ function side_collision(side) {
 
 function scoreup(side) {
     score[side]++;
-    engine.state.playerScore = score[LEFT_PLAYER];
-    engine.state.adversaryScore = score[RIGHT_PLAYER];
+
+    //TODO signal score change to engine gamestate
+
     if (score[side] >= SCORE_MAX) {
-        endgame();
+        endgame(false);
         return;
     }
     startRound();
 }
 
-function endgame() {
-    winner = score[LEFT_PLAYER] >= SCORE_MAX ? "Player 1" : "CPU";
-    alert(`GAME OVER\nLe gagnant est ${winner}!`);
-    cancelAnimationFrame(raf);
-    // init(); //REVIEW ??????????????
-    engine.state = new window.imports.StateIdle(engine.state);
+/** @param {boolean} cancelled  */
+function endgame(cancelled) {
+    if (cancelled !== true) {
+        winner = score[LEFT_PLAYER] >= SCORE_MAX ? "Player 1" : "CPU";
+        alert(`GAME OVER\nLe gagnant est ${winner}!`);
+    }
+    // init(); //REVIEW ?
     playing = false;
+    copyValuesToEngine();
     window.location.hash = 'matchmaking.html';
+    gameFrame = undefined;
+    cancelCurrentGameFunction = undefined;
 }
 
-function play(time) {
+function simulationFrame(time) {
     movePaddles();
     moveBall();
     copyValuesToEngine();
-    engine.frame(time);
-    if (playing)
-        requestAnimationFrame(play);
 }

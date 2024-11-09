@@ -6,6 +6,7 @@ const SCORE_MAX = 10;
 let field, lpad, rpad, ball_div, playing, raf, side, difficulty;
 let ball_dx, ball_dy, ball_x, ball_y, winner, speed, keyStillCPUDown;
 let pad = [], move = [], score = [], keyStillDown = [], nick = [], size = [];
+let gameFrame, cancelCurrentGameFunction;
 
 /////////////////////////// Utils part ///////////////////////////
 

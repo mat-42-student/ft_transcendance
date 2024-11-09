@@ -1,13 +1,10 @@
 import * as THREE from 'three';
 import engine from 'engine';
+import GameState from '../GameState.js';
 
 
-const __DEBUG_MODE= true;
-
+// MARK: Public
 export default {
-
-
-
 
 	// Readonly getters, because yes, i am that paranoid of accidentally replacing variables.
 	get scene() { return __scene; },
@@ -18,6 +15,7 @@ export default {
 	 * Ideally any debug related visualization or feature remains in the code,
 	 * but is switched on/off based on this. */
 	get DEBUG_MODE() { return __DEBUG_MODE; },
+	get gameState() { return __gameState; },
 
 
 	/** Hide or display the loading overlay.
@@ -97,6 +95,13 @@ export default {
 		__renderer.render(__scene, __camera);
 	},
 };
+
+
+// MARK: Private
+
+const __DEBUG_MODE= true;
+
+let __gameState = new GameState();
 
 
 /** @type {THREE.PerspectiveCamera} */
