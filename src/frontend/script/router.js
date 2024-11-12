@@ -2,7 +2,7 @@ import global from 'global';
 
 
 // Header. always present
-inject_code_into_markup('menu.html', 'nav', null);
+global.inject_code_into_markup('menu.html', 'nav', null);
 
 
 // if we can't detect when the address changes, we're Mega Screwed™
@@ -28,7 +28,7 @@ function onChangePage(){
 	if (currentPath.length >= 1 && currentPath[0] === '#') {
 		currentPath = currentPath.substring(1);
 	}
-	inject_code_into_markup(currentPath, 'main', null)
+	global.inject_code_into_markup(currentPath, 'main', null)
 
 	if (global.gameCancelFunction != null) {
 		global.gameCancelFunction();

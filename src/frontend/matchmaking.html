@@ -1,8 +1,11 @@
 <div id="matchmaking">
     <h1>Sélectionnez un Mode de Jeu</h1>
     <!-- <button onclick="sendPostRequest()">Create User</button> -->
-    <button onclick="modeSelection('matchmaking')">Matchmaking 1 vs 1</button>
-    <button onclick="modeSelection('tournament')">Tournoi</button>
-    <button onclick="modeSelection('1v1')">1 vs 1 local</button>
-    <button onclick="modeSelection('cpu')">CPU</button>
+
+    <script type="module" src="./script/matchmaking.js"></script>
+
+    <button onclick="window.modeMatchmaking()">Matchmaking 1 vs 1</button>
+    <button onclick="window.modeTournament()">Tournoi</button>
+    <button onclick="window.mode1v1()">1 vs 1 local</button>
+    <button onclick="window.modeCPU()">CPU</button>
 </div>
