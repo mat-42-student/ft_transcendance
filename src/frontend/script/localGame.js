@@ -57,8 +57,6 @@ export async function startLocalGame(isCPU) {
     global.isPlaying = true;
     __isCPU = isCPU;
 
-    //TODO actually use isCPU to switch between a bot and p2
-
     engine.loading = true;
 
     __cpuMistake.delay.min = 0.1;
@@ -139,8 +137,6 @@ function movePaddles(delta) {
             -limit, limit);
     }
 }
-
-//TODO delete comment MARK: move ball
 
 function moveBall(delta) {
     global.game.ballPosition.x += delta * __ballDirection.x * __ballSpeed;
