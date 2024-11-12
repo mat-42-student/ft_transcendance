@@ -1,3 +1,6 @@
+import global from 'global';
+
+
 // Header. always present
 inject_code_into_markup('menu.html', 'nav', null);
 
@@ -16,6 +19,7 @@ window.onhashchange = onChangePage;
 onChangePage();
 
 function onChangePage(){
+	// REVIEW delete or keep this?
 	// if (window.location.hash === currentPath) {
 	// 	return;  // Same page already, do nothing
 	// }
@@ -26,7 +30,7 @@ function onChangePage(){
 	}
 	inject_code_into_markup(currentPath, 'main', null)
 
-	if (cancelCurrentGameFunction != null) {
-		cancelCurrentGameFunction();
+	if (global.gameCancelFunction != null) {
+		global.gameCancelFunction();
 	}
 }

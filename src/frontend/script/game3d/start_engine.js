@@ -1,4 +1,5 @@
 import engine from 'engine';
+import global from 'global';
 import * as THREE from 'three';
 import * as GAMEOBJECTS from 'gameobjects';
 
@@ -30,7 +31,7 @@ engine.initialize();
 requestAnimationFrame(frame);
 function frame(time) {
 	const delta = clock.getDelta();
-	if (typeof gameFrame === 'function') gameFrame(delta, time);
+	if (global.gameFrameFunction != null) global.gameFrameFunction(delta, time);
 	engine.render(delta, time);
 	requestAnimationFrame(frame);
 }

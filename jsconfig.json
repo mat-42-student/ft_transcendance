@@ -3,6 +3,8 @@
 		"baseUrl": "./src/frontend/script/",
 		"paths": {
 			"engine": ["./game3d/engine.js"],
+			"global": ["./global.js"],
+			"input": ["./input.js"],
 			"gameobjects": ["./game3d/gameobjects/_exports.js"]
 		}
 	}

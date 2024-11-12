@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import engine from 'engine';
-import GameState from '../GameState.js';
 
 
 // MARK: Public
@@ -15,7 +14,6 @@ export default {
 	 * Ideally any debug related visualization or feature remains in the code,
 	 * but is switched on/off based on this. */
 	get DEBUG_MODE() { return __DEBUG_MODE; },
-	get gameState() { return __gameState; },
 
 
 	/** Hide or display the loading overlay.
@@ -100,8 +98,6 @@ export default {
 // MARK: Private
 
 const __DEBUG_MODE= true;
-
-let __gameState = new GameState();
 
 
 /** @type {THREE.PerspectiveCamera} */
