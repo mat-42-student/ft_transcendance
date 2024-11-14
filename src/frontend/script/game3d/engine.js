@@ -171,6 +171,7 @@ function __onObjectRemovedFromScene(e) {
 
 function __onResize() {
 	const rect = __html_container.getBoundingClientRect();
+	__renderer.setPixelRatio(window.devicePixelRatio / 10);  //REVIEW what about a limiter? could this be a setting for the user? can we autodetect a good value?
 	__renderer.setSize(rect.width, rect.height);
 	__camera.aspect = rect.width / rect.height;
 }

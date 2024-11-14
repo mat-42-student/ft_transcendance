@@ -53,7 +53,7 @@ function bounce1D(pos, mirror) { return -(pos - mirror) + mirror; }
 // MARK: Game engine
 
 export async function startLocalGame(isCPU) {
-    if (playing == true) throw Error("Already playing??");
+    if (global.isPlaying == true) throw Error("Already playing??");
     global.isPlaying = true;
     __isCPU = isCPU;
 

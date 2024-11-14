@@ -1,17 +1,14 @@
 import global from 'global';
 import * as LOCAL_GAME from './localGame.js'
 
-//FIXME how do i get stuff in a module to execute on load.. this worked ONCE
-debugger;
 
 window['modeMatchmaking'] = modeMatchmaking;
 window['modeTournament'] = modeTournament;
 window['mode1v1'] = mode1v1;
 window['modeCPU'] = modeCPU;
-console.log('adsdsadad');
+
 
 function modeCPU() {
-    debugger;
     global.inject_code_into_markup("../playing.html", "main", null);
     LOCAL_GAME.startLocalGame(true);
 }

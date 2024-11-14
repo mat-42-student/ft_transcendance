@@ -33,5 +33,7 @@ function frame(time) {
 	const delta = clock.getDelta();
 	if (global.gameFrameFunction != null) global.gameFrameFunction(delta, time);
 	engine.render(delta, time);
-	requestAnimationFrame(frame);
+	setTimeout(() => {
+		requestAnimationFrame(frame);
+	}, 33);  //REVIEW powersave limit because working in K0
 }
