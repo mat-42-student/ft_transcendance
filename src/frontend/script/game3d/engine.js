@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import engine from 'engine';
+import CameraTarget from './CameraTarget.js';
 
 
 // MARK: Public
@@ -7,7 +8,7 @@ export default {
 
 	// Readonly getters, because yes, i am that paranoid of accidentally replacing variables.
 	get scene() { return __scene; },
-	get camera() { return __camera; },
+	get cameraTarget() { return __cameraTarget; },
 	get renderer() { return __renderer; },
 	get html_debugBox() { return __html_debugBox; },
 	/** General purpose flag that can be read by anyone.
@@ -102,6 +103,9 @@ const __DEBUG_MODE= true;
 
 /** @type {THREE.PerspectiveCamera} */
 let __camera;
+
+/** @type {CameraTarget} */
+let __cameraTarget;
 
 /** @type {THREE.WebGLRenderer} */
 let __renderer;
