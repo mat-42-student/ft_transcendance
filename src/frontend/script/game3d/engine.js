@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import engine from 'engine';
 import CameraTarget from './CameraTarget.js';
+import global from 'global';
 
 
 // MARK: Public
@@ -84,6 +85,8 @@ export default {
 	render(delta, time) {
 		this.isProcessingFrame = true;
 
+		__updateAutoResolution(delta);
+
 		{  // Game logic update
 			__paramsForAddDuringRender = {delta: delta, time: time};
 
@@ -157,6 +160,10 @@ let __html_debugBox;
 let __html_loading;
 
 
+/** Pixel density used for auto resolution */
+let __currentRatio = 1;
+
+
 /**
  * tracks if we are during a engine.render() call (null if not),
  * and if so, stores the parameters to be passed to Object3D's onRender() methods.
@@ -205,7 +212,28 @@ function __onObjectRemovedFromScene(e) {
 
 function __onResize() {
 	const rect = __html_container.getBoundingClientRect();
-	__renderer.setPixelRatio(window.devicePixelRatio / 10);  //REVIEW what about a limiter? could this be a setting for the user? can we autodetect a good value?
+	__renderer.setPixelRatio(__currentRatio);
 	__renderer.setSize(rect.width, rect.height);
 	__camera.aspect = rect.width / rect.height;
+}
+
+
+function __updateAutoResolution(delta) {
+	const targetFramerate = global.powersave ? 10 : 60;
+	const targetDelta = 1 / targetFramerate;
+
+	// haha funi name (but true).  Positive = faster than target, negative = too slow.
+	const deltaDelta = targetDelta - delta;
+
+	// Arbitrary value, increase to speed up adjustments.
+	const ADJUSTMENT_SPEED = 30;
+	// Just apply it a little bit.
+	// Delta is squared so small numbers get even smaller (reduces oscillation when near target)
+	__currentRatio += (deltaDelta * ADJUSTMENT_SPEED) * (deltaDelta * ADJUSTMENT_SPEED);
+
+	// Prevent rendering higher than the screen's true resolution (wasteful)
+	const ratioMax = global.powersave ? window.devicePixelRatio * 0.5 : window.devicePixelRatio;
+	// Prevent rendering at an unwatchable resolution
+	const ratioMin = ratioMax * 0.3;
+	__currentRatio = global.clamp(__currentRatio, ratioMin, ratioMax);
 }

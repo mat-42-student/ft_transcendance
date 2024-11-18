@@ -53,4 +53,6 @@ export default {
 			return max;
 		return value;
 	},
+
+	get powersave() { return !global.isPlaying && !document.hasFocus(); },
 }

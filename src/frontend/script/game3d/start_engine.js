@@ -30,13 +30,16 @@ engine.initialize();
 }
 
 
-//TODO limit framerate while not in focus?
 requestAnimationFrame(frame);
 function frame(time) {
 	const delta = clock.getDelta();
 	if (global.gameFrameFunction != null) global.gameFrameFunction(delta, time);
 	engine.render(delta, time);
-	setTimeout(() => {
+	if (global.powersave) {
+		setTimeout(() => {
+			requestAnimationFrame(frame);
+		}, 1 / 10);
+	} else {
 		requestAnimationFrame(frame);
-	}, 33);  //REVIEW powersave limit because working in K0
+	}
 }
