@@ -54,6 +54,8 @@ export default {
 
 		{  // Setup ThreeJS
 			__scene = new THREE.Scene();
+
+			//FIXME these events are NOT recursive. Either inject code that binds the objects, or use "added" and make each object3d add itself. wait i guess thats the same thing. huh. hmm. uh huh. thinking time
 			__scene.addEventListener('childadded', __onObjectAddedToScene);
 			__scene.addEventListener('childremoved', __onObjectRemovedFromScene);
 
@@ -146,6 +148,9 @@ let __renderer;
 /** @type {THREE.Scene} */
 let __scene;
 
+/** @type {THREE.Group} */
+let __level;
+
 
 /** @type {HTMLDivElement} */
 let __html_container;
@@ -181,6 +186,7 @@ function __onObjectAddedToScene(e) {
 		throw Error("Adding an object that requires to be loaded, but isn't.");
 	}
 
+	debugger
 	if ('onAdded' in obj) {
 		obj.onAdded();
 	}

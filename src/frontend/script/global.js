@@ -86,5 +86,5 @@ export default {
 		return source.slerp(target, 1 - Math.pow(time, delta));
 	},
 
-	get powersave() { return !global.isPlaying && !document.hasFocus(); },
+	get powersave() { return !this.isPlaying && !document.hasFocus(); },
 }

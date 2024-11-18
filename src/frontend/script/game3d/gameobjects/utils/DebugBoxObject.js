@@ -12,7 +12,8 @@ export default class DebugBoxObject extends THREE.Object3D {
 	html_div;
 
 
-	onAdded() {
+	constructor() {
+		super();
 		this.html_div = document.createElement('div');
 		engine.html_debugBox.appendChild(this.html_div);
 	}

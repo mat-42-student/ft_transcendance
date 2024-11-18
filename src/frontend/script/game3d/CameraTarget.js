@@ -76,8 +76,8 @@ export default class CameraTarget {
 				this.smoothSpeed, delta);
 		}
 
-		camera.position = this.#current.pos;
-		camera.rotation = this.#current.rot;
+		camera.position.copy(this.#current.pos);
+		camera.rotation.setFromQuaternion(this.#current.rot);
 		camera.fov = this.#current.fov;
 
 		this.#cameraRefresh(camera, helper, canvasSize);
