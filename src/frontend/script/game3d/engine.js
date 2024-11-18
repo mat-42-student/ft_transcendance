@@ -54,12 +54,19 @@ export default {
 
 		{  // Setup ThreeJS
 			__scene = new THREE.Scene();
+			__scene.name = "Engine Scene";
 
+			//REVIEW does this injection work?
+			const fakeEvent = { child: __scene };
+			__onObjectAddedToScene(fakeEvent);
 			//FIXME these events are NOT recursive. Either inject code that binds the objects, or use "added" and make each object3d add itself. wait i guess thats the same thing. huh. hmm. uh huh. thinking time
-			__scene.addEventListener('childadded', __onObjectAddedToScene);
-			__scene.addEventListener('childremoved', __onObjectRemovedFromScene);
+			// __scene.addEventListener('childadded', __onObjectAddedToScene);
+			// __scene.addEventListener('childremoved', __onObjectRemovedFromScene);
 
 			__camera = new THREE.PerspectiveCamera();
+			__cameraHelper = new THREE.CameraHelper(__camera);
+			__cameraHelper.name = 'Camera Helper';
+			__scene.add(__cameraHelper);
 
 			__renderer = new THREE.WebGLRenderer({
 				canvas: __html_canvas,
@@ -69,8 +76,7 @@ export default {
 			__renderer.toneMapping = THREE.ACESFilmicToneMapping;
 			__renderer.toneMappingExposure = 1;
 
-			__level = new THREE.Group();
-			__scene.add(__level);
+			engine.clearLevel();
 
 			window.addEventListener('resize', __onResize);
 			__onResize();
@@ -110,13 +116,11 @@ export default {
 		// Camera system
 		const canvasSize = new THREE.Vector2(__renderer.domElement.clientWidth,
 			__renderer.domElement.clientHeight);
-		const cameraHelper = new THREE.CameraHelper(__camera);
-		cameraHelper.visible = engine.DEBUG_MODE;
-		__cameraTarget.onFrame(delta, __camera, cameraHelper, canvasSize);
+		__cameraHelper.visible = engine.DEBUG_MODE;
+		__cameraHelper.camera = __camera;
+		__cameraTarget.onFrame(delta, __camera, __cameraHelper, canvasSize);
 
 		__renderer.render(__scene, __camera);
-
-		__scene.remove(cameraHelper);
 
 		this.isProcessingFrame = false;
 	},
@@ -126,6 +130,7 @@ export default {
 		if (this.isProcessingFrame) throw Error("Nuh uh");
 		__scene.remove(__level);
 		__level = new THREE.Group();
+		__level.name = "Engine Level";
 		__scene.add(__level);
 	}
 };
@@ -141,6 +146,9 @@ let __camera;
 
 /** @type {CameraTarget} */
 let __cameraTarget;
+
+/** @type {THREE.CameraHelper} */
+let __cameraHelper;
 
 /** @type {THREE.WebGLRenderer} */
 let __renderer;
@@ -181,12 +189,17 @@ function __onObjectAddedToScene(e) {
 	/** @type {THREE.Object3D} */
 	const obj = e.child;
 
+	console.log('ADD', obj.name);  //REVIEW remove log
+
+	//REVIEW does this injection work?
+	obj.addEventListener('childadded', __onObjectAddedToScene);
+	obj.addEventListener('childremoved', __onObjectRemovedFromScene);
+
 	const statics = obj.__proto__.constructor;
 	if (statics.isLoaded === false) {
 		throw Error("Adding an object that requires to be loaded, but isn't.");
 	}
 
-	debugger
 	if ('onAdded' in obj) {
 		obj.onAdded();
 	}
@@ -209,6 +222,8 @@ function __onObjectRemovedFromScene(e) {
 	/** @type {THREE.Object3D} */
 	const obj = e.child;
 
+	console.log('RM', obj.name);  //FIXME this is not recursive at all
+
 	// you can opt out of auto dispose, if you need to 'reuse' your object3D.
 	if ('dispose' in obj && obj.noAutoDispose !== true) {
 		obj.dispose();
@@ -225,6 +240,8 @@ function __onResize() {
 
 
 function __updateAutoResolution(delta) {
+	__currentRatio = window.devicePixelRatio; __renderer.setPixelRatio(__currentRatio); return;  //FIXME this is probably crap. add a restoring force that tries to increase framerate? how can i be sure that it does what i want?
+
 	const targetFramerate = global.powersave ? 10 : 60;
 	const targetDelta = 1 / targetFramerate;
 
@@ -232,14 +249,18 @@ function __updateAutoResolution(delta) {
 	const deltaDelta = targetDelta - delta;
 
 	// Arbitrary value, increase to speed up adjustments.
-	const ADJUSTMENT_SPEED = 30;
+	const ADJUSTMENT_SPEED = 1000;
 	// Just apply it a little bit.
 	// Delta is squared so small numbers get even smaller (reduces oscillation when near target)
 	__currentRatio += (deltaDelta * ADJUSTMENT_SPEED) * (deltaDelta * ADJUSTMENT_SPEED);
+
+	// Given that the display has a
+	// __currentRatio += 0.1;
 
 	// Prevent rendering higher than the screen's true resolution (wasteful)
 	const ratioMax = global.powersave ? window.devicePixelRatio * 0.5 : window.devicePixelRatio;
 	// Prevent rendering at an unwatchable resolution
 	const ratioMin = ratioMax * 0.3;
 	__currentRatio = global.clamp(__currentRatio, ratioMin, ratioMax);
+	__renderer.setPixelRatio(__currentRatio);
 }

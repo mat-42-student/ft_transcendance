@@ -58,32 +58,39 @@ export default {
 	},
 
 	/**
-	 * NOTE - turns out ThreeJS already has MathUtils.damp, but, oh well...
 	 * Use this to smoothly interpolate a value over time, regardless of framerate.
 	 * (Exponential decay towards parameter "target")
-	 * @param {number} source
-	 * @param {number} target
+	 * @param {number | THREE.Vector3 | THREE.Quaternion} source
+	 * @param {number | THREE.Vector3 | THREE.Quaternion} target
 	 * @param {number} speed Must be greater than 1, higher value = faster movement.
 	 * @param {number} delta
 	 */
 	smooth(source, target, speed, delta) {
 		if (speed < 1) throw RangeError("Parameter 'speed' should be greater than 1 to get intended behaviour.");
-		let time = 1.0 / Math.pow(speed, speed);
-		return THREE.MathUtils.lerp(source, target, 1 - Math.pow(time, delta));
+		const time = 1.0 / Math.pow(speed, speed);
+		const t = 1 - Math.pow(time, delta);
+
+		if (source.constructor.name !== target.constructor.name) {
+			throw Error("Bad arguments");
+		}
+
+		switch (source.constructor.name) {
+			case "Number":
+				return THREE.MathUtils.lerp(source, target, t);
+			case "Quaternion":
+				const q = new THREE.Quaternion();
+				return q.slerpQuaternions(source, target, t);
+			case "Vector3":
+				const v = new THREE.Vector3();
+				return v.lerpVectors(source, target, t);
+			default:
+				throw Error("Bad arguments");
+		}
 	},
 
-	/**
-	 * Use this to smoothly interpolate a value over time, regardless of framerate.
-	 * (Exponential decay towards parameter "target")
-	 * @param {THREE.Quaternion} source
-	 * @param {THREE.Quaternion} target
-	 * @param {number} speed Must be greater than 1, higher value = faster movement.
-	 * @param {number} delta
-	 */
 	smoothRotation(source, target, speed, delta) {
 		if (speed < 1) throw RangeError("Parameter 'speed' should be greater than 1 to get intended behaviour.");
 		let time = 1.0 / Math.pow(speed, speed);
-		return source.slerp(target, 1 - Math.pow(time, delta));
 	},
 
 	get powersave() { return !this.isPlaying && !document.hasFocus(); },

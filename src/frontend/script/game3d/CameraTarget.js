@@ -24,7 +24,7 @@ export default class CameraTarget {
 	/* Smooth interpolation */
 
 	teleportNow = true;
-	smoothSpeed = 5.0;
+	smoothSpeed = 5;
 
 
 	/* Mouse perspective */
@@ -68,7 +68,7 @@ export default class CameraTarget {
 		} else {
 			this.#current.pos = global.smooth(this.#current.pos, this.position,
 				this.smoothSpeed, delta);
-			this.#current.rot = global.smoothRotation(this.#current.rot, this.rotation,
+			this.#current.rot = global.smooth(this.#current.rot, this.rotation,
 				this.smoothSpeed, delta);
 			this.#current.fov = global.smooth(this.#current.fov, this.fov,
 				this.smoothSpeed, delta);
@@ -115,7 +115,7 @@ export default class CameraTarget {
 		const oldAspect = camera.aspect;
 		const oldNear = camera.near;
 		camera.aspect = result.vAspectRatio;
-		camera.near *= 0.5;
+		camera.near *= 2;  //FIXME the camera helper looks bad. can i grab world coords from camera matrix and use a regular 3d rectangle?
 		camera.clearViewOffset();
 		camera.updateProjectionMatrix();
 		helper.update();
@@ -134,6 +134,14 @@ export default class CameraTarget {
 	/** @param {THREE.Vector2} canvasSize */
 	#tryCalculateBorderAvoidance(canvasSize) {
 		let result = {};
+
+		{
+			//TODO delete this block, im just using it to test
+			const margin = 10;
+			this.borders.left = this.borders.top = margin;
+			this.borders.right = canvasSize.x - margin;
+			this.borders.bottom = canvasSize.y - margin;
+		}
 
 		const span = {
 			x: this.borders.right - this.borders.left,
