@@ -10,9 +10,12 @@ engine.initialize();
 
 {  // Environment setup
 	engine.scene.background = new THREE.Color("#112211");
-	engine.camera.position.y = 10;
-	engine.camera.rotateX(THREE.MathUtils.degToRad(-90));
-	engine.camera.rotateZ(THREE.MathUtils.degToRad(180));
+	engine.cameraTarget.position.y = 10;
+	engine.cameraTarget.rotation = new THREE.Euler(
+		THREE.MathUtils.degToRad(-90),
+		0,
+		THREE.MathUtils.degToRad(180)
+	);
 }
 
 {  // Gameobjects setup

@@ -7,7 +7,12 @@ import CameraTarget from './CameraTarget.js';
 export default {
 
 	// Readonly getters, because yes, i am that paranoid of accidentally replacing variables.
-	get scene() { return __scene; },
+	/**
+	 * This is intended for changing environment, not the scene's child Object3D.
+	 * Use engine.level instead for that purpose.
+	 */
+	get environmentScene() { return __scene; },
+	get level() { return __level; },
 	get cameraTarget() { return __cameraTarget; },
 	get renderer() { return __renderer; },
 	get html_debugBox() { return __html_debugBox; },
@@ -61,9 +66,14 @@ export default {
 			__renderer.toneMapping = THREE.ACESFilmicToneMapping;
 			__renderer.toneMappingExposure = 1;
 
+			__level = new THREE.Group();
+			__scene.add(__level);
+
 			window.addEventListener('resize', __onResize);
 			__onResize();
 		}
+
+		__cameraTarget = new CameraTarget();
 	},
 
 
@@ -72,7 +82,9 @@ export default {
 	 * @param {DOMHighResTimeStamp} time requestAnimationFrame() can give this value.
 	 */
 	render(delta, time) {
-		{  // Perform an update step
+		this.isProcessingFrame = true;
+
+		{  // Game logic update
 			__paramsForAddDuringRender = {delta: delta, time: time};
 
 			const updateQueue = [];
@@ -90,9 +102,27 @@ export default {
 			__paramsForAddDuringRender = null;
 		}
 
-		__camera.updateProjectionMatrix();
+		// Camera system
+		const canvasSize = new THREE.Vector2(__renderer.domElement.clientWidth,
+			__renderer.domElement.clientHeight);
+		const cameraHelper = new THREE.CameraHelper(__camera);
+		cameraHelper.visible = engine.DEBUG_MODE;
+		__cameraTarget.onFrame(delta, __camera, cameraHelper, canvasSize);
+
 		__renderer.render(__scene, __camera);
+
+		__scene.remove(cameraHelper);
+
+		this.isProcessingFrame = false;
 	},
+
+	/** Replaces engine.level with a fresh new empty Group. */
+	clearLevel() {
+		if (this.isProcessingFrame) throw Error("Nuh uh");
+		__scene.remove(__level);
+		__level = new THREE.Group();
+		__scene.add(__level);
+	}
 };
 
 
