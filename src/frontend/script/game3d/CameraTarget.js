@@ -1,14 +1,15 @@
 import * as THREE from 'three';
 import engine from 'engine';
 import * as GAMEOBJECTS from 'gameobjects';
+import global from 'global';
 
 
 export default class CameraTarget {
 
 	/* Target values */
 
-    position = new Vector3();
-    rotation = new Euler();
+    position = new THREE.Vector3();
+    rotation = new THREE.Quaternion();
 	fov = 70;
 	diagonal = 30;
 
@@ -23,7 +24,7 @@ export default class CameraTarget {
 	/* Smooth interpolation */
 
 	teleportNow = true;
-	smoothSpeed = 1.0;
+	smoothSpeed = 5.0;
 
 
 	/* Mouse perspective */
@@ -65,7 +66,14 @@ export default class CameraTarget {
 			this.#current.fov = this.fov;
 			this.#current.diagonal = this.diagonal;
 		} else {
-			throw "TODO Exponential decay smoothing to everything in this.#current"
+			this.#current.pos = global.smooth(this.#current.pos, this.position,
+				this.smoothSpeed, delta);
+			this.#current.rot = global.smoothRotation(this.#current.rot, this.rotation,
+				this.smoothSpeed, delta);
+			this.#current.fov = global.smooth(this.#current.fov, this.fov,
+				this.smoothSpeed, delta);
+			this.#current.diagonal = global.smooth(this.#current.diagonal, this.diagonal,
+				this.smoothSpeed, delta);
 		}
 
 		camera.position = this.#current.pos;

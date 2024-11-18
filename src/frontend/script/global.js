@@ -1,3 +1,6 @@
+import * as THREE from 'three';
+
+
 export default {
 	// MARK: Values
 
@@ -52,6 +55,35 @@ export default {
 		else if (value > max)
 			return max;
 		return value;
+	},
+
+	/**
+	 * NOTE - turns out ThreeJS already has MathUtils.damp, but, oh well...
+	 * Use this to smoothly interpolate a value over time, regardless of framerate.
+	 * (Exponential decay towards parameter "target")
+	 * @param {number} source
+	 * @param {number} target
+	 * @param {number} speed Must be greater than 1, higher value = faster movement.
+	 * @param {number} delta
+	 */
+	smooth(source, target, speed, delta) {
+		if (speed < 1) throw RangeError("Parameter 'speed' should be greater than 1 to get intended behaviour.");
+		let time = 1.0 / Math.pow(speed, speed);
+		return THREE.MathUtils.lerp(source, target, 1 - Math.pow(time, delta));
+	},
+
+	/**
+	 * Use this to smoothly interpolate a value over time, regardless of framerate.
+	 * (Exponential decay towards parameter "target")
+	 * @param {THREE.Quaternion} source
+	 * @param {THREE.Quaternion} target
+	 * @param {number} speed Must be greater than 1, higher value = faster movement.
+	 * @param {number} delta
+	 */
+	smoothRotation(source, target, speed, delta) {
+		if (speed < 1) throw RangeError("Parameter 'speed' should be greater than 1 to get intended behaviour.");
+		let time = 1.0 / Math.pow(speed, speed);
+		return source.slerp(target, 1 - Math.pow(time, delta));
 	},
 
 	get powersave() { return !global.isPlaying && !document.hasFocus(); },
