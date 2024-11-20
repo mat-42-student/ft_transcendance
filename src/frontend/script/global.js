@@ -79,7 +79,7 @@ export default {
 				return THREE.MathUtils.lerp(source, target, t);
 			case "Quaternion":
 				const q = new THREE.Quaternion();
-				return q.slerpQuaternions(source, target, t);
+				return q.slerpQuaternions(source, target, t);  //FIXME this is broken!
 			case "Vector3":
 				const v = new THREE.Vector3();
 				return v.lerpVectors(source, target, t);

@@ -10,12 +10,12 @@ engine.initialize();
 
 {  // Environment setup
 	engine.environmentScene.background = new THREE.Color("#112211");
-	engine.cameraTarget.position.y = 10;
+	engine.cameraTarget.position.y = 14.2535353443;
 	const deg90AsRad = THREE.MathUtils.degToRad(90);
 
 	const q1 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -deg90AsRad);
 	const q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), 2*deg90AsRad);
-	engine.cameraTarget.rotation = q1.multiply(q2);
+	engine.cameraTarget.quaternion = q1.multiply(q2);
 }
 
 {  // Gameobjects setup
@@ -47,8 +47,8 @@ function frame(time) {
 }
 
 setTimeout(() => {
-	engine.cameraTarget.smoothSpeed = 2;
-	engine.cameraTarget.rotation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0.5, 0.5, 0.5), 0.2))
-	engine.cameraTarget.position.add(new THREE.Vector3(-1,1,-1))
+	engine.cameraTarget.smoothSpeed = 20;
+	engine.cameraTarget.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0.5, 0.5, 0.5), 3.2))
+	engine.cameraTarget.position.add(new THREE.Vector3(-4,4,-4))
 	engine.cameraTarget.fov = 45;
 }, 1000);

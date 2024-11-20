@@ -9,7 +9,7 @@ export default class CameraTarget {
 	/* Target values */
 
     position = new THREE.Vector3();
-    rotation = new THREE.Quaternion();
+    quaternion = new THREE.Quaternion();
 	fov = 70;
 	diagonal = 30;
 
@@ -36,8 +36,8 @@ export default class CameraTarget {
 
 
 	#current = {
-		pos: structuredClone(this.position),
-		rot: structuredClone(this.rotation),
+		position: this.position.clone(),
+		quaternion: this.quaternion.clone(),
 		fov: this.fov,
 		diagonal: this.diagonal,
 	}
@@ -49,10 +49,10 @@ export default class CameraTarget {
 	constructor() {
 		this.#geo = new THREE.BufferGeometry();
 		const mat = new THREE.LineBasicMaterial({
-			depthTest: false,
+			// depthTest: false,
 			color: 0xffff00,
 		});
-		this.#visualizer = new THREE.LineLoop(this.#geo, mat);
+		this.#visualizer = new THREE.LineSegments(this.#geo, mat);
 		this.#visualizer.name = 'Camera Target Visualization'
 		engine.environmentScene.add(this.#visualizer);
 	}
@@ -73,14 +73,14 @@ export default class CameraTarget {
 
 		if (this.teleportNow) {
 			this.teleportNow = false;
-			this.#current.pos = this.position;
-			this.#current.rot = this.rotation;
+			this.#current.position.copy(this.position);
+			this.#current.quaternion.copy(this.quaternion);
 			this.#current.fov = this.fov;
 			this.#current.diagonal = this.diagonal;
 		} else {
-			this.#current.pos = global.smooth(this.#current.pos, this.position,
+			this.#current.position = global.smooth(this.#current.position, this.position,
 				this.smoothSpeed, delta);
-			this.#current.rot = global.smooth(this.#current.rot, this.rotation,
+			this.#current.quaternion = global.smooth(this.#current.quaternion, this.quaternion,
 				this.smoothSpeed, delta);
 			this.#current.fov = global.smooth(this.#current.fov, this.fov,
 				this.smoothSpeed, delta);
@@ -88,8 +88,8 @@ export default class CameraTarget {
 				this.smoothSpeed, delta);
 		}
 
-		camera.position.copy(this.#current.pos);
-		camera.rotation.setFromQuaternion(this.#current.rot);
+		camera.position.copy(this.#current.position);
+		camera.rotation.setFromQuaternion(this.#current.quaternion);
 		camera.fov = this.#current.fov;
 
 		this.#cameraRefresh(camera, canvasSize);
@@ -98,28 +98,30 @@ export default class CameraTarget {
 
 	/** @param {THREE.PerspectiveCamera} camera */
 	#updateVisualizer(camera, aspectRatio) {
-		// Let the camera do the work to calculate the points we need.
-		const oldAspect = camera.aspect;
-		const oldFar = camera.far;
-		let helper;
-
 		try {
-			camera.aspect = aspectRatio;
-			camera.far = camera.near + 0.5;
-			camera.clearViewOffset();
-			camera.updateProjectionMatrix();
+			const offset = new THREE.Vector3(0,0,-1);
+			offset.applyQuaternion(camera.quaternion);
+			const planeCenter = new THREE.Vector3().copy(this.position).add(offset);
 
-			helper = new THREE.CameraHelper(camera);
-			helper.update();
+			this.#visualizer.position.copy(planeCenter);
+			this.#visualizer.rotation.setFromQuaternion(this.quaternion);
 
-			const g = helper.geometry.attributes.position.array;
-			const p = helper.pointMap;
-			debugger
+			const fov_mult = __triangle_thing(this.fov / 2, 1);
+			const h = (          1) * fov_mult;
+			const w = (aspectRatio) * fov_mult;
+			const corners = [
+				new THREE.Vector3( w,  h, 0),
+				new THREE.Vector3( w, -h, 0),
+				new THREE.Vector3(-w,-h, 0),
+				new THREE.Vector3(-w, h, 0),
+			];
 			const vertices = [
-				new THREE.Vector3(g[p.f1[0]], g[p.f1[1]], g[p.f1[2]]).unproject(camera),
-				new THREE.Vector3(g[p.f3[0]], g[p.f3[1]], g[p.f3[2]]).unproject(camera),
-				new THREE.Vector3(g[p.f2[0]], g[p.f2[1]], g[p.f2[2]]).unproject(camera),
-				new THREE.Vector3(g[p.f4[0]], g[p.f4[1]], g[p.f4[2]]).unproject(camera),
+				corners[0], corners[1],
+				corners[1], corners[2],
+				corners[2], corners[3],
+				corners[3], corners[0],
+				corners[0], corners[2],
+				corners[1], corners[3],
 			];
 
 			this.#geo.setFromPoints(vertices);
@@ -128,10 +130,6 @@ export default class CameraTarget {
 			// catch because we can't afford this to interrupt the rest of the code
 			console.error(' 🥺   uh oh\n👉👈  this is not supposed to happen');
 		}
-
-		camera.aspect = oldAspect;
-		camera.far = oldFar;
-		if (helper != undefined)  helper.dispose();
 	}
 
 
@@ -144,11 +142,11 @@ export default class CameraTarget {
 		let result;
 		try {
 			result = this.#tryCalculateBorderAvoidance(canvasSize);
-			const THRESHOLD = 0.3;
-			if (result.subscreenSize.x / canvasSize.x < THRESHOLD
-			|| result.subscreenSize.y / canvasSize.y < THRESHOLD) {
-				throw Error("Borders are eating too much of the screen, the game would be unreasonably small.");
-			}
+			// const THRESHOLD = 0.3;
+			// if (result.subscreenSize.x / canvasSize.x < THRESHOLD
+			// || result.subscreenSize.y / canvasSize.y < THRESHOLD) {
+			// 	throw Error("Borders are eating too much of the screen, the game would be unreasonably small.");
+			// }
 		} catch (error) {
 			// Fallback: just render fullscreen.
 			console.warn('CameraTarget: Error during margin avoidance calculations:', error,
@@ -230,3 +228,8 @@ export default class CameraTarget {
 	}
 }
 
+
+function __triangle_thing(angle_deg, side_a) {
+	const hypothenuse = side_a / Math.cos(THREE.MathUtils.degToRad(angle_deg));
+	return Math.sqrt(hypothenuse*hypothenuse - side_a*side_a);
+}
