@@ -87,3 +87,11 @@
 
 	background: #000000aa;
 }
+
+
+#engine #engine-border-visualizer {
+	margin: 0;
+	padding: 0;
+	border: 1px dashed #44a;
+	position: fixed;
+}

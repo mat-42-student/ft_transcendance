@@ -62,8 +62,9 @@ export default class CameraTarget {
 	 * @param {number} delta
 	 * @param {THREE.PerspectiveCamera} camera
 	 * @param {THREE.Vector2} canvasSize
+	 * @param {HTMLDivElement} borderVisualizer
 	 */
-	onFrame(delta, camera, canvasSize) {
+	onFrame(delta, camera, canvasSize, borderVisualizer) {
 
 		// Force teleport if we have a new camera.
 		if (this.#previousCamera !== camera) {
@@ -92,12 +93,28 @@ export default class CameraTarget {
 		camera.rotation.setFromQuaternion(this.#current.quaternion);
 		camera.fov = this.#current.fov;
 
+		this.#updateBorderVisualizer(borderVisualizer, canvasSize);
 		this.#cameraRefresh(camera, canvasSize);
 	}
 
 
+	/**
+	 * @param {HTMLDivElement} borderVisualizer
+	 * @param {THREE.Vector2} canvasSize
+	 */
+	#updateBorderVisualizer(borderVisualizer, canvasSize) {
+		borderVisualizer.style.display = engine.DEBUG_MODE ? null : 'none';
+
+		borderVisualizer.style.left = this.borders.left + 'px';
+		borderVisualizer.style.top = this.borders.top + 'px';
+
+		borderVisualizer.style.right = canvasSize.x - this.borders.right + 'px';
+		borderVisualizer.style.bottom = canvasSize.y - this.borders.bottom + 'px';
+	}
+
+
 	/** @param {THREE.PerspectiveCamera} camera */
-	#updateVisualizer(camera, aspectRatio) {
+	#update3dVisualizer(camera, aspectRatio) {
 		try {
 			const offset = new THREE.Vector3(0,0,-1);
 			offset.applyQuaternion(camera.quaternion);
@@ -159,7 +176,7 @@ export default class CameraTarget {
 		}
 
 		this.#visualizer.visible = engine.DEBUG_MODE;
-		this.#updateVisualizer(camera, result.vAspectRatio);
+		this.#update3dVisualizer(camera, result.vAspectRatio);
 
 		camera.setViewOffset(
 			canvasSize.x, canvasSize.y,

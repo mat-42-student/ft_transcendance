@@ -56,6 +56,10 @@ export default {
 
 			__debug_AutoResolution = document.createElement("div");
 			__html_debugBox.appendChild(__debug_AutoResolution);
+
+			__html_borderVisualizer = document.createElement('div');
+			__html_borderVisualizer.id = 'engine-border-visualizer';
+			__html_container.appendChild(__html_borderVisualizer);
 		}
 
 		{  // Setup ThreeJS
@@ -116,7 +120,7 @@ export default {
 		{  // Camera system
 			const canvasSize = new THREE.Vector2(__renderer.domElement.clientWidth,
 				__renderer.domElement.clientHeight);
-			__cameraTarget.onFrame(delta, __camera, canvasSize);
+			__cameraTarget.onFrame(delta, __camera, canvasSize, __html_borderVisualizer);
 		}
 
 		__renderer.render(__scene, __camera);
@@ -167,6 +171,9 @@ let __html_debugBox;
 
 /** @type {HTMLDivElement} */
 let __html_loading;
+
+/** @type {HTMLDivElement} */
+let __html_borderVisualizer;
 
 
 /** Pixel density used for auto resolution */
