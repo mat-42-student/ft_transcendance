@@ -2,6 +2,8 @@ import engine from "engine";
 import global from "global";
 import input from "input";
 import {MathUtils} from "three";
+import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
+import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 
 
 // MARK: Variables
@@ -14,6 +16,8 @@ let __ballSpeed = 1;
 let __isCPU = true;
 let __paddleSpeeds = [1, 1];
 const __maxScore = 10;
+/** @type {LevelBase} */
+let __level;
 
 /**
  * These parameters control the CPU's deliberate mistakes, to tweak difficulty.
@@ -54,9 +58,8 @@ function bounce1D(pos, mirror) { return -(pos - mirror) + mirror; }
 
 export async function startLocalGame(isCPU) {
     if (global.isPlaying == true) throw Error("Already playing??");
-    global.isPlaying = true;
     __isCPU = isCPU;
-
+    global.isPlaying = true;
     engine.loading = true;
 
     __cpuMistake.delay.min = 0.1;
@@ -67,16 +70,13 @@ export async function startLocalGame(isCPU) {
     __ballSpeed = 0.005;
     __paddleSpeeds[0] = __paddleSpeeds[1] = 0.1;
 
-    //TODO Choose and load the level.
+    __level = new (LEVELS.pickRandomLevel())();
 
-    // TODO these will be read from level (so level can change it)
-    global.game.boardSize.x = 4;
-    global.game.boardSize.y = 3;
+    const size = global.unitRect(__level.boardDiagonal);
+    global.game.boardSize.x = size.x;
+    global.game.boardSize.y = size.y;
 
-    if (isCPU)
-        global.game.playerNames[1] = generateRandomNick();
-    else
-        global.game.playerNames[1] = 'Player 2';
+    global.game.playerNames[1] = isCPU ? generateRandomNick() : 'Player 2';
 
     global.game.scores = [0, 0];
     global.game.focusedPlayerIndex = isCPU ? 0 : -1;
@@ -212,6 +212,9 @@ function endgame(isEndingBecauseCancelled) {
     global.isPlaying = false;
     global.gameSimulation.gameFrameFunction = null;
     global.gameSimulation.gameCancelFunction = null;
+
+    __level.dispose();
+    __level = null;
 
     window.location.hash = 'matchmaking.html';
 }

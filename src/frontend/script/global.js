@@ -83,4 +83,11 @@ export default {
 	},
 
 	get powersave() { return !this.isPlaying && !document.hasFocus(); },
+
+	unitRect(diagonalDeg) {
+		const diagonalRad = THREE.MathUtils.degToRad(diagonalDeg);
+		const height = Math.sin(diagonalRad);
+		const width = Math.sqrt(1 - height * height);
+		return { x: width, y: height };
+	},
 }

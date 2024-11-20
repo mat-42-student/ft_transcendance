@@ -1,8 +1,10 @@
-import * as DEBUG from './debug/_level.js';
+import LevelDebug from './debug/_level.js';
+
 
 export const LIST = {
-	'debug': DEBUG,
+	'debug': LevelDebug,
 };
+
 
 export function pickRandomLevel() {
 	var keys = Object.keys(LIST);

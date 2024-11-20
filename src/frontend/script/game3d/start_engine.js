@@ -9,7 +9,7 @@ const clock = new THREE.Clock(true);
 engine.initialize();
 
 {  // Environment setup
-	engine.environmentScene.background = new THREE.Color("#112211");
+	engine.environmentScene.background = new THREE.Color("#000000");
 	engine.cameraTarget.position.y = 14.2535353443;
 	const deg90AsRad = THREE.MathUtils.degToRad(90);
 
@@ -19,16 +19,12 @@ engine.initialize();
 }
 
 {  // Gameobjects setup
-	//TODO add gameobjects that actually start the game
+	//TODO if not in game, load a 'main menu' level that has no gameplay
 	//     -> how to react to URL on page load? redirect to home? redirect to matchmaking?
-	const debugthing = new GAMEOBJECTS.UTILS.DebugBoxObject();
-	debugthing.name = 'Debug thing';
-	engine.level.add(debugthing);
-	debugthing.html_div.innerText = 'hello world';
 
 	const thing3d = new GAMEOBJECTS.UTILS.SceneOriginHelper();
 	thing3d.name = "Scene origin helper";
-	engine.level.add(thing3d);
+	engine.environmentScene.add(thing3d);
 	engine.cameraTarget.borders = null;
 }
 
@@ -46,13 +42,3 @@ function frame(time) {
 		requestAnimationFrame(frame);
 	}
 }
-
-setTimeout(() => {
-	let q = new THREE.Quaternion().setFromAxisAngle(
-		new THREE.Vector3(0.5, 0.5, 0.5).normalize(), 0.2);
-	engine.cameraTarget.quaternion.multiply(q);
-
-	engine.cameraTarget.position.add(new THREE.Vector3(-4,4,-4))
-
-	engine.cameraTarget.fov = 45;
-}, 1000);
