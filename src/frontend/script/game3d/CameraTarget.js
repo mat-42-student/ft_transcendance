@@ -24,7 +24,7 @@ export default class CameraTarget {
 	/* Smooth interpolation */
 
 	teleportNow = true;
-	smoothSpeed = 5;
+	smoothSpeed = 10;
 
 
 	/* Mouse perspective */
@@ -78,13 +78,13 @@ export default class CameraTarget {
 			this.#current.fov = this.fov;
 			this.#current.diagonal = this.diagonal;
 		} else {
-			this.#current.position = global.smooth(this.#current.position, this.position,
+			this.#current.position = global.damp(this.#current.position, this.position,
 				this.smoothSpeed, delta);
-			this.#current.quaternion = global.smooth(this.#current.quaternion, this.quaternion,
+			this.#current.quaternion = global.damp(this.#current.quaternion, this.quaternion,
 				this.smoothSpeed, delta);
-			this.#current.fov = global.smooth(this.#current.fov, this.fov,
+			this.#current.fov = global.damp(this.#current.fov, this.fov,
 				this.smoothSpeed, delta);
-			this.#current.diagonal = global.smooth(this.#current.diagonal, this.diagonal,
+			this.#current.diagonal = global.damp(this.#current.diagonal, this.diagonal,
 				this.smoothSpeed, delta);
 		}
 

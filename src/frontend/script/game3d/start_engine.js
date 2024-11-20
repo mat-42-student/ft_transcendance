@@ -47,8 +47,10 @@ function frame(time) {
 }
 
 setTimeout(() => {
-	engine.cameraTarget.smoothSpeed = 20;
-	engine.cameraTarget.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0.5, 0.5, 0.5), 3.2))
+	let q1 = new THREE.Quaternion().copy(engine.cameraTarget.quaternion);
+	let q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0.5, 0.5, 0.5), 3.2);
+	q2.multiplyQuaternions(q1, engine.cameraTarget.quaternion);
+	engine.cameraTarget.quaternion = q2;
 	engine.cameraTarget.position.add(new THREE.Vector3(-4,4,-4))
 	engine.cameraTarget.fov = 45;
 }, 1000);

@@ -58,39 +58,28 @@ export default {
 	},
 
 	/**
-	 * Use this to smoothly interpolate a value over time, regardless of framerate.
-	 * (Exponential decay towards parameter "target")
+	 * https://www.rorydriscoll.com/2016/03/07/frame-rate-independent-damping-using-lerp/
 	 * @param {number | THREE.Vector3 | THREE.Quaternion} source
 	 * @param {number | THREE.Vector3 | THREE.Quaternion} target
-	 * @param {number} speed Must be greater than 1, higher value = faster movement.
+	 * @param {number} speed Must be positive, higher number = faster.
 	 * @param {number} delta
 	 */
-	smooth(source, target, speed, delta) {
-		if (speed < 1) throw RangeError("Parameter 'speed' should be greater than 1 to get intended behaviour.");
-		const time = 1.0 / Math.pow(speed, speed);
-		const t = 1 - Math.pow(time, delta);
+	damp(source, target, speed, delta) {
+		if (speed < 0) throw RangeError("Parameter 'speed' must be positive.");
 
-		if (source.constructor.name !== target.constructor.name) {
-			throw Error("Bad arguments");
-		}
+		const t = 1 - Math.exp(-speed * delta);
 
+		// Assuming [source] and [target] are the same type...
 		switch (source.constructor.name) {
 			case "Number":
 				return THREE.MathUtils.lerp(source, target, t);
-			case "Quaternion":
-				const q = new THREE.Quaternion();
-				return q.slerpQuaternions(source, target, t);  //FIXME this is broken!
 			case "Vector3":
-				const v = new THREE.Vector3();
-				return v.lerpVectors(source, target, t);
+				return new THREE.Vector3().lerpVectors(source, target, t);
+			case "Quaternion":
+				return new THREE.Quaternion().slerpQuaternions(source, target, t);
 			default:
-				throw Error("Bad arguments");
+				throw Error("Unsupported type");
 		}
-	},
-
-	smoothRotation(source, target, speed, delta) {
-		if (speed < 1) throw RangeError("Parameter 'speed' should be greater than 1 to get intended behaviour.");
-		let time = 1.0 / Math.pow(speed, speed);
 	},
 
 	get powersave() { return !this.isPlaying && !document.hasFocus(); },
