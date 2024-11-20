@@ -24,8 +24,11 @@ export default {
 
 
 	/** Hide or display the loading overlay.
-	 * @param {boolean} display */
-	set loading(display) { __html_loading.style.display = display ? null : 'none'; },
+	 * @param {boolean} newIsLoading */
+	set loading(newIsLoading) {
+		__isLoading = newIsLoading;
+		__html_loading.style.display = __isLoading ? null : 'none';
+	},
 
 
 	/**
@@ -91,9 +94,10 @@ export default {
 	 * @param {DOMHighResTimeStamp} time requestAnimationFrame() can give this value.
 	 */
 	render(delta, time) {
-		this.isProcessingFrame = true;
-
 		__updateAutoResolution(delta);
+		if (__isLoading) return;
+
+		this.isProcessingFrame = true;
 
 		{  // Game logic update
 			__paramsForAddDuringRender = {delta: delta, time: time};
@@ -175,6 +179,8 @@ let __html_loading;
 
 /** Pixel density used for auto resolution */
 let __currentRatio = 1;
+
+let __isLoading = false;
 
 
 /**
