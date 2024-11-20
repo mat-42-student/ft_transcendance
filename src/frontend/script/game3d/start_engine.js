@@ -47,10 +47,10 @@ function frame(time) {
 }
 
 //TODO delet
-// setTimeout(() => {
-// 	console.log('Testing deletion')
-// 	engine.clearLevel();
-// }, 1000);
+setTimeout(() => {
+	console.log('Testing deletion')
+	engine.clearLevel();
+}, 1000);
 
 setTimeout(() => {
 	engine.cameraTarget.smoothSpeed = 2;

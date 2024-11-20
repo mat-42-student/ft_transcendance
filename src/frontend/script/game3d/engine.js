@@ -62,12 +62,8 @@ export default {
 			__scene = new THREE.Scene();
 			__scene.name = "Engine Scene";
 
-			//REVIEW does this injection work?
 			const fakeEvent = { child: __scene };
 			__onObjectAddedToScene(fakeEvent);
-			//FIXME these events are NOT recursive. Either inject code that binds the objects, or use "added" and make each object3d add itself. wait i guess thats the same thing. huh. hmm. uh huh. thinking time
-			// __scene.addEventListener('childadded', __onObjectAddedToScene);
-			// __scene.addEventListener('childremoved', __onObjectRemovedFromScene);
 
 			__camera = new THREE.PerspectiveCamera();
 			__cameraHelper = new THREE.CameraHelper(__camera);
@@ -120,12 +116,13 @@ export default {
 			__paramsForAddDuringRender = null;
 		}
 
-		// Camera system
-		const canvasSize = new THREE.Vector2(__renderer.domElement.clientWidth,
-			__renderer.domElement.clientHeight);
-		__cameraHelper.visible = engine.DEBUG_MODE;
-		__cameraHelper.camera = __camera;
-		__cameraTarget.onFrame(delta, __camera, __cameraHelper, canvasSize);
+		{  // Camera system
+			const canvasSize = new THREE.Vector2(__renderer.domElement.clientWidth,
+				__renderer.domElement.clientHeight);
+			__cameraHelper.visible = engine.DEBUG_MODE;
+			__cameraHelper.camera = __camera;
+			__cameraTarget.onFrame(delta, __camera, __cameraHelper, canvasSize);
+		}
 
 		__renderer.render(__scene, __camera);
 
@@ -202,11 +199,8 @@ function __onObjectAddedToScene(e) {
 	/** @type {THREE.Object3D} */
 	const obj = e.child;
 
-	console.log('ADD', obj.name);  //REVIEW remove log
-
-	//REVIEW does this injection work?
 	obj.addEventListener('childadded', __onObjectAddedToScene);
-	obj.addEventListener('childremoved', __onObjectRemovedFromScene);
+	obj.addEventListener('removed', __onObjectRemoved);
 
 	const statics = obj.__proto__.constructor;
 	if (statics.isLoaded === false) {
@@ -231,11 +225,11 @@ function __onObjectAddedToScene(e) {
 }
 
 
-function __onObjectRemovedFromScene(e) {
+function __onObjectRemoved(e) {
 	/** @type {THREE.Object3D} */
-	const obj = e.child;
+	const obj = e.target;
 
-	console.log('RM', obj.name);  //FIXME this is not recursive at all
+	obj.clear();
 
 	// you can opt out of auto dispose, if you need to 'reuse' your object3D.
 	if ('dispose' in obj && obj.noAutoDispose !== true) {
