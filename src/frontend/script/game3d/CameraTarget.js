@@ -120,8 +120,9 @@ export default class CameraTarget {
 				corners[1], corners[2],
 				corners[2], corners[3],
 				corners[3], corners[0],
-				corners[0], corners[2],
-				corners[1], corners[3],
+
+				// corners[0], corners[2],
+				// corners[1], corners[3],
 			];
 
 			this.#geo.setFromPoints(vertices);
