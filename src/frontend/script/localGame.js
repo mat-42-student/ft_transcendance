@@ -86,9 +86,10 @@ export async function startLocalGame(isCPU) {
     global.gameCancelFunction = () => {
         endgame(true);
     };
-    global.gameFrameFunction = () => {
+    global.gameFrameFunction = (delta, time) => {
         movePaddles();
         moveBall();
+        __level.onFrame(delta, time);
     };
 }
 
