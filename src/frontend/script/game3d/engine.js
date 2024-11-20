@@ -53,6 +53,9 @@ export default {
 			__html_debugBox.classList.add("engine-debug-box");
 			if (engine.DEBUG_MODE !== true) __html_debugBox.style.display = 'none';
 			__html_container.appendChild(__html_debugBox);
+
+			__debug_AutoResolution = document.createElement("div");
+			__html_debugBox.appendChild(__debug_AutoResolution);
 		}
 
 		{  // Setup ThreeJS
@@ -178,7 +181,11 @@ let __html_loading;
 
 
 /** Pixel density used for auto resolution */
-let __currentRatio = 1;
+let __currentRatio = window.devicePixelRatio;
+
+/** @type {HTMLDivElement} */
+let __debug_AutoResolution;
+
 
 let __isLoading = false;
 
@@ -246,27 +253,22 @@ function __onResize() {
 
 
 function __updateAutoResolution(delta) {
-	__currentRatio = window.devicePixelRatio; __renderer.setPixelRatio(__currentRatio); return;  //FIXME this is probably crap. add a restoring force that tries to increase framerate? how can i be sure that it does what i want?
+	const fullres = window.devicePixelRatio;
+	const lowres = fullres / 2;
 
-	const targetFramerate = global.powersave ? 10 : 60;
-	const targetDelta = 1 / targetFramerate;
-
-	// haha funi name (but true).  Positive = faster than target, negative = too slow.
-	const deltaDelta = targetDelta - delta;
-
-	// Arbitrary value, increase to speed up adjustments.
-	const ADJUSTMENT_SPEED = 1000;
-	// Just apply it a little bit.
-	// Delta is squared so small numbers get even smaller (reduces oscillation when near target)
-	__currentRatio += (deltaDelta * ADJUSTMENT_SPEED) * (deltaDelta * ADJUSTMENT_SPEED);
-
-	// Given that the display has a
-	// __currentRatio += 0.1;
-
-	// Prevent rendering higher than the screen's true resolution (wasteful)
-	const ratioMax = global.powersave ? window.devicePixelRatio * 0.5 : window.devicePixelRatio;
-	// Prevent rendering at an unwatchable resolution
-	const ratioMin = ratioMax * 0.3;
-	__currentRatio = global.clamp(__currentRatio, ratioMin, ratioMax);
+	if (global.powersave) {
+		__currentRatio = lowres;
+		__debug_AutoResolution.innerText = 'Auto resolution: Powersave mode';
+	} else {
+		const targetFramerate = 60 - 10;  // Add a margin because otherwise we will rarely hit the exact framerate cap
+		const targetDelta = 1 / targetFramerate;
+		if (delta > targetDelta) {
+			__currentRatio = lowres;
+			__debug_AutoResolution.innerText = 'Auto resolution: Low';
+		} else {
+			__currentRatio = fullres;
+			__debug_AutoResolution.innerText = 'Auto resolution: Full';
+		}
+	}
 	__renderer.setPixelRatio(__currentRatio);
 }
