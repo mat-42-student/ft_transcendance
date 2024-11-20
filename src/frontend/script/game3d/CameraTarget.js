@@ -66,6 +66,8 @@ export default class CameraTarget {
 	 */
 	onFrame(delta, camera, canvasSize, borderVisualizer) {
 
+		this.#recreateBordersIfReset(canvasSize);
+
 		// Force teleport if we have a new camera.
 		if (this.#previousCamera !== camera) {
 			this.#previousCamera = camera;
@@ -93,8 +95,8 @@ export default class CameraTarget {
 		camera.rotation.setFromQuaternion(this.#current.quaternion);
 		camera.fov = this.#current.fov;
 
-		this.#updateBorderVisualizer(borderVisualizer, canvasSize);
 		this.#cameraRefresh(camera, canvasSize);
+		this.#updateBorderVisualizer(borderVisualizer, canvasSize);
 	}
 
 
@@ -187,17 +189,22 @@ export default class CameraTarget {
 	}
 
 
+	#recreateBordersIfReset(canvasSize) {
+		if (this.borders == null) {
+			const margin = 0;
+			this.borders = {
+				top: margin,
+				right: canvasSize.x - margin,
+				left: margin,
+				bottom: canvasSize.y - margin,
+			};
+		}
+	}
+
+
 	/** @param {THREE.Vector2} canvasSize */
 	#tryCalculateBorderAvoidance(canvasSize) {
 		let result = {};
-
-		{
-			//TODO delete this block, im just using it to test
-			const margin = 10;
-			this.borders.left = this.borders.top = margin;
-			this.borders.right = canvasSize.x - margin;
-			this.borders.bottom = canvasSize.y - margin;
-		}
 
 		const span = {
 			x: this.borders.right - this.borders.left,

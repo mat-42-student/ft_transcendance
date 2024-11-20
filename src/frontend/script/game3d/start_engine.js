@@ -29,6 +29,7 @@ engine.initialize();
 	const thing3d = new GAMEOBJECTS.UTILS.SceneOriginHelper();
 	thing3d.name = "Scene origin helper";
 	engine.level.add(thing3d);
+	engine.cameraTarget.borders = null;
 }
 
 
