@@ -22,7 +22,7 @@ export default class SceneOriginHelper extends THREE.Group {
 		this.add(this.#grid);
 
 		this.#axes = new THREE.AxesHelper(1);
-		this.#axes.material.linewidth = 3;
+		this.#axes.material.linewidth = 3;  // NOTE: this does nothing lmao
 		this.add(this.#axes);
 
 		// not bulletproof but hey better than nothing

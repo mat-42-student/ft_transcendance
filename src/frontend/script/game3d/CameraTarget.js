@@ -41,17 +41,29 @@ export default class CameraTarget {
 		fov: this.fov,
 		diagonal: this.diagonal,
 	}
-
 	#previousCamera = null;
+	#visualizer;
+	#geo;
+
+
+	constructor() {
+		this.#geo = new THREE.BufferGeometry();
+		const mat = new THREE.LineBasicMaterial({
+			depthTest: false,
+			color: 0xffff00,
+		});
+		this.#visualizer = new THREE.LineLoop(this.#geo, mat);
+		this.#visualizer.name = 'Camera Target Visualization'
+		engine.environmentScene.add(this.#visualizer);
+	}
 
 
 	/**
 	 * @param {number} delta
 	 * @param {THREE.PerspectiveCamera} camera
-	 * @param {THREE.CameraHelper} helper
 	 * @param {THREE.Vector2} canvasSize
 	 */
-	onFrame(delta, camera, helper, canvasSize) {
+	onFrame(delta, camera, canvasSize) {
 
 		// Force teleport if we have a new camera.
 		if (this.#previousCamera !== camera) {
@@ -80,16 +92,54 @@ export default class CameraTarget {
 		camera.rotation.setFromQuaternion(this.#current.rot);
 		camera.fov = this.#current.fov;
 
-		this.#cameraRefresh(camera, helper, canvasSize);
+		this.#cameraRefresh(camera, canvasSize);
+	}
+
+
+	/** @param {THREE.PerspectiveCamera} camera */
+	#updateVisualizer(camera, aspectRatio) {
+		// Let the camera do the work to calculate the points we need.
+		const oldAspect = camera.aspect;
+		const oldFar = camera.far;
+		let helper;
+
+		try {
+			camera.aspect = aspectRatio;
+			camera.far = camera.near + 0.5;
+			camera.clearViewOffset();
+			camera.updateProjectionMatrix();
+
+			helper = new THREE.CameraHelper(camera);
+			helper.update();
+
+			const g = helper.geometry.attributes.position.array;
+			const p = helper.pointMap;
+			debugger
+			const vertices = [
+				new THREE.Vector3(g[p.f1[0]], g[p.f1[1]], g[p.f1[2]]).unproject(camera),
+				new THREE.Vector3(g[p.f3[0]], g[p.f3[1]], g[p.f3[2]]).unproject(camera),
+				new THREE.Vector3(g[p.f2[0]], g[p.f2[1]], g[p.f2[2]]).unproject(camera),
+				new THREE.Vector3(g[p.f4[0]], g[p.f4[1]], g[p.f4[2]]).unproject(camera),
+			];
+
+			this.#geo.setFromPoints(vertices);
+
+		} catch (error) {
+			// catch because we can't afford this to interrupt the rest of the code
+			console.error(' 🥺   uh oh\n👉👈  this is not supposed to happen');
+		}
+
+		camera.aspect = oldAspect;
+		camera.far = oldFar;
+		if (helper != undefined)  helper.dispose();
 	}
 
 
 	/**
 	 * @param {THREE.PerspectiveCamera} camera
-	 * @param {THREE.CameraHelper} helper
 	 * @param {THREE.Vector2} canvasSize
 	 */
-	#cameraRefresh(camera, helper, canvasSize) {
+	#cameraRefresh(camera, canvasSize) {
 
 		let result;
 		try {
@@ -103,25 +153,15 @@ export default class CameraTarget {
 			// Fallback: just render fullscreen.
 			console.warn('CameraTarget: Error during margin avoidance calculations:', error,
 				'Falling back to simple fullscreen view, ignoring borders and aspect ratio.');
+			this.#visualizer.visible = false;
 			camera.clearViewOffset();
 			camera.updateProjectionMatrix();
-			helper.update();
 			return;
 		}
 
-		// back and forth dance of modifying the real camera, so the helper can copy its values,
-		// then actually resetting the real camera to its final values.
+		this.#visualizer.visible = engine.DEBUG_MODE;
+		this.#updateVisualizer(camera, result.vAspectRatio);
 
-		const oldAspect = camera.aspect;
-		const oldNear = camera.near;
-		camera.aspect = result.vAspectRatio;
-		camera.near *= 2;  //FIXME the camera helper looks bad. can i grab world coords from camera matrix and use a regular 3d rectangle?
-		camera.clearViewOffset();
-		camera.updateProjectionMatrix();
-		helper.update();
-
-		camera.aspect = oldAspect;
-		camera.near = oldNear;
 		camera.setViewOffset(
 			canvasSize.x, canvasSize.y,
 			result.corner.x, result.corner.y,

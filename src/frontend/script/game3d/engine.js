@@ -66,9 +66,6 @@ export default {
 			__onObjectAddedToScene(fakeEvent);
 
 			__camera = new THREE.PerspectiveCamera();
-			__cameraHelper = new THREE.CameraHelper(__camera);
-			__cameraHelper.name = 'Camera Helper';
-			__scene.add(__cameraHelper);
 
 			__renderer = new THREE.WebGLRenderer({
 				canvas: __html_canvas,
@@ -119,9 +116,7 @@ export default {
 		{  // Camera system
 			const canvasSize = new THREE.Vector2(__renderer.domElement.clientWidth,
 				__renderer.domElement.clientHeight);
-			__cameraHelper.visible = engine.DEBUG_MODE;
-			__cameraHelper.camera = __camera;
-			__cameraTarget.onFrame(delta, __camera, __cameraHelper, canvasSize);
+			__cameraTarget.onFrame(delta, __camera, canvasSize);
 		}
 
 		__renderer.render(__scene, __camera);
@@ -150,9 +145,6 @@ let __camera;
 
 /** @type {CameraTarget} */
 let __cameraTarget;
-
-/** @type {THREE.CameraHelper} */
-let __cameraHelper;
 
 /** @type {THREE.WebGLRenderer} */
 let __renderer;

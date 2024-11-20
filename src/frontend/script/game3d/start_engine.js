@@ -46,12 +46,6 @@ function frame(time) {
 	}
 }
 
-//TODO delet
-setTimeout(() => {
-	console.log('Testing deletion')
-	engine.clearLevel();
-}, 1000);
-
 setTimeout(() => {
 	engine.cameraTarget.smoothSpeed = 2;
 	engine.cameraTarget.rotation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0.5, 0.5, 0.5), 0.2))
