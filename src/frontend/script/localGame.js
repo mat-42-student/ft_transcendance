@@ -5,6 +5,8 @@ import {MathUtils} from "three";
 import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
 import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 
+// FIXME ball position is NaN
+//TODO add paddles
 
 // MARK: Variables
 // NOTE: All the values here are only an example of the data structures. (also helps intellisense)

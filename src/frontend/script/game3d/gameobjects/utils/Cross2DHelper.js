@@ -8,6 +8,7 @@ export default class Cross2DHelper extends THREE.LineSegments {
 	 */
 	constructor(color) {
 		const geo = new THREE.BufferGeometry();
+		geo.setFromPoints(verts);
 
 		const mat = new THREE.LineBasicMaterial({color: color});
 		super(geo, mat);
@@ -21,7 +22,7 @@ export default class Cross2DHelper extends THREE.LineSegments {
 
 
 const verts =[
-	-1, 0, 0,	1, 0, 0,
-	0, -1, 0,	0, 1, 0,
-	0, 0, -1,	0, 0, 1
+	new THREE.Vector3(-0.5, 0, 0), new THREE.Vector3(0.5, 0, 0),
+	new THREE.Vector3(0, -0.5, 0), new THREE.Vector3(0, 0.5, 0),
+	new THREE.Vector3(0, 0, -0.5), new THREE.Vector3(0, 0, 0.5),
 ];
