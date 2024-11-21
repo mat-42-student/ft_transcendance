@@ -21,7 +21,7 @@ export default class LevelBase {
 
 	onFrame(delta, time) {
 		{  // Automatic camera switching
-			const idx = global.game.focusedPlayerIndex < 2 ? global.game.focusedPlayerIndex : 2;
+			const idx = global.game.focusedPlayerIndex >= 0 ? global.game.focusedPlayerIndex : 2;
 			const selectedCamera = this.cameras[idx];
 
 			engine.cameraTarget.position.copy(selectedCamera.position);

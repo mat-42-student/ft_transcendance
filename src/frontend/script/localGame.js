@@ -81,7 +81,11 @@ export async function startLocalGame(isCPU) {
     global.game.playerNames[1] = isCPU ? generateRandomNick() : 'Player 2';
 
     global.game.scores = [0, 0];
-    global.game.focusedPlayerIndex = isCPU ? 0 : -1;
+    if (global.game.focusedPlayerIndex === 'neutral') {
+        global.game.focusedPlayerIndex = -1;
+    } else {
+        global.game.focusedPlayerIndex = isCPU ? 0 : -1;
+    }
 
     engine.loading = false;
     newRound();

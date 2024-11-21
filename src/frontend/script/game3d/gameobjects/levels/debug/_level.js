@@ -41,6 +41,8 @@ export default class LevelDebug extends LevelBase {
 
 		mainCameraAngle.fov = 65;
 
+		global.game.focusedPlayerIndex = 'neutral';
+
 		this.cameras = [mainCameraAngle, mainCameraAngle, mainCameraAngle];
 		engine.level.add(new DebugBoard());
 	}
