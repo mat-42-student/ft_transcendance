@@ -6,17 +6,12 @@ import engine from 'engine';
 
 
 export default class LevelBase {
-	/** @type {Ball} */
-	ball;
 
 	/** @type {CameraStats[]} */
 	cameras;
 
 	/** @type {number} */
 	boardDiagonal;
-
-	/** @type {Paddle[]} */
-	paddles;
 
 
 	onFrame(delta, time) {

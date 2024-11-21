@@ -17,15 +17,11 @@ export default class LevelDebug extends LevelBase {
 		engine.cameraTarget.teleportNow = true;
 
 		this.boardDiagonal = 30;
-		this.ball = new DebugBall();
-		engine.level.add(this.ball);
+		const ball = new DebugBall();
+		engine.level.add(ball);
 
-		this.paddles = [
-			new DebugPaddle(0),
-			new DebugPaddle(1)
-		];
-		engine.level.add(this.paddles[0]);
-		engine.level.add(this.paddles[1]);
+		engine.level.add(new DebugPaddle(0));
+		engine.level.add(new DebugPaddle(1));
 
 		const mainCameraAngle = new LevelBase.CameraStats();
 		mainCameraAngle.position = new THREE.Vector3(0, 0.45, -0.3);
