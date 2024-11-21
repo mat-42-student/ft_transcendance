@@ -6,7 +6,6 @@ import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
 import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 
 
-//FIXME cpu move is crazy
 //TODO add score visualizer
 //TODO victory screen and transition to idle?
 //TODO ball direction visualizer
@@ -133,15 +132,16 @@ function cpuMove() {
     // This margin multiplies the size of the paddle.
     const margin = 0.5;
 
+    //TODO maybe add a random offset every time it bounces?
     // Abbreviate
     const ball = global.game.ballPosition.y;
     const paddle = global.game.paddlePositions[1];
     const halfSize = global.game.paddleHeights[1] / 2;
 
-    if (ball <= paddle - halfSize * margin)
-        return 1;
-    if (ball >= paddle + halfSize * margin)
+    if (ball < paddle - halfSize * margin)
         return -1;
+    if (ball > paddle + halfSize * margin)
+        return 1;
     return 0;
 }
 
