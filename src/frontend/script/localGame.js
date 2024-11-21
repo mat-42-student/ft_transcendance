@@ -12,6 +12,8 @@ import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 //TODO auto border element
 
 
+const __maxScore = 5;
+
 // MARK: Variables
 // NOTE: All the values here are only an example of the data structures. (also helps intellisense)
 //       Actual default values are set in functions.
@@ -21,7 +23,6 @@ let __ballDirection = {x: 1.0, y: 1.0};
 let __ballSpeed = 1;
 let __isCPU = true;
 let __paddleSpeeds = [1, 1];
-const __maxScore = 10;
 /** @type {LevelBase} */
 let __level;
 
@@ -70,8 +71,8 @@ export async function startLocalGame(isCPU) {
     __cpuMistake.duration.min = 0.05;
     __cpuMistake.duration.max = 0.2;
 
-    __ballSpeed = 0.05;
-    __paddleSpeeds[0] = __paddleSpeeds[1] = 0.1;
+    __ballSpeed = 0.08;
+    __paddleSpeeds[0] = __paddleSpeeds[1] = 0.12;
     global.game.paddleHeights[0] = 0.2;
     global.game.paddleHeights[1] = global.game.paddleHeights[0];
 
