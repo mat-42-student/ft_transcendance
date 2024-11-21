@@ -194,7 +194,6 @@ function moveBall(delta) {
             const pHeight = global.game.paddleHeights[side] / 2;  // line too long lmao
             const ballTooLow = global.game.ballPosition.y < global.game.paddlePositions[side] - pHeight;
             const ballTooHigh = global.game.ballPosition.y > global.game.paddlePositions[side] + pHeight;
-            debugger
             if (ballTooLow || ballTooHigh) {
                 scoreup(side === 1 ? 0 : 1);
                 break;
