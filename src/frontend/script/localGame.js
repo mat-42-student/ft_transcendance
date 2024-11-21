@@ -10,6 +10,7 @@ import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 //TODO victory screen and transition to idle?
 //TODO ball direction visualizer
 //TODO auto border element
+//TODO CPU game should have a timer (highscore?)
 
 
 const __maxScore = 5;

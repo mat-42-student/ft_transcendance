@@ -12,7 +12,7 @@ export default class Paddle extends THREE.Group {
 
 		this.name = 'Paddle ' + String(playerIndex);
 
-		if (playerIndex != 0 && playerIndex != 1)  throw Error('Bad argument');
+		if (playerIndex !== 0 && playerIndex !== 1)  throw Error('Bad argument');
 		this.playerIndex = playerIndex;
 
 		if (playerIndex === 1) {
