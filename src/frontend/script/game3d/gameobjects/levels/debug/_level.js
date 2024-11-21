@@ -5,6 +5,10 @@ import DebugBall from './DebugBall.js';
 import DebugPaddle from './DebugPaddle.js';
 import DebugBoard from './DebugBoard.js';
 import global from 'global';
+import DebugScoreIndicator from './DebugScoreIndicator.js';
+
+
+//TODO max score indicator? doesn't have to be standard.
 
 
 export default class LevelDebug extends LevelBase {
@@ -22,6 +26,9 @@ export default class LevelDebug extends LevelBase {
 
 		engine.level.add(new DebugPaddle(0));
 		engine.level.add(new DebugPaddle(1));
+
+		engine.level.add(new DebugScoreIndicator(0));
+		engine.level.add(new DebugScoreIndicator(1));
 
 		const mainCameraAngle = new LevelBase.CameraStats();
 		mainCameraAngle.position = new THREE.Vector3(0, 0.45, -0.3);

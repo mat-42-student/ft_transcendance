@@ -142,7 +142,7 @@ export default {
 
 // MARK: Private
 
-const __DEBUG_MODE= true;
+const __DEBUG_MODE = true;
 
 
 /** @type {THREE.PerspectiveCamera} */

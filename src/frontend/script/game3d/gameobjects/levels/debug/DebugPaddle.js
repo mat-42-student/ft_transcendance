@@ -6,8 +6,8 @@ import global from 'global';
 
 export default class DebugPaddle extends GAMEOBJECTS.GAMEPLAY.Paddle {
 
-
 	#box3helper;
+
 
 	constructor(playerIndex) {
 		super(playerIndex);
@@ -30,12 +30,14 @@ export default class DebugPaddle extends GAMEOBJECTS.GAMEPLAY.Paddle {
 
 		this.#box3helper.box.set(
 			new THREE.Vector3(0, 0, -halfHeight),
-			new THREE.Vector3(0.1, 0, halfHeight)
+			new THREE.Vector3(0, 0.05, halfHeight)
 		);
 	}
 
 
 	dispose() {
+		this.clear();
+		this.#box3helper = null;
 		//TODO does auto dispose also delete #box3helper? or is that injected after constructor.
 		//REVIEW write dispose and initializations consistently across various gameobjects.
 	}

@@ -46,8 +46,8 @@ export default class PersistentDebug extends THREE.Object3D {
 
 			this.dFramerate.classList = classList;
 
-			this.dFramerate.innerText = 'FPS: ' + FPS + '\n'
-				+ 'Frame time: ' + delta;
+			this.dFramerate.innerText = 'FPS: ' + FPS.toFixed(2) + '\n'
+				+ 'Frame time: ' + delta.toFixed(4);
 		}
 
 		this.dPlaying.style.display = global.isPlaying ? null : 'none';

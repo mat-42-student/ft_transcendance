@@ -28,6 +28,5 @@ export default class Cross2DHelper extends THREE.LineSegments {
 
 const verts =[
 	new THREE.Vector3(-0.5, 0, 0), new THREE.Vector3(0.5, 0, 0),
-	new THREE.Vector3(0, -0.5, 0), new THREE.Vector3(0, 0.5, 0),
 	new THREE.Vector3(0, 0, -0.5), new THREE.Vector3(0, 0, 0.5),
 ];

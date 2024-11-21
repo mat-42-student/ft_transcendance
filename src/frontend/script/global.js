@@ -14,6 +14,7 @@ export default {
 		ballPosition: {x: 0, y: 0},
 		boardSize: {x: 1.0, y: 1.0},
 		scores: [0, 0],
+		maxScore: 5,
 		paddlePositions: [0, 0],
 		paddleHeights: [0, 0],
 		focusedPlayerIndex: -1,

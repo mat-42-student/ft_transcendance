@@ -13,8 +13,6 @@ import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 //TODO CPU game should have a timer (highscore?)
 
 
-const __maxScore = 5;
-
 // MARK: Variables
 // NOTE: All the values here are only an example of the data structures. (also helps intellisense)
 //       Actual default values are set in functions.
@@ -71,6 +69,8 @@ export async function startLocalGame(isCPU) {
     __cpuMistake.delay.max = 1.8;
     __cpuMistake.duration.min = 0.05;
     __cpuMistake.duration.max = 0.2;
+
+    global.game.maxScore = 5;
 
     __ballSpeed = 0.08;
     __paddleSpeeds[0] = __paddleSpeeds[1] = 0.12;
@@ -220,7 +220,7 @@ function moveBall(delta) {
 function scoreup(side) {
     global.game.scores[side]++;
 
-    if (global.game.scores[side] >= __maxScore) {
+    if (global.game.scores[side] >= global.game.maxScore) {
         endgame(false);
         return;
     }
@@ -230,7 +230,7 @@ function scoreup(side) {
 /** @param {boolean} isEndingBecauseCancelled */
 function endgame(isEndingBecauseCancelled) {
     if (isEndingBecauseCancelled !== true) {
-        let winner = global.game.scores[0] >= __maxScore ? 0 : 1;
+        let winner = global.game.scores[0] >= global.game.maxScore ? 0 : 1;
         alert(`GAME OVER\nLe gagnant est ${global.game.playerNames[winner]}!`);
     }
 

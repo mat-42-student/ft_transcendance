@@ -10,7 +10,7 @@ engine.initialize();
 
 {  // Environment setup
 	engine.environmentScene.background = new THREE.Color("#000000");
-	engine.cameraTarget.position.y = 14.2535353443;
+	engine.cameraTarget.position.y = 1.42535353443;
 	const deg90AsRad = THREE.MathUtils.degToRad(90);
 
 	const q1 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -deg90AsRad);
@@ -30,14 +30,15 @@ engine.initialize();
 
 
 requestAnimationFrame(frame);
-function frame(time) {
+async function frame(time) {
 	const delta = clock.getDelta();
 	if (global.gameFrameFunction != null) global.gameFrameFunction(delta, time);
 	engine.render(delta, time);
-	if (global.powersave) {
+
+	if (global.powersave === true) {
 		setTimeout(() => {
 			requestAnimationFrame(frame);
-		}, 1 / 10);
+		}, 1.0 / 10.0);  //FIXME this does nothing (still goes full framerate)
 	} else {
 		requestAnimationFrame(frame);
 	}

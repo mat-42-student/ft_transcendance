@@ -15,13 +15,13 @@ export default class SceneOriginHelper extends THREE.Group {
 			return;
 		}
 
-		this.#grid = new THREE.GridHelper(10, 10,
+		this.#grid = new THREE.GridHelper(1, 10,
 			new THREE.Color("#555555"),
 			new THREE.Color("#333333")
 		);
 		this.add(this.#grid);
 
-		this.#axes = new THREE.AxesHelper(1);
+		this.#axes = new THREE.AxesHelper(0.1);
 		this.#axes.material.linewidth = 3;  // NOTE: this does nothing lmao
 		this.add(this.#axes);
 
