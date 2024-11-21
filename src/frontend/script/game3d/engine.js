@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import engine from 'engine';
 import CameraTarget from './CameraTarget.js';
 import global from 'global';
+import PersistentDebug from './gameobjects/utils/PersistentDebug.js';
 
 
 // MARK: Public
@@ -54,9 +55,6 @@ export default {
 			if (engine.DEBUG_MODE !== true) __html_debugBox.style.display = 'none';
 			__html_container.appendChild(__html_debugBox);
 
-			__debug_AutoResolution = document.createElement("div");
-			__html_debugBox.appendChild(__debug_AutoResolution);
-
 			__html_borderVisualizer = document.createElement('div');
 			__html_borderVisualizer.id = 'engine-border-visualizer';
 			__html_container.appendChild(__html_borderVisualizer);
@@ -86,6 +84,9 @@ export default {
 		}
 
 		__cameraTarget = new CameraTarget();
+
+		__persistentDebug = new PersistentDebug();
+		__scene.add(__persistentDebug);
 	},
 
 
@@ -179,11 +180,11 @@ let __html_borderVisualizer;
 /** Pixel density used for auto resolution */
 let __currentRatio = window.devicePixelRatio;
 
-/** @type {HTMLDivElement} */
-let __debug_AutoResolution;
-
 
 let __isLoading = false;
+
+/** @type {PersistentDebug} */
+let __persistentDebug;
 
 
 /**
@@ -251,20 +252,20 @@ function __updateAutoResolution(delta) {
 
 	if (global.powersave) {
 		__currentRatio = lowres;
-		__debug_AutoResolution.innerText = 'Auto resolution: Powersave mode';
+		__persistentDebug.dAutoResolution.innerText = 'Auto resolution: Powersave mode';
 	} else {
 		__currentRatio = fullres;
-		__debug_AutoResolution.innerText = 'Auto resolution: Full';
+		__persistentDebug.dAutoResolution.innerText = 'Auto resolution: Full';
 
 		/*NOTE: commented out because i realize this would likely flicker on and off every alternating frame, which would be very distracting.
 		const targetFramerate = 60 - 10;  // Add a margin because otherwise we will rarely hit the exact framerate cap
 		const targetDelta = 1 / targetFramerate;
 		if (delta > targetDelta) {
 			__currentRatio = lowres;
-			__debug_AutoResolution.innerText = 'Auto resolution: Low';
+			__persistentDebug.dAutoResolution.innerText = 'Auto resolution: Low';
 		} else {
 			__currentRatio = fullres;
-			__debug_AutoResolution.innerText = 'Auto resolution: Full';
+			__persistentDebug.dAutoResolution.innerText = 'Auto resolution: Full';
 		}
 		*/
 	}
