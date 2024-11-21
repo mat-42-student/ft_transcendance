@@ -190,10 +190,12 @@ function moveBall(delta) {
         if (collision === null) {
             break;
         } else if (collision === 'x') {
-            const side = __ballDirection.x > 0.0 ? 1 : 0;
-            const pHeight = global.game.paddleHeights[side];  // line too long lmao
-            if ((global.game.ballPosition.y < global.game.paddlePositions[side] - pHeight)
-             || (global.game.ballPosition.y < global.game.paddlePositions[side] + pHeight)) {
+            const side = __ballDirection.x > 0.0 ? 0 : 1;
+            const pHeight = global.game.paddleHeights[side] / 2;  // line too long lmao
+            const ballTooLow = global.game.ballPosition.y < global.game.paddlePositions[side] - pHeight;
+            const ballTooHigh = global.game.ballPosition.y > global.game.paddlePositions[side] + pHeight;
+            debugger
+            if (ballTooLow || ballTooHigh) {
                 scoreup(side === 1 ? 0 : 1);
                 break;
             } else {
