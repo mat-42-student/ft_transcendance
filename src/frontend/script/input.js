@@ -13,8 +13,8 @@ export default {
 		let result = [];
 		for (let i = 0; i < 2; i++) {
 			result[i] = (
-				__currentlyPressed.has(playerKeys[i].negative ? -1 : 0)
-			  + __currentlyPressed.has(playerKeys[i].positive ? +1 : 0)
+				(__currentlyPressed.has(playerKeys[i].negative) ? -1 : 0)
+			  + (__currentlyPressed.has(playerKeys[i].positive) ? +1 : 0)
 			);
 		}
 		return result;

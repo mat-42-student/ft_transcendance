@@ -6,7 +6,6 @@ import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
 import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 
 
-//FIXME input does nothing.
 //FIXME cpu move is crazy
 
 
