@@ -3,6 +3,7 @@ import * as THREE from 'three';
 
 export default class Cross2DHelper extends THREE.LineSegments {
 
+
 	/**
 	 * @param {THREE.ColorRepresentation} color
 	 */
@@ -11,12 +12,16 @@ export default class Cross2DHelper extends THREE.LineSegments {
 		geo.setFromPoints(verts);
 
 		const mat = new THREE.LineBasicMaterial({color: color});
+
 		super(geo, mat);
 	}
 
 
 	dispose() {
-		super.dispose();
+		this.geometry.dispose();
+		this.geometry = null;
+		this.material.dispose();
+		this.material = null;
 	}
 }
 

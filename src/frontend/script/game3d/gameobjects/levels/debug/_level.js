@@ -20,6 +20,13 @@ export default class LevelDebug extends LevelBase {
 		this.ball = new DebugBall();
 		engine.level.add(this.ball);
 
+		this.paddles = [
+			new DebugPaddle(0),
+			new DebugPaddle(1)
+		];
+		engine.level.add(this.paddles[0]);
+		engine.level.add(this.paddles[1]);
+
 		const mainCameraAngle = new LevelBase.CameraStats();
 		mainCameraAngle.position = new THREE.Vector3(0, 0.45, -0.3);
 
@@ -35,7 +42,7 @@ export default class LevelDebug extends LevelBase {
 		mainCameraAngle.fov = 65;
 
 		this.cameras = [mainCameraAngle, mainCameraAngle, mainCameraAngle];
-		engine.level.add(new DebugBoard(global.unitRect(this.boardDiagonal)));
+		engine.level.add(new DebugBoard());
 	}
 
 

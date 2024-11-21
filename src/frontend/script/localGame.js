@@ -5,8 +5,10 @@ import {MathUtils} from "three";
 import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
 import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 
-// FIXME ball position is NaN
-//TODO add paddles
+
+//FIXME input does nothing.
+//FIXME cpu move is crazy
+
 
 // MARK: Variables
 // NOTE: All the values here are only an example of the data structures. (also helps intellisense)
@@ -44,16 +46,13 @@ function generateRandomNick() {
     return '[BOT] ' + randomAdj + randomNoun + Math.floor(Math.random() * 1000);
 }
 
-function randomInRange(a, b) {
-    let range = Math.random() < 0.5 ? [-b, -a] : [a, b];
-    return Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
-}
-
 /**
  * Used for 'folding' the ball's position along the board's edge.
  * https://www.desmos.com/calculator/a2vy4fey6u
  */
-function bounce1D(pos, mirror) { return -(pos - mirror) + mirror; }
+function bounce1D(pos, mirror) {
+    return -(pos - mirror) + mirror;
+}
 
 
 // MARK: Game engine
@@ -69,8 +68,10 @@ export async function startLocalGame(isCPU) {
     __cpuMistake.duration.min = 0.05;
     __cpuMistake.duration.max = 0.2;
 
-    __ballSpeed = 0.005;
+    __ballSpeed = 0.05;
     __paddleSpeeds[0] = __paddleSpeeds[1] = 0.1;
+    global.game.paddleHeights[0] = 0.2;
+    global.game.paddleHeights[1] = global.game.paddleHeights[0];
 
     __level = new (LEVELS.pickRandomLevel())();
 
@@ -89,8 +90,9 @@ export async function startLocalGame(isCPU) {
         endgame(true);
     };
     global.gameFrameFunction = (delta, time) => {
-        movePaddles();
-        moveBall();
+        if (!global.isPlaying) console.warn('Game frame called while not playing');
+        movePaddles(delta);
+        moveBall(delta);
         __level.onFrame(delta, time);
     };
 }
@@ -133,7 +135,8 @@ function movePaddles(delta) {
     let inputs = input.currentPaddleInputs;
     if (__isCPU) inputs[1] = cpuMove();
 
-    const limit = global.game.boardSize.y;
+    debugger
+    const limit = global.game.boardSize.y / 2;
     for (let i = 0; i < 2; i++) {
         global.game.paddlePositions[i] += delta * __paddleSpeeds[i] * inputs[i];
         global.game.paddlePositions[i] = global.clamp(global.game.paddlePositions[i],
@@ -152,27 +155,29 @@ function moveBall(delta) {
     // edge that it hit, until it no longer collides.
 
     for (let bounces = 0; true; bounces++) {
-        if (bounces >= 3) console.warn('Suspiciously high number of ball bounces in 1 frame:', bounces);
+        if (bounces >= 3) console.warn('Suspiciously high number of ball bounces in 1 frame:',
+            bounces, '. Did the game freeze for several seconds?');
 
         let collision = null;
         {
             // Negative numbers mean collisions.
             let collisions = {
-                x: global.game.boardSize.x  / 2 - Math.abs(global.game.ballPosition.x),
+                x: global.game.boardSize.x / 2 - Math.abs(global.game.ballPosition.x),
                 y: global.game.boardSize.y / 2 - Math.abs(global.game.ballPosition.y),
             };
 
             if (collisions.x < 0.0) {
                 collision = 'x';
-            } else if (collisions.y < 0.0 && collisions.x < collisions.y) {  // Pick the closest edge
+            } else if (collisions.y < 0.0 && collisions.y < collisions.x) {  // Pick the closest edge
                 collision = 'y';
             }
         }
 
+
         if (collision === null) {
             break;
         } else if (collision === 'x') {
-            const side = __ball_direction.x > 0.0 ? 1 : 0;
+            const side = __ballDirection.x > 0.0 ? 1 : 0;
             const pHeight = global.game.paddleHeights[side];  // line too long lmao
             if ((global.game.ballPosition.y < global.game.paddlePositions[side] - pHeight)
              || (global.game.ballPosition.y < global.game.paddlePositions[side] + pHeight)) {
@@ -190,7 +195,8 @@ function moveBall(delta) {
         // They're not even the same properties, but hey, JS is anarchy,
         // and right here it happens to be convenient.
         global.game.ballPosition[collision] = bounce1D(global.game.ballPosition[collision],
-            __ballDirection[collision] > 0 ? halfBoard[collision] : -halfBoard[collision]);
+            global.game.boardSize[collision] * (__ballDirection[collision] > 0 ? 0.5 : -0.5)
+        );
         __ballDirection[collision] *= -1;
     }
 }
@@ -213,8 +219,8 @@ function endgame(isEndingBecauseCancelled) {
     }
 
     global.isPlaying = false;
-    global.gameSimulation.gameFrameFunction = null;
-    global.gameSimulation.gameCancelFunction = null;
+    global.gameFrameFunction = null;
+    global.gameCancelFunction = null;
 
     __level.dispose();
     __level = null;

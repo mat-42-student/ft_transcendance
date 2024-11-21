@@ -253,6 +253,10 @@ function __updateAutoResolution(delta) {
 		__currentRatio = lowres;
 		__debug_AutoResolution.innerText = 'Auto resolution: Powersave mode';
 	} else {
+		__currentRatio = fullres;
+		__debug_AutoResolution.innerText = 'Auto resolution: Full';
+
+		/*NOTE: commented out because i realize this would likely flicker on and off every alternating frame, which would be very distracting.
 		const targetFramerate = 60 - 10;  // Add a margin because otherwise we will rarely hit the exact framerate cap
 		const targetDelta = 1 / targetFramerate;
 		if (delta > targetDelta) {
@@ -262,6 +266,7 @@ function __updateAutoResolution(delta) {
 			__currentRatio = fullres;
 			__debug_AutoResolution.innerText = 'Auto resolution: Full';
 		}
+		*/
 	}
 	__renderer.setPixelRatio(__currentRatio);
 }

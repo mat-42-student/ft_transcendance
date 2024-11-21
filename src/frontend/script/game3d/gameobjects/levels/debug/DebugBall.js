@@ -9,13 +9,19 @@ export default class DebugBall extends GAMEOBJECTS.GAMEPLAY.Ball {
 	#helper;
 
 
-	onAdded() {
+	constructor() {
+		super();
+
 		this.#helper = new GAMEOBJECTS.UTILS.Cross2DHelper("#33aa33");
 		this.#helper.rotateOnAxis(
 			new THREE.Vector3(0,1,0),
 			THREE.MathUtils.degToRad(45)
 		);
 		this.#helper.scale.set(0.1, 0.1, 0.1);
+	}
+
+
+	onAdded() {
 		this.add(this.#helper);
 	}
 
