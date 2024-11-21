@@ -1,13 +1,11 @@
 import engine from "engine";
 import global from "global";
 import input from "input";
-import {MathUtils} from "three";
 import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
 import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 
 
 //TODO victory screen and transition to idle?
-//TODO auto border element
 //TODO CPU game should have a timer (highscore?)
 
 
