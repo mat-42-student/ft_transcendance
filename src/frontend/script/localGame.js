@@ -7,6 +7,10 @@ import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 
 
 //FIXME cpu move is crazy
+//TODO add score visualizer
+//TODO victory screen and transition to idle?
+//TODO ball direction visualizer
+//TODO auto border element
 
 
 // MARK: Variables
@@ -93,9 +97,16 @@ export async function startLocalGame(isCPU) {
         endgame(true);
     };
     global.gameFrameFunction = (delta, time) => {
-        if (!global.isPlaying) console.warn('Game frame called while not playing');
+        if (!global.isPlaying) {
+            console.warn('Game frame called while not playing');
+            return;
+        }
         movePaddles(delta);
         moveBall(delta);
+        if (__level == null) {
+            console.warn('Game frame called while level is missing');  //REVIEW maybe its normal, and this shouldnt log.
+            return;
+        }
         __level.onFrame(delta, time);
     };
 }
@@ -138,7 +149,6 @@ function movePaddles(delta) {
     let inputs = input.currentPaddleInputs;
     if (__isCPU) inputs[1] = cpuMove();
 
-    debugger
     const limit = global.game.boardSize.y / 2;
     for (let i = 0; i < 2; i++) {
         global.game.paddlePositions[i] += delta * __paddleSpeeds[i] * inputs[i];
