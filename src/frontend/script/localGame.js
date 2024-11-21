@@ -6,9 +6,7 @@ import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
 import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 
 
-//TODO add score visualizer
 //TODO victory screen and transition to idle?
-//TODO ball direction visualizer
 //TODO auto border element
 //TODO CPU game should have a timer (highscore?)
 
