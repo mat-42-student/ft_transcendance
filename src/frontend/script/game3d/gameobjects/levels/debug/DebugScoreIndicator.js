@@ -5,10 +5,7 @@ import Cross2DHelper from '../..//utils/Cross2DHelper.js';
 
 
 const SIZE = 0.05;
-const CORNER_DISTANCE = 0.1;
-
-
-//FIXME make it horizontal so it always fits in the frame
+const CORNER_DISTANCE = SIZE/2;
 
 
 export default class DebugScoreIndicator extends ScoreIndicator {
@@ -37,8 +34,8 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 
 		const boxMax = new THREE.Vector3(
 			-boxMin.x,
+			-boxMin.y,
 			SIZE * global.game.maxScore - half,
-			-boxMin.z
 		);
 
 		this.#box = new THREE.Box3Helper(
@@ -54,8 +51,8 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 
 		this.position.set(
 			this.#playerMult * (global.game.boardSize.x / 2 - CORNER_DISTANCE),
-			0,
-			global.game.boardSize.y / 2 + CORNER_DISTANCE
+			-SIZE / 2,
+			-global.game.boardSize.y / 2 + CORNER_DISTANCE
 		);
 	}
 
@@ -71,13 +68,13 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 
 		newPoint.position.set(
 			0,
+			0,
 			this.#addedCount * SIZE,
-			0
 		);
 
 		newPoint.rotateOnWorldAxis(
 			new THREE.Vector3(1, 0, 0),
-			THREE.MathUtils.degToRad(-60)
+			THREE.MathUtils.degToRad(-15)
 		);
 
 		newPoint.scale.set(SIZE, SIZE, SIZE);
