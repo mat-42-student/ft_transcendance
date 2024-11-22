@@ -21,6 +21,14 @@ class HTMLAutoBorderElement extends HTMLElement {
 		if (this.#resizeObserver != null) {
 			this.#resizeObserver.disconnect();
 			this.#resizeObserver = null;
+
+			// Reset just in case
+			engine.cameraTarget.borders = {
+				top: 0,
+				right: window.innerWidth,
+				bottom: window.innerHeight,
+				left: 0,
+			};
 		}
 	}
 
