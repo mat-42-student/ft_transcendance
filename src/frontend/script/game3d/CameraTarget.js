@@ -12,12 +12,12 @@ import input from 'input';
 export default class CameraTarget {
 
 	/* Target values */
-
     position = new THREE.Vector3();
     quaternion = new THREE.Quaternion();
 	fov = 70;
 	diagonal = 30;
 
+	/* Border avoidance */
 	borders = {
 		top: 100,
 		right: 600,
@@ -25,15 +25,11 @@ export default class CameraTarget {
 		left: 100,
 	};
 
-
 	/* Smooth interpolation */
-
 	teleportNow = true;
 	smoothSpeed = 10;
 
-
 	/* Mouse perspective */
-
 	mousePositionMultiplier = new THREE.Vector2(1, 1);
 	mouseRotationMultiplier = new THREE.Vector2(1,1);
 
@@ -50,6 +46,7 @@ export default class CameraTarget {
 	}
 	#previousCamera = null;
 	#visualizer;
+	#visualizer2;
 	#geo;
 
 
@@ -62,6 +59,12 @@ export default class CameraTarget {
 		this.#visualizer = new THREE.LineSegments(this.#geo, mat);
 		this.#visualizer.name = 'Camera Target Visualization'
 		engine.environmentScene.add(this.#visualizer);
+
+		this.#visualizer2 = new THREE.LineSegments(this.#geo, mat);
+		const secondVisualizerDistance = 100;
+		this.#visualizer2.scale.set(secondVisualizerDistance, secondVisualizerDistance, secondVisualizerDistance);
+		this.#visualizer2.position.set(0, 0, -(secondVisualizerDistance - 1));
+		this.#visualizer.add(this.#visualizer2);
 	}
 
 
