@@ -11,6 +11,7 @@ export default {
 
 	get mouseX() { return __mouseX; },
 	get mouseY() { return __mouseY; },
+	get isMouseInWindow() { return __isMouseInWindow; },
 
 
 	get currentPaddleInputs() {
@@ -31,6 +32,7 @@ export default {
 let __currentlyPressed = new Set([]);
 let __mouseX = 0;
 let __mouseY = 0;
+let __isMouseInWindow = false;
 
 
 window.addEventListener('keydown', (event) => {
@@ -42,7 +44,19 @@ window.addEventListener('keyup', (event) => {
 	__currentlyPressed.delete(event.code);
 });
 
-window.addEventListener('mousemove', __updateMousePos);
+window.addEventListener('mousemove', (e) => {
+	__isMouseInWindow = true;
+	__mouseX = e.x;
+	__mouseY = e.y;
+});
+
+document.body.addEventListener('mouseleave', (e) => {
+	__isMouseInWindow = false;
+});
+
+document.body.addEventListener('mouseenter', (e) => {
+	__isMouseInWindow = true;
+});
 
 
 function __getPlayerKeys() {
@@ -57,11 +71,4 @@ function __getPlayerKeys() {
 			negative: isFocusNeutral ? 'ArrowDown' : 'ArrowLeft',
 		},
 	];
-}
-
-
-/** @param {MouseEvent} e */
-function __updateMousePos(e) {
-	__mouseX = e.x;
-	__mouseY = e.y;
 }

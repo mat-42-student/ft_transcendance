@@ -5,9 +5,6 @@ import global from 'global';
 import input from 'input';
 
 
-//TODO reset mouse shift when not in focus?
-
-
 export default class CameraTarget {
 
 	/* Target values */
@@ -111,10 +108,13 @@ export default class CameraTarget {
 
 	/** @param {THREE.Vector2} canvasSize */
 	#updateMouse(canvasSize) {
-		const pos = new THREE.Vector2(
-			(input.mouseX / canvasSize.x) * 2 - 1,
-			(input.mouseY / canvasSize.y) * 2 - 1
-		);
+		const pos = new THREE.Vector2();
+		if (document.hasFocus() && input.isMouseInWindow) {
+			pos.set(
+				(input.mouseX / canvasSize.x) * 2 - 1,
+				(input.mouseY / canvasSize.y) * 2 - 1
+			);
+		}
 
 		const mouseOffsets = {};
 
