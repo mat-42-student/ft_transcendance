@@ -34,8 +34,6 @@ class HTMLAutoBorderElement extends HTMLElement {
 			bottom: rect.y + rect.height,
 			left: rect.x,
 		};
-
-		console.log('Update');
 	}
 
 }
