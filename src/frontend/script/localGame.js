@@ -61,6 +61,11 @@ export async function startLocalGame(isCPU) {
     global.isPlaying = true;
     engine.loading = true;
 
+    if (__level != null) {
+        __level.dispose();
+        __level = null;
+    }
+
     __cpuMistake.delay.min = 0.1;
     __cpuMistake.delay.max = 1.8;
     __cpuMistake.duration.min = 0.05;
@@ -233,9 +238,6 @@ function endgame(isEndingBecauseCancelled) {
     global.isPlaying = false;
     global.gameFrameFunction = null;
     global.gameCancelFunction = null;
-
-    __level.dispose();
-    __level = null;
 
     window.location.hash = 'matchmaking.html';
 }
