@@ -15,7 +15,6 @@ export default class LevelDebug extends LevelBase {
 		engine.clearLevel();
 		engine.environmentScene.fog = null;
 		engine.environmentScene.background = new THREE.Color('#112211');
-		engine.cameraTarget.teleportNow = true;
 
 		this.boardDiagonal = 30;
 		const ball = new DebugBall();
@@ -28,7 +27,7 @@ export default class LevelDebug extends LevelBase {
 		engine.level.add(new DebugScoreIndicator(1));
 
 		const mainCameraAngle = new LevelBase.CameraStats();
-		mainCameraAngle.position = new THREE.Vector3(0, 0.45, -0.3);
+		mainCameraAngle.position = new THREE.Vector3(0, 0.65, -0.4);
 
 		mainCameraAngle.quaternion = new THREE.Quaternion().setFromAxisAngle(
 			new THREE.Vector3(1,0,0),
@@ -39,7 +38,11 @@ export default class LevelDebug extends LevelBase {
 			THREE.MathUtils.degToRad(180)
 		));
 
-		mainCameraAngle.fov = 65;
+		mainCameraAngle.fov = 55;
+
+		engine.cameraTarget.teleportNow = true;
+		engine.cameraTarget.mousePositionMultiplier.set(0.1, 0.1);
+		engine.cameraTarget.mouseRotationMultiplier.set(0.1, 0.1);
 
 		global.game.focusedPlayerIndex = 'neutral';
 

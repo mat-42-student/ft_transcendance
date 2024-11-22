@@ -2,9 +2,15 @@ import global from "global";
 import input from "input";
 
 
+//TODO clear __currentlyPressed when focus is lost.
+
+
 export default {
 
 	get currentlyPressed() { return __currentlyPressed; },
+
+	get mouseX() { return __mouseX; },
+	get mouseY() { return __mouseY; },
 
 
 	get currentPaddleInputs() {
@@ -23,6 +29,8 @@ export default {
 
 
 let __currentlyPressed = new Set([]);
+let __mouseX = 0;
+let __mouseY = 0;
 
 
 window.addEventListener('keydown', (event) => {
@@ -33,6 +41,8 @@ window.addEventListener('keydown', (event) => {
 window.addEventListener('keyup', (event) => {
 	__currentlyPressed.delete(event.code);
 });
+
+window.addEventListener('mousemove', __updateMousePos);
 
 
 function __getPlayerKeys() {
@@ -47,4 +57,11 @@ function __getPlayerKeys() {
 			negative: isFocusNeutral ? 'ArrowDown' : 'ArrowLeft',
 		},
 	];
+}
+
+
+/** @param {MouseEvent} e */
+function __updateMousePos(e) {
+	__mouseX = e.x;
+	__mouseY = e.y;
 }
