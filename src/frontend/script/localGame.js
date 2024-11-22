@@ -1,3 +1,4 @@
+import {MathUtils, Vector2} from 'three';
 import engine from "engine";
 import global from "global";
 import input from "input";
@@ -14,7 +15,7 @@ import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 //       Actual default values are set in functions.
 //       Changing them here will do nothing.
 
-let __ballDirection = {x: 1.0, y: 1.0};
+let __ballDirection = new Vector2(1.0, 1.0).normalize();
 let __ballSpeed = 1;
 let __isCPU = true;
 let __paddleSpeeds = [1, 1];
@@ -73,7 +74,7 @@ export async function startLocalGame(isCPU) {
 
     global.game.maxScore = 5;
 
-    __ballSpeed = 0.08;
+    __ballSpeed = 0.18;
     __paddleSpeeds[0] = __paddleSpeeds[1] = 0.12;
     global.game.paddleHeights[0] = 0.2;
     global.game.paddleHeights[1] = global.game.paddleHeights[0];
@@ -115,7 +116,10 @@ export async function startLocalGame(isCPU) {
 
 function newRound() {
     global.game.ballPosition = { x: 0, y: 0 };
-    __ballDirection = { x: 0.785, y: 0.785 };
+    __ballDirection.set(1, 0).rotateAround(
+        new Vector2(0, 0),
+        MathUtils.degToRad(45)  //TODO random rotation, and point at direction based on who lost
+    );
     global.game.paddlePositions[0] = global.game.paddlePositions[1] = 0;
 
     // Shrink
@@ -161,8 +165,10 @@ function movePaddles(delta) {
 }
 
 function moveBall(delta) {
-    global.game.ballPosition.x += delta * __ballDirection.x * __ballSpeed;
-    global.game.ballPosition.y += delta * __ballDirection.y * __ballSpeed;
+    const gg = global.game;  // abbreviate because used a lot
+
+    gg.ballPosition.x += delta * __ballDirection.x * __ballSpeed;
+    gg.ballPosition.y += delta * __ballDirection.y * __ballSpeed;
 
     // At this point the ball's position has been linearly extrapolated forward
     // for this point in time.
@@ -174,36 +180,67 @@ function moveBall(delta) {
         if (bounces >= 3) console.warn('Suspiciously high number of ball bounces in 1 frame:',
             bounces, '. Did the game freeze for several seconds?');
 
-        let collision = null;
+        let collisionAxis = null;
         {
             // Negative numbers mean collisions.
             let collisions = {
-                x: global.game.boardSize.x / 2 - Math.abs(global.game.ballPosition.x),
-                y: global.game.boardSize.y / 2 - Math.abs(global.game.ballPosition.y),
+                x: gg.boardSize.x / 2 - Math.abs(gg.ballPosition.x),
+                y: gg.boardSize.y / 2 - Math.abs(gg.ballPosition.y),
             };
 
             if (collisions.x < 0.0) {
-                collision = 'x';
+                collisionAxis = 'x';
             } else if (collisions.y < 0.0 && collisions.y < collisions.x) {  // Pick the closest edge
-                collision = 'y';
+                collisionAxis = 'y';
             }
         }
 
 
-        if (collision === null) {
+        if (collisionAxis === null) {
             break;
-        } else if (collision === 'x') {
+        } else if (collisionAxis === 'x') {
             const side = __ballDirection.x > 0.0 ? 0 : 1;
-            const pHeight = global.game.paddleHeights[side] / 2;  // line too long lmao
-            const ballTooLow = global.game.ballPosition.y < global.game.paddlePositions[side] - pHeight;
-            const ballTooHigh = global.game.ballPosition.y > global.game.paddlePositions[side] + pHeight;
+            const pHeight = gg.paddleHeights[side] / 2;
+            const ballTooLow = gg.ballPosition.y < gg.paddlePositions[side] - pHeight;
+            const ballTooHigh = gg.ballPosition.y > gg.paddlePositions[side] + pHeight;
             if (ballTooLow || ballTooHigh) {
                 scoreup(side === 1 ? 0 : 1);
                 break;
             } else {
-                //TODO bend __ballDirection based on where ball hits the paddle.
+                const hitPosition = global.map(gg.ballPosition.y,
+                    gg.paddlePositions[side] - pHeight,
+                    gg.paddlePositions[side] + pHeight,
+                    -1,
+                    1
+                );
+
+                const angleMax = MathUtils.degToRad(60);
+                const angle = global.clamp(
+                    __ballDirection.angleTo(new Vector2(side == 0 ? 1 : -1, 0)),
+                    -angleMax,
+                    angleMax
+                );
+
+                const newAngle = MathUtils.lerp(
+                    angle,
+                    (angle < 0) ? -angleMax : angleMax,
+                    hitPosition
+                );
+
+                __ballDirection.copy(
+                    new Vector2(1,0).rotateAround(new Vector2(), newAngle)
+                );
+
+                if (side == 1) {
+                    // because [angle] is flipped based on which side of the board we are,
+                    // we need to rotate the angle 180° again
+                    __ballDirection.x *= -1;
+                    // __ballDirection.y *= -1;
+                }
+
+                //FIXME it's kind of doing it but the bounces are wrong (bounces up always)
             }
-        } else { // (collision === 'y')
+        } else { // (collisionAxis === 'y')
         }
 
         // If execution reaches here, we have to perform a bounce.
@@ -211,10 +248,10 @@ function moveBall(delta) {
         // All of the [collision] stuff has properties named .x or .y .
         // They're not even the same properties, but hey, JS is anarchy,
         // and right here it happens to be convenient.
-        global.game.ballPosition[collision] = bounce1D(global.game.ballPosition[collision],
-            global.game.boardSize[collision] * (__ballDirection[collision] > 0 ? 0.5 : -0.5)
+        gg.ballPosition[collisionAxis] = bounce1D(gg.ballPosition[collisionAxis],
+            gg.boardSize[collisionAxis] * (__ballDirection[collisionAxis] > 0 ? 0.5 : -0.5)
         );
-        __ballDirection[collision] *= -1;
+        __ballDirection[collisionAxis] *= -1;
     }
 }
 

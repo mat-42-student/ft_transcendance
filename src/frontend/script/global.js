@@ -91,4 +91,18 @@ export default {
 		const width = Math.sqrt(1 - height * height);
 		return { x: width, y: height };
 	},
+
+	/**
+	 * https://processing.org/reference/map_.html
+	 * @param {number} input
+	 * @param {number} inMin
+	 * @param {number} inMax
+	 * @param {number} outMin
+	 * @param {number} outMax
+	 * @returns
+	 */
+	map(input, inMin, inMax, outMin, outMax) {
+		// return outMin + (outMax - outMin) * (input - inMin) / (inMax - inMin);
+		return outMin + (input - inMin) / (inMax - inMin) * (outMax - outMin);
+	},
 }
