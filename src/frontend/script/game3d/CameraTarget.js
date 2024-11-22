@@ -5,7 +5,6 @@ import global from 'global';
 import input from 'input';
 
 
-//FIXME apply mouse shift before smoothing (so mouse shift is smooth)
 //TODO reset mouse shift when not in focus?
 
 
@@ -34,10 +33,6 @@ export default class CameraTarget {
 	mouseRotationMultiplier = new THREE.Vector2(1,1);
 
 
-	#computedTarget = {
-		position: this.position.clone(),
-		quaternion: this.quaternion.clone(),
-	};
 	#smooth = {
 		position: this.position.clone(),
 		quaternion: this.quaternion.clone(),
@@ -84,16 +79,20 @@ export default class CameraTarget {
 			this.teleportNow = true;
 		}
 
+		const mouseOffsets = this.#updateMouse(canvasSize);
+		const targetPos = this.position.clone().add(mouseOffsets.position);
+		const targetRot = this.quaternion.clone().multiply(mouseOffsets.quaternion);
+
 		if (this.teleportNow) {
 			this.teleportNow = false;
-			this.#smooth.position.copy(this.position);
-			this.#smooth.quaternion.copy(this.quaternion);
+			this.#smooth.position.copy(targetPos);
+			this.#smooth.quaternion.copy(targetRot);
 			this.#smooth.fov = this.fov;
 			this.#smooth.diagonal = this.diagonal;
 		} else {
-			this.#smooth.position = global.damp(this.#smooth.position, this.position,
+			this.#smooth.position = global.damp(this.#smooth.position, targetPos,
 				this.smoothSpeed, delta);
-			this.#smooth.quaternion = global.damp(this.#smooth.quaternion, this.quaternion,
+			this.#smooth.quaternion = global.damp(this.#smooth.quaternion, targetRot,
 				this.smoothSpeed, delta);
 			this.#smooth.fov = global.damp(this.#smooth.fov, this.fov,
 				this.smoothSpeed, delta);
@@ -101,10 +100,8 @@ export default class CameraTarget {
 				this.smoothSpeed, delta);
 		}
 
-		this.#updateMouse(canvasSize);
-
-		camera.position.copy(this.#computedTarget.position);
-		camera.rotation.setFromQuaternion(this.#computedTarget.quaternion);
+		camera.position.copy(this.#smooth.position);
+		camera.rotation.setFromQuaternion(this.#smooth.quaternion);
 		camera.fov = this.#smooth.fov;
 
 		this.#cameraRefresh(camera, canvasSize);
@@ -119,26 +116,28 @@ export default class CameraTarget {
 			(input.mouseY / canvasSize.y) * 2 - 1
 		);
 
-		const mouseOffset = new THREE.Vector3(
+		const mouseOffsets = {};
+
+		mouseOffsets.position = new THREE.Vector3(
 			-pos.x * this.mousePositionMultiplier.x,
 			pos.y * this.mousePositionMultiplier.y,
 			0
 		);
-		mouseOffset.applyQuaternion(this.quaternion);
-		this.#computedTarget.position.copy(this.#smooth.position).add(mouseOffset);
+		mouseOffsets.position.applyQuaternion(this.quaternion);
 
-		const mouseRotationX = new THREE.Quaternion().setFromAxisAngle(
+		const rx = new THREE.Quaternion().setFromAxisAngle(
 				new THREE.Vector3(0, 1, 0),
 				-pos.x * this.mouseRotationMultiplier.x
 			);
-		const mouseRotationY = new THREE.Quaternion().setFromAxisAngle(
+		const ry = new THREE.Quaternion().setFromAxisAngle(
 			new THREE.Vector3(1, 0, 0),
 			-pos.y * this.mouseRotationMultiplier.y
 		);
-		const mouseRotation = new THREE.Quaternion()
-			.multiply(mouseRotationX)
-			.multiply(mouseRotationY);
-		this.#computedTarget.quaternion.copy(this.#smooth.quaternion).multiply(mouseRotation);
+		mouseOffsets.quaternion = new THREE.Quaternion()
+			.multiply(rx)
+			.multiply(ry);
+
+		return mouseOffsets;
 	}
 
 
