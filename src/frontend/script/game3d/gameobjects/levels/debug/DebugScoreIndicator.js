@@ -12,6 +12,7 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 
 	#addedCount = 0;
 
+	/** @type {THREE.Box3Helper} */
 	#box;
 
 	#playerMult;
@@ -86,5 +87,6 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 
 	dispose() {
 		this.clear();
+		this.#box = null;
 	}
 }

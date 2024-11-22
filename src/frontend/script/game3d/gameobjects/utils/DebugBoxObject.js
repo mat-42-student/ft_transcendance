@@ -21,6 +21,6 @@ export default class DebugBoxObject extends THREE.Object3D {
 
 	dispose() {
 		engine.html_debugBox.removeChild(this.html_div);
-		this.html_div = undefined;
+		this.html_div = null;
 	}
 }

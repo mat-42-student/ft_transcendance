@@ -38,7 +38,5 @@ export default class DebugPaddle extends GAMEOBJECTS.GAMEPLAY.Paddle {
 	dispose() {
 		this.clear();
 		this.#box3helper = null;
-		//TODO does auto dispose also delete #box3helper? or is that injected after constructor.
-		//REVIEW write dispose and initializations consistently across various gameobjects.
 	}
 }

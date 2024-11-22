@@ -23,7 +23,7 @@ export default class Paddle extends THREE.Group {
 
 	onFrame(delta, time) {
 		this.position.x = global.game.boardSize.x / 2;
-		this.position.x *= this.playerIndex == 0 ? 1 : -1; //REVIEW check: this may be inverted
+		this.position.x *= this.playerIndex == 0 ? 1 : -1;
 
 		this.position.z = global.game.paddlePositions[this.playerIndex];
 

@@ -106,7 +106,7 @@ export async function startLocalGame(isCPU) {
         movePaddles(delta);
         moveBall(delta);
         if (__level == null) {
-            console.warn('Game frame called while level is missing');  //REVIEW maybe its normal, and this shouldnt log.
+            console.warn('Game frame called while level is missing');  //REVIEW eventually delete this log, this is expected.
             return;
         }
         __level.onFrame(delta, time);

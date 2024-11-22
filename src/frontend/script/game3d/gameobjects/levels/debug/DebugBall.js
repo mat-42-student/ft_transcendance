@@ -65,7 +65,6 @@ export default class DebugBall extends GAMEOBJECTS.GAMEPLAY.Ball {
 
 	dispose() {
 		this.clear();
-		this.#cross = undefined;
-		this.#arrow = undefined;
+		this.#cross = this.#arrow = null;
 	}
 }

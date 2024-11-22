@@ -19,9 +19,8 @@ export default class Cross2DHelper extends THREE.LineSegments {
 
 	dispose() {
 		this.geometry.dispose();
-		this.geometry = null;
 		this.material.dispose();
-		this.material = null;
+		this.geometry = this.material = null;
 	}
 }
 

@@ -8,9 +8,6 @@ import global from 'global';
 import DebugScoreIndicator from './DebugScoreIndicator.js';
 
 
-//TODO max score indicator? doesn't have to be standard.
-
-
 export default class LevelDebug extends LevelBase {
 	constructor() {
 		super();
@@ -53,5 +50,7 @@ export default class LevelDebug extends LevelBase {
 
 	dispose() {
 		super.dispose();
+
+		//TODO
 	}
 }
