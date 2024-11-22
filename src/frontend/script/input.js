@@ -2,9 +2,6 @@ import global from "global";
 import input from "input";
 
 
-//TODO clear __currentlyPressed when focus is lost.
-
-
 export default {
 
 	get currentlyPressed() { return __currentlyPressed; },
@@ -52,6 +49,7 @@ window.addEventListener('mousemove', (e) => {
 
 document.body.addEventListener('mouseleave', (e) => {
 	__isMouseInWindow = false;
+	__currentlyPressed.clear();
 });
 
 document.body.addEventListener('mouseenter', (e) => {
