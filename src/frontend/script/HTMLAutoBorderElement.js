@@ -1,14 +1,6 @@
 import engine from 'engine';
 
 
-//REVIEW check that this runs
-console.log('Registered web component HTMLAutoBorderElement');
-customElements.define('auto-engine-border', HTMLAutoBorderElement);
-
-
-//TODO test and use this entire thing
-//TODO is there a way to prevent multiple fighting eachother if more than 1 is created accidentally?
-//TODO also test that this doesnt linger when the page is removed/replaced
 class HTMLAutoBorderElement extends HTMLElement {
 
 	/** @type {ResizeObserver} */
@@ -16,22 +8,12 @@ class HTMLAutoBorderElement extends HTMLElement {
 
 
 	connectedCallback() {
-		this.#resizeObserver = new ResizeObserver((entries) => {
-			// for (const entry of entries) {
-			// 	//TODO do i need this?
-			// }
-			const rect = this.getBoundingClientRect();
+		const updateCallback = this.update.bind(this);
 
-			engine.cameraTarget.borders = {
-				top: rect.x,
-				right: rect.y + rect.width,
-				bottom: rect.x + rect.height,
-				left: rect.y,
-			};
-			console.log('Resize detected');  //REVIEW check that this works
-		});
-
+		this.#resizeObserver = new ResizeObserver(updateCallback);
 		this.#resizeObserver.observe(this);
+
+		window.addEventListener('resize', updateCallback);
 	}
 
 
@@ -42,4 +24,21 @@ class HTMLAutoBorderElement extends HTMLElement {
 		}
 	}
 
+
+	update() {
+		const rect = this.getBoundingClientRect();
+
+		engine.cameraTarget.borders = {
+			top: rect.y,
+			right: rect.x + rect.width,
+			bottom: rect.y + rect.height,
+			left: rect.x,
+		};
+
+		console.log('Update');
+	}
+
 }
+
+
+customElements.define('auto-engine-border', HTMLAutoBorderElement);

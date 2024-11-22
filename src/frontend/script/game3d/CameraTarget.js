@@ -66,7 +66,6 @@ export default class CameraTarget {
 	 */
 	onFrame(delta, camera, canvasSize, borderVisualizer) {
 
-		this.borders = null;  //TODO delete this line (borders always resetting)
 		this.#recreateBordersIfReset(canvasSize);
 
 		// Force teleport if we have a new camera.
