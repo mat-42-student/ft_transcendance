@@ -118,7 +118,7 @@ function newRound() {
     global.game.ballPosition = { x: 0, y: 0 };
     __ballDirection.set(1, 0).rotateAround(
         new Vector2(0, 0),
-        MathUtils.degToRad(45)  //TODO random rotation, and point at direction based on who lost
+        MathUtils.degToRad(20)  //TODO random rotation, and point at direction based on who lost
     );
     global.game.paddlePositions[0] = global.game.paddlePositions[1] = 0;
 
@@ -197,7 +197,6 @@ function moveBall(delta) {
             }
         }
 
-
         if (collisionAxis === null) {
             break;
         } else if (collisionAxis === 'x') {
@@ -209,6 +208,9 @@ function moveBall(delta) {
                 scoreup(collisionSide === 1 ? 0 : 1);
                 break;
             } else {
+                const signedSide = collisionSide == 0 ? 1 : -1;
+                const angleMax = MathUtils.degToRad(70);
+
                 const hitPosition = global.map(gg.ballPosition.y,
                     gg.paddlePositions[collisionSide] - pHeight,
                     gg.paddlePositions[collisionSide] + pHeight,
@@ -216,27 +218,35 @@ function moveBall(delta) {
                     1
                 );
 
-                const angleMax = MathUtils.degToRad(70);
-                const angle = global.clamp(
-                    __ballDirection.angleTo(new Vector2(collisionSide == 0 ? 1 : -1, 0)),
+                let angle = __ballDirection.angle();
+                if (angle > global._180) {
+                    angle = -signedSide * ((collisionSide == 0 ? global._360 : global._180) - angle);
+                }
+
+                if (angle > global._90) {
+                    angle = global._90 - (angle - global._90);
+                }
+
+                angle = global.clamp(angle, -angleMax, angleMax);
+
+                const redirection = hitPosition * 0.5;
+
+                const newAngle = MathUtils.clamp(
+                    angle + redirection,
                     -angleMax,
                     angleMax
                 );
 
-                const newAngle = global.map(
-                    hitPosition, -1, 1,
-                    -angleMax, angleMax,
-                );
+                const newDirection = new Vector2(signedSide,0).rotateAround(new Vector2(), newAngle * signedSide);
 
-                __ballDirection.copy(
-                    new Vector2(1,0).rotateAround(new Vector2(), newAngle)
-                );
+//                 console.log(
+// `Ball Direction: (Before)`, __ballDirection, `(After)`, newDirection,`
+// Angle: ${MathUtils.RAD2DEG*angle}
+// Redirect: ${MathUtils.RAD2DEG*redirection}
+// New Angle: ${MathUtils.RAD2DEG*newAngle}`
+//                 );
 
-                if (collisionSide == 1) {
-                    // because [angle] is flipped based on which side of the board we are,
-                    // we need to rotate the angle 180° again
-                    __ballDirection.x *= -1;
-                }
+                __ballDirection.copy(newDirection);
             }
         } else { // (collisionAxis === 'y')
         }

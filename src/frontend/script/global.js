@@ -21,6 +21,11 @@ export default {
 		playerNames: ['Guest', 'Uninitialized'],
 	},
 
+	_90: THREE.MathUtils.degToRad(90),
+	_180: THREE.MathUtils.degToRad(180),
+	_270: THREE.MathUtils.degToRad(270),
+	_360: THREE.MathUtils.degToRad(360),
+
 
 	// MARK: Functions
 
