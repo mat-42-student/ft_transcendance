@@ -6,9 +6,13 @@ import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
 import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 
 
+//TODO AI: predict impact and go there, since shallow angles move faster than the paddle
+//TODO AI: margin choice: pick a redirection that tries to bring the angle within a range (not too direct, not too slow)
+//TODO AI: new logic for randomization is needed
 //TODO victory screen and transition to idle?
 //TODO CPU game should have a timer (highscore?)
 
+const __angleMax = MathUtils.degToRad(70);
 
 // MARK: Variables
 // NOTE: All the values here are only an example of the data structures. (also helps intellisense)
@@ -21,16 +25,6 @@ let __isCPU = true;
 let __paddleSpeeds = [1, 1];
 /** @type {LevelBase} */
 let __level;
-
-/**
- * These parameters control the CPU's deliberate mistakes, to tweak difficulty.
- * When playing normally, the CPU will wait a random amount of time between delayMin/Max.
- * Then it 'gets distracted' and stops moving for a random amount of time between durationMin/Max.
- */
-let __cpuMistake = {
-    delay: { min: 1, max: 2 },
-    duration: { min: 1, max: 2 },
-};
 
 
 // MARK: Utils
@@ -66,11 +60,6 @@ export async function startLocalGame(isCPU) {
         __level.dispose();
         __level = null;
     }
-
-    __cpuMistake.delay.min = 0.1;
-    __cpuMistake.delay.max = 1.8;
-    __cpuMistake.duration.min = 0.05;
-    __cpuMistake.duration.max = 0.2;
 
     global.game.maxScore = 5;
 
@@ -118,7 +107,7 @@ function newRound() {
     global.game.ballPosition = { x: 0, y: 0 };
     __ballDirection.set(1, 0).rotateAround(
         new Vector2(0, 0),
-        MathUtils.degToRad(20)  //TODO random rotation, and point at direction based on who lost
+        (Math.random() - 1) * 2 * __angleMax + global._90  //TODO direction should depend on last round
     );
     global.game.paddlePositions[0] = global.game.paddlePositions[1] = 0;
 
@@ -133,13 +122,10 @@ function newRound() {
 }
 
 function cpuMove() {
-    // TODO artificial mistakes
-
     // CPU tries to keep the ball in the center.
     // This margin multiplies the size of the paddle.
     const margin = 0.5;
 
-    //TODO maybe add a random offset every time it bounces?
     // Abbreviate
     const ball = global.game.ballPosition.y;
     const paddle = global.game.paddlePositions[1];
@@ -209,7 +195,6 @@ function moveBall(delta) {
                 break;
             } else {
                 const signedSide = collisionSide == 0 ? 1 : -1;
-                const angleMax = MathUtils.degToRad(70);
 
                 const hitPosition = global.map(gg.ballPosition.y,
                     gg.paddlePositions[collisionSide] - pHeight,
@@ -227,14 +212,14 @@ function moveBall(delta) {
                     angle = global._90 - (angle - global._90);
                 }
 
-                angle = global.clamp(angle, -angleMax, angleMax);
+                angle = global.clamp(angle, -__angleMax, __angleMax);
 
-                const redirection = hitPosition * 0.5;
+                const redirection = hitPosition * 1.5;  // Arbitrary number, controls how strong redirection is
 
                 const newAngle = MathUtils.clamp(
                     angle + redirection,
-                    -angleMax,
-                    angleMax
+                    -__angleMax,
+                    __angleMax
                 );
 
                 const newDirection = new Vector2(signedSide,0).rotateAround(new Vector2(), newAngle * signedSide);
