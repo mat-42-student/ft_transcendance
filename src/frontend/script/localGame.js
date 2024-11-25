@@ -176,9 +176,11 @@ function moveBall(delta) {
     // If it collides, the ball's position (and direction) is 'folded' along the
     // edge that it hit, until it no longer collides.
 
-    for (let bounces = 0; true; bounces++) {
-        if (bounces >= 3) console.warn('Suspiciously high number of ball bounces in 1 frame:',
-            bounces, '. Did the game freeze for several seconds?');
+    let bounces = 0;
+    for (; true; bounces++) {
+        if (bounces > 100) {
+            throw Error(`Bounced ${bounces} times in a single frame, interrupting infinite loop.`);
+        }
 
         let collisionAxis = null;
         {
@@ -199,46 +201,42 @@ function moveBall(delta) {
         if (collisionAxis === null) {
             break;
         } else if (collisionAxis === 'x') {
-            const side = __ballDirection.x > 0.0 ? 0 : 1;
-            const pHeight = gg.paddleHeights[side] / 2;
-            const ballTooLow = gg.ballPosition.y < gg.paddlePositions[side] - pHeight;
-            const ballTooHigh = gg.ballPosition.y > gg.paddlePositions[side] + pHeight;
+            const collisionSide = __ballDirection.x > 0.0 ? 0 : 1;
+            const pHeight = gg.paddleHeights[collisionSide] / 2;
+            const ballTooLow = gg.ballPosition.y < gg.paddlePositions[collisionSide] - pHeight;
+            const ballTooHigh = gg.ballPosition.y > gg.paddlePositions[collisionSide] + pHeight;
             if (ballTooLow || ballTooHigh) {
-                scoreup(side === 1 ? 0 : 1);
+                scoreup(collisionSide === 1 ? 0 : 1);
                 break;
             } else {
                 const hitPosition = global.map(gg.ballPosition.y,
-                    gg.paddlePositions[side] - pHeight,
-                    gg.paddlePositions[side] + pHeight,
+                    gg.paddlePositions[collisionSide] - pHeight,
+                    gg.paddlePositions[collisionSide] + pHeight,
                     -1,
                     1
                 );
 
-                const angleMax = MathUtils.degToRad(60);
+                const angleMax = MathUtils.degToRad(70);
                 const angle = global.clamp(
-                    __ballDirection.angleTo(new Vector2(side == 0 ? 1 : -1, 0)),
+                    __ballDirection.angleTo(new Vector2(collisionSide == 0 ? 1 : -1, 0)),
                     -angleMax,
                     angleMax
                 );
 
-                const newAngle = MathUtils.lerp(
-                    angle,
-                    (angle < 0) ? -angleMax : angleMax,
-                    hitPosition
+                const newAngle = global.map(
+                    hitPosition, -1, 1,
+                    -angleMax, angleMax,
                 );
 
                 __ballDirection.copy(
                     new Vector2(1,0).rotateAround(new Vector2(), newAngle)
                 );
 
-                if (side == 1) {
+                if (collisionSide == 1) {
                     // because [angle] is flipped based on which side of the board we are,
                     // we need to rotate the angle 180° again
                     __ballDirection.x *= -1;
-                    // __ballDirection.y *= -1;
                 }
-
-                //FIXME it's kind of doing it but the bounces are wrong (bounces up always)
             }
         } else { // (collisionAxis === 'y')
         }
@@ -252,6 +250,14 @@ function moveBall(delta) {
             gg.boardSize[collisionAxis] * (__ballDirection[collisionAxis] > 0 ? 0.5 : -0.5)
         );
         __ballDirection[collisionAxis] *= -1;
+    }
+
+    if (bounces > 1) {
+        console.warn(
+`Ball bounced ${bounces} times in a single frame, which is unusual.
+Did the game freeze long enough for the ball to travel to multiple borders?
+Did the ball nearly exactly hit a corner of the board, and bounce twice?`
+        );
     }
 }
 
