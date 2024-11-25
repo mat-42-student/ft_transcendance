@@ -5,6 +5,9 @@ import global from 'global';
 import input from 'input';
 
 
+//REVIEW When nothing is continuously updating the border, resizing the window is broken. Either check that this never happens, or add some failsafe.
+
+
 export default class CameraTarget {
 
 	/* Target values */

@@ -61,7 +61,7 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 	onFrame(delta, time) {
 		super.onFrame(delta, time);
 
-		this.#colorFlashInterpolator = Math.max(0, this.#colorFlashInterpolator - delta);
+		this.#colorFlashInterpolator = Math.max(0, this.#colorFlashInterpolator - delta / 3);
 		this.#material.color.lerpColors(
 			new THREE.Color(0x444444),
 			new THREE.Color(0x44ff44),
