@@ -23,8 +23,8 @@ let __ballDirection = new Vector2(1.0, 1.0).normalize();
 let __ballSpeed = 1;
 let __isCPU = true;
 let __paddleSpeeds = [1, 1];
-/** @type {LevelBase} */
-let __level;
+/** @type {LevelBase} */  let __level;
+let __didOpponentLoseLastRound = 0;
 
 
 // MARK: Utils
@@ -63,6 +63,8 @@ export async function startLocalGame(isCPU) {
 
     global.game.maxScore = 5;
 
+    __didOpponentLoseLastRound = Math.random() > 0.5 ? 1 : 0;
+
     __ballSpeed = 0.18;
     __paddleSpeeds[0] = __paddleSpeeds[1] = 0.12;
     global.game.paddleHeights[0] = 0.2;
@@ -96,7 +98,7 @@ export async function startLocalGame(isCPU) {
         movePaddles(delta);
         moveBall(delta);
         if (__level == null) {
-            console.warn('Game frame called while level is missing');  //REVIEW eventually delete this log, this is expected.
+            console.warn('Game frame called while level is missing');
             return;
         }
         __level.onFrame(delta, time);
@@ -107,7 +109,7 @@ function newRound() {
     global.game.ballPosition = { x: 0, y: 0 };
     __ballDirection.set(1, 0).rotateAround(
         new Vector2(0, 0),
-        (Math.random() - 1) * 2 * __angleMax + global._90  //TODO direction should depend on last round
+        global._180 * __didOpponentLoseLastRound
     );
     global.game.paddlePositions[0] = global.game.paddlePositions[1] = 0;
 
@@ -258,6 +260,8 @@ Did the ball nearly exactly hit a corner of the board, and bounce twice?`
 
 function scoreup(side) {
     global.game.scores[side]++;
+
+    __didOpponentLoseLastRound = side == 0 ? 1 : 0;
 
     if (global.game.scores[side] >= global.game.maxScore) {
         endgame(false);
