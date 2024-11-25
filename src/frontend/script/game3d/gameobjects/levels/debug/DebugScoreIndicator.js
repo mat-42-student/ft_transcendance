@@ -5,7 +5,7 @@ import Cross2DHelper from '../..//utils/Cross2DHelper.js';
 
 
 const SIZE = 0.05;
-const CORNER_DISTANCE = SIZE/2;
+const CORNER_DISTANCE = SIZE/2 + 0.01;
 
 
 export default class DebugScoreIndicator extends ScoreIndicator {
@@ -14,6 +14,11 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 
 	/** @type {THREE.Box3Helper} */
 	#box;
+
+	/** @type {THREE.LineBasicMaterial} */
+	#material;
+
+	#colorFlashInterpolator = 0.0;
 
 	#playerMult;
 
@@ -39,16 +44,29 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 			SIZE * global.game.maxScore - half,
 		);
 
+		this.#material = new THREE.LineBasicMaterial({
+			color: new THREE.Color('#0000ff'),
+		})
+
 		this.#box = new THREE.Box3Helper(
 			new THREE.Box3(boxMin, boxMax),
 			new THREE.Color('#ffffff')
 		);
+		this.#box.material.dispose();
+		this.#box.material = this.#material;
 		this.add(this.#box);
 	}
 
 
 	onFrame(delta, time) {
 		super.onFrame(delta, time);
+
+		this.#colorFlashInterpolator = Math.max(0, this.#colorFlashInterpolator - delta);
+		this.#material.color.lerpColors(
+			new THREE.Color(0x444444),
+			new THREE.Color(0x44ff44),
+			this.#colorFlashInterpolator
+		);
 
 		this.position.set(
 			this.#playerMult * (global.game.boardSize.x / 2 - CORNER_DISTANCE),
@@ -61,11 +79,15 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 	scoreChanged(score) {
 		super.scoreChanged(score);
 		this.#addScorePoint();
+		this.#colorFlashInterpolator = 1;
 	}
 
 
 	#addScorePoint() {
-		const newPoint = new Cross2DHelper(new THREE.Color("#ffffff"));
+		const newPoint = new Cross2DHelper(new THREE.Color("#ffff00"));
+
+		newPoint.material.dispose();
+		newPoint.material = this.#material;
 
 		newPoint.position.set(
 			0,
@@ -88,5 +110,7 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 	dispose() {
 		this.clear();
 		this.#box = null;
+		this.#material.dispose();
+		this.#material = null;
 	}
 }
