@@ -1,11 +1,66 @@
 
 services:
+  chat:
+    container_name: chat
+    build:
+      context: chat
+      dockerfile: Dockerfile
+    environment:
+      - PYTHONUNBUFFERED=1  # Désactiver le buffering des sorties Python
+    volumes:
+      - ./chat/:/code
+    depends_on:
+      matchmaking:
+        condition: service_started
+    networks:
+      - db-network
+      - redis-network
+
+  gateway:
+    container_name: gateway
+    build:
+      context: gateway
+      dockerfile: Dockerfile
+    environment:
+      - PYTHONUNBUFFERED=1  # Désactiver le buffering des sorties Python
+    volumes:
+      - ./gateway/:/code
+    depends_on:
+      matchmaking:
+        condition: service_started
+    expose:
+      - "8057"
+    networks:
+      - nginx-network
+      - db-network
+      - redis-network
+
+  matchmaking:
+    container_name: matchmaking
+    build:
+      context: matchmaking
+      dockerfile: Dockerfile
+    environment:
+        PYTHONUNBUFFERED: 1  # Désactiver le buffering des sorties Python
+        DJANGO_SETTINGS_MODULE: matchmaking.settings
+    volumes:
+      - ./matchmaking:/code
+    depends_on:
+      pong:
+        condition: service_started
+    expose:
+      - "8000" # ??
+    networks:
+      - db-network
+      - redis-network
+
   nginx:
     container_name: nginx
     build:
       context: nginx
       dockerfile: Dockerfile
     depends_on:
+      - gateway
       - matchmaking
       - pong
     ports:
@@ -14,6 +69,27 @@ services:
       - ./frontend:/usr/share/nginx/frontend
     networks:
       - nginx-network
+
+  pong:
+    container_name: pong
+    build:
+      context: _Pong
+      dockerfile: Dockerfile
+    environment:
+      - PYTHONUNBUFFERED=1  # Désactiver le buffering des sorties Python
+    volumes:
+      - ./_Pong/:/code
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8006"
+    networks:
+      - nginx-network
+      - db-network
+      - redis-network
 
   postgres:
     container_name: posgresql
@@ -40,51 +116,6 @@ services:
     expose:
       - "6379"
     networks:
-      - redis-network
-    
-  pong:
-    container_name: pong
-    build:
-      context: _Pong
-      dockerfile: Dockerfile
-    environment:
-      - PYTHONUNBUFFERED=1  # Désactiver le buffering des sorties Python
-    volumes:
-      - ./_Pong/:/code
-    depends_on:
-      redis:
-        condition: service_started
-      postgres:
-        condition: service_healthy
-    expose:
-      - "8006"
-    networks:
-      - nginx-network
-      - db-network
-      - redis-network
-
-  matchmaking:
-    container_name: matchmaking
-    build:
-      context: matchmaking
-      dockerfile: Dockerfile
-    environment:
-        PYTHONUNBUFFERED: 1  # Désactiver le buffering des sorties Python
-        DJANGO_SETTINGS_MODULE: matchmaking.settings
-    volumes:
-      - ./matchmaking:/code
-    depends_on:
-      redis:
-        condition: service_started
-      postgres:
-        condition: service_healthy
-      pong:
-        condition: service_started
-    expose:
-      - "8000"
-    networks:
-      - nginx-network
-      - db-network
       - redis-network
 
 volumes:
