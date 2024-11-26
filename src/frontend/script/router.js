@@ -1,29 +1,50 @@
 // Header. always present
-inject_code_into_markup('menu.html', 'nav', null);
+let menu = await inject_code_into_markup('menu.html', 'nav', null);
+let link = null;
+if (menu)
+{
+	document.querySelectorAll('a.nav_url').forEach((link) => {
+		link.addEventListener('click', function(event) {
+			event.preventDefault(); // Facultatif
+			console.log('Lien cliqué :', this.href);
+			navigateTo(event.target.href); // Appelle la fonction de navigation
+		});
+	});
 
 
-// if we can't detect when the address changes, we're Mega Screwed™
-if (!("onhashchange" in window)) {
-	const err = 'big oopsie, it seems this browser is unsupported';
-	alert(err);
-	throw Error(err);
 }
 
-
-let currentPath = undefined;
-
-window.onhashchange = onChangePage;
-onChangePage();
-
-function onChangePage(){
-	// if (window.location.hash === currentPath) {
-	// 	return;  // Same page already, do nothing
-	// }
-
-	currentPath = window.location.hash;
-	if (currentPath.length >= 1 && currentPath[0] === '#') {
-		currentPath = currentPath.substring(1);
-	}
-	inject_code_into_markup(currentPath, 'main', null)
-	// console.log('Router: Switched to ', currentPath);
+let routes = {
+	'/index.html': {file: 'index.html', script: null},
+	'/home': {file: 'home.html', scipt: null},
+	'/matchmaking': {file: 'matchmaking.html', script: ['./script/matchmaking.js','wsgame.js']},
+	'/chat': {file: 'chat.html', script: null},
+	'/profile': {file: 'profile.html', script: null},
+	'/login': {file: 'login.html' , script: null},
 }
+
+function router() {
+	const path = window.location.pathname;
+	console.log(path);
+	const content = routes[path];
+
+	console.log(content);
+	if (content)
+		inject_code_into_markup(content.file, 'main', content.script);
+
+}
+
+function navigateTo(url){
+	window.history.pushState(null, null, url);
+	router();
+}
+
+window.addEventListener('popstate', router);
+
+window.addEventListener('load', (e)=>
+{
+	router();
+})
+
+
+

@@ -31,16 +31,22 @@ async function inject_code_into_markup(htmlfile, markup, script) {
         document.querySelector(markup).innerHTML = content;
     } catch (error) {
         console.error("Erreur lors du chargement du fichier :", error);
+        return (0);
     }
     if (script)
         addScript(script);
+    return (1);
 }
 
 function addScript(file) {
-    if (document.getElementById(file))
+    let i = 0;
+    while (i < file.length){
+    if (document.getElementById(file[i]))
         return ;
     const newScript = document.createElement('script');
-    newScript.src = file;
-    newScript.id = file;
+    newScript.type = 'module';
+    newScript.src = file[i];
+    newScript.id = file[i];
     document.body.appendChild(newScript);
+    }
 }
