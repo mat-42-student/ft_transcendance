@@ -28,14 +28,14 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         """Listen redis to send data back to appropriate client"""
         async for message in self.pubsub.listen():
             data = loads(message['data'])
-            if data['dest'] == 'front':
+            if data['header']['to'] == 'client' and data['body']['id'] == self.consumer_id:
                 try:
                     await self.send_json(data)
                 except Exception as e:
                     print(f"Send error : {e}")
 
     async def receive_json(self, data):
-        """data incoming from client ws -> send a request (GET/POST/etc.) to appropriate container OR publish to concerned redis group\n
+        """data incoming from client ws -> publish to concerned redis group\n
         possible 'dc' values are 'auth', 'user', 'mmaking', 'chat', 'social'"""
         data['exp'] = self.consumer_id
         group = API_GROUPS.get(data['dc'])
