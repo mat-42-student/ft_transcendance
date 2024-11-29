@@ -1,39 +1,42 @@
-let chatInput;
+// let chatInput, destCont;
 
 function initChat() {
-    chatInput = document.getElementById("chatMsg");
+    // chatInput = document.getElementById("chatMsg");
 
-    if (!chatInput) {
-        console.error("Element with id 'chatMsg' not found.");
-        return;
-    }
+    // if (!chatInput) {
+    //     console.error("Element with id 'chatMsg' not found.");
+    //     return;
+    // }
 
-    chatInput.addEventListener("keydown", function(event) {
-        if (event.key === "Enter") {
-            onEnterPress();
-        }
-    });
+    // chatInput.addEventListener("keyup", function(event) {
+    //     if (event.key === "Enter") {
+    //         onEnterPress();
+    //     }
+    // });
 }
 
 async function onEnterPress() {
+    let chatInput = document.getElementById("chatMsg");
     if (!chatInput || !mainSocket || mainSocket.readyState !== WebSocket.OPEN) {
         console.error("WebSocket is not ready or chatInput is missing.");
         return;
     }
 
-    const inputValue = chatInput.value.trim(); // Remove extra whitespace
+    const inputValue = chatInput.value.trim();
     if (inputValue === "") {
         console.log("Message is empty, nothing to send.");
         return;
     }
 
-    console.log("Sending message:", inputValue);
+    let destCont = document.getElementById("cont").value;
     try {
         await mainSocket.send(JSON.stringify({
-            'dc': 'chat',
+            'dc': destCont,
             'message': inputValue,
+            'url': '',
+            'method':'POST',
         }));
-        chatInput.value = ''; // Clear input after successful send
+        chatInput.value = '';
     } catch (error) {
         console.error("Failed to send message:", error);
     }

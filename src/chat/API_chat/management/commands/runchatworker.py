@@ -1,15 +1,13 @@
 import json
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
-from asyncio import run as arun
+from asyncio import run as arun, sleep as asleep
 from signal import SIGTERM, SIGINT
-# from models import User, Messages
 
 class Command(BaseCommand):
-    help = "Listen to a specific pub/sub redis channel"
+    help = "Listen to 'deep_chat' pub/sub redis channel"
 
     def handle(self, *args, **kwargs):
-        # Démarre la boucle asyncio avec arun
         arun(self.main())
 
     async def main(self):
@@ -25,7 +23,7 @@ class Command(BaseCommand):
             await self.cleanup()
 
     async def listen(self):
-        print("Listening for messages...")
+        print(f"Listening for messages...")
         async for msg in self.pubsub.listen():
             if msg :
                 await self.process_message(json.loads(msg["data"]))
@@ -33,9 +31,10 @@ class Command(BaseCommand):
     async def process_message(self, data):
         if data['dc'] != 'chat':
             return
-        data['dc'] = 'gateway'
+        if data['dest'] != 'back':
+            return
+        data['dest'] = 'front'
         data['message'] += '(back from chat)'
-        print(data)
         await self.redis_client.publish(self.group_name, json.dumps(data))
 
     async def cleanup(self):
@@ -43,7 +42,3 @@ class Command(BaseCommand):
         await self.pubsub.unsubscribe()
         await self.pubsub.close()
         await self.redis_client.close()
-
-    def handle_stop_signal(self):
-        print("Stop signal received. Shutting down gracefully...")
-        # arun(self.redis_client.publish(self.group_name, "zfbfg"))

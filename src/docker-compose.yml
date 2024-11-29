@@ -53,6 +53,7 @@ services:
     networks:
       - db-network
       - redis-network
+      - nginx-network
 
   nginx:
     container_name: nginx

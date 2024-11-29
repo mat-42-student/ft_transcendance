@@ -8,6 +8,7 @@ greenlet==3.1.1
 h11==0.14.0
 psycopg==3.2.3
 redis==5.2.0
+requests==2.32.3
 setuptools==75.5.0
 sqlparse==0.5.2
 uvicorn==0.32.0

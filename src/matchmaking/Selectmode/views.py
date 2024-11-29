@@ -15,6 +15,7 @@ def test(request):
 
 class Userview(APIView):
     def get(self, request):
+        print('SALUT from ws')
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
