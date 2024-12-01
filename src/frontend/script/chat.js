@@ -1,20 +1,3 @@
-// let chatInput, destCont;
-
-function initChat() {
-    // chatInput = document.getElementById("chatMsg");
-
-    // if (!chatInput) {
-    //     console.error("Element with id 'chatMsg' not found.");
-    //     return;
-    // }
-
-    // chatInput.addEventListener("keyup", function(event) {
-    //     if (event.key === "Enter") {
-    //         onEnterPress();
-    //     }
-    // });
-}
-
 async function onEnterPress() {
     let chatInput = document.getElementById("chatMsg");
     if (!chatInput || !mainSocket || mainSocket.readyState !== WebSocket.OPEN) {

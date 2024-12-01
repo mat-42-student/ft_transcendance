@@ -3,6 +3,7 @@ from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep
 from signal import SIGTERM, SIGINT
+from models import User, BlockedUser
 
 class Command(BaseCommand):
     help = "Listen to 'deep_chat' pub/sub redis channel"
@@ -26,16 +27,28 @@ class Command(BaseCommand):
         print(f"Listening for messages...")
         async for msg in self.pubsub.listen():
             if msg :
-                await self.process_message(json.loads(msg["data"]))
+                data = json.loads(msg["data"])
+                if data['header']['to'] == 'chat':
+                    await self.process_message(data)
 
     async def process_message(self, data):
-        if data['dc'] != 'chat':
-            return
-        if data['dest'] != 'back':
-            return
-        data['dest'] = 'front'
-        data['message'] += '(back from chat)'
+        data['header']['to'] = 'client'
+        if self.recipient_exists(data['body']['to']):
+            if self.wasMuted(data):
+                data['body']['message'] += f"You were muted by {data['body']['to']}"
+            else:
+                data['header']['id'] = data['body']['to'] # username OR userID ?
+                data['body']['message'] += '(back from chat)'
+        else:
+            data['body']['message'] += 'User not found'
         await self.redis_client.publish(self.group_name, json.dumps(data))
+
+    def wasMuted(self,data) -> bool :
+        # Check db relationship
+        return False
+
+    def recipient_exists(self, user):
+        return True
 
     async def cleanup(self):
         print("Cleaning up Redis connections...")
