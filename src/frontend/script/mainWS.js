@@ -10,24 +10,25 @@ function launchMainSocket() {
 
     mainSocket.onopen = async function(e) {
         await mainSocket.send(JSON.stringify({
-            'dc': 'auth',
-            'dest': 'back',
-            'message' : {
-                'user':'toto',
-                'pass':'password'
+            'header': {
+                'from': 'client',
+                'to': 'chat',
+                'id': 'pikachu666'
             },
-            })
-        );
+            'body': {
+                'to':'Philou',
+                'message': 'YO !!',
+            }
+        }));
     };
 
     mainSocket.onclose = async function(e) {
-        window.location.hash = "#home.html";
-        window.location.hash = "#matchmaking.html";
+        console.log("MainWS is disconnected")
     };
 
     mainSocket.onmessage = async function(e) {
         data = JSON.parse(e.data);
-        console.log("Incoming data : DC : " + data['dc'] + " MSG : " + data['message']);
+        console.log("Incoming data : " + data['body']['message']);
     };
 }
 
