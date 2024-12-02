@@ -10,7 +10,7 @@ services:
     expose:
       - "8000"
     env_file:
-      - .env
+      - ./auth_service/.env
     restart: on-failure
     networks:
       - nginx-network
@@ -21,13 +21,12 @@ services:
     build:
       context: chat
       dockerfile: Dockerfile
-    environment:
-      - PYTHONUNBUFFERED=1  # Désactiver le buffering des sorties Python
+    env_file:
+      - .env
     volumes:
       - ./chat/:/code
     depends_on:
-      matchmaking:
-        condition: service_started
+      - matchmaking
     networks:
       - db-network
       - redis-network
@@ -37,8 +36,8 @@ services:
     build:
       context: gateway
       dockerfile: Dockerfile
-    environment:
-      - PYTHONUNBUFFERED=1  # Désactiver le buffering des sorties Python
+    env_file:
+      - .env
     volumes:
       - ./gateway/:/code
     depends_on:
@@ -56,9 +55,8 @@ services:
     build:
       context: matchmaking
       dockerfile: Dockerfile
-    environment:
-        PYTHONUNBUFFERED: 1  # Désactiver le buffering des sorties Python
-        DJANGO_SETTINGS_MODULE: matchmaking.settings
+    env_file:
+      - ./matchmaking/.env
     volumes:
       - ./matchmaking:/code
     depends_on:
@@ -92,8 +90,8 @@ services:
     build:
       context: _Pong
       dockerfile: Dockerfile
-    environment:
-      - PYTHONUNBUFFERED=1  # Désactiver le buffering des sorties Python
+    env_file:
+      - .env
     volumes:
       - ./_Pong/:/code
     depends_on:
@@ -109,16 +107,14 @@ services:
       - redis-network
 
   postgres:
-    container_name: posgresql
+    container_name: postgres
     image: postgres
     expose:
       - "5432"
     volumes:
       - postgres_data:/var/lib/posgresql/data
-    environment:
-      POSTGRES_DB: transcendance
-      POSTGRES_USER: toto
-      POSTGRES_PASSWORD: test
+    env_file:
+      - .env
     networks:
       - db-network
     healthcheck:

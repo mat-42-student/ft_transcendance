@@ -1,0 +1,6 @@
+.git
+.env
+node_modules
+*.pyc
+*.pyo
+__pycache__
