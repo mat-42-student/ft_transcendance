@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep
 from signal import SIGTERM, SIGINT
-from cerberus import Validator
+# from cerberus import Validator
 # from models import User, BlockedUser
 
 class Command(BaseCommand):
@@ -12,34 +12,11 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         arun(self.main())
 
-    def get_validator(self):
-        schema = {
-            'header': {
-                'type': 'dict',
-                'schema': {
-                    'from': {'type': 'string', 'required': True},
-                    'to': {'type': 'string', 'required': True},
-                    'id': {'type': 'string', 'required': True}
-                },
-                'required': True
-            },
-            'body': {
-                'type': 'dict',
-                'schema': {
-                    'to': {'type': 'string', 'required': True},
-                    'message': {'type': 'string', 'required': True}
-                },
-                'required': True
-            }
-        }
-        v = Validator(schema)
-        return v
-
     async def main(self):
         self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
         self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
         self.group_name = "deep_chat"
-        self.json_validator = self.get_validator()
+       
 
         print(f"Subscribing to channel: {self.group_name}")
         await self.pubsub.subscribe(self.group_name)
@@ -52,14 +29,19 @@ class Command(BaseCommand):
         print(f"Listening for messages...")
         async for msg in self.pubsub.listen():
             if msg :
-                data = json.loads(msg["data"])
-                if data['header']['to'] == 'chat':
-                    await self.process_message(data)
+                try:
+                    data = json.loads(msg["data"])
+                    if data['header']['to'] == 'chat':
+                        await self.process_message(data)
+                except:
+                    return
 
     async def process_message(self, data):
         # if not self.json_validator.validate(data):
         #     print("Invalid format")
         #     return
+        if not self.valid_json(data):
+            return
         data['header']['to'] = 'client'
         if self.recipient_exists(data['body']['to']):
             if self.was_muted(data):

@@ -8,6 +8,7 @@ from .consts import REDIS_GROUPS #, API_GROUPS
 
 class GatewayConsumer(AsyncJsonWebsocketConsumer):
     """Main websocket"""
+
     async def connect(self):
         self.consumer_id = self.checkJWT()
         if self.consumer_id is None:
@@ -39,6 +40,13 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         # self.auth_request()
         return "Philou"
 
+    def valid_json(self, data):
+        if not(data.get('header') and data.get('body')):
+            return False
+        data = data['header']
+        if not (data.get('from') and data.get('to') and data.get('id')):
+            return False
+
     async def listen_to_channels(self):
         """Listen redis to send data back to appropriate client"""
         async for message in self.pubsub.listen():
@@ -52,6 +60,10 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, data):
         """data incoming from client ws -> publish to concerned redis group\n
         possible 'to' values are 'auth', 'user', 'mmaking', 'chat', 'social'"""
+        # Testing global structure of data
+        if not self.valid_json(data):
+            print(f"Data error (json) : {data}")
+            return
         data['body']['id'] = self.consumer_id
         # group = API_GROUPS.get(data['dc'])
         # if group is not None:
