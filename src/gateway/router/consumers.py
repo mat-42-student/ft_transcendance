@@ -17,7 +17,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         except Exception as e:
             print(f"Connection to redis error : {e}")
         self.consumer_id = self.get_user_id()
-        self.consumer_id = 'Bob' # bypass failing authentication for now
+        self.consumer_id = 'bob' # bypass failing authentication for now
         if self.consumer_id is None:
             print("User is not authenticated. Aborting")
             await self.close()
