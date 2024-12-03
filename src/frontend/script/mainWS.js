@@ -13,10 +13,10 @@ function launchMainSocket() {
             'header': {
                 'from': 'client',
                 'to': 'chat',
-                'id': 'pikachu666'
+                'id': 'bob'
             },
             'body': {
-                'to':'Philou',
+                'to':'bob',
                 'message': 'YO !!',
             }
         }));
