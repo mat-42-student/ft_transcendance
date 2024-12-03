@@ -4,19 +4,33 @@ from json import dumps, loads
 from channels.generic.websocket import AsyncJsonWebsocketConsumer # type: ignore
 from redis.asyncio import from_url
 from asyncio import create_task
-from .consts import REDIS_GROUPS, API_GROUPS
+from .consts import REDIS_GROUPS #, API_GROUPS
 
 class GatewayConsumer(AsyncJsonWebsocketConsumer):
     """Main websocket"""
-    async def connect(self):
-        self.consumer_id = str(uuid4())
-        self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
-        self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
-        await self.pubsub.subscribe(*REDIS_GROUPS.values())  # Subscribe all channels
 
-        self.listen_task = create_task(self.listen_to_channels())
+    async def connect(self):
         await self.accept()
-        print("GatewayConsumer accepted incoming websocket")
+        try:
+            await self.connect_to_redis()
+            print("GatewayConsumer accepted incoming websocket")
+        except Exception as e:
+            print(f"Connection to redis error : {e}")
+        self.consumer_id = self.get_user_id()
+        if self.consumer_id is None:
+            print("User is not authenticated. Aborting")
+            await self.close()
+        else:
+            print("User is authenticated")
+
+    async def connect_to_redis(self):
+        try:
+            self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
+            self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
+            await self.pubsub.subscribe(*REDIS_GROUPS.values())  # Subscribe all channels
+            self.listen_task = create_task(self.listen_to_channels())
+        except:
+            raise Exception
 
     async def disconnect(self, close_code):
         await self.pubsub.unsubscribe() # unsubscribe all channels
@@ -24,11 +38,37 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         await self.redis_client.close()
         self.listen_task.cancel()
 
+    def get_user_id(self):
+        data = self.checkAuth()
+        if data:
+            return data.get('id')
+        else:
+            return None
+
+    def checkAuth(self):
+        response = requests.get("http://auth-service:8000/api/auth/ping")
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                return data.get('id')
+            except ValueError as e:
+                print("Erreur lors de la conversion en JSON :", e)
+        else:
+            print(f"Requête échouée avec le statut {response.status_code}")
+        return None
+
+    def valid_json(self, data):
+        if not(data.get('header') and data.get('body')):
+            return False
+        data = data['header']
+        if not (data.get('from') and data.get('to') and data.get('id')):
+            return False
+
     async def listen_to_channels(self):
         """Listen redis to send data back to appropriate client"""
         async for message in self.pubsub.listen():
             data = loads(message['data'])
-            if data['header']['to'] == 'client' and data['body']['id'] == self.consumer_id:
+            if data['header']['to'] == 'client' and data['header']['id'] == self.consumer_id:
                 try:
                     await self.send_json(data)
                 except Exception as e:
@@ -36,40 +76,44 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
 
     async def receive_json(self, data):
         """data incoming from client ws -> publish to concerned redis group\n
-        possible 'dc' values are 'auth', 'user', 'mmaking', 'chat', 'social'"""
-        data['exp'] = self.consumer_id
-        group = API_GROUPS.get(data['dc'])
-        if group is not None:
-            self.forward_as_HTML_request(data, group)
+        possible 'to' values are 'auth', 'user', 'mmaking', 'chat', 'social'"""
+        # Testing global structure of data
+        if not self.valid_json(data):
+            print(f"Data error (json) : {data}")
             return
-        group = REDIS_GROUPS.get(data['dc'])
+        data['body']['id'] = self.consumer_id
+        # group = API_GROUPS.get(data['dc'])
+        # if group is not None:
+        #     self.forward_as_HTML_request(data, group)
+        #     return
+        group = REDIS_GROUPS.get(data['header']['to'])
         if group is not None:
-            data['dest'] = 'back'
             await self.forward_with_redis(data, group)
             return
         print("Unknown recipient, message lost")
 
-    def forward_as_HTML_request(self, data, group):
-        match group:
-            case 'auth':
-                self.auth_request(data)
-            case 'user':
-                self.user_request(data)
-        try:
-            response = requests.get("matchmaking:8000/api/users/")
-        except Exception as e:
-            print(f"GET error : {e}")
-        
+    # def forward_as_HTML_request(self, data, group):
+    #     match group:
+    #         case 'auth':
+    #             self.auth_request(data)
+    #         case 'user':
+    #             self.user_request(data)
+    #     try:
+    #         response = requests.get("matchmaking:8000/api/users/")
+    #     except Exception as e:
+    #         print(f"GET error : {e}")
+
     def auth_request(self, data):
         url = "http://auth-service:8000/" + data['url']
-        response = requests.post(url) # others methods to implement ?
-        self.send_json(response)
+        response = requests.post(url)
+        return response.text # ?
 
-    def user_request(self, data):
-        pass
+    # def user_request(self, data):
+    #     pass
 
     async def forward_with_redis(self, data, group):
             try:
+                print(f"Sending data to {group}")
                 await self.redis_client.publish(group, dumps(data))
             except Exception as e:
                 print(f"Publish error : {e}")

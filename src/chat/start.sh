@@ -1,1 +1,0 @@
-# exec python manage.py runworker

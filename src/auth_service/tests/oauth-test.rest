@@ -1,0 +1,11 @@
+GET https://127.0.0.1:8081/api/auth/oauth/redirect
+Content-Type: application/json
+
+{}
+
+###
+
+GET https://127.0.0.1:8081/api/auth/oauth/callback
+Content-Type: application/json
+
+{}

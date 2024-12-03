@@ -4,7 +4,7 @@ REDIS_GROUPS = {
     'social': 'deep_social',
 }
 
-API_GROUPS = {
-    'auth': 'deep_auth',
-    'user': 'deep_user',
-}
+# API_GROUPS = {
+#     'auth': 'deep_auth',
+#     'user': 'deep_user',
+# }
