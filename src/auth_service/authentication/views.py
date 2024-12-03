@@ -115,7 +115,6 @@ class RefreshTokenView(APIView):
 
         return Response({'accessToken': new_access_token})
 
-
 class PingView(APIView):
     renderer_classes = [JSONRenderer]
     # permission_classes = [IsAuthenticated]
@@ -141,7 +140,7 @@ class PingView(APIView):
         
         serializer = UserSerializer(user)
         return Response(serializer.data)
-    
+
 class LogoutView(APIView):
     def post(self, request):
         response = Response()
@@ -150,7 +149,7 @@ class LogoutView(APIView):
             'message': 'success'
         }
         return response
-    
+
 class Enable2FAView(APIView):
     renderer_classes = [JSONRenderer]
 

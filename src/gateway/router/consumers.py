@@ -10,16 +10,18 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
     """Main websocket"""
 
     async def connect(self):
-        self.consumer_id = self.checkJWT()
-        if self.consumer_id is None:
-            return
-        # self.consumer_id = str(uuid4()) # waiting for JWT data
+        await self.accept()
         try:
             await self.connect_to_redis()
-            await self.accept()
             print("GatewayConsumer accepted incoming websocket")
         except Exception as e:
             print(f"Connection to redis error : {e}")
+        self.consumer_id = self.get_user_id()
+        if self.consumer_id is None:
+            print("User is not authenticated. Aborting")
+            await self.close()
+        else:
+            print("User is authenticated")
 
     async def connect_to_redis(self):
         try:
@@ -36,9 +38,24 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         await self.redis_client.close()
         self.listen_task.cancel()
 
-    def checkJWT(self):
-        # self.auth_request()
-        return "Philou"
+    def get_user_id(self):
+        data = self.checkAuth()
+        if data:
+            return data.get('id')
+        else:
+            return None
+
+    def checkAuth(self):
+        response = requests.get("http://auth-service:8000/api/auth/ping")
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                return data.get('id')
+            except ValueError as e:
+                print("Erreur lors de la conversion en JSON :", e)
+        else:
+            print(f"Requête échouée avec le statut {response.status_code}")
+        return None
 
     def valid_json(self, data):
         if not(data.get('header') and data.get('body')):
