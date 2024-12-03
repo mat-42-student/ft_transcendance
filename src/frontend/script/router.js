@@ -1,8 +1,5 @@
 // Header. always present
-let menu = await inject_code_into_markup('menu.html', 'nav', null);
-let link = null;
-if (menu)
-{
+
 	document.querySelectorAll('a.nav_url').forEach((link) => {
 		link.addEventListener('click', function(event) {
 			event.preventDefault(); // Facultatif
@@ -12,11 +9,9 @@ if (menu)
 	});
 
 
-}
-
 let routes = {
 	'/index.html': {file: 'index.html', script: null},
-	'/home': {file: 'home.html', scipt: null},
+	'/home': {file: 'matchmaking.html', scipt: ['./script/matchmaking.js','wsgame.js']},
 	'/matchmaking': {file: 'matchmaking.html', script: ['./script/matchmaking.js','wsgame.js']},
 	'/chat': {file: 'chat.html', script: null},
 	'/profile': {file: 'profile.html', script: null},
@@ -30,7 +25,7 @@ function router() {
 
 	console.log(content);
 	if (content)
-		inject_code_into_markup(content.file, 'main', content.script);
+		inject_code_into_markup(content.file, 'section', content.script);
 
 }
 

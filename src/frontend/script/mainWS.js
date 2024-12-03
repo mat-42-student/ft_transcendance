@@ -21,8 +21,7 @@ function launchMainSocket() {
     };
 
     mainSocket.onclose = async function(e) {
-        window.location.hash = "#home.html";
-        window.location.hash = "#matchmaking.html";
+        
     };
 
     mainSocket.onmessage = async function(e) {
