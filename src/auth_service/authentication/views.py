@@ -61,12 +61,14 @@ class LoginView(APIView):
 
         access_payload = {
             'id': user.id,
+            'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=60),
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }
 
         refresh_payload = {
             'id': user.id,
+            'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }
