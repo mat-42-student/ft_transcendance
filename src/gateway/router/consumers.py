@@ -17,11 +17,12 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         except Exception as e:
             print(f"Connection to redis error : {e}")
         self.consumer_id = self.get_user_id()
+        self.consumer_id = 'bob' # bypassing auth system for now
         if self.consumer_id is None:
             print("User is not authenticated. Aborting")
             await self.close()
         else:
-            print("User is authenticated")
+            print(f"User is authenticated as {self.consumer_id}")
 
     async def connect_to_redis(self):
         try:
@@ -63,6 +64,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         data = data['header']
         if not (data.get('from') and data.get('to') and data.get('id')):
             return False
+        return True
 
     async def listen_to_channels(self):
         """Listen redis to send data back to appropriate client"""
@@ -77,39 +79,20 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, data):
         """data incoming from client ws -> publish to concerned redis group\n
         possible 'to' values are 'auth', 'user', 'mmaking', 'chat', 'social'"""
-        # Testing global structure of data
-        if not self.valid_json(data):
+        if not self.valid_json(data): # Testing global structure of data
             print(f"Data error (json) : {data}")
             return
         data['body']['id'] = self.consumer_id
-        # group = API_GROUPS.get(data['dc'])
-        # if group is not None:
-        #     self.forward_as_HTML_request(data, group)
-        #     return
         group = REDIS_GROUPS.get(data['header']['to'])
         if group is not None:
             await self.forward_with_redis(data, group)
             return
         print("Unknown recipient, message lost")
 
-    # def forward_as_HTML_request(self, data, group):
-    #     match group:
-    #         case 'auth':
-    #             self.auth_request(data)
-    #         case 'user':
-    #             self.user_request(data)
-    #     try:
-    #         response = requests.get("matchmaking:8000/api/users/")
-    #     except Exception as e:
-    #         print(f"GET error : {e}")
-
     def auth_request(self, data):
         url = "http://auth-service:8000/" + data['url']
         response = requests.post(url)
         return response.text # ?
-
-    # def user_request(self, data):
-    #     pass
 
     async def forward_with_redis(self, data, group):
             try:
@@ -117,8 +100,9 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 await self.redis_client.publish(group, dumps(data))
             except Exception as e:
                 print(f"Publish error : {e}")
-        # try:
-        #     response = requests.get("http://matchmaking:8000/api/test/")
-        #     print(response)
-        # except Exception as e:
-        #     print(f"GET error : {e}")
+
+    # try:
+    #     response = requests.get("http://matchmaking:8000/api/test/")
+    #     print(response)
+    # except Exception as e:
+    #     print(f"GET error : {e}")
