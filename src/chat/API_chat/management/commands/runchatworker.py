@@ -34,12 +34,17 @@ class Command(BaseCommand):
                     if data['header']['to'] == 'chat':
                         await self.process_message(data)
                 except:
-                    return
+                    pass
+
+    def valid_json(self, data):
+        data = data.get('body')
+        if not(data):
+            return False
+        if not (data.get('message') and data.get('to')):
+            return False
+        return True
 
     async def process_message(self, data):
-        # if not self.json_validator.validate(data):
-        #     print("Invalid format")
-        #     return
         if not self.valid_json(data):
             return
         data['header']['to'] = 'client'
@@ -47,11 +52,12 @@ class Command(BaseCommand):
             if self.was_muted(data):
                 data['body']['message'] += f"You were muted by {data['body']['to']}"
             else:
-                data['header']['id'] = data['body']['to'] # username OR userID ?
+                data['header']['from'] = data['body']['to'] # username OR userID ?
                 data['body']['message'] += '(back from chat)'
         else:
             data['body']['message'] += 'User not found'
         await self.redis_client.publish(self.group_name, json.dumps(data))
+        print(f"Publishing : {data}")
 
     def was_muted(self,data) -> bool :
         # Check db relationship
