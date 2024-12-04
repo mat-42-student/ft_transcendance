@@ -30,7 +30,8 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
             await self.pubsub.subscribe(*REDIS_GROUPS.values())  # Subscribe all channels
             self.listen_task = create_task(self.listen_to_channels())
-        except:
+        except Exception as e:
+            print(e)
             raise Exception
 
     async def disconnect(self, close_code):
@@ -47,16 +48,17 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             return None
 
     def checkAuth(self):
-        response = requests.get("http://auth-service:8000/api/auth/ping")
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                return data.get('id')
-            except ValueError as e:
-                print("Erreur lors de la conversion en JSON :", e)
-        else:
-            print(f"Requête échouée avec le statut {response.status_code}")
-        return None
+        pass
+        # response = requests.get("http://auth-service:8000/api/auth/ping")
+        # if response.status_code == 200:
+        #     try:
+        #         data = response.json()
+        #         return data.get('id')
+        #     except ValueError as e:
+        #         print("Erreur lors de la conversion en JSON :", e)
+        # else:
+        #     print(f"Requête échouée avec le statut {response.status_code}")
+        # return None
 
     def valid_json(self, data):
         if not(data.get('header') and data.get('body')):
