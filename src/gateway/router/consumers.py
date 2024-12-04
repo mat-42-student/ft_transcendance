@@ -60,11 +60,15 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         #     print(f"Requête échouée avec le statut {response.status_code}")
         # return None
 
-    def valid_json(self, data):
-        if not(data.get('header') and data.get('body')):
+    def valid_json_header(self, data):
+        if not isinstance(data, dict):
+            return False
+        if "header" not in data or "body" not in data:
             return False
         data = data['header']
-        if not (data.get('from') and data.get('to') and data.get('id')):
+        if not isinstance(data, dict):
+            return False
+        if "from" not in data or "to" not in data or "id" not in data:
             return False
         return True
 
@@ -72,7 +76,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         """Listen redis to send data back to appropriate client"""
         async for message in self.pubsub.listen():
             data = loads(message['data'])
-            if data['header']['to'] == 'client' and data['header']['id'] == self.consumer_id:
+            if data['header']['side'] == 'front' and data['header']['id'] == self.consumer_id:
                 try:
                     await self.send_json(data)
                 except Exception as e:
@@ -82,9 +86,10 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         """data incoming from client ws -> publish to concerned redis group\n
         possible 'to' values are 'auth', 'user', 'mmaking', 'chat', 'social'"""
         # Testing global structure of data
-        if not self.valid_json(data):
+        if not self.valid_json_header(data):
             print(f"Data error (json) : {data}")
             return
+        data['header']['side'] = 'back'
         data['body']['id'] = self.consumer_id
         group = REDIS_GROUPS.get(data['header']['to'])
         if group is not None:

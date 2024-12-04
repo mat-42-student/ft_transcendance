@@ -40,30 +40,33 @@ class Command(BaseCommand):
                 except Exception as e:
                     print(e)
 
-    def valid_json(self, data):
-        data = data.get('body')
-        if not(data):
+    def valid_json_body(self, data):
+        if data['header']['side'] != 'back':
             return False
-        if not (data.get('message') and data.get('to')):
+        data = data.get('body')
+        if not isinstance(data, dict):
+            return False
+        if "message" not in data or "to" not in data:
             return False
         return True
 
     async def process_message(self, data):
-        if not self.valid_json(data):
+        if not self.valid_json_body(data):
             return
-        data['header']['to'] = 'client'
+        data['header']['side'] = 'front' # data destination after deep processing
         if self.recipient_exists(data['body']['to']):
-            if self.was_muted(data):
+            if self.is_muted(data['header']['from'], data['body']['to']):
                 data['body']['message'] += f"You were muted by {data['body']['to']}"
             else:
                 data['header']['from'] = data['body']['to'] # username OR userID ?
                 data['body']['message'] += '(back from chat)'
         else:
             data['body']['message'] += 'User not found'
-        await self.redis_client.publish(self.group_name, json.dumps(data))
         print(f"Publishing : {data}")
+        await self.redis_client.publish(self.group_name, json.dumps(data))
 
-    def was_muted(self,data) -> bool :
+    def is_muted(self, exp, recipient) -> bool :
+        """is exp muted by recipient ?"""
         # Check db relationship
         return False
 
