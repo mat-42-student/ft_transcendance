@@ -11,6 +11,9 @@ import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 //TODO AI: new logic for randomization is needed
 //TODO victory screen and transition to idle?
 //TODO CPU game should have a timer (highscore?)
+//TODO whole game speed should be scaled by 1 variable (faster game doesnt change ratio of ball speed to paddle speed unless they are explicitly scaled separately)
+//REVIEW Exceptions should be caught, and should terminate the game
+
 
 const __angleMax = MathUtils.degToRad(70);
 
