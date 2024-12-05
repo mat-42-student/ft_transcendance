@@ -12,8 +12,8 @@ function launchMainSocket() {
         await mainSocket.send(JSON.stringify({
             'header': {
                 'from': 'client',
-                'to': 'chat',
-                'id': 'bob'
+                'to': 'mmaking',
+                'id': '2'
             },
             'body': {
                 'to':'bob',
