@@ -29,19 +29,8 @@ export default class LevelBase {
 
 
 	static CameraStats = class {
-		/** @type {THREE.Vector3} */
-		position;
-		/** @type {THREE.Quaternion} */
-		quaternion;
-		/** @type {number} */
-		fov;
-
-		clone() {
-			const obj = new LevelBase.CameraStats();
-			obj.position = this.position.clone();
-			obj.quaternion = this.quaternion.clone();
-			obj.fov = this.fov;
-			return obj;
-		}
+		position = new THREE.Vector3();
+		quaternion = new THREE.Quaternion();
+		fov = NaN;
 	};
 }

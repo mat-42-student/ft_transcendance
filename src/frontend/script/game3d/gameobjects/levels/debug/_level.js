@@ -49,35 +49,34 @@ export default class LevelDebug extends LevelBase {
 function __makeCameraAngles() {
 	const neutralCamera = new LevelBase.CameraStats();
 	neutralCamera.position = new THREE.Vector3(0, 0.65, -0.4);
-
-	neutralCamera.quaternion = new THREE.Quaternion().setFromAxisAngle(
-		new THREE.Vector3(1,0,0),
-		THREE.MathUtils.degToRad(-120)
-	);
-	neutralCamera.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(
-		new THREE.Vector3(0,0,1),
-		THREE.MathUtils.degToRad(180)
-	));
-
+	neutralCamera.quaternion = __lookDownQuaternion(180, 60);
 	neutralCamera.fov = 55;
 
-	const turn90 = new THREE.Quaternion().setFromAxisAngle(
-		new THREE.Vector3(0, 1, 0),
-		global._90,
-	);
-	const turn180 = new THREE.Quaternion().setFromAxisAngle(
-		new THREE.Vector3(0, 1, 0),
-		global._180,
-	);
+	const p0Camera = new LevelBase.CameraStats();
+	p0Camera.position = new THREE.Vector3(0.6, 0.45, 0);
+	p0Camera.quaternion = __lookDownQuaternion(90, 45);
+	p0Camera.fov = 55;
 
-	const p0Camera = neutralCamera.clone();
-
-	p0Camera.position.applyQuaternion(turn90);
-	p0Camera.quaternion.applyQuaternion(turn90);
-
-	const p1Camera = p0Camera.clone();
-	p1Camera.position.applyQuaternion(turn180);
-	p1Camera.quaternion.applyQuaternion(turn180);
+	const p1Camera = new LevelBase.CameraStats();
+	p1Camera.position.copy(p0Camera.position).x *= -1;
+	p1Camera.quaternion = __lookDownQuaternion(-90, 45);
+	p1Camera.fov = p0Camera.fov;
 
 	return [p0Camera, p1Camera, neutralCamera];
+}
+
+
+function __lookDownQuaternion(yawDegrees, pitchDegrees) {
+
+	const q_yaw = new THREE.Quaternion().setFromAxisAngle(
+		new THREE.Vector3(0, 1, 0),
+		THREE.MathUtils.degToRad(yawDegrees)
+	);
+
+	const q_pitch = new THREE.Quaternion().setFromAxisAngle(
+		new THREE.Vector3(1, 0, 0),
+		THREE.MathUtils.degToRad(-pitchDegrees)
+	);
+
+	return q_yaw.multiply(q_pitch);
 }
