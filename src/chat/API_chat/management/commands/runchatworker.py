@@ -53,12 +53,12 @@ class Command(BaseCommand):
     async def process_message(self, data):
         if not self.valid_json_body(data):
             return
-        data['header']['side'] = 'front' # data destination after deep processing
+        data['header']['dest'] = 'front' # data destination after deep processing
         if self.recipient_exists(data['body']['to']):
-            if self.is_muted(data['header']['from'], data['body']['to']):
+            if self.is_muted(data['header']['id'], data['body']['to']):
                 data['body']['message'] += f"You were muted by {data['body']['to']}"
             else:
-                data['header']['from'] = data['body']['to'] # username OR userID ?
+                # data['header']['from'] = data['body']['to'] # username OR userID ?
                 data['body']['message'] += '(back from chat)'
         else:
             data['body']['message'] += 'User not found'
