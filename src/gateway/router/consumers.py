@@ -68,7 +68,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         data = data['header']
         if not isinstance(data, dict):
             return False
-        if "from" not in data or "to" not in data or "id" not in data:
+        if "dest" not in data or "service" not in data or "id" not in data:
             return False
         return True
 
@@ -76,7 +76,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         """Listen redis to send data back to appropriate client"""
         async for message in self.pubsub.listen():
             data = loads(message['data'])
-            if data['header']['side'] == 'front' and data['header']['id'] == self.consumer_id:
+            if data['header']['dest'] == 'front' and data['header']['id'] == self.consumer_id:
                 try:
                     await self.send_json(data)
                 except Exception as e:
@@ -89,9 +89,9 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         if not self.valid_json_header(data):
             print(f"Data error (json) : {data}")
             return
-        data['header']['side'] = 'back'
+        # data['header']['dest'] = 'back'
         data['body']['id'] = self.consumer_id
-        group = REDIS_GROUPS.get(data['header']['to'])
+        group = REDIS_GROUPS.get(data['header']['dest'])
         if group is not None:
             await self.forward_with_redis(data, group)
             return
