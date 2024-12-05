@@ -15,6 +15,8 @@ import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 //REVIEW Exceptions should be caught, and should terminate the game
 
 
+const gg = global.game;  // abbreviate because used a lot
+
 const __angleMax = MathUtils.degToRad(70);
 
 // MARK: Variables
@@ -64,28 +66,28 @@ export async function startLocalGame(isCPU) {
         __level = null;
     }
 
-    global.game.maxScore = 5;
+    gg.maxScore = 5;
 
     __didOpponentLoseLastRound = Math.random() > 0.5 ? 1 : 0;
 
     __ballSpeed = 0.18;
     __paddleSpeeds[0] = __paddleSpeeds[1] = 0.12;
-    global.game.paddleHeights[0] = 0.2;
-    global.game.paddleHeights[1] = global.game.paddleHeights[0];
+    gg.paddleHeights[0] = 0.2;
+    gg.paddleHeights[1] = gg.paddleHeights[0];
 
     __level = new (LEVELS.pickRandomLevel())();
 
     const size = global.unitRect(__level.boardDiagonal);
-    global.game.boardSize.x = size.x;
-    global.game.boardSize.y = size.y;
+    gg.boardSize.x = size.x;
+    gg.boardSize.y = size.y;
 
-    global.game.playerNames[1] = isCPU ? generateRandomNick() : 'Player 2';
+    gg.playerNames[1] = isCPU ? generateRandomNick() : 'Player 2';
 
-    global.game.scores = [0, 0];
-    if (global.game.focusedPlayerIndex === 'neutral') {
-        global.game.focusedPlayerIndex = -1;
+    gg.scores = [0, 0];
+    if (gg.focusedPlayerIndex === 'neutral') {
+        gg.focusedPlayerIndex = -1;
     } else {
-        global.game.focusedPlayerIndex = isCPU ? 0 : -1;
+        gg.focusedPlayerIndex = isCPU ? 0 : -1;
     }
 
     engine.loading = false;
@@ -109,16 +111,16 @@ export async function startLocalGame(isCPU) {
 }
 
 function newRound() {
-    global.game.ballPosition = { x: 0, y: 0 };
+    gg.ballPosition = { x: 0, y: 0 };
     __ballDirection.set(1, 0).rotateAround(
         new Vector2(0, 0),
         global._180 * __didOpponentLoseLastRound
     );
-    global.game.paddlePositions[0] = global.game.paddlePositions[1] = 0;
+    gg.paddlePositions[0] = gg.paddlePositions[1] = 0;
 
     // Shrink
-    global.game.paddleHeights[0] *= 0.9;
-    global.game.paddleHeights[1] = global.game.paddleHeights[0];
+    gg.paddleHeights[0] *= 0.9;
+    gg.paddleHeights[1] = gg.paddleHeights[0];
 
     // Accelerate
     __ballSpeed *= 1.2;
@@ -132,9 +134,9 @@ function cpuMove() {
     const margin = 0.5;
 
     // Abbreviate
-    const ball = global.game.ballPosition.y;
-    const paddle = global.game.paddlePositions[1];
-    const halfSize = global.game.paddleHeights[1] / 2;
+    const ball = gg.ballPosition.y;
+    const paddle = gg.paddlePositions[1];
+    const halfSize = gg.paddleHeights[1] / 2;
 
     if (ball < paddle - halfSize * margin)
         return -1;
@@ -147,10 +149,10 @@ function movePaddles(delta) {
     let inputs = input.currentPaddleInputs;
     if (__isCPU) inputs[1] = cpuMove();
 
-    const limit = global.game.boardSize.y / 2;
+    const limit = gg.boardSize.y / 2;
     for (let i = 0; i < 2; i++) {
-        global.game.paddlePositions[i] += delta * __paddleSpeeds[i] * inputs[i];
-        global.game.paddlePositions[i] = global.clamp(global.game.paddlePositions[i],
+        gg.paddlePositions[i] += delta * __paddleSpeeds[i] * inputs[i];
+        gg.paddlePositions[i] = global.clamp(gg.paddlePositions[i],
             -limit, limit);
     }
 }
@@ -262,11 +264,11 @@ Did the ball nearly exactly hit a corner of the board, and bounce twice?`
 }
 
 function scoreup(side) {
-    global.game.scores[side]++;
+    gg.scores[side]++;
 
     __didOpponentLoseLastRound = side == 0 ? 1 : 0;
 
-    if (global.game.scores[side] >= global.game.maxScore) {
+    if (gg.scores[side] >= gg.maxScore) {
         endgame(false);
         return;
     }
@@ -276,8 +278,8 @@ function scoreup(side) {
 /** @param {boolean} isEndingBecauseCancelled */
 function endgame(isEndingBecauseCancelled) {
     if (isEndingBecauseCancelled !== true) {
-        let winner = global.game.scores[0] >= global.game.maxScore ? 0 : 1;
-        alert(`GAME OVER\nLe gagnant est ${global.game.playerNames[winner]}!`);
+        let winner = gg.scores[0] >= gg.maxScore ? 0 : 1;
+        alert(`GAME OVER\nLe gagnant est ${gg.playerNames[winner]}!`);
     }
 
     global.isPlaying = false;
