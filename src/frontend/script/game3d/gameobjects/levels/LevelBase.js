@@ -1,6 +1,4 @@
 import * as THREE from 'three';
-import Ball from '../gameplay/Ball.js';
-import Paddle from '../gameplay/Paddle.js';
 import global from 'global';
 import engine from 'engine';
 
@@ -37,5 +35,13 @@ export default class LevelBase {
 		quaternion;
 		/** @type {number} */
 		fov;
+
+		clone() {
+			const obj = new LevelBase.CameraStats();
+			obj.position = this.position.clone();
+			obj.quaternion = this.quaternion.clone();
+			obj.fov = this.fov;
+			return obj;
+		}
 	};
 }

@@ -26,27 +26,14 @@ export default class LevelDebug extends LevelBase {
 		engine.level.add(new DebugScoreIndicator(0));
 		engine.level.add(new DebugScoreIndicator(1));
 
-		const mainCameraAngle = new LevelBase.CameraStats();
-		mainCameraAngle.position = new THREE.Vector3(0, 0.65, -0.4);
-
-		mainCameraAngle.quaternion = new THREE.Quaternion().setFromAxisAngle(
-			new THREE.Vector3(1,0,0),
-			THREE.MathUtils.degToRad(-120)
-		);
-		mainCameraAngle.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(
-			new THREE.Vector3(0,0,1),
-			THREE.MathUtils.degToRad(180)
-		));
-
-		mainCameraAngle.fov = 55;
+		this.cameras = __makeCameraAngles();
 
 		engine.cameraTarget.teleportNow = true;
 		engine.cameraTarget.mousePositionMultiplier.set(0.1, 0.1);
 		engine.cameraTarget.mouseRotationMultiplier.set(0.1, 0.1);
 
-		global.game.focusedPlayerIndex = 'neutral';
+		// global.game.focusedPlayerIndex = 'neutral';  // Forced camera choice
 
-		this.cameras = [mainCameraAngle, mainCameraAngle, mainCameraAngle];
 		engine.level.add(new DebugBoard());
 	}
 
@@ -56,4 +43,41 @@ export default class LevelDebug extends LevelBase {
 
 		//TODO
 	}
+}
+
+
+function __makeCameraAngles() {
+	const neutralCamera = new LevelBase.CameraStats();
+	neutralCamera.position = new THREE.Vector3(0, 0.65, -0.4);
+
+	neutralCamera.quaternion = new THREE.Quaternion().setFromAxisAngle(
+		new THREE.Vector3(1,0,0),
+		THREE.MathUtils.degToRad(-120)
+	);
+	neutralCamera.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(
+		new THREE.Vector3(0,0,1),
+		THREE.MathUtils.degToRad(180)
+	));
+
+	neutralCamera.fov = 55;
+
+	const turn90 = new THREE.Quaternion().setFromAxisAngle(
+		new THREE.Vector3(0, 1, 0),
+		global._90,
+	);
+	const turn180 = new THREE.Quaternion().setFromAxisAngle(
+		new THREE.Vector3(0, 1, 0),
+		global._180,
+	);
+
+	const p0Camera = neutralCamera.clone();
+
+	p0Camera.position.applyQuaternion(turn90);
+	p0Camera.quaternion.applyQuaternion(turn90);
+
+	const p1Camera = p0Camera.clone();
+	p1Camera.position.applyQuaternion(turn180);
+	p1Camera.quaternion.applyQuaternion(turn180);
+
+	return [p0Camera, p1Camera, neutralCamera];
 }
