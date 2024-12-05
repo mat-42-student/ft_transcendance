@@ -34,7 +34,7 @@ class Command(BaseCommand):
 			if self.shutdown_event.is_set():
 				break
 			if msg : #and msg['type'] == 'message':  # Filtre uniquement les messages réels
-				value = matchmaking(msg)
+				value = await matchmaking(msg)
 				self.user.update(value)
 				print(f"Message received: {msg['data']}")
 				for key, value in self.user.items():
@@ -53,3 +53,4 @@ class Command(BaseCommand):
 			pass
 		print("Shutdown task completed.")
 		self.shutdown_event.set()
+	

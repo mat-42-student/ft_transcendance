@@ -19,13 +19,13 @@ class Ex_consumer():
 
 
 
-def return_the_id_from_the_json(some_data):
+async def return_the_id_from_the_json(some_data):
 	return some_data['header']['id']
 
 
-def matchmaking(msg_from_somoene):
+async def matchmaking(msg_from_somoene):
 	dict_from_client = json.loads(msg_from_somoene.get('data'))
 	n = Ex_consumer(msg_from_somoene)
 	n.parsing_of_JSONclient()
-	id = return_the_id_from_the_json(dict_from_client)
+	id = await return_the_id_from_the_json(dict_from_client)
 	return ({id: n})

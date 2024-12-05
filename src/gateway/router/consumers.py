@@ -91,7 +91,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             return
         # data['header']['dest'] = 'back'
         data['body']['id'] = self.consumer_id
-        group = REDIS_GROUPS.get(data['header']['dest'])
+        group = REDIS_GROUPS.get(data['header']['service'])
         if group is not None:
             await self.forward_with_redis(data, group)
             return
