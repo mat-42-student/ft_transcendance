@@ -32,6 +32,22 @@ services:
       - db-network
       - redis-network
 
+  social:
+    container_name: social
+    build:
+      context: social_project
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./social_project/:/code
+    depends_on:
+      # - auth-service
+      - redis
+    networks:
+      # - db-network
+      - redis-network
+
   gateway:
     container_name: gateway
     build:
@@ -64,7 +80,7 @@ services:
       pong:
         condition: service_started
     expose:
-      - "8000" # ??
+      - "8000"
     networks:
       - db-network
       - redis-network

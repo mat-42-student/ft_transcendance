@@ -76,7 +76,8 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         """Listen redis to send data back to appropriate client"""
         async for message in self.pubsub.listen():
             data = loads(message['data'])
-            if data['header']['side'] == 'front' and data['header']['id'] == self.consumer_id:
+            print(f"gateway listen : {data}")
+            if data['header']['to'] == 'client' and data['body']['to'] == self.consumer_id:
                 try:
                     await self.send_json(data)
                 except Exception as e:
