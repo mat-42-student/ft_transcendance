@@ -26,6 +26,7 @@ export default class LevelDebug extends LevelBase {
 		engine.level.add(new DebugScoreIndicator(0));
 		engine.level.add(new DebugScoreIndicator(1));
 
+		engine.cameraTarget.diagonal = 40;
 		this.cameras = __makeCameraAngles();
 
 		engine.cameraTarget.teleportNow = true;
@@ -50,7 +51,7 @@ function __makeCameraAngles() {
 	const neutralCamera = new LevelBase.CameraStats();
 	neutralCamera.position = new THREE.Vector3(0, 0.65, -0.4);
 	neutralCamera.quaternion = __lookDownQuaternion(180, 60);
-	neutralCamera.fov = 55;
+	neutralCamera.fov = 60;
 
 	const p0Camera = new LevelBase.CameraStats();
 	p0Camera.position = new THREE.Vector3(0.6, 0.45, 0);
