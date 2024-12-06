@@ -3,7 +3,6 @@ from signal import signal, SIGTERM, SIGINT
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep, create_task
-# from cerberus import Validator
 # from models import User, BlockedUser
 
 class Command(BaseCommand):
@@ -32,16 +31,16 @@ class Command(BaseCommand):
     async def listen(self):
         print(f"Listening for messages...")
         async for msg in self.pubsub.listen():
-            if msg.get('data') :
+            if msg :
                 try:
-                    data = json.loads(msg["data"])
-                    if data['header']['to'] == 'chat':
+                    data = json.loads(msg['data'])
+                    if self.valid_chat_json(data):
                         await self.process_message(data)
                 except Exception as e:
                     print(e)
 
-    def valid_json_body(self, data):
-        if data['header']['side'] != 'back':
+    def valid_chat_json(self, data):
+        if data['header']['dest'] != 'back' or data['header']['service'] != 'chat':
             return False
         data = data.get('body')
         if not isinstance(data, dict):
@@ -51,8 +50,6 @@ class Command(BaseCommand):
         return True
 
     async def process_message(self, data):
-        if not self.valid_json_body(data):
-            return
         data['header']['dest'] = 'front' # data destination after deep processing
         if self.recipient_exists(data['body']['to']):
             if self.is_muted(data['header']['id'], data['body']['to']):

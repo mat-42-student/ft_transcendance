@@ -11,9 +11,7 @@ function launchMainSocket() {
     mainSocket.onopen = async function(e) {
         await mainSocket.send(JSON.stringify({
             'header': {
-                'from': 'client',
-                'to': 'chat',
-                'id': 'bob'
+                'service': 'chat',
             },
             'body': {
                 'to':'bob',
@@ -28,7 +26,7 @@ function launchMainSocket() {
 
     mainSocket.onmessage = async function(e) {
         data = JSON.parse(e.data);
-        console.log("Incoming data : " + data['body']['message']);
+        console.log("Incoming data : " + data['body']);
     };
 }
 
