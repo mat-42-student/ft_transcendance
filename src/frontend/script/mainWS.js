@@ -26,7 +26,7 @@ function launchMainSocket() {
 
     mainSocket.onmessage = async function(e) {
         data = JSON.parse(e.data);
-        console.log("Incoming data : " + data['body']);
+        console.log(JSON.stringify(data, null, 2));
     };
 }
 
