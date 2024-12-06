@@ -23,7 +23,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             print("User is not authenticated. Aborting")
             await self.close()
         else:
-            print("User is authenticated")
+            print(f"User is authenticated as {self.consumer_id}")
 
     async def connect_to_redis(self):
         try:
