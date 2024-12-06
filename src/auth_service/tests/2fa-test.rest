@@ -1,14 +1,14 @@
 POST http://localhost:9090/api/auth/signup
 Content-Type: application/json
 
-{ "username": "bob", "email": "bob@gmail.fr", "password": "bob" }
+{ "username": "test1", "email": "test1@gmail.fr", "password": "test1" }
 
 ###
 
 POST http://127.0.0.1:9090/api/auth/login
 Content-Type: application/json
 
-{ "email": "bob@mail.fr", "password": "bob", "otp": "775245" }
+{ "email": "test1@mail.fr", "password": "test1", "otp": "775245" }
 
 ###
 
