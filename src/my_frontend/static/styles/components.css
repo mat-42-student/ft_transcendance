@@ -1,0 +1,89 @@
+/* CARDS */
+/* Global container for the dynamic card */
+#dynamic-card-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* z-index: 9999; */
+}
+
+/* Background overlay for opacity */
+#dynamic-card-container .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+}
+
+/* Card styling */
+#dynamic-card-container .card {
+    position: fixed;
+    z-index: 2;
+    /* max-width: ; */
+    width: 50%;
+    /* max-height: ; */
+    height: 40%;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    box-sizing: border-box;
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Close button styling */
+#dynamic-card-container .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #333;
+    transition: color 0.2s ease;
+}
+
+#dynamic-card-container .close-btn:hover {
+    color: #007bff;
+}
+
+
+
+/* FRIEND REQUEST */
+.friend-request-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 10px 0;
+}
+  
+.friend-request-item img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+  
+.friend-request-item button {
+    margin-left: 5px;
+    padding: 5px 10px;
+    border: none;
+    background: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+  
+.friend-request-item button:hover {
+    background: #0056b3;
+}

@@ -1,0 +1,51 @@
+services:
+  # Le service users_management en l'état n'utilise pas encore daphne
+  users_management:
+    build: ./users_management
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./media:/media
+      - ./users_management:/app
+    env_file:
+      - .my_env
+    networks:
+      - my_network
+    restart: always
+    # depends_on:
+    #   - database
+    # command: daphne -b 0.0.0.0 -p 8000 users_management.asgi:application
+
+  my_frontend:
+    build: ./my_frontend
+    volumes:
+      - ./media:/media # changer pour `./avatars:/media/avatars/` -> changer settings python en conséquences
+      - ./my_frontend/static:/usr/share/nginx/html
+    ports:
+      - "80:80"
+    depends_on:
+      - users_management
+    networks:
+      - my_network
+    restart: always
+
+  # database:
+  #   image: postgres:15
+  #   container_name: database
+  #   env_file:
+  #     - .my_env
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - database_data:/var/lib/postgresql/data
+  #   networks:
+  #     - my_network
+  #   restart: always
+
+networks:
+  my_network:
+    driver: bridge
+
+volumes:
+  media:
+  # database_data:
