@@ -1,4 +1,22 @@
 services:
+  # Le service users_management en l'état n'utilise pas encore daphne ni postgres
+  users_management:
+    build: ./users_management
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./media:/media
+      - ./users_management:/app
+    env_file:
+      - .env
+    networks:
+      # - db-network
+      - nginx-network
+    restart: always
+    # depends_on:
+    #   - postgres
+    # command: daphne -b 0.0.0.0 -p 8000 users_management.asgi:application
+
   auth-service:
     build:
       context: ./auth_service
@@ -76,6 +94,7 @@ services:
       context: nginx
       dockerfile: Dockerfile
     depends_on:
+      - users_management # ajout merge users_management
       - gateway
       - matchmaking
       - pong
@@ -134,6 +153,7 @@ services:
 
 volumes:
   postgres_data:
+  media: # ajout merge users_management
 
 networks:
   nginx-network:
