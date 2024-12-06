@@ -1,4 +1,5 @@
-// Header. always present
+import global from 'global';
+
 
 	document.querySelectorAll('a.nav_url').forEach((link) => {
 		link.addEventListener('click', function(event) {
@@ -10,8 +11,9 @@
 
 
 let routes = {
+	//FIXME this probably shouldn't load index.html recursively...
 	'/index.html': {file: 'index.html', script: null},
-	'/home': {file: 'matchmaking.html', scipt: ['./script/matchmaking.js','wsgame.js']},
+	'/home':        {file: 'matchmaking.html', script: ['./script/matchmaking.js','wsgame.js']},
 	'/matchmaking': {file: 'matchmaking.html', script: ['./script/matchmaking.js','wsgame.js']},
 	'/chat': {file: 'chat.html', script: null},
 	'/profile': {file: 'profile.html', script: null},
@@ -20,13 +22,18 @@ let routes = {
 
 function router() {
 	const path = window.location.pathname;
-	console.log(path);
 	const content = routes[path];
 
-	console.log(content);
-	if (content)
-		inject_code_into_markup(content.file, 'section', content.script);
-
+	if (content) {
+		console.log('router.js : router() : changing page.', '\n',
+			'Browser URL is:', path, '\n',
+			'Injected page is:', content.file, '\n',
+			'Injected script is:', content.script
+		);
+		global.inject_code_into_markup(content.file, 'section', content.script);
+	} else {
+		console.warn('router.js : router() : changing page, but the URL is unknown.');
+	}
 }
 
 function navigateTo(url){
@@ -40,6 +47,3 @@ window.addEventListener('load', (e)=>
 {
 	router();
 })
-
-
-

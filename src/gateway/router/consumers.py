@@ -4,7 +4,8 @@ from json import dumps, loads
 from channels.generic.websocket import AsyncJsonWebsocketConsumer # type: ignore
 from redis.asyncio import from_url
 from asyncio import create_task
-from .consts import REDIS_GROUPS #, API_GROUPS
+from .consts import REDIS_GROUPS
+from datetime import datetime, timezone
 
 class GatewayConsumer(AsyncJsonWebsocketConsumer):
     """Main websocket"""
@@ -22,7 +23,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             print("User is not authenticated. Aborting")
             await self.close()
         else:
-            print("User is authenticated")
+            print(f"User is authenticated as {self.consumer_id}")
 
     async def connect_to_redis(self):
         try:
@@ -65,10 +66,9 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             return False
         if "header" not in data or "body" not in data:
             return False
-        data = data['header']
-        if not isinstance(data, dict):
+        if not isinstance(data['header'], dict):
             return False
-        if "from" not in data or "to" not in data or "id" not in data:
+        if "service" not in data['header']:
             return False
         return True
 
@@ -76,8 +76,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         """Listen redis to send data back to appropriate client"""
         async for message in self.pubsub.listen():
             data = loads(message['data'])
-            print(f"gateway listen : {data}")
-            if data['header']['to'] == 'client' and data['body']['to'] == self.consumer_id:
+            if data['header']['id'] == self.consumer_id and data['header']['dest'] == 'front':
                 try:
                     await self.send_json(data)
                 except Exception as e:
@@ -90,10 +89,11 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         if not self.valid_json_header(data):
             print(f"Data error (json) : {data}")
             return
-        data['header']['side'] = 'back'
-        data['body']['id'] = self.consumer_id
-        group = REDIS_GROUPS.get(data['header']['to'])
-        if group is not None:
+        group = REDIS_GROUPS.get(data['header']['service'])
+        if group:
+            data['header']['dest'] = 'back'
+            data['header']['id'] = self.consumer_id
+            data['body']['timestamp'] = datetime.now(timezone.utc).isoformat()
             await self.forward_with_redis(data, group)
             return
         print("Unknown recipient, message lost")

@@ -1,3 +1,32 @@
+# Fichiers sensibles
+.env
 ./src/django/code/.env
+
+# Environnement virtuel Python
+**env/
+
+# Fichiers générés par Django
 **/__pycache__/
-.env/
+**/*.pyc
+**/*.pyo
+db.sqlite3
+
+# Fichiers statiques et médias
+**/staticfiles/
+# static/
+media/
+
+# Logs
+*.log
+logs/
+
+# IDEs et outils
+.vscode/
+
+# Specifique branche `users_management`
+.DS_Store
+src/Makefile
+src/my_compose.yml
+src/my_frontend
+src/media
+src/.my_env

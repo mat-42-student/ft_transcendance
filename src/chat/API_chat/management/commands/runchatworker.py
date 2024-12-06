@@ -32,16 +32,16 @@ class Command(BaseCommand):
     async def listen(self):
         print(f"Listening for messages...")
         async for msg in self.pubsub.listen():
-            if msg.get('data') :
+            if msg :
                 try:
-                    data = json.loads(msg["data"])
-                    if data['header']['to'] == 'chat':
+                    data = json.loads(msg['data'])
+                    if self.valid_chat_json(data):
                         await self.process_message(data)
                 except Exception as e:
                     print(e)
 
-    def valid_json_body(self, data):
-        if data['header']['side'] != 'back':
+    def valid_chat_json(self, data):
+        if data['header']['dest'] != 'back' or data['header']['service'] != 'chat':
             return False
         data = data.get('body')
         if not isinstance(data, dict):
@@ -51,26 +51,13 @@ class Command(BaseCommand):
         return True
 
     async def process_message(self, data):
-        if not self.valid_json_body(data):
-            return
-        data['header']['to'] = 'client' # data destination after deep processing
-        if data['body'].get('first'):
-            self.get_history(data['header']['id'], data['body']['to'])
-        else:
-            await self.publish_message(data)
-
-    def get_history(self, user1, user2):
-        """send 10 last messages between user1 and user2"""
-        pass
-
-    async def publish_message(self, data):
+        data['header']['dest'] = 'front' # data destination after deep processing
         if self.recipient_exists(data['body']['to']):
-            if self.is_muted(data['header']['from'], data['body']['to']):
-                data['body']['message'] = f"You were muted by {data['body']['to']}"
+            if self.is_muted(data['header']['id'], data['body']['to']):
+                data['body']['message'] += f"You were muted by {data['body']['to']}"
             else:
-                data['header']['from'] = 'chat'
-                data['body']['timestamp'] = datetime.now(timezone.utc).isoformat()
-                self.store_msg_into_db(data) # do we ?
+                # data['header']['from'] = data['body']['to'] # username OR userID ?
+                data['body']['message'] += '(back from chat)'
         else:
             data['body']['message'] = 'User not found'
         print(f"Publishing : {data}")

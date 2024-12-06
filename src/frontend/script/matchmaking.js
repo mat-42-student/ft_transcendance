@@ -1,24 +1,29 @@
-//import { sendGetRequest } from './requestGet.js';
+import global from 'global';
+import * as LOCAL_GAME from './localGame.js'
 
-function modeSelection(mode) {
+
+export function modeSelection(mode) {
     if (mode === 'matchmaking') {
         console.log("matchmaking");
-        inject_code_into_markup("../board.html", "main", "./script/wsgame.js");
+        global.inject_code_into_markup("../board.html", "main", "./script/wsgame.js");
         setupWebSocket('2P');
     }
     else if (mode === 'tournament')
     {
         console.log('tournament');
-        inject_code_into_markup("../board.html", "main", "./script/wsgame.js");
+        global.inject_code_into_markup("../board.html", "main", "./script/wsgame.js");
         setupWebSocket('4P')
     }
     else if (mode === '1v1') {
-        inject_code_into_markup("../board.html", "main", "./script/local1v1.js")
+        global.inject_code_into_markup("../board.html", "main", "./script/local1v1.js");
+        LOCAL_GAME.startLocalGame(false);
     }
     else if (mode === 'cpu') {
-        inject_code_into_markup("../board.html", "main", "./script/localCPU.js");
+        global.inject_code_into_markup("../board.html", "main", "./script/localCPU.js");
+        LOCAL_GAME.startLocalGame(true);
     }
 }
+
 
 function showLobby() {
     // Vérifier si le lobby est déjà affiché
