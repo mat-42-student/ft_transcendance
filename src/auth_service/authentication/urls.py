@@ -7,7 +7,6 @@ urlpatterns = [
     path('login', LoginView.as_view(), name='login'),
     path('refresh', RefreshTokenView.as_view(), name='refresh'),
     path('ping', PingView.as_view(), name='ping'),
-
     path('logout', LogoutView.as_view(), name='logout'),
     path('2fa/enable-2fa', Enable2FAView.as_view(), name='enable-2fa'),
     path('2fa/disable-2fa', Disable2FAView.as_view(), name='disable-2fa'),

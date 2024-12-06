@@ -1,28 +1,10 @@
 services:
-  # Le service users_management en l'état n'utilise pas encore daphne ni postgres
-  users_management:
-    build: ./users_management
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./media:/media
-      - ./users_management:/app
-    env_file:
-      - .env
-    networks:
-      # - db-network
-      - nginx-network
-    restart: always
-    # depends_on:
-    #   - postgres
-    # command: daphne -b 0.0.0.0 -p 8000 users_management.asgi:application
-
   auth-service:
     build:
       context: ./auth_service
       dockerfile: Dockerfile
     volumes:
-      - ./auth_service:/app
+      - ./auth_service:/code
     depends_on:
       postgres:
         condition: service_healthy
@@ -34,6 +16,29 @@ services:
     networks:
       - nginx-network
       - db-network
+
+  # Le service users_management en l'état n'utilise pas encore daphne ni postgres
+  users:
+    build:
+      context: ./users
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./media:/media
+      - ./users:/code
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    env_file:
+      - ./users/.env
+    restart: on-failure
+    networks:
+      - db-network
+      - nginx-network
+
 
   chat:
     container_name: chat
@@ -110,7 +115,7 @@ services:
       context: nginx
       dockerfile: Dockerfile
     depends_on:
-      - users_management # ajout merge users_management
+      - users
       - gateway
       - matchmaking
       - pong
@@ -148,7 +153,7 @@ services:
     expose:
       - "5432"
     volumes:
-      - postgres_data:/var/lib/posgresql/data
+        - postgres_data:/var/lib/postgresql/data
     env_file:
       - .env
     networks:
@@ -169,7 +174,7 @@ services:
 
 volumes:
   postgres_data:
-  media: # ajout merge users_management
+  media:
 
 networks:
   nginx-network:
