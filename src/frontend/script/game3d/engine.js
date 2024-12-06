@@ -23,6 +23,11 @@ export default {
 	 * but is switched on/off based on this. */
 	get DEBUG_MODE() { return __DEBUG_MODE; },
 
+	borders: {
+		top: 0, left: 0,
+		right: 500, bottom: 500,
+	},
+
 
 	/** Hide or display the loading overlay.
 	 * @param {boolean} newIsLoading */
@@ -85,6 +90,14 @@ export default {
 
 		__cameraTarget = new CameraTarget();
 
+		let htmlAutoBorder = document.body.getElementsByTagName('auto-engine-border');
+		if (htmlAutoBorder) {
+			htmlAutoBorder = htmlAutoBorder.item(0);
+			if (htmlAutoBorder.update) {
+				htmlAutoBorder.update();
+			}
+		}
+
 		__persistentDebug = new PersistentDebug();
 		__scene.add(__persistentDebug);
 	},
@@ -136,7 +149,13 @@ export default {
 		__level = new THREE.Group();
 		__level.name = "Engine Level";
 		__scene.add(__level);
-	}
+	},
+
+	refreshBorder() {
+		const rect = __html_container.getBoundingClientRect();
+		__html_debugBox.style.bottom = (rect.height - engine.borders.bottom) + 'px';
+		__html_debugBox.style.left = engine.borders.left + 'px';
+	},
 };
 
 
@@ -243,6 +262,7 @@ function __onResize() {
 	__renderer.setPixelRatio(__currentRatio);
 	__renderer.setSize(rect.width, rect.height);
 	__camera.aspect = rect.width / rect.height;
+	engine.refreshBorder();
 }
 
 

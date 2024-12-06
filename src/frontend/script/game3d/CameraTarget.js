@@ -16,14 +16,6 @@ export default class CameraTarget {
 	fov = 70;
 	diagonal = 30;
 
-	/* Border avoidance */
-	borders = {
-		top: 100,
-		right: 600,
-		bottom: 600,
-		left: 100,
-	};
-
 	/* Smooth interpolation */
 	teleportNow = true;
 	smoothSpeed = 10;
@@ -151,11 +143,11 @@ export default class CameraTarget {
 	#updateBorderVisualizer(borderVisualizer, canvasSize) {
 		borderVisualizer.style.display = engine.DEBUG_MODE ? null : 'none';
 
-		borderVisualizer.style.left = this.borders.left + 'px';
-		borderVisualizer.style.top = this.borders.top + 'px';
+		borderVisualizer.style.left = engine.borders.left + 'px';
+		borderVisualizer.style.top = engine.borders.top + 'px';
 
-		borderVisualizer.style.right = canvasSize.x - this.borders.right + 'px';
-		borderVisualizer.style.bottom = canvasSize.y - this.borders.bottom + 'px';
+		borderVisualizer.style.right = canvasSize.x - engine.borders.right + 'px';
+		borderVisualizer.style.bottom = canvasSize.y - engine.borders.bottom + 'px';
 	}
 
 
@@ -234,9 +226,9 @@ export default class CameraTarget {
 
 
 	#recreateBordersIfReset(canvasSize) {
-		if (this.borders == null) {
+		if (engine.borders == null) {
 			const margin = 0;
-			this.borders = {
+			engine.borders = {
 				top: margin,
 				right: canvasSize.x - margin,
 				left: margin,
@@ -251,8 +243,8 @@ export default class CameraTarget {
 		let result = {};
 
 		const span = {
-			x: this.borders.right - this.borders.left,
-			y: this.borders.bottom - this.borders.top,
+			x: engine.borders.right - engine.borders.left,
+			y: engine.borders.bottom - engine.borders.top,
 		};
 
 		const unitRect = global.unitRect(this.diagonal);
@@ -275,8 +267,8 @@ export default class CameraTarget {
 			y: canvasSize.y/2,
 		};
 		const subscreenCenter = {
-			x: THREE.MathUtils.lerp(this.borders.left, this.borders.right, 0.5),
-			y: THREE.MathUtils.lerp(this.borders.top, this.borders.bottom, 0.5),
+			x: THREE.MathUtils.lerp(engine.borders.left, engine.borders.right, 0.5),
+			y: THREE.MathUtils.lerp(engine.borders.top, engine.borders.bottom, 0.5),
 		};
 		const offset = {  // Lateral offset for when margins arent symmetrical
 			x: screenCenter.x - subscreenCenter.x,

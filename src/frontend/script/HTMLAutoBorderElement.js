@@ -23,7 +23,7 @@ class HTMLAutoBorderElement extends HTMLElement {
 			this.#resizeObserver = null;
 
 			// Reset just in case
-			engine.cameraTarget.borders = {
+			engine.borders = {
 				top: 0,
 				right: window.innerWidth,
 				bottom: window.innerHeight,
@@ -36,12 +36,14 @@ class HTMLAutoBorderElement extends HTMLElement {
 	update() {
 		const rect = this.getBoundingClientRect();
 
-		engine.cameraTarget.borders = {
+		engine.borders = {
 			top: rect.y,
 			right: rect.x + rect.width,
 			bottom: rect.y + rect.height,
 			left: rect.x,
 		};
+
+		engine.refreshBorder();
 	}
 
 }

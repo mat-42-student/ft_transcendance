@@ -92,6 +92,6 @@
 #engine #engine-border-visualizer {
 	margin: 0;
 	padding: 0;
-	border: 1px dashed #44a;
+	border: 1px solid rgba(76, 149, 245, 0.317);
 	position: fixed;
 }
