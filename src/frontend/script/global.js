@@ -29,6 +29,7 @@ export default {
 
 	// MARK: Functions
 
+	// REVIEW this function is unused at the time of writing this comment. Delete?
 	randomInRange(a, b) {
 		let range = Math.random() < 0.5 ? [-b, -a] : [a, b];
 		return Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
@@ -37,6 +38,9 @@ export default {
 
 	async inject_code_into_markup(htmlfile, markup, script) {
 		try {
+			if (script != null && script.__proto__.constructor.name !== 'Array') {
+				throw Error('Bad argument: script must be null or array');
+			}
 			const response = await fetch(htmlfile);
 			const content = await response.text();
 			document.querySelector(markup).innerHTML = content;
@@ -45,21 +49,8 @@ export default {
 			return (0);
 		}
 		if (script)
-			addScript(script);
+			__addScript(script);
 		return (1);
-	},
-
-	addScript(file) {
-		let i = 0;
-		while (i < file.length){
-			if (document.getElementById(file[i]))
-				return ;
-			const newScript = document.createElement('script');
-			newScript.type = 'module';
-			newScript.src = file[i];
-			newScript.id = file[i];
-			document.body.appendChild(newScript);
-		}
 	},
 
 	clamp(value, min, max) {
@@ -117,4 +108,18 @@ export default {
 		// return outMin + (outMax - outMin) * (input - inMin) / (inMax - inMin);
 		return outMin + (input - inMin) / (inMax - inMin) * (outMax - outMin);
 	},
+}
+
+
+function __addScript(file) {
+	let i = 0;
+	while (i < file.length){
+		if (document.getElementById(file[i]))
+			return ;
+		const newScript = document.createElement('script');
+		newScript.type = 'module';
+		newScript.src = file[i];
+		newScript.id = file[i];
+		document.body.appendChild(newScript);
+	}
 }

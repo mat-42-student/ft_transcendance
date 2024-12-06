@@ -286,5 +286,5 @@ function endgame(isEndingBecauseCancelled) {
     global.gameFrameFunction = null;
     global.gameCancelFunction = null;
 
-    window.location.hash = 'matchmaking.html';
+    throw "#TODO: return to matchmaking?"
 }
