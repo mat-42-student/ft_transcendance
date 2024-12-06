@@ -1,11 +1,82 @@
-
 services:
+  auth-service:
+    build:
+      context: ./auth_service
+      dockerfile: Dockerfile
+    volumes:
+      - ./auth_service:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8000"
+    env_file:
+      - ./auth_service/.env
+    restart: on-failure
+    networks:
+      - nginx-network
+      - db-network
+
+  chat:
+    container_name: chat
+    build:
+      context: chat
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./chat/:/code
+    depends_on:
+      - matchmaking
+    networks:
+      - db-network
+      - redis-network
+
+  gateway:
+    container_name: gateway
+    build:
+      context: gateway
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./gateway/:/code
+    depends_on:
+      matchmaking:
+        condition: service_started
+    expose:
+      - "8057"
+    networks:
+      - nginx-network
+      - db-network
+      - redis-network
+
+  matchmaking:
+    container_name: matchmaking
+    build:
+      context: matchmaking
+      dockerfile: Dockerfile
+    env_file:
+      - ./matchmaking/.env
+    volumes:
+      - ./matchmaking:/code
+    depends_on:
+      pong:
+        condition: service_started
+    expose:
+      - "8000" # ??
+    networks:
+      - db-network
+      - redis-network
+      - nginx-network
+
   nginx:
     container_name: nginx
     build:
       context: nginx
       dockerfile: Dockerfile
     depends_on:
+      - gateway
       - matchmaking
       - pong
     ports:
@@ -15,40 +86,13 @@ services:
     networks:
       - nginx-network
 
-  postgres:
-    container_name: posgresql
-    image: postgres
-    expose:
-      - "5432"
-    volumes:
-      - postgres_data:/var/lib/posgresql/data
-    environment:
-      POSTGRES_DB: transcendance
-      POSTGRES_USER: toto
-      POSTGRES_PASSWORD: test
-    networks:
-      - db-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d transcendance -U toto"]
-      interval: 3s
-      timeout: 2s
-      retries: 5
-
-  redis:
-    container_name: redis
-    image: redis
-    expose:
-      - "6379"
-    networks:
-      - redis-network
-    
   pong:
     container_name: pong
     build:
       context: _Pong
       dockerfile: Dockerfile
-    environment:
-      - PYTHONUNBUFFERED=1  # Désactiver le buffering des sorties Python
+    env_file:
+      - .env
     volumes:
       - ./_Pong/:/code
     depends_on:
@@ -63,28 +107,29 @@ services:
       - db-network
       - redis-network
 
-  matchmaking:
-    container_name: matchmaking
-    build:
-      context: matchmaking
-      dockerfile: Dockerfile
-    environment:
-        PYTHONUNBUFFERED: 1  # Désactiver le buffering des sorties Python
-        DJANGO_SETTINGS_MODULE: matchmaking.settings
-    volumes:
-      - ./matchmaking:/code
-    depends_on:
-      redis:
-        condition: service_started
-      postgres:
-        condition: service_healthy
-      pong:
-        condition: service_started
+  postgres:
+    container_name: postgres
+    image: postgres
     expose:
-      - "8000"
+      - "5432"
+    volumes:
+      - postgres_data:/var/lib/posgresql/data
+    env_file:
+      - .env
     networks:
-      - nginx-network
       - db-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d transcendance -U toto"]
+      interval: 3s
+      timeout: 2s
+      retries: 5
+
+  redis:
+    container_name: redis
+    image: redis:alpine
+    expose:
+      - "6379"
+    networks:
       - redis-network
 
 volumes:

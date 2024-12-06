@@ -2,7 +2,7 @@
 
 
 // Données utilisateur à envoyer
-export function sendGetRequest(){
+export async function sendGetRequest(){
 
     const url = 'https://localhost:3000/api/soloq/';  // Remplacez par l'URL correcte de votre API
     const userData = {
@@ -10,7 +10,7 @@ export function sendGetRequest(){
     };
 
     // Requête POST pour créer un objet User
-    fetch(url, {
+    await fetch(url, {
         method: 'POST',  // Méthode HTTP
         headers: {
             'Content-Type': 'application/json',  // Envoi des données en JSON

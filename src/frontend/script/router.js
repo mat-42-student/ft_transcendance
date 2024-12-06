@@ -2,35 +2,47 @@ import global from 'global';
 
 
 // Header. always present
-global.inject_code_into_markup('menu.html', 'nav', null);
+
+	document.querySelectorAll('a.nav_url').forEach((link) => {
+		link.addEventListener('click', function(event) {
+			event.preventDefault(); // Facultatif
+			console.log('Lien cliqué :', this.href);
+			navigateTo(event.target.href); // Appelle la fonction de navigation
+		});
+	});
 
 
-// if we can't detect when the address changes, we're Mega Screwed™
-if (!("onhashchange" in window)) {
-	const err = 'big oopsie, it seems this browser is unsupported';
-	alert(err);
-	throw Error(err);
+let routes = {
+	'/index.html': {file: 'index.html', script: null},
+	'/home': {file: 'matchmaking.html', scipt: ['./script/matchmaking.js','wsgame.js']},
+	'/matchmaking': {file: 'matchmaking.html', script: ['./script/matchmaking.js','wsgame.js']},
+	'/chat': {file: 'chat.html', script: null},
+	'/profile': {file: 'profile.html', script: null},
+	'/login': {file: 'login.html' , script: null},
 }
 
+function router() {
+	const path = window.location.pathname;
+	console.log(path);
+	const content = routes[path];
 
-let currentPath = undefined;
+	console.log(content);
+	if (content)
+		inject_code_into_markup(content.file, 'section', content.script);
 
-window.onhashchange = onChangePage;
-onChangePage();
-
-function onChangePage(){
-	// REVIEW delete or keep this?
-	// if (window.location.hash === currentPath) {
-	// 	return;  // Same page already, do nothing
-	// }
-
-	currentPath = window.location.hash;
-	if (currentPath.length >= 1 && currentPath[0] === '#') {
-		currentPath = currentPath.substring(1);
-	}
-	global.inject_code_into_markup(currentPath, 'main', null)
-
-	if (global.gameCancelFunction != null) {
-		global.gameCancelFunction();
-	}
 }
+
+function navigateTo(url){
+	window.history.pushState(null, null, url);
+	router();
+}
+
+window.addEventListener('popstate', router);
+
+window.addEventListener('load', (e)=>
+{
+	router();
+})
+
+
+

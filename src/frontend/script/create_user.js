@@ -1,7 +1,7 @@
 // URL de l'API qui gère la création d'utilisateur
 
 // Données utilisateur à envoyer
-function sendPostRequest(){
+async function sendPostRequest(){
 
     const url = 'https://' + window.location.hostname + ':3000/api/users/';  // Remplacez par l'URL correcte de votre API
     const userData = {
@@ -38,6 +38,4 @@ function sendPostRequest(){
 }
 
 // Envoyer la requête POST dès que la page est prête
-document.addEventListener('DOMContentLoaded', function() {
-   sendPostRequest();  // Appel de la fonction dès que le DOM est prêt
-});
+document.addEventListener('DOMContentLoaded', sendPostRequest);
