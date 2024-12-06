@@ -4,7 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/engine.css">
     <title>Transcendence</title>
+
+    <script type="importmap">
+        {"imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+            "engine": "./script/game3d/engine.js",
+            "global": "./script/global.js",
+            "input": "./script/input.js",
+            "gameobjects": "./script/game3d/gameobjects/_exports.js"
+        }}
+    </script>
+
+    <script type="module" src="./script/HTMLAutoBorderElement.js"></script>
 </head>
 <body>
     <header>
@@ -102,4 +116,5 @@
 <script src="./script/mainWS.js"></script>
 <script src="./script/router.js"></script>
 <script src="./script/create_user.js"></script>
+<script type="module" src="./script/game3d/start_engine.js"></script>
 </html>

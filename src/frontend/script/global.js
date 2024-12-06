@@ -34,6 +34,7 @@ export default {
 		return Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
 	},
 
+
 	async inject_code_into_markup(htmlfile, markup, script) {
 		try {
 			const response = await fetch(htmlfile);
@@ -41,18 +42,24 @@ export default {
 			document.querySelector(markup).innerHTML = content;
 		} catch (error) {
 			console.error("Erreur lors du chargement du fichier :", error);
+			return (0);
 		}
 		if (script)
 			addScript(script);
+		return (1);
 	},
 
 	addScript(file) {
-		if (document.getElementById(file))
-			return ;
-		const newScript = document.createElement('script');
-		newScript.src = file;
-		newScript.id = file;
-		document.body.appendChild(newScript);
+		let i = 0;
+		while (i < file.length){
+			if (document.getElementById(file[i]))
+				return ;
+			const newScript = document.createElement('script');
+			newScript.type = 'module';
+			newScript.src = file[i];
+			newScript.id = file[i];
+			document.body.appendChild(newScript);
+		}
 	},
 
 	clamp(value, min, max) {

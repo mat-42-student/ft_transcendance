@@ -1,6 +1,3 @@
-import global from 'global';
-
-
 // Header. always present
 
 	document.querySelectorAll('a.nav_url').forEach((link) => {
@@ -43,6 +40,3 @@ window.addEventListener('load', (e)=>
 {
 	router();
 })
-
-
-

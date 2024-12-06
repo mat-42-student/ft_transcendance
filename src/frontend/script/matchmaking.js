@@ -2,32 +2,26 @@ import global from 'global';
 import * as LOCAL_GAME from './localGame.js'
 
 
-window['modeMatchmaking'] = modeMatchmaking;
-window['modeTournament'] = modeTournament;
-window['mode1v1'] = mode1v1;
-window['modeCPU'] = modeCPU;
-
-
-function modeCPU() {
-    global.inject_code_into_markup("../playing.html", "main", null);
-    LOCAL_GAME.startLocalGame(true);
-}
-
-function mode1v1() {
-    global.inject_code_into_markup("../playing.html", "main", null);
-    LOCAL_GAME.startLocalGame(false);
-}
-
-function modeTournament() {
-    console.log('tournament');
-    global.inject_code_into_markup("../board.html", "main", "./script/wsgame.js");
-    setupWebSocket('4P')
-}
-
-function modeMatchmaking() {
-    console.log("matchmaking");
-    global.inject_code_into_markup("../board.html", "main", "./script/wsgame.js");
-    setupWebSocket('2P');
+function modeSelection(mode) {
+    if (mode === 'matchmaking') {
+        console.log("matchmaking");
+        inject_code_into_markup("../board.html", "main", "./script/wsgame.js");
+        setupWebSocket('2P');
+    }
+    else if (mode === 'tournament')
+    {
+        console.log('tournament');
+        inject_code_into_markup("../board.html", "main", "./script/wsgame.js");
+        setupWebSocket('4P')
+    }
+    else if (mode === '1v1') {
+        inject_code_into_markup("../board.html", "main", "./script/local1v1.js");
+        LOCAL_GAME.startLocalGame(false);
+    }
+    else if (mode === 'cpu') {
+        inject_code_into_markup("../board.html", "main", "./script/localCPU.js");
+        LOCAL_GAME.startLocalGame(true);
+    }
 }
 
 
