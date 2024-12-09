@@ -12,12 +12,12 @@ import global from 'global';
 
 let routes = {
 	//FIXME this probably shouldn't load index.html recursively...
-	'/index.html': {file: 'index.html', script: null},
-	'/home':        {file: 'matchmaking.html', script: ['./script/matchmaking.js','wsgame.js']},
-	'/matchmaking': {file: 'matchmaking.html', script: ['./script/matchmaking.js','wsgame.js']},
-	'/chat': {file: 'chat.html', script: null},
-	'/profile': {file: 'profile.html', script: null},
-	'/login': {file: 'login.html' , script: null},
+	'/page/index.html': {file: 'index.html', script: null},
+	'/page/home':        {file: 'matchmaking.html', script: ['./script/matchmaking.js','wsgame.js']},
+	'/page/matchmaking': {file: 'matchmaking.html', script: ['./script/matchmaking.js','wsgame.js']},
+	'/page/chat': {file: 'chat.html', script: null},
+	'/page/profile': {file: 'profile.html', script: null},
+	'/page/login': {file: 'login.html' , script: null},
 }
 
 function router() {
@@ -32,6 +32,7 @@ function router() {
 		);
 		global.inject_code_into_markup(content.file, 'section', content.script);
 	} else {
+		//TODO this should probably be handled with a 404 page.
 		console.warn('router.js : router() : changing page, but the URL is unknown.');
 	}
 }
