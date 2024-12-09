@@ -3,7 +3,6 @@ from signal import signal, SIGTERM, SIGINT
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep, create_task
-# from cerberus import Validator
 # from models import User, BlockedUser
 
 class Command(BaseCommand):
@@ -26,7 +25,6 @@ class Command(BaseCommand):
             self.listen_task = create_task(self.listen())
             while self.running:
                 await asleep(1)
-                # await self.ping_users() # check status of all users every 30 sec
         except  Exception as e:
             print(e)
         finally:
@@ -56,17 +54,17 @@ class Command(BaseCommand):
         user_id = data['header']['id']
         self.user_status[user_id] = data['body']['status']
         friends = self.get_friend_list(user_id)
+        if not friends:
+            print(f"No friends found for user: {user_id}")
+            return
         for friend in friends:
-            if self.user_status[friend] != 'offline':
-                self.send_status(user_id, friend)
-                await self.redis_client.publish(self.group_name, json.dumps(data))
-
-        print(f"Publishing : {data}")
-        await self.redis_client.publish(self.group_name, json.dumps(data))
+            if self.user_status.get(friend) != 'offline':
+                await self.send_status(user_id, friend)
 
     def get_friend_list(self, user_id):
         """Request friendlist from database"""
-        pass
+        self.user_status.update({"toto" : "online", "titi": "ingame", "tutu": "offline"})
+        return ["toto", "titi", "tutu"]
 
     async def send_status(self, user_id, friend):
         """publish status of 'user_id' and adress it to 'friend'"""
@@ -81,17 +79,8 @@ class Command(BaseCommand):
                 "status": self.user_status[user_id]
             }
         }
+        print(f"Publishing : {data}")
         await self.redis_client.publish(self.group_name, json.dumps(data))
-
-    # async def ping_users(self):
-    #     data = {"header": {
-    #         "service": "ping",
-    #         "dest": "front",
-    #         }
-    #     }
-    #     for id, status in self.user_status.items():
-    #         data['header']['id'] = id
-    #         await self.redis_client.publish(self.group_name, json.dumps(data))
 
     def signal_handler(self):
         self.running = False

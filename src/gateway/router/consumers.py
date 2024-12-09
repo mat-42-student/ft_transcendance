@@ -24,6 +24,8 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             await self.close()
         else:
             print(f"User is authenticated as {self.consumer_id}")
+            await self.send_online_status('online')
+
 
     async def connect_to_redis(self):
         try:
@@ -36,6 +38,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             raise Exception
 
     async def disconnect(self, close_code):
+        await self.send_online_status('offline')
         await self.pubsub.unsubscribe() # unsubscribe all channels
         await self.pubsub.close()
         await self.redis_client.close()
@@ -78,6 +81,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             data = loads(message['data'])
             if data['header']['id'] == self.consumer_id and data['header']['dest'] == 'front':
                 try:
+                    print(f"Sending: {data}")
                     await self.send_json(data)
                 except Exception as e:
                     print(f"Send error : {e}")
@@ -85,7 +89,6 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, data):
         """data incoming from client ws -> publish to concerned redis group\n
         possible 'to' values are 'auth', 'user', 'mmaking', 'chat', 'social'"""
-        # Testing global structure of data
         if not self.valid_json_header(data):
             print(f"Data error (json) : {data}")
             return
@@ -104,6 +107,20 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 await self.redis_client.publish(group, dumps(data))
             except Exception as e:
                 print(f"Publish error : {e}")
+
+    async def send_online_status(self, status):
+        data = {
+            "header": {
+                "service": "social",
+                "dest": "back",
+                "id": self.consumer_id
+            },
+            "body":{
+                "status": status
+            }
+        }
+        print(f"Sending data to deep_social: {data}")
+        await self.redis_client.publish("deep_social", dumps(data))
 
     # try:
     #     response = requests.get("http://matchmaking:8000/api/test/")
