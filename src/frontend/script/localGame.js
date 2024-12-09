@@ -285,6 +285,4 @@ function endgame(isEndingBecauseCancelled) {
     global.isPlaying = false;
     global.gameFrameFunction = null;
     global.gameCancelFunction = null;
-
-    throw "#TODO: return to matchmaking?"
 }

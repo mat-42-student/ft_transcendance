@@ -11,18 +11,23 @@ import global from 'global';
 
 
 let routes = {
-	//FIXME this probably shouldn't load index.html recursively...
+	//FIXME this probably shouldn't load index.html recursively... also why is this a separate route than /home
 	'/page/index.html': {file: 'index.html', script: null},
-	'/page/home':        {file: 'matchmaking.html', script: ['./script/matchmaking.js','wsgame.js']},
-	'/page/matchmaking': {file: 'matchmaking.html', script: ['./script/matchmaking.js','wsgame.js']},
+	// '/page/home': {file: null, script: null}, //TODO run CPU game directly?
+	'/page/matchmaking': {file: 'matchmaking.html', script: null},
 	'/page/chat': {file: 'chat.html', script: null},
 	'/page/profile': {file: 'profile.html', script: null},
 	'/page/login': {file: 'login.html' , script: null},
+	'/page/playing': {file: 'playing.html', script: null}
 }
 
 function router() {
 	const path = window.location.pathname;
 	const content = routes[path];
+
+	if (path !== '/page/playing' && global.gameCancelFunction != null) {
+		global.gameCancelFunction();
+	}
 
 	if (content) {
 		console.log('router.js : router() : changing page.', '\n',
@@ -37,7 +42,7 @@ function router() {
 	}
 }
 
-function navigateTo(url){
+export function navigateTo(url){
 	window.history.pushState(null, null, url);
 	router();
 }
