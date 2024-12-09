@@ -17,29 +17,26 @@ services:
       - nginx-network
       - db-network
 
-  # Le service users_management en l'état n'utilise pas encore daphne ni postgres
-  #TODO disabled temporarily to allow project to run
-  # users:
-  #   build:
-  #     context: ./users
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "8000:8000"
-  #   volumes:
-  #     - ./media:/media
-  #     - ./users:/code
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     auth-service:
-  #       condition: service_started
-  #   env_file:
-  #     - ./users/.env
-  #   restart: on-failure
-  #   networks:
-  #     - db-network
-  #     - nginx-network
-
+  users:
+    build:
+      context: ./users
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./media:/media
+      - ./users:/code
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    env_file:
+      - ./users/.env
+    restart: on-failure
+    networks:
+      - db-network
+      - nginx-network
 
   chat:
     container_name: chat
@@ -47,7 +44,7 @@ services:
       context: chat
       dockerfile: Dockerfile
     env_file:
-      - .env
+      - ./chat/.env
     volumes:
       - ./chat/:/code
     depends_on:
@@ -116,7 +113,7 @@ services:
       context: nginx
       dockerfile: Dockerfile
     depends_on:
-      # - users #TODO disabled temporarily to allow project to run
+      - users
       - gateway
       - matchmaking
       - pong
@@ -133,7 +130,7 @@ services:
       context: _Pong
       dockerfile: Dockerfile
     env_file:
-      - .env
+      - ./_Pong/.env
     volumes:
       - ./_Pong/:/code
     depends_on:
