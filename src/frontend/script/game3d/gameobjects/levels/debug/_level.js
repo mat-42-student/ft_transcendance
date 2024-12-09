@@ -32,6 +32,7 @@ export default class LevelDebug extends LevelBase {
 		engine.cameraTarget.teleportNow = true;
 		engine.cameraTarget.mousePositionMultiplier.set(0.1, 0.1);
 		engine.cameraTarget.mouseRotationMultiplier.set(0.1, 0.1);
+		engine.cameraTarget.smoothSpeed = 15;
 
 		// global.game.focusedPlayerIndex = 'neutral';  // Forced camera choice
 

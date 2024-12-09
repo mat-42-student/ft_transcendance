@@ -11,18 +11,23 @@ import global from 'global';
 
 
 let routes = {
-	//FIXME this probably shouldn't load index.html recursively...
-	'/index.html': {file: 'index.html', script: null},
-	'/home':        {file: 'matchmaking.html', script: ['./script/matchmaking.js','wsgame.js']},
-	'/matchmaking': {file: 'matchmaking.html', script: ['./script/matchmaking.js','wsgame.js']},
-	'/chat': {file: 'chat.html', script: null},
-	'/profile': {file: 'profile.html', script: null},
-	'/login': {file: 'login.html' , script: null},
+	//FIXME this probably shouldn't load index.html recursively... also why is this a separate route than /home
+	'/page/index.html': {file: 'index.html', script: null},
+	// '/page/home': {file: null, script: null}, //TODO run CPU game directly?
+	'/page/matchmaking': {file: 'matchmaking.html', script: null},
+	'/page/chat': {file: 'chat.html', script: null},
+	'/page/profile': {file: 'profile.html', script: null},
+	'/page/login': {file: 'login.html' , script: null},
+	'/page/playing': {file: 'playing.html', script: null}
 }
 
 function router() {
 	const path = window.location.pathname;
 	const content = routes[path];
+
+	if (path !== '/page/playing' && global.gameCancelFunction != null) {
+		global.gameCancelFunction();
+	}
 
 	if (content) {
 		console.log('router.js : router() : changing page.', '\n',
@@ -32,11 +37,12 @@ function router() {
 		);
 		global.inject_code_into_markup(content.file, 'section', content.script);
 	} else {
+		//TODO this should probably be handled with a 404 page.
 		console.warn('router.js : router() : changing page, but the URL is unknown.');
 	}
 }
 
-function navigateTo(url){
+export function navigateTo(url){
 	window.history.pushState(null, null, url);
 	router();
 }

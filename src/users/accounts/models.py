@@ -19,6 +19,9 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(username, password, **extra_fields)
+    
+    class Meta:
+        db_table = 'accounts1'
 
 
 # User model (inherits Django user model)
@@ -71,6 +74,9 @@ class User(AbstractBaseUser):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['password']
 
+    class Meta:
+        db_table = 'accounts2'
+
     def __str__(self):
         return self.username
     
@@ -91,6 +97,7 @@ class BlockedUser(models.Model):
     blocked_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        db_table = 'accounts3'
         unique_together = ('from_user', 'to_user')
 
 
@@ -124,6 +131,7 @@ class Relationship(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        db_table = 'accounts4'
         unique_together = ('from_user', 'to_user')
 
     def clean(self):

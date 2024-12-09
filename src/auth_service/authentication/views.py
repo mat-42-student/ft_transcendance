@@ -13,6 +13,7 @@ from urllib.parse import urlencode
 import jwt
 import datetime
 import requests
+from django.http import JsonResponse
 
 class SignUpView(APIView):
     renderer_classes = [JSONRenderer]
@@ -253,4 +254,3 @@ class OAuthCallbackView(APIView):
             return Response({"access_token": access_token, "refresh_token": refresh_token}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Failed to obtain access token"}, status=status.HTTP_400_BAD_REQUEST)
-

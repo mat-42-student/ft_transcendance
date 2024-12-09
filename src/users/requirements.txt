@@ -30,3 +30,5 @@ txaio==23.1.1
 typing_extensions==4.12.2
 urllib3==2.2.3
 zope.interface==7.1.0
+psycopg2-binary==2.9.10
+gunicorn==23.0.0
