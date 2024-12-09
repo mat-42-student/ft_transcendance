@@ -42,17 +42,18 @@ export default class LevelTest extends LevelBase {
 		{
 			const loader = new THREE.CubeTextureLoader();
 
-			//FIXME this doesnt appear to do anything
-			loader.setPath( '/ressources/3d/tex/test_cubemap/',
-				()=>{console.log('Loaded')},
-				()=>{console.log('Progress')},
-				()=>{console.error('Fail')} );
+			loader.setPath( '/ressources/3d/tex/test_cubemap/' );
 
+			//FIXME doesn't find the files
 			this.skybox = loader.load( [
-				'px.png', 'nx.png',
-				'py.png', 'ny.png',
-				'pz.png', 'nz.png'
-			] );
+					'px.png', 'nx.png',
+					'py.png', 'ny.png',
+					'pz.png', 'nz.png'
+				],
+				(tex)=>{console.log('Loaded')},
+				()=>{console.log('Progress')},
+				()=>{console.error('Fail')}
+			);
 		}
 	}
 
