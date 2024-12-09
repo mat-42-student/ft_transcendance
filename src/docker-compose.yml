@@ -18,26 +18,27 @@ services:
       - db-network
 
   # Le service users_management en l'état n'utilise pas encore daphne ni postgres
-  users:
-    build:
-      context: ./users
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./media:/media
-      - ./users:/code
-    depends_on:
-      postgres:
-        condition: service_healthy
-      auth-service:
-        condition: service_started
-    env_file:
-      - ./users/.env
-    restart: on-failure
-    networks:
-      - db-network
-      - nginx-network
+  #TODO disabled temporarily to allow project to run
+  # users:
+  #   build:
+  #     context: ./users
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8000:8000"
+  #   volumes:
+  #     - ./media:/media
+  #     - ./users:/code
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     auth-service:
+  #       condition: service_started
+  #   env_file:
+  #     - ./users/.env
+  #   restart: on-failure
+  #   networks:
+  #     - db-network
+  #     - nginx-network
 
 
   chat:
@@ -115,7 +116,7 @@ services:
       context: nginx
       dockerfile: Dockerfile
     depends_on:
-      - users
+      # - users #TODO disabled temporarily to allow project to run
       - gateway
       - matchmaking
       - pong
