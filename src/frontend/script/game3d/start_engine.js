@@ -11,10 +11,10 @@ engine.initialize();
 {  // Environment setup
 	engine.environmentScene.background = new THREE.Color("#000000");
 	engine.cameraTarget.position.y = 1.42535353443;
-	const deg90AsRad = THREE.MathUtils.degToRad(90);
+	engine.cameraTarget.smoothSpeed = 1;
 
-	const q1 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -deg90AsRad);
-	const q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), 2*deg90AsRad);
+	const q1 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -global._90);
+	const q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), 2*global._90);
 	engine.cameraTarget.quaternion = q1.multiply(q2);
 }
 
