@@ -7,7 +7,7 @@ from asyncio import run as arun, sleep as asleep, create_task
 # from models import User, BlockedUser
 
 class Command(BaseCommand):
-    help = "Listen to 'deep_social' pub/sub redis channel"
+    help = "Async pub/sub redis worker. Listens 'deep_social' channel"
 
     def handle(self, *args, **kwargs):
         signal(SIGINT, self.signal_handler)
@@ -16,6 +16,7 @@ class Command(BaseCommand):
 
     async def main(self):
         self.running = True
+        self.user_status = {}
         try:
             self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
@@ -25,6 +26,7 @@ class Command(BaseCommand):
             self.listen_task = create_task(self.listen())
             while self.running:
                 await asleep(1)
+                # await self.ping_users() # check status of all users every 30 sec
         except  Exception as e:
             print(e)
         finally:
@@ -33,34 +35,63 @@ class Command(BaseCommand):
     async def listen(self):
         print(f"Listening for messages...")
         async for msg in self.pubsub.listen():
-            if msg.get('data') :
+            if msg:
                 try:
-                    data = json.loads(msg["data"])
-                    if data['header']['service'] == 'social':
+                    data = json.loads(msg['data'])
+                    if self.valid_social_json(data):
                         await self.process_message(data)
                 except Exception as e:
                     print(e)
 
-    def valid_json_body(self, data):
-        if data['header']['to'] != 'back':
+    def valid_social_json(self, data):
+        if data['header']['dest'] != 'back' or data['header']['service'] != 'social':
             return False
         data = data.get('body')
-        if not isinstance(data, dict):
-            return False
-        if "status" not in data:
+        if not isinstance(data, dict) or "status" not in data:
             return False
         return True
 
     async def process_message(self, data):
-        if not self.valid_json_body(data):
-            return
-        data['header']['side'] = 'front' # data destination after deep processing
-        data['body']['friends'] = self.get_user_friends(data['header']['id'])
+        data['header']['dest'] = 'front' # data destination after deep processing
+        user_id = data['header']['id']
+        self.user_status[user_id] = data['body']['status']
+        friends = self.get_friend_list(user_id)
+        for friend in friends:
+            if self.user_status[friend] != 'offline':
+                self.send_status(user_id, friend)
+                await self.redis_client.publish(self.group_name, json.dumps(data))
+
         print(f"Publishing : {data}")
         await self.redis_client.publish(self.group_name, json.dumps(data))
 
-    def recipient_exists(self, user):
-        return True
+    def get_friend_list(self, user_id):
+        """Request friendlist from database"""
+        pass
+
+    async def send_status(self, user_id, friend):
+        """publish status of 'user_id' and adress it to 'friend'"""
+        data = {
+            "header": {
+                "service": "social",
+                "dest": "front",
+                "id": friend
+            },
+            "body":{
+                "user": user_id,
+                "status": self.user_status[user_id]
+            }
+        }
+        await self.redis_client.publish(self.group_name, json.dumps(data))
+
+    # async def ping_users(self):
+    #     data = {"header": {
+    #         "service": "ping",
+    #         "dest": "front",
+    #         }
+    #     }
+    #     for id, status in self.user_status.items():
+    #         data['header']['id'] = id
+    #         await self.redis_client.publish(self.group_name, json.dumps(data))
 
     def signal_handler(self):
         self.running = False
@@ -68,7 +99,7 @@ class Command(BaseCommand):
             self.listen_task.cancel()
         except Exception as e:
             print(e)
-        
+
     async def cleanup(self):
         print("Cleaning up Redis connections...")
         if self.pubsub:
