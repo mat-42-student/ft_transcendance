@@ -108,6 +108,21 @@ export default {
 		// return outMin + (outMax - outMin) * (input - inMin) / (inMax - inMin);
 		return outMin + (input - inMin) / (inMax - inMin) * (outMax - outMin);
 	},
+
+
+	makeLookDownQuaternion(yawDegrees, pitchDegrees) {
+		const q_yaw = new THREE.Quaternion().setFromAxisAngle(
+			new THREE.Vector3(0, 1, 0),
+			THREE.MathUtils.degToRad(yawDegrees)
+		);
+
+		const q_pitch = new THREE.Quaternion().setFromAxisAngle(
+			new THREE.Vector3(1, 0, 0),
+			THREE.MathUtils.degToRad(-pitchDegrees)
+		);
+
+		return q_yaw.multiply(q_pitch);
+	},
 }
 
 

@@ -25,6 +25,7 @@ function router() {
 	const path = window.location.pathname;
 	const content = routes[path];
 
+	//FIXME this can probably cause engine.loading to be stuck on
 	if (path !== '/page/playing' && global.gameCancelFunction != null) {
 		global.gameCancelFunction();
 	}
