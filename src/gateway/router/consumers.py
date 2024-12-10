@@ -4,25 +4,32 @@ from json import dumps, loads
 from channels.generic.websocket import AsyncJsonWebsocketConsumer # type: ignore
 from redis.asyncio import from_url
 from asyncio import create_task
-from .consts import REDIS_GROUPS #, API_GROUPS
+from .consts import REDIS_GROUPS
+from datetime import datetime, timezone
+from urllib.parse import parse_qs
+import jwt
+# from jwt import ExpiredSignatureError, InvalidTokenError
 
 class GatewayConsumer(AsyncJsonWebsocketConsumer):
     """Main websocket"""
 
     async def connect(self):
-        await self.accept()
-        try:
-            await self.connect_to_redis()
-            print("GatewayConsumer accepted incoming websocket")
-        except Exception as e:
-            print(f"Connection to redis error : {e}")
+        self.public_key = "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnvGKZgRN72lJMBIMq8MtxHTjKzJV/3WpHj52TiVYhD43Z+Z720BH257gqBni5Vpsph96EhBHmiDqDuJKr1x5KWz1tDG2A8RQszEPfpryTRXZKnv33wMfLo+h9qo6yXvh8BT9It/zk5mNoqugTmH+oBo7qr8emuBFXXoHIPF+AhcCpFoSETuTBe3ufAlT8v2LjKdw/NDzxm3KBd7s/3nA/+euQ97gWB1ZlwHFC9gb0e5zCW6Clh7YCPEQ1OJ/YmzUsowVObQYqrPh0SLuv1qmUqLdFdEYr1wO0jYPiZeDP6Hf8oH2s6dVoczMWvQvqr10xc9TPCefefPNE2lqpH2IrQIDAQAB-----END PUBLIC KEY-----"
+        params = parse_qs(self.scope['query_string'].decode())
+        self.token = params.get('access_token', [None])[0]
         self.consumer_id = self.get_user_id()
-        self.consumer_id = 'bob' # bypass failing authentication for now
+        # self.consumer_id = 'bob' # bypass failing authentication for now
         if self.consumer_id is None:
             print("User is not authenticated. Aborting")
             await self.close()
-        else:
-            print(f"User is authenticated as {self.consumer_id}")
+        print("GatewayConsumer accepted incoming websocket")
+        await self.accept()
+        print(f"User is authenticated as {self.consumer_id}")
+        await self.send_online_status('online')
+        try:
+            await self.connect_to_redis()
+        except Exception as e:
+            print(f"Connection to redis error : {e}")
 
     async def connect_to_redis(self):
         try:
@@ -35,6 +42,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             raise Exception
 
     async def disconnect(self, close_code):
+        await self.send_online_status('offline')
         await self.pubsub.unsubscribe() # unsubscribe all channels
         await self.pubsub.close()
         await self.redis_client.close()
@@ -48,27 +56,21 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             return None
 
     def checkAuth(self):
-        pass
-        # response = requests.get("http://auth-service:8000/api/auth/ping")
-        # if response.status_code == 200:
-        #     try:
-        #         data = response.json()
-        #         return data.get('id')
-        #     except ValueError as e:
-        #         print("Erreur lors de la conversion en JSON :", e)
-        # else:
-        #     print(f"Requête échouée avec le statut {response.status_code}")
-        # return None
+        try:
+            payload = jwt.decode(self.token, self.public_key, algorithms=["RS256"])
+            return payload
+        except Exception as e:
+            print(e)
+        return None
 
     def valid_json_header(self, data):
         if not isinstance(data, dict):
             return False
         if "header" not in data or "body" not in data:
             return False
-        data = data['header']
-        if not isinstance(data, dict):
+        if not isinstance(data['header'], dict):
             return False
-        if "from" not in data or "to" not in data or "id" not in data:
+        if "service" not in data['header']:
             return False
         return True
 
@@ -76,8 +78,9 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         """Listen redis to send data back to appropriate client"""
         async for message in self.pubsub.listen():
             data = loads(message['data'])
-            if data['header']['side'] == 'front' and data['header']['id'] == self.consumer_id:
+            if data['header']['id'] == self.consumer_id and data['header']['dest'] == 'front':
                 try:
+                    print(f"Sending: {data}")
                     await self.send_json(data)
                 except Exception as e:
                     print(f"Send error : {e}")
@@ -85,14 +88,14 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, data):
         """data incoming from client ws -> publish to concerned redis group\n
         possible 'to' values are 'auth', 'user', 'mmaking', 'chat', 'social'"""
-        # Testing global structure of data
         if not self.valid_json_header(data):
             print(f"Data error (json) : {data}")
             return
-        data['header']['side'] = 'back'
-        data['body']['id'] = self.consumer_id
-        group = REDIS_GROUPS.get(data['header']['to'])
-        if group is not None:
+        group = REDIS_GROUPS.get(data['header']['service'])
+        if group:
+            data['header']['dest'] = 'back'
+            data['header']['id'] = self.consumer_id
+            data['body']['timestamp'] = datetime.now(timezone.utc).isoformat()
             await self.forward_with_redis(data, group)
             return
         print("Unknown recipient, message lost")
@@ -103,6 +106,20 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 await self.redis_client.publish(group, dumps(data))
             except Exception as e:
                 print(f"Publish error : {e}")
+
+    async def send_online_status(self, status):
+        data = {
+            "header": {
+                "service": "social",
+                "dest": "back",
+                "id": self.consumer_id
+            },
+            "body":{
+                "status": status
+            }
+        }
+        print(f"Sending data to deep_social: {data}")
+        await self.redis_client.publish("deep_social", dumps(data))
 
     # try:
     #     response = requests.get("http://matchmaking:8000/api/test/")
