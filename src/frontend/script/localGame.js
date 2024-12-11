@@ -90,7 +90,8 @@ export async function startLocalGame(isCPU) {
         gg.focusedPlayerIndex = isCPU ? 0 : -1;
     }
 
-    engine.loading = false;
+    //TODO wait for level to finish loading before continuing
+    // engine.loading = false;
     newRound();
     global.gameCancelFunction = () => {
         endgame(true);

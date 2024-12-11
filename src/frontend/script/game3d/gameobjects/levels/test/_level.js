@@ -8,6 +8,8 @@ export default class LevelTest extends LevelBase {
 	constructor() {
 		super();
 
+		engine.loading = true;
+
 		// throw "TODO: wip"
 
 		this.loadAssets();
@@ -18,9 +20,9 @@ export default class LevelTest extends LevelBase {
 
 		this.boardDiagonal = 30;
 
-		engine.cameraTarget.diagonal = 40;
 		this.cameras = __makeCameraAngles();
 
+		engine.cameraTarget.diagonal = 40;
 		engine.cameraTarget.teleportNow = true;
 		engine.cameraTarget.mousePositionMultiplier.set(0.1, 0.1);
 		engine.cameraTarget.mouseRotationMultiplier.set(3, 3);
