@@ -9,6 +9,15 @@ function launchMainSocket(token) {
     };
 
     mainSocket.onopen = async function(e) {
+        await mainSocket.send(JSON.stringify({
+            'header': {
+                'service': 'chat',
+            },
+            'body': {
+                'to':'toto34',
+                'message': 'YO !!',
+            }
+}));
     };
 
     mainSocket.onclose = async function(e) { 
@@ -91,12 +100,3 @@ function auth(username) {
     });
 }
 
-// await mainSocket.send(JSON.stringify({
-//     'header': {
-//         'service': 'chat',
-//     },
-//     'body': {
-//         'to':'bob',
-//         'message': 'YO !!',
-//     }
-// }));

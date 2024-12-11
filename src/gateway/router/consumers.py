@@ -14,22 +14,23 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
     """Main websocket"""
 
     async def connect(self):
-        self.public_key = "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnvGKZgRN72lJMBIMq8MtxHTjKzJV/3WpHj52TiVYhD43Z+Z720BH257gqBni5Vpsph96EhBHmiDqDuJKr1x5KWz1tDG2A8RQszEPfpryTRXZKnv33wMfLo+h9qo6yXvh8BT9It/zk5mNoqugTmH+oBo7qr8emuBFXXoHIPF+AhcCpFoSETuTBe3ufAlT8v2LjKdw/NDzxm3KBd7s/3nA/+euQ97gWB1ZlwHFC9gb0e5zCW6Clh7YCPEQ1OJ/YmzUsowVObQYqrPh0SLuv1qmUqLdFdEYr1wO0jYPiZeDP6Hf8oH2s6dVoczMWvQvqr10xc9TPCefefPNE2lqpH2IrQIDAQAB-----END PUBLIC KEY-----"
-        params = parse_qs(self.scope['query_string'].decode())
-        self.token = params.get('access_token', [None])[0]
-        self.consumer_id = self.get_user_id()
-        # self.consumer_id = 'bob' # bypass failing authentication for now
+        self.connected = False
+        if self.checkAuth():
+            self.consumer_id = self.get_user_id()
         if self.consumer_id is None:
             print("User is not authenticated. Aborting")
-            await self.close()
-        print("GatewayConsumer accepted incoming websocket")
-        await self.accept()
+            self.close()
+        try:
+            await self.accept()
+            self.connected = True
+        except Exception as e:
+            print(e)
         print(f"User is authenticated as {self.consumer_id}")
-        await self.send_online_status('online')
         try:
             await self.connect_to_redis()
         except Exception as e:
             print(f"Connection to redis error : {e}")
+        await self.send_online_status('online')
 
     async def connect_to_redis(self):
         try:
@@ -42,6 +43,8 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             raise Exception
 
     async def disconnect(self, close_code):
+        if not self.connected:
+            return
         await self.send_online_status('offline')
         await self.pubsub.unsubscribe() # unsubscribe all channels
         await self.pubsub.close()
@@ -56,10 +59,15 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             return None
 
     def checkAuth(self):
+        self.public_key = "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnvGKZgRN72lJMBIMq8MtxHTjKzJV/3WpHj52TiVYhD43Z+Z720BH257gqBni5Vpsph96EhBHmiDqDuJKr1x5KWz1tDG2A8RQszEPfpryTRXZKnv33wMfLo+h9qo6yXvh8BT9It/zk5mNoqugTmH+oBo7qr8emuBFXXoHIPF+AhcCpFoSETuTBe3ufAlT8v2LjKdw/NDzxm3KBd7s/3nA/+euQ97gWB1ZlwHFC9gb0e5zCW6Clh7YCPEQ1OJ/YmzUsowVObQYqrPh0SLuv1qmUqLdFdEYr1wO0jYPiZeDP6Hf8oH2s6dVoczMWvQvqr10xc9TPCefefPNE2lqpH2IrQIDAQAB-----END PUBLIC KEY-----"
+        params = parse_qs(self.scope['query_string'].decode())
+        self.token = params.get('access_token', [None])[0]
         try:
-            payload = jwt.decode(self.token, self.public_key, algorithms=["RS256"])
+            payload = jwt.decode(self.token, self.public_key, algorithms=['RS256'])
             return payload
-        except Exception as e:
+        except jwt.ExpiredSignatureError as e:
+            print(e)
+        except jwt.InvalidTokenError as e:
             print(e)
         return None
 
