@@ -23,7 +23,7 @@ export default class LevelTest extends LevelBase {
 
 		engine.cameraTarget.teleportNow = true;
 		engine.cameraTarget.mousePositionMultiplier.set(0.1, 0.1);
-		engine.cameraTarget.mouseRotationMultiplier.set(0.1, 0.1);
+		engine.cameraTarget.mouseRotationMultiplier.set(3, 3);
 		engine.cameraTarget.smoothSpeed = 15;
 
 		this.addGameobjects();
@@ -39,26 +39,37 @@ export default class LevelTest extends LevelBase {
 
 
 	loadAssets() {
+		this.loadingCounter = 0;
+
 		{
 			const loader = new THREE.CubeTextureLoader();
 
 			loader.setPath( '/ressources/3d/tex/test_cubemap/' );
 
-			//FIXME doesn't find the files
+			this.loadingCounter++;
 			this.skybox = loader.load( [
-					'px.png', 'nx.png',
-					'py.png', 'ny.png',
-					'pz.png', 'nz.png'
+					'px.jpg', 'nx.jpg',
+					'py.jpg', 'ny.jpg',
+					'pz.jpg', 'nz.jpg'
 				],
-				(tex)=>{console.log('Loaded')},
-				()=>{console.log('Progress')},
-				()=>{console.error('Fail')}
+				this.loadCompleteCallback,
+				null,
+				()=>{console.error('Fail')}  //TODO there needs to be a way to cancel the game. also, timeout?
 			);
 		}
 	}
 
 	addGameobjects() {
 		//TODO
+	}
+
+	loadCompleteCallback = this.loadComplete.bind(this);
+	loadComplete() {
+		this.loadingCounter--;
+		if (this.loadingCounter <= 0) {
+			engine.loading = false;
+			//TODO signal readyness to server or local game, to allow the game to start only then
+		}
 	}
 
 }
