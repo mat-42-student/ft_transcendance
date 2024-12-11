@@ -1,21 +1,21 @@
 POST https://localhost:3000/api/auth/signup
 Content-Type: application/json
 
-{"username": "tom", "email": "tom@mail.fr", "password": "tom"}
+{"username": "test3", "email": "test3@mail.fr", "password": "test3"}
 
 ###
 
 POST https://localhost:3000/api/auth/login
 Content-Type: application/json
 
-{"email": "tom@mail.fr", "password": "tom"}
+{"email": "test3@mail.fr", "password": "test3"}
 
 ###
 
 POST https://localhost:3000/api/auth/refresh
 Content-Type: application/json
 
-{"email": "tom@mail.fr"}
+{"email": "test1@mail.fr"}
 
 ###
 
