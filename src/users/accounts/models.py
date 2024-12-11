@@ -3,6 +3,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
+import random
+import datetime
 
 
 # User model manager
@@ -20,10 +22,6 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(username, password, **extra_fields)
     
-    class Meta:
-        db_table = 'accounts1'
-
-
 # User model (inherits Django user model)
 class User(AbstractBaseUser):
     STATUS_CHOICES = [
@@ -42,10 +40,10 @@ class User(AbstractBaseUser):
         validators=[MinLengthValidator(5)]
     )
     email = models.EmailField(
-        max_length=254,  # Longueur standard pour les emails
-        blank=True,      # Champ non obligatoire pour le moment
-        null=True,       # Permet de stocker NULL dans la base si le champ est vide
-        unique=True,     # Pour assurer l'unicité
+        max_length=254,
+        blank=True,
+        null=True,
+        unique=True,
     )
     avatar = models.ImageField(
         upload_to="avatars/", 
@@ -63,6 +61,18 @@ class User(AbstractBaseUser):
         related_name='blocked_by',
         through='BlockedUser'
     )
+    otp = models.CharField(
+        max_length=6,
+        null=True,
+        blank=True
+    )
+    otp_expiry_time = models.DateTimeField(
+        blank=True,
+        null=True
+    )
+    is_2fa_enabled = models.BooleanField(
+        default=False
+    )
     
     # Champs d'authentification standard de Django
     is_active = models.BooleanField(default=True)
@@ -74,8 +84,13 @@ class User(AbstractBaseUser):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['password']
 
-    class Meta:
-        db_table = 'accounts2'
+    def generate_otp(self):
+            self.otp = str(random.randint(100000, 999999))
+            self.otp_expiry_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1)
+            self.save()
+
+    def is_otp_expired(self):
+            return self.otp_expiry_time and datetime.datetime.now(datetime.timezone.utc) > self.otp_expiry_time
 
     def __str__(self):
         return self.username
@@ -97,9 +112,7 @@ class BlockedUser(models.Model):
     blocked_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'accounts3'
         unique_together = ('from_user', 'to_user')
-
 
 # Relationship model
 class Relationship(models.Model):
@@ -131,7 +144,6 @@ class Relationship(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'accounts4'
         unique_together = ('from_user', 'to_user')
 
     def clean(self):

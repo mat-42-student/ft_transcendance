@@ -9,6 +9,10 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import AuthenticationFailed
+from .models import User
+import hashlib
+from .authentication import CustomAuthentication
 
 from .models import User, Relationship
 from .serializers import (
@@ -18,50 +22,37 @@ from .serializers import (
     UserBlockedSerializer, 
     UserUpdateSerializer, 
     UserRegistrationSerializer, 
-    UserLoginSerializer, 
     RelationshipSerializer
 )
 
+class VerifyView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
 
-# User registration APIView
+        if not email or not password:
+            return Response({"status": "failure", "message": "Email and password are required!"}, status=400)
+
+        user = User.objects.filter(email=email).first()
+
+        if user is None or not self.check_password(user, password):
+            return Response({"status": "failure", "message": "Invalid email or password!"}, status=401)
+
+        return Response({"status": "success"})
+
+    def check_password(self, user, password):
+        return hashlib.checkpw(password.encode('utf-8'), user.password.encode('utf-8'))
+
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            print(user)
-            user.refresh_from_db() # Rafraîchir l'objet utilisateur pour s'assurer que toutes les données sont chargées
-            print(user.__class__)
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }, status=status.HTTP_201_CREATED)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-# User login APIView
-class UserLoginView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serializer = UserLoginSerializer(data=request.data)
-        if serializer.is_valid():
-            print("Utilisateur existe et identifiants correctes")
-            username = serializer.validated_data['username'] # Obtenir l'utilisateur à partir du serializer
-            user = User.objects.get(username=username)
-
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }, status=status.HTTP_200_OK)
-        return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-
-# User ViewSet
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
 
@@ -69,7 +60,7 @@ class UserViewSet(viewsets.ModelViewSet):
         """Définit les permissions pour chaque action."""
         if self.action in ['list', 'retrieve']:
             return [AllowAny()]
-        return [IsAuthenticated()]  # Authentification requise pour toutes les autres actions
+        return [CustomAuthentication()]  # Authentification requise pour toutes les autres actions
 
     def get_serializer_class(self):
         """Définit le serializer selon l'action."""
@@ -121,7 +112,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated], url_path='block')
+    @action(detail=True, methods=['post'], permission_classes=[CustomAuthentication], url_path='block')
     def block_user(self, request, pk=None):
         """Bloquer un utilisateur."""
         try:
@@ -140,7 +131,7 @@ class UserViewSet(viewsets.ModelViewSet):
         except User.DoesNotExist:
             return Response({"detail": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
 
-    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated], url_path='unblock')
+    @action(detail=True, methods=['delete'], permission_classes=[CustomAuthentication], url_path='unblock')
     def unblock_user(self, request, pk=None):
         """Débloquer un utilisateur."""
         try:
@@ -158,7 +149,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 # Relationship ViewSet
 class RelationshipViewSet(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [CustomAuthentication]
 
     @action(detail=False, methods=['get'], url_path='my-relationships')
     def get_user_relationships(self, request):

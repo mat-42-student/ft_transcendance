@@ -19,6 +19,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")
+JWT_ALGORITHM = 'RS256'
+
 
 # Application definition
 
@@ -74,10 +77,10 @@ WSGI_APPLICATION = 'users.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'transcendance',
-        'USER': 'toto',
-        'PASSWORD': 'test',
-        'HOST': 'postgres',
+        'NAME': 'users_db',
+        'USER': 'bob',
+        'PASSWORD': 'password',
+        'HOST': 'users-db',
         'PORT': '5432',
     }
 }
@@ -128,22 +131,23 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'auth.custom_authentication.CustomAuthentication',
+        # 'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=20),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-}
+# SIMPLE_JWT = {
+#     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+#     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+#     'ROTATE_REFRESH_TOKENS': False,
+#     'BLACKLIST_AFTER_ROTATION': True,
+#     'ALGORITHM': 'RS256',
+#     'SIGNING_KEY': SECRET_KEY,
+#     'AUTH_HEADER_TYPES': ('Bearer',),
+# }
 
 AUTH_USER_MODEL = 'accounts.User'  # Remplace 'accounts' par le nom de ton app si nécessaire
 

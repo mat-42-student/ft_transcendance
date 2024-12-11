@@ -1,4 +1,28 @@
 services:
+  auth-db:
+    container_name: auth-db
+    image: postgres
+    expose:
+      - "5432"
+    volumes:
+        - auth_db_data:/var/lib/postgresql/data
+    env_file:
+      - ./auth_service/.env
+    networks:
+      - db-network
+
+  users-db:
+    container_name: users-db
+    image: postgres
+    expose:
+      - "5432"
+    volumes:
+      - users_db_data:/var/lib/postgresql/data
+    env_file:
+      - ./users/.env
+    networks:
+      - db-network
+
   auth-service:
     build:
       context: ./auth_service
@@ -38,74 +62,74 @@ services:
       - db-network
       - nginx-network
 
-  chat:
-    container_name: chat
-    build:
-      context: chat
-      dockerfile: Dockerfile
-    env_file:
-      - ./chat/.env
-    volumes:
-      - ./chat/:/code
-    depends_on:
-      - matchmaking
-    networks:
-      - db-network
-      - redis-network
+  # chat:
+  #   container_name: chat
+  #   build:
+  #     context: chat
+  #     dockerfile: Dockerfile
+  #   env_file:
+  #     - ./chat/.env
+  #   volumes:
+  #     - ./chat/:/code
+  #   depends_on:
+  #     - matchmaking
+  #   networks:
+  #     - db-network
+  #     - redis-network
 
-  social:
-    container_name: social
-    build:
-      context: social_project
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    volumes:
-      - ./social_project/:/code
-    depends_on:
-      # - auth-service
-      - redis
-    networks:
-      # - db-network
-      - redis-network
+  # social:
+  #   container_name: social
+  #   build:
+  #     context: social_project
+  #     dockerfile: Dockerfile
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - ./social_project/:/code
+  #   depends_on:
+  #     # - auth-service
+  #     - redis
+  #   networks:
+  #     # - db-network
+  #     - redis-network
 
-  gateway:
-    container_name: gateway
-    build:
-      context: gateway
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    volumes:
-      - ./gateway/:/code
-    depends_on:
-      matchmaking:
-        condition: service_started
-    expose:
-      - "8057"
-    networks:
-      - nginx-network
-      - db-network
-      - redis-network
+  # gateway:
+  #   container_name: gateway
+  #   build:
+  #     context: gateway
+  #     dockerfile: Dockerfile
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - ./gateway/:/code
+  #   depends_on:
+  #     matchmaking:
+  #       condition: service_started
+  #   expose:
+  #     - "8057"
+  #   networks:
+  #     - nginx-network
+  #     - db-network
+  #     - redis-network
 
-  matchmaking:
-    container_name: matchmaking
-    build:
-      context: matchmaking
-      dockerfile: Dockerfile
-    env_file:
-      - ./matchmaking/.env
-    volumes:
-      - ./matchmaking:/code
-    depends_on:
-      pong:
-        condition: service_started
-    expose:
-      - "8000" # ??
-    networks:
-      - db-network
-      - redis-network
-      - nginx-network
+  # matchmaking:
+  #   container_name: matchmaking
+  #   build:
+  #     context: matchmaking
+  #     dockerfile: Dockerfile
+  #   env_file:
+  #     - ./matchmaking/.env
+  #   volumes:
+  #     - ./matchmaking:/code
+  #   depends_on:
+  #     pong:
+  #       condition: service_started
+  #   expose:
+  #     - "8000" # ??
+  #   networks:
+  #     - db-network
+  #     - redis-network
+  #     - nginx-network
 
   nginx:
     container_name: nginx
@@ -124,43 +148,43 @@ services:
     networks:
       - nginx-network
 
-  pong:
-    container_name: pong
-    build:
-      context: _Pong
-      dockerfile: Dockerfile
-    env_file:
-      - ./_Pong/.env
-    volumes:
-      - ./_Pong/:/code
-    depends_on:
-      redis:
-        condition: service_started
-      postgres:
-        condition: service_healthy
-    expose:
-      - "8006"
-    networks:
-      - nginx-network
-      - db-network
-      - redis-network
+  # pong:
+  #   container_name: pong
+  #   build:
+  #     context: _Pong
+  #     dockerfile: Dockerfile
+  #   env_file:
+  #     - ./_Pong/.env
+  #   volumes:
+  #     - ./_Pong/:/code
+  #   depends_on:
+  #     redis:
+  #       condition: service_started
+  #     postgres:
+  #       condition: service_healthy
+  #   expose:
+  #     - "8006"
+  #   networks:
+  #     - nginx-network
+  #     - db-network
+  #     - redis-network
 
-  postgres:
-    container_name: postgres
-    image: postgres
-    expose:
-      - "5432"
-    volumes:
-        - postgres_data:/var/lib/postgresql/data
-    env_file:
-      - .env
-    networks:
-      - db-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d transcendance -U toto"]
-      interval: 3s
-      timeout: 2s
-      retries: 5
+  # postgres:
+  #   container_name: postgres
+  #   image: postgres
+  #   expose:
+  #     - "5432"
+  #   volumes:
+  #       - postgres_data:/var/lib/postgresql/data
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - db-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -d transcendance -U toto"]
+  #     interval: 3s
+  #     timeout: 2s
+  #     retries: 5
 
   redis:
     container_name: redis

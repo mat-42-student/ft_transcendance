@@ -3,8 +3,6 @@ from .serializers import UserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.permissions import AllowAny
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework import status
 from django.core.mail import send_mail
@@ -13,17 +11,6 @@ from urllib.parse import urlencode
 import jwt
 import datetime
 import requests
-from django.http import JsonResponse
-
-class SignUpView(APIView):
-    renderer_classes = [JSONRenderer]
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serialiser = UserSerializer(data=request.data)
-        serialiser.is_valid(raise_exception=True)
-        serialiser.save()
-        return Response(serialiser.data)
     
 class LoginView(APIView):
     renderer_classes = [JSONRenderer]
@@ -117,32 +104,6 @@ class RefreshTokenView(APIView):
         new_access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
 
         return Response({'accessToken': new_access_token})
-
-class PingView(APIView):
-    renderer_classes = [JSONRenderer]
-    # permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        auth_header = request.headers.get('Authorization')
-
-        if not auth_header or not auth_header.startswith('Bearer '):
-            raise AuthenticationFailed('Unauthenticated!')
-        
-        access_token = auth_header.split(' ')[1]
-        
-        try:
-            payload = jwt.decode(access_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Access token expired!')
-        except jwt.InvalidTokenError:
-            raise AuthenticationFailed('Invalid access token!')
-        
-        user = CustomUser.objects.filter(id=payload['id']).first()
-        if not user:
-            raise AuthenticationFailed('User not found!')
-        
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
 
 class LogoutView(APIView):
     def post(self, request):

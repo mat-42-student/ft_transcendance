@@ -70,11 +70,11 @@ WSGI_APPLICATION = 'auth_service.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'transcendance',
-        'USER': 'toto',
-        'PASSWORD': 'test',
-        'HOST': 'postgres',
+        'ENGINE': 'django.db.backends.postgres',
+        'NAME': 'auth_db',
+        'USER': 'alice',
+        'PASSWORD': 'password',
+        'HOST': 'auth-db',
         'PORT': '5432',
     }
 }
