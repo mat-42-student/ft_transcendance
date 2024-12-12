@@ -9,7 +9,7 @@ services:
     env_file:
       - ./auth_service/.env
     networks:
-      - db-network
+      - auth-network
 
   users-db:
     container_name: users-db
@@ -21,7 +21,7 @@ services:
     env_file:
       - ./users/.env
     networks:
-      - db-network
+      - users-network
 
   auth-service:
     build:
@@ -39,7 +39,7 @@ services:
     restart: on-failure
     networks:
       - nginx-network
-      - db-network
+      - auth-network
 
   users:
     build:
@@ -59,7 +59,7 @@ services:
       - ./users/.env
     restart: on-failure
     networks:
-      - db-network
+      - users-network
       - nginx-network
 
   # chat:
@@ -199,6 +199,10 @@ volumes:
   media:
 
 networks:
+  auth-network:
+    driver: bridge
+  users-network:
+    driver: bridge
   nginx-network:
     driver: bridge
   db-network:

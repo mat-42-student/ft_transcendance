@@ -28,8 +28,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'status', 'avatar']
-        read_only_fields = ['id', 'username', 'status', 'avatar']
+        fields = ['id', 'username', 'status', 'avatar', 'is_2fa_enabled']
+        read_only_fields = ['id', 'username', 'status', 'avatar', 'is_2fa_enabled']
 
     def get_avatar(self, obj):
         return obj.avatar.name.split('/')[-1] if obj.avatar else "default.png"

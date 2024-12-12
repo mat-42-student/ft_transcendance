@@ -11,52 +11,75 @@ from urllib.parse import urlencode
 import jwt
 import datetime
 import requests
+import random
+import pyotp
     
 class LoginView(APIView):
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
         email = request.data.get('email')
+        username = request.data.get('username')
         password = request.data.get('password')
         otp = request.data.get('otp')
 
-        user = CustomUser.objects.filter(email=email).first()
+        """Credentials check"""
+        payload = {'email': email, 'password': password}
+        r = requests.post('https://localhost:3000/api/v1/users/verify', data=payload)
 
-        if user is None:
+        response_data = r.json()
+        user_id = response_data.get('user_id')
+        if response_data.get('status') != 'success':
             raise AuthenticationFailed('User not found!')
         
-        if not user.check_password(password):
-            raise AuthenticationFailed('Incorrect password!')
-        
-        if user.is_2fa_enabled:
-            if user.is_otp_expired() or not user.otp:
-                user.otp = None
-                user.otp_expiry_time = None
-                user.generate_otp()
+        """Check if 2fa is activated"""
+        r = requests.post(f'https://localhost:3000/api/v1/users/{user_id}')
+        response_data = r.json()
 
-                send_mail(
-                    'Verification Code',
-                    f'Your verification code is: {user.otp}',
-                    'from@example.com',
-                    [email],
-                    fail_silently=False,
-                )
-                return Response({'message': 'OTP sent! Please check your email.'}, status=200)
-            if otp != user.otp:
-                raise AuthenticationFailed('Invalid OTP!')
-            user.otp = None
-            user.save()
+        # if response_data.get('is_2fa_enable') == 'true':
+        #     if user.is_otp_expired() or not user.otp:
+        #         user.otp = None
+        #         user.otp_expiry_time = None
+        #         user.generate_otp()
 
+        #         send_mail(
+        #             'Verification Code',
+        #             f'Your verification code is: {user.otp}',
+        #             'from@example.com',
+        #             [email],
+        #             fail_silently=False,
+        #         )
+        #         return Response({'message': 'OTP sent! Please check your email.'}, status=200)
+        #     if otp != user.otp:
+        #         raise AuthenticationFailed('Invalid OTP!')
+        #     user.otp = None
+        #     user.save()
+
+        if response_data.get('is_2fa_enable') == 'true':
+            if not otp:
+                raise AuthenticationFailed('2FA code is required!')
+
+            # Retrieve TOTP secret for the user
+            totp_secret = response_data.get('totp_secret')  # Ensure this is securely fetched
+
+            if not totp_secret:
+                raise AuthenticationFailed('TOTP secret not found for user!')
+
+            totp = pyotp.TOTP(totp_secret)
+            if not totp.verify(otp):
+                raise AuthenticationFailed('Invalid 2FA code!')
+
+        """Generate tokens"""
         access_payload = {
-            'id': user.id,
-            'username': user.username,
+            'id': user_id,
+            'username': username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=60),
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }
 
         refresh_payload = {
-            'id': user.id,
-            'username': user.username,
+            'id': user_id,
+            'username': username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }

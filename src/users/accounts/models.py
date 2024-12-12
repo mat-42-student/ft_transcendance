@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
 import random
 import datetime
+import pyotp
 
 
 # User model manager
@@ -29,6 +30,19 @@ class User(AbstractBaseUser):
         ('offline', 'Offline'),
         ('in_game', 'In Game'),
     ]
+
+    """TOTP"""
+    totp_secret = models.CharField(max_length=16, null=True, blank=True)
+
+    def generate_totp_secret(self):
+        totp = pyotp.TOTP(pyotp.random_base32())
+        self.totp_secret = totp.secret
+        self.save()
+        return totp.secret
+
+    def get_totp_qr_code_url(self):
+        totp = pyotp.TOTP(self.totp_secret)
+        return totp.provisioning_uri(name=self.username, issuer_name="YourApp")
     
     username = models.CharField(
         max_length=50, 
@@ -61,15 +75,15 @@ class User(AbstractBaseUser):
         related_name='blocked_by',
         through='BlockedUser'
     )
-    otp = models.CharField(
-        max_length=6,
-        null=True,
-        blank=True
-    )
-    otp_expiry_time = models.DateTimeField(
-        blank=True,
-        null=True
-    )
+    # otp = models.CharField(
+    #     max_length=6,
+    #     null=True,
+    #     blank=True
+    # )
+    # otp_expiry_time = models.DateTimeField(
+    #     blank=True,
+    #     null=True
+    # )
     is_2fa_enabled = models.BooleanField(
         default=False
     )
@@ -83,14 +97,6 @@ class User(AbstractBaseUser):
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['password']
-
-    def generate_otp(self):
-            self.otp = str(random.randint(100000, 999999))
-            self.otp_expiry_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1)
-            self.save()
-
-    def is_otp_expired(self):
-            return self.otp_expiry_time and datetime.datetime.now(datetime.timezone.utc) > self.otp_expiry_time
 
     def __str__(self):
         return self.username

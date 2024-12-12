@@ -25,6 +25,23 @@ from .serializers import (
     RelationshipSerializer
 )
 
+class Enable2FAView(APIView):
+    permission_classes = [CustomAuthentication]
+
+    def post(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+            totp_secret = user.generate_totp_secret()
+            qr_code_url = user.get_totp_qr_code_url()
+
+            return Response({
+                "totp_secret": totp_secret,
+                "qr_code_url": qr_code_url
+            }, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
 class VerifyView(APIView):
     def post(self, request):
         email = request.data.get('email')
@@ -36,9 +53,15 @@ class VerifyView(APIView):
         user = User.objects.filter(email=email).first()
 
         if user is None or not self.check_password(user, password):
-            return Response({"status": "failure", "message": "Invalid email or password!"}, status=401)
+            return Response(
+                {"status": "failure", "message": "Invalid email or password!"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
-        return Response({"status": "success"})
+        return Response(
+            {"status": "success", "user_id": user.id},
+            status=status.HTTP_200_OK,
+        )
 
     def check_password(self, user, password):
         return hashlib.checkpw(password.encode('utf-8'), user.password.encode('utf-8'))
