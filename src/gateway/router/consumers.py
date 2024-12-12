@@ -16,7 +16,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.connected = False
         if self.checkAuth():
-            self.consumer_id = self.get_user_id()
+            self.get_user_infos()
         if self.consumer_id is None:
             print("User is not authenticated. Aborting")
             self.close()
@@ -25,7 +25,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             self.connected = True
         except Exception as e:
             print(e)
-        print(f"User is authenticated as {self.consumer_id}")
+        print(f"User {self.consumer_id} is authenticated as {self.consumer_name}")
         try:
             await self.connect_to_redis()
         except Exception as e:
@@ -51,10 +51,11 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         await self.redis_client.close()
         self.listen_task.cancel()
 
-    def get_user_id(self):
+    def get_user_infos(self):
         data = self.checkAuth()
         if data:
-            return data.get('id')
+            self.consumer_id =  data.get('id')
+            self.consumer_name = data.get('username')
         else:
             return None
 
@@ -86,12 +87,15 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         """Listen redis to send data back to appropriate client"""
         async for message in self.pubsub.listen():
             data = loads(message['data'])
-            if data['header']['id'] == self.consumer_id and data['header']['dest'] == 'front':
+            if self.right_consumer(data['header']['id']) and data['header']['dest'] == 'front':
                 try:
                     print(f"Sending: {data}")
                     await self.send_json(data)
                 except Exception as e:
                     print(f"Send error : {e}")
+
+    def right_consumer(self, id):
+        return (id == self.consumer_name or id == self.consumer_id)
 
     async def receive_json(self, data):
         """data incoming from client ws -> publish to concerned redis group\n
@@ -110,7 +114,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
 
     async def forward_with_redis(self, data, group):
             try:
-                print(f"Sending data to {group}")
+                print(f"Sending data to {group}: {data}")
                 await self.redis_client.publish(group, dumps(data))
             except Exception as e:
                 print(f"Publish error : {e}")
