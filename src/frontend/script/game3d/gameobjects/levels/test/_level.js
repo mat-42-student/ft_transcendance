@@ -8,8 +8,6 @@ export default class LevelTest extends LevelBase {
 	constructor() {
 		super();
 
-		engine.loading = true;
-
 		// throw "TODO: wip"
 
 		this.loadAssets();
@@ -50,28 +48,15 @@ export default class LevelTest extends LevelBase {
 
 			this.loadingCounter++;
 			this.skybox = loader.load( [
-					'px.jpg', 'nx.jpg',
-					'py.jpg', 'ny.jpg',
-					'pz.jpg', 'nz.jpg'
-				],
-				this.loadCompleteCallback,
-				null,
-				()=>{console.error('Fail')}  //TODO there needs to be a way to cancel the game. also, timeout?
-			);
+				'px.jpg', 'nx.jpg',
+				'py.jpg', 'ny.jpg',
+				'pz.jpg', 'nz.jpg'
+			]);
 		}
 	}
 
 	addGameobjects() {
 		//TODO
-	}
-
-	loadCompleteCallback = this.loadComplete.bind(this);
-	loadComplete() {
-		this.loadingCounter--;
-		if (this.loadingCounter <= 0) {
-			engine.loading = false;
-			//TODO signal readyness to server or local game, to allow the game to start only then
-		}
 	}
 
 }

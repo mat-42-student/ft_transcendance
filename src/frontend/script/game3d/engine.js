@@ -28,12 +28,22 @@ export default {
 		right: 500, bottom: 500,
 	},
 
+	/** is there active gameplay? or is it paused for any reason */
+	get isRunning() {
+		return (!__isWaitingForGameStart
+			&& __loadingCounter === 0
+			&& !__isConnecting
+			&& !__isPaused
+		);
+	},
 
-	/** Hide or display the loading overlay.
-	 * @param {boolean} newIsLoading */
-	set loading(newIsLoading) {
-		__isLoading = newIsLoading;
-		__html_loading.style.display = __isLoading ? null : 'none';
+	set isWaitingForGameStart(value) {
+		__isWaitingForGameStart = value;
+		const cl = 'waiting-game-start';
+		if (value)
+			__html_loading_text.classList.add(cl);
+		else
+			__html_loading_text.classList.remove(cl);
 	},
 
 
@@ -44,25 +54,31 @@ export default {
 		{  // Setup DOM elements
 			__html_container = document.createElement("div");
 			__html_container.id = "engine";
+			if (engine.DEBUG_MODE) {
+				__html_container.classList.add('debug-mode');
+			}
 			document.body.insertBefore(__html_container, document.body.firstChild);
 
 			__html_canvas = document.createElement("canvas");
 			__html_container.appendChild(__html_canvas);
 
-			__html_loading = document.createElement("div");
-			__html_loading.innerText = 'loading...';
-			__html_loading.id = 'engine-loading';
-			__html_container.appendChild(__html_loading);
-			engine.loading = false;
 
 			__html_debugBox = document.createElement("div");
 			__html_debugBox.classList.add("engine-debug-box");
-			if (engine.DEBUG_MODE !== true) __html_debugBox.style.display = 'none';
 			__html_container.appendChild(__html_debugBox);
 
-			__html_borderVisualizer = document.createElement('div');
-			__html_borderVisualizer.id = 'engine-border-visualizer';
-			__html_container.appendChild(__html_borderVisualizer);
+			__html_borderCopy = document.createElement('div');
+			__html_borderCopy.id = 'engine-border-copy';
+			__html_container.appendChild(__html_borderCopy);
+
+			//TODO wip loading rework (add new stuff)
+			__html_loading_text = document.createElement("div");
+			__html_loading_text.id = 'engine-loading-text';
+			__html_borderCopy.appendChild(__html_loading_text);
+			// Connecting
+			// Loading 3D content
+			// Waiting for other player
+			// Paused? (hidden - but there needs to be a generic 'is running' property that checks everything. And a hidden property for the pre match / game countdown.)
 		}
 
 		{  // Setup ThreeJS
@@ -81,6 +97,11 @@ export default {
 			});
 			__renderer.toneMapping = THREE.ACESFilmicToneMapping;
 			__renderer.toneMappingExposure = 1;
+
+			THREE.DefaultLoadingManager.onLoad = __decreaseLoadingCounter;
+			THREE.DefaultLoadingManager.onError = __decreaseLoadingCounter;
+			THREE.DefaultLoadingManager.onStart = __increaseLoadingCounter;
+			// THREE.DefaultLoadingManager.onProgress = () => {console.log('Default load progress')}  //REVIEW timeout? do the loaders automatically do it by failing?
 
 			engine.clearLevel();
 
@@ -109,7 +130,7 @@ export default {
 	 */
 	render(delta, time) {
 		__updateAutoResolution(delta);
-		if (__isLoading) return;
+		if (__loadingCounter !== 0) return;
 
 		this.isProcessingFrame = true;
 
@@ -134,7 +155,7 @@ export default {
 		{  // Camera system
 			const canvasSize = new THREE.Vector2(__renderer.domElement.clientWidth,
 				__renderer.domElement.clientHeight);
-			__cameraTarget.onFrame(delta, __camera, canvasSize, __html_borderVisualizer);
+			__cameraTarget.onFrame(delta, __camera, canvasSize, __html_borderCopy);
 		}
 
 		__renderer.render(__scene, __camera);
@@ -190,20 +211,24 @@ let __html_canvas;
 let __html_debugBox;
 
 /** @type {HTMLDivElement} */
-let __html_loading;
+let __html_borderCopy;
 
 /** @type {HTMLDivElement} */
-let __html_borderVisualizer;
+let __html_loading_text;
 
 
 /** Pixel density used for auto resolution */
 let __currentRatio = window.devicePixelRatio;
 
 
-let __isLoading = false;
-
 /** @type {PersistentDebug} */
 let __persistentDebug;
+
+/** Number of things that are in the process of loading. */
+let __loadingCounter = 0;
+let __isWaitingForGameStart = false;
+let __isConnecting = false;
+let __isPaused = false;
 
 
 /**
@@ -290,4 +315,24 @@ function __updateAutoResolution(delta) {
 		*/
 	}
 	__renderer.setPixelRatio(__currentRatio);
+}
+
+
+function __decreaseLoadingCounter() {
+	__loadingCounter--;
+	if (__loadingCounter < 0) { __loadingCounter = 0; }  // idk, just in case
+
+	if (__loadingCounter == 0) {
+		//TODO signal load complete?
+		__html_loading_text.classList.remove('loading');
+	}
+}
+
+
+function __increaseLoadingCounter() {
+	if (__loadingCounter == 0) {
+		//TODO signal beginning of loading phase
+		__html_loading_text.classList.add('loading');
+	}
+	__loadingCounter++;
 }

@@ -41,6 +41,10 @@
 	font-family: monospace;
 }
 
+#engine.debug-mode engine-debug-box {
+	display: none;
+}
+
 #engine .engine-debug-box:empty {
 	/* Set engine.DEBUG_MODE=false to fully hide the debug box. */
 	width: 2em;
@@ -68,30 +72,53 @@
 }
 
 
-#engine #engine-loading {
-	/* Positioning */
-	top: 0;
-	left: 0;
+#engine #engine-border-copy {
+	margin: 0;
+	padding: 0;
 	position: fixed;
-	width: 100%;
+}
 
-	/* Text centering */
-	text-align: center;
-	line-height: 100vh;
-
-	/* Text style */
-	letter-spacing: 1em;
-	font-size: 3em;
-	font-family: monospace;
-	color: white;
-
-	background: #000000aa;
+#engine.debug-mode #engine-border-copy {
+	border: 1px solid rgba(76, 149, 245, 0.317);
 }
 
 
-#engine #engine-border-visualizer {
-	margin: 0;
-	padding: 0;
-	border: 1px solid rgba(76, 149, 245, 0.317);
-	position: fixed;
+@keyframes loading-blink {
+	0% {
+		opacity: 0.1;
+	}
+	10% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0.1;
+	}
+}
+
+#engine-loading-text {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	color: white;
+	font-size: 3em;
+	font-family: monospace;
+	font-weight: bold;
+	text-transform: lowercase;
+	text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+#engine-loading-text::after {
+	animation: loading-blink 1s ease 0s infinite normal forwards;
+}
+
+#engine-loading-text.waiting-game-start::after {
+	content: 'Waiting for game start';
+}
+
+#engine-loading-text.loading::after {
+	content: 'Loading';
+}
+
+#engine-loading-text.connecting::after {
+	content: 'Connecting';
 }

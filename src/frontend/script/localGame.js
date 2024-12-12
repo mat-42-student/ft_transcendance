@@ -59,7 +59,6 @@ export async function startLocalGame(isCPU) {
     if (global.isPlaying == true) throw Error("Already playing??");
     __isCPU = isCPU;
     global.isPlaying = true;
-    engine.loading = true;
 
     if (__level != null) {
         __level.dispose();
@@ -91,7 +90,6 @@ export async function startLocalGame(isCPU) {
     }
 
     //TODO wait for level to finish loading before continuing
-    // engine.loading = false;
     newRound();
     global.gameCancelFunction = () => {
         endgame(true);
