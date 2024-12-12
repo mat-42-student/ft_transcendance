@@ -3,7 +3,7 @@ from signal import signal, SIGTERM, SIGINT
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep, create_task
-from datetime import datetime, timezone
+# from datetime import datetime, timezone
 # from models import User, BlockedUser
 
 class Command(BaseCommand):
@@ -56,7 +56,9 @@ class Command(BaseCommand):
             if self.is_muted(data['header']['id'], data['body']['to']):
                 data['body']['message'] += f"You were muted by {data['body']['to']}"
             else:
-                # data['header']['from'] = data['body']['to'] # username OR userID ?
+                data['body']['from'] = data['header']['id']
+                data['header']['id'] = data['body']['to'] # username OR userID
+                del data['body']['to']
                 data['body']['message'] += '(back from chat)'
         else:
             data['body']['message'] = 'User not found'
@@ -71,7 +73,7 @@ class Command(BaseCommand):
     def recipient_exists(self, user):
         return True
 
-    def store_msg_into_db(self, data):
+    def store_msg_into_db(self):
         pass
 
     async def signal_handler(self):
