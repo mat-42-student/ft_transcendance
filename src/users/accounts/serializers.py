@@ -163,28 +163,33 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'password', 'confirm_password']
+        fields = ['username', 'email', 'password', 'confirm_password']
         extra_kwargs = {
             'username': {
-                'min_length': 3, 
+                'min_length': 2, 
                 'max_length': 50,
-                'label': 'Nom d’utilisateur'
+                'label': 'Username'
+            },
+            'email': {
+                'min_length': 5, 
+                'max_length': 100,
+                'label': 'Email'
             },
             'password': {
                 'write_only': True,
                 'min_length': 5,
                 'max_length': 128,
-                'label': 'Mot de passe'
+                'label': 'Password'
             },
             'confirm_password': {
                 'write_only': True,
-                'label': 'Confirmez mot de passe'
+                'label': 'Confirm password'
             },
         }
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:
-            raise serializers.ValidationError("Les mots de passe ne correspondent pas.")
+            raise serializers.ValidationError("Passwords don't match.")
             # Ne pas accepter `is_staff` ou `is_superuser` dans les données
         if 'is_staff' in data or 'is_superuser' in data:
             raise serializers.ValidationError("La création d'un super utilisateur est interdite via cette API.")
@@ -194,7 +199,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop('confirm_password')  # Supprime `confirm_password` des données validées
         user = User.objects.create_user(
             username=validated_data['username'],
-            password=validated_data['password']
+            password=validated_data['password'],
+            email=validated_data['email']
         )
         user.save()
         return user

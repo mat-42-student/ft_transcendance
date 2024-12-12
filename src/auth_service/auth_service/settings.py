@@ -70,11 +70,11 @@ WSGI_APPLICATION = 'auth_service.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgres',
-        'NAME': 'auth_db',
-        'USER': 'alice',
-        'PASSWORD': 'password',
-        'HOST': 'auth-db',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'transcendance',
+        'USER': 'toto',
+        'PASSWORD': 'test',
+        'HOST': 'postgres',
         'PORT': '5432',
     }
 }
@@ -120,7 +120,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #     'http://localhost:9090',
 # ]
 
-AUTH_USER_MODEL = 'authentication.CustomUser'
+AUTH_USER_MODEL = 'authentication.User'
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_ALL_ORIGINS = True

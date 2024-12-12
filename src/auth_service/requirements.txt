@@ -22,6 +22,7 @@ pillow==11.0.0
 psycopg2-binary==2.9.10
 pycparser==2.22
 PyJWT==2.9.0
+pyotp==2.9.0
 pypng==0.20220715.0
 qrcode==7.4.2
 redis==5.2.0

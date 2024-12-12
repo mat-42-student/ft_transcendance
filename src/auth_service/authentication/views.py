@@ -1,5 +1,4 @@
-from .models import CustomUser
-from .serializers import UserSerializer
+from .models import *
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
@@ -13,73 +12,53 @@ import datetime
 import requests
 import random
 import pyotp
-    
+from .authentication import CustomAuthentication
+
 class LoginView(APIView):
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
         email = request.data.get('email')
-        username = request.data.get('username')
         password = request.data.get('password')
         otp = request.data.get('otp')
 
-        """Credentials check"""
-        payload = {'email': email, 'password': password}
-        r = requests.post('https://localhost:3000/api/v1/users/verify', data=payload)
+        user = User.objects.filter(email=email).first()
 
-        response_data = r.json()
-        user_id = response_data.get('user_id')
-        if response_data.get('status') != 'success':
+        if user is None:
             raise AuthenticationFailed('User not found!')
         
-        """Check if 2fa is activated"""
-        r = requests.post(f'https://localhost:3000/api/v1/users/{user_id}')
-        response_data = r.json()
+        if not user.check_password(password):
+            raise AuthenticationFailed('Incorrect password!')
+        
+        if user.is_2fa_enabled:
+            if user.is_otp_expired() or not user.otp:
+                user.otp = None
+                user.otp_expiry_time = None
+                user.generate_otp()
 
-        # if response_data.get('is_2fa_enable') == 'true':
-        #     if user.is_otp_expired() or not user.otp:
-        #         user.otp = None
-        #         user.otp_expiry_time = None
-        #         user.generate_otp()
+                send_mail(
+                    'Verification Code',
+                    f'Your verification code is: {user.otp}',
+                    'from@example.com',
+                    [email],
+                    fail_silently=False,
+                )
+                return Response({'message': 'OTP sent! Please check your email.'}, status=200)
+            if otp != user.otp:
+                raise AuthenticationFailed('Invalid OTP!')
+            user.otp = None
+            user.save()
 
-        #         send_mail(
-        #             'Verification Code',
-        #             f'Your verification code is: {user.otp}',
-        #             'from@example.com',
-        #             [email],
-        #             fail_silently=False,
-        #         )
-        #         return Response({'message': 'OTP sent! Please check your email.'}, status=200)
-        #     if otp != user.otp:
-        #         raise AuthenticationFailed('Invalid OTP!')
-        #     user.otp = None
-        #     user.save()
-
-        if response_data.get('is_2fa_enable') == 'true':
-            if not otp:
-                raise AuthenticationFailed('2FA code is required!')
-
-            # Retrieve TOTP secret for the user
-            totp_secret = response_data.get('totp_secret')  # Ensure this is securely fetched
-
-            if not totp_secret:
-                raise AuthenticationFailed('TOTP secret not found for user!')
-
-            totp = pyotp.TOTP(totp_secret)
-            if not totp.verify(otp):
-                raise AuthenticationFailed('Invalid 2FA code!')
-
-        """Generate tokens"""
         access_payload = {
-            'id': user_id,
-            'username': username,
+            'id': user.id,
+            'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=60),
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }
 
         refresh_payload = {
-            'id': user_id,
-            'username': username,
+            'id': user.id,
+            'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }
@@ -105,7 +84,7 @@ class RefreshTokenView(APIView):
         refresh_token = request.COOKIES.get('refreshToken')
         email = request.data.get('email')
 
-        user = CustomUser.objects.filter(email=email).first()
+        user = User.objects.filter(email=email).first()
 
         if not refresh_token:
             raise AuthenticationFailed('Refresh token missing!')
@@ -136,105 +115,121 @@ class LogoutView(APIView):
             'message': 'success'
         }
         return response
+    
+# class Enable2FAView(APIView):
+#     permission_classes = [CustomAuthentication]
 
-class Enable2FAView(APIView):
-    renderer_classes = [JSONRenderer]
+#     def post(self, request, user_id):
+#         try:
+#             user = User.objects.get(id=user_id)
+#             totp_secret = user.generate_totp_secret()
+#             qr_code_url = user.get_totp_qr_code_url()
 
-    def post(self, request):
-        auth_header = request.headers.get('Authorization')
+#             return Response({
+#                 "totp_secret": totp_secret,
+#                 "qr_code_url": qr_code_url
+#             }, status=status.HTTP_200_OK)
+#         except User.DoesNotExist:
+#             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        if not auth_header or not auth_header.startswith('Bearer '):
-            raise AuthenticationFailed('Unauthenticated!')
+# class Enable2FAView(APIView):
+#     renderer_classes = [JSONRenderer]
+
+#     def post(self, request):
+#         auth_header = request.headers.get('Authorization')
+
+#         if not auth_header or not auth_header.startswith('Bearer '):
+#             raise AuthenticationFailed('Unauthenticated!')
         
-        access_token = auth_header.split(' ')[1]
+#         access_token = auth_header.split(' ')[1]
 
-        if not access_token:
-            raise AuthenticationFailed('Unauthenticated!')
+#         if not access_token:
+#             raise AuthenticationFailed('Unauthenticated!')
         
-        try:
-            payload = jwt.decode(access_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Unauthenticated!')
+#         try:
+#             payload = jwt.decode(access_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
+#         except jwt.ExpiredSignatureError:
+#             raise AuthenticationFailed('Unauthenticated!')
         
-        user = CustomUser.objects.filter(id=payload['id']).first()
-        user.is_2fa_enabled = True
-        user.save()
-        return Response({'message': '2FA has been enabled.'}, status=status.HTTP_200_OK)
+#         user = User.objects.filter(id=payload['id']).first()
+#         user.is_2fa_enabled = True
+#         user.save()
+#         return Response({'message': '2FA has been enabled.'}, status=status.HTTP_200_OK)
 
-class Disable2FAView(APIView):
-    renderer_classes = [JSONRenderer]
+# class Disable2FAView(APIView):
+#     renderer_classes = [JSONRenderer]
 
-    def post(self, request):
-        auth_header = request.headers.get('Authorization')
+#     def post(self, request):
+#         auth_header = request.headers.get('Authorization')
 
-        if not auth_header or not auth_header.startswith('Bearer '):
-            raise AuthenticationFailed('Unauthenticated!')
+#         if not auth_header or not auth_header.startswith('Bearer '):
+#             raise AuthenticationFailed('Unauthenticated!')
         
-        access_token = auth_header.split(' ')[1]
+#         access_token = auth_header.split(' ')[1]
 
-        if not access_token:
-            raise AuthenticationFailed('Unauthenticated!')
+#         if not access_token:
+#             raise AuthenticationFailed('Unauthenticated!')
         
-        try:
-            payload = jwt.decode(access_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Unauthenticated!')
+#         try:
+#             payload = jwt.decode(access_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
+#         except jwt.ExpiredSignatureError:
+#             raise AuthenticationFailed('Unauthenticated!')
         
-        user = CustomUser.objects.filter(id=payload['id']).first()
-        user.is_2fa_enabled = False 
-        user.save()
-        return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK)
+#         user = User.objects.filter(id=payload['id']).first()
+#         user.is_2fa_enabled = False 
+#         user.save()
+#         return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK)
 
-class OAuthRedirectView(APIView):
-    renderer_classes = [JSONRenderer]
+# class OAuthRedirectView(APIView):
+#     renderer_classes = [JSONRenderer]
 
-    def get(self, request):
-        client_id = settings.OAUTH_CLIENT_ID
-        redirect_uri = 'http://localhost:9090/api/oauth/callback'
-        scope = 'public'
-        state = 'a_random_string_for_csrf' # Create a function for that
+#     def get(self, request):
+#         client_id = settings.OAUTH_CLIENT_ID
+#         redirect_uri = 'http://localhost:9090/api/oauth/callback'
+#         scope = 'public'
+#         state = 'a_random_string_for_csrf' # Create a function for that
 
-        params = {
-            'client_id': client_id,
-            'redirect_uri': redirect_uri,
-            'response_type': 'code',
-            'scope': scope,
-            'state': state,
-        }
+#         params = {
+#             'client_id': client_id,
+#             'redirect_uri': redirect_uri,
+#             'response_type': 'code',
+#             'scope': scope,
+#             'state': state,
+#         }
         
-        auth_url = f'https://api.intra.42.fr/oauth/authorize?{urlencode(params)}'
+#         auth_url = f'https://api.intra.42.fr/oauth/authorize?{urlencode(params)}'
 
-        return Response({"url": auth_url}, status=status.HTTP_302_FOUND)
+#         return Response({"url": auth_url}, status=status.HTTP_302_FOUND)
 
-class OAuthCallbackView(APIView):
-    renderer_classes = [JSONRenderer]
+# class OAuthCallbackView(APIView):
+#     renderer_classes = [JSONRenderer]
 
-    def get(self, request):
-        code = request.GET.get('code')
-        state = request.GET.get('state')
+#     def get(self, request):
+#         code = request.GET.get('code')
+#         state = request.GET.get('state')
 
-        if state != 'a_random_string_for_csrf': # Create a function for that
-            return Response({"error": "Invalid state, possible CSRF attack"}, status=status.HTTP_400_BAD_REQUEST)
+#         if state != 'a_random_string_for_csrf': # Create a function for that
+#             return Response({"error": "Invalid state, possible CSRF attack"}, status=status.HTTP_400_BAD_REQUEST)
 
-        token_data = {
-            'grant_type': 'authorization_code',
-            'client_id': settings.OAUTH_CLIENT_ID,
-            'client_secret': settings.OAUTH_CLIENT_SECRET,
-            'code': code,
-            'redirect_uri': 'http://localhost:9090/api/oauth/callback',
-        }
+#         token_data = {
+#             'grant_type': 'authorization_code',
+#             'client_id': settings.OAUTH_CLIENT_ID,
+#             'client_secret': settings.OAUTH_CLIENT_SECRET,
+#             'code': code,
+#             'redirect_uri': 'http://localhost:9090/api/oauth/callback',
+#         }
 
-        token_url = 'https://api.intra.42.fr/oauth/token'
-        response = requests.post(token_url, data=token_data)
+#         token_url = 'https://api.intra.42.fr/oauth/token'
+#         response = requests.post(token_url, data=token_data)
 
-        if response.status_code == 200:
-            token_info = response.json()
-            access_token = token_info['access_token']
-            refresh_token = token_info.get('refresh_token')
+#         if response.status_code == 200:
+#             token_info = response.json()
+#             access_token = token_info['access_token']
+#             refresh_token = token_info.get('refresh_token')
 
-            request.session['access_token'] = access_token
-            request.session['refresh_token'] = refresh_token
+#             request.session['access_token'] = access_token
+#             request.session['refresh_token'] = refresh_token
 
-            return Response({"access_token": access_token, "refresh_token": refresh_token}, status=status.HTTP_200_OK)
-        else:
-            return Response({"error": "Failed to obtain access token"}, status=status.HTTP_400_BAD_REQUEST)
+#             return Response({"access_token": access_token, "refresh_token": refresh_token}, status=status.HTTP_200_OK)
+#         else:
+#             return Response({"error": "Failed to obtain access token"}, status=status.HTTP_400_BAD_REQUEST)

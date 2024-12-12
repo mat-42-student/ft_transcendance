@@ -23,6 +23,9 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(username, password, **extra_fields)
     
+    class Meta:
+        db_table = 'user_manager'
+    
 # User model (inherits Django user model)
 class User(AbstractBaseUser):
     STATUS_CHOICES = [
@@ -75,15 +78,6 @@ class User(AbstractBaseUser):
         related_name='blocked_by',
         through='BlockedUser'
     )
-    # otp = models.CharField(
-    #     max_length=6,
-    #     null=True,
-    #     blank=True
-    # )
-    # otp_expiry_time = models.DateTimeField(
-    #     blank=True,
-    #     null=True
-    # )
     is_2fa_enabled = models.BooleanField(
         default=False
     )
@@ -100,6 +94,9 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.username
+
+    class Meta:
+        db_table = 'users'
     
 # BlockedUser model -> personnalisé pour gérer indexation dans db (améliore perf)
 class BlockedUser(models.Model):
@@ -118,6 +115,7 @@ class BlockedUser(models.Model):
     blocked_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        db_table = 'blocked_users'
         unique_together = ('from_user', 'to_user')
 
 # Relationship model
@@ -150,6 +148,7 @@ class Relationship(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        db_table = 'relationship'
         unique_together = ('from_user', 'to_user')
 
     def clean(self):
