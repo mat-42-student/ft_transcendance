@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.renderers import JSONRenderer
 from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.conf import settings
 from urllib.parse import urlencode
@@ -42,7 +43,7 @@ class LoginView(APIView):
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=60),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }
 
@@ -109,26 +110,28 @@ class LogoutView(APIView):
         }
         return response
 class Enable2FAView(APIView):
+    permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
-        auth_header = request.headers.get('Authorization')
+        # auth_header = request.headers.get('Authorization')
 
-        if not auth_header or not auth_header.startswith('Bearer '):
-            raise AuthenticationFailed('Unauthenticated!')
+        # if not auth_header or not auth_header.startswith('Bearer '):
+        #     raise AuthenticationFailed('Unauthenticated!')
 
-        access_token = auth_header.split(' ')[1]
+        # access_token = auth_header.split(' ')[1]
 
-        try:
-            payload = jwt.decode(access_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Access token expired!')
-        except jwt.InvalidTokenError:
-            raise AuthenticationFailed('Invalid access token!')
+        # try:
+        #     payload = jwt.decode(access_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
+        # except jwt.ExpiredSignatureError:
+        #     raise AuthenticationFailed('Access token expired!')
+        # except jwt.InvalidTokenError:
+        #     raise AuthenticationFailed('Invalid access token!')
 
-        user = User.objects.filter(id=payload['id']).first()
-        if not user:
-            raise AuthenticationFailed('User not found!')
+        # user = User.objects.filter(id=payload['id']).first()
+        # if not user:
+        #     raise AuthenticationFailed('User not found!')
+        user = request.user
         
         if user.is_2fa_enabled:
             return Response({'message': '2FA is already enabled.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -156,27 +159,28 @@ class Enable2FAView(APIView):
 
         return Response(response_data, status=status.HTTP_200_OK)
 class Disable2FAView(APIView):
+    permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
-        auth_header = request.headers.get('Authorization')
+        # auth_header = request.headers.get('Authorization')
 
-        if not auth_header or not auth_header.startswith('Bearer '):
-            raise AuthenticationFailed('Unauthenticated!')
+        # if not auth_header or not auth_header.startswith('Bearer '):
+        #     raise AuthenticationFailed('Unauthenticated!')
 
-        access_token = auth_header.split(' ')[1]
+        # access_token = auth_header.split(' ')[1]
 
-        try:
-            payload = jwt.decode(access_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Access token expired!')
-        except jwt.InvalidTokenError:
-            raise AuthenticationFailed('Invalid access token!')
+        # try:
+        #     payload = jwt.decode(access_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
+        # except jwt.ExpiredSignatureError:
+        #     raise AuthenticationFailed('Access token expired!')
+        # except jwt.InvalidTokenError:
+        #     raise AuthenticationFailed('Invalid access token!')
 
-        user = User.objects.filter(id=payload['id']).first()
-
-        if not user:
-            raise AuthenticationFailed('User not found!')
+        # user = User.objects.filter(id=payload['id']).first()
+        # if not user:
+        #     raise AuthenticationFailed('User not found!')
+        user = request.user
         
         user.is_2fa_enabled = False 
         user.save()

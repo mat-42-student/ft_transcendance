@@ -14,14 +14,13 @@ from accounts.views import (
 )
 
 router = routers.SimpleRouter()
-router.register('users', UserViewSet, basename='users')
+router.register('accounts', UserViewSet, basename='accounts')
 router.register('relationships', RelationshipViewSet, basename='relationships')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/users/register/', UserRegisterView.as_view(), name='register'),
-    # path('api/v1/users/<int:user_id>/enable_2fa', Enable2FAView.as_view(), name='enable_2fa'),
-    path('api/v1/users', include(router.urls)), # router include for ViewSets
+    path('api/v1/users/', include(router.urls)), # router include for ViewSets
 ]
 
 if settings.DEBUG:

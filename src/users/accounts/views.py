@@ -1,7 +1,7 @@
 import django.db.models as models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-
+from .authentication import JWTAuthentication
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.decorators import action
@@ -38,7 +38,7 @@ class UserViewSet(viewsets.ModelViewSet):
         """Définit les permissions pour chaque action."""
         if self.action in ['list', 'retrieve']:
             return [AllowAny()]
-        return [CustomAuthentication()]  # Authentification requise pour toutes les autres actions
+        return [JWTAuthentication()]  # Authentification requise pour toutes les autres actions
 
     def get_serializer_class(self):
         """Définit le serializer selon l'action."""
@@ -90,7 +90,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['post'], permission_classes=[CustomAuthentication], url_path='block')
+    @action(detail=True, methods=['post'], permission_classes=[JWTAuthentication], url_path='block')
     def block_user(self, request, pk=None):
         """Bloquer un utilisateur."""
         try:
@@ -109,7 +109,7 @@ class UserViewSet(viewsets.ModelViewSet):
         except User.DoesNotExist:
             return Response({"detail": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
 
-    @action(detail=True, methods=['delete'], permission_classes=[CustomAuthentication], url_path='unblock')
+    @action(detail=True, methods=['delete'], permission_classes=[JWTAuthentication], url_path='unblock')
     def unblock_user(self, request, pk=None):
         """Débloquer un utilisateur."""
         try:
@@ -127,7 +127,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 # Relationship ViewSet
 class RelationshipViewSet(viewsets.ViewSet):
-    permission_classes = [CustomAuthentication]
+    permission_classes = [JWTAuthentication]
 
     @action(detail=False, methods=['get'], url_path='my-relationships')
     def get_user_relationships(self, request):
