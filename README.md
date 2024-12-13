@@ -1,6 +1,6 @@
-# Documentation de l'API `users_management`
+# Documentation de l'API `users`
 
-Ce document décrit les fonctionnalités exposées par l'API Django `users_management` du projet **ft_transcendence**, incluant les endpoints disponibles, leurs usages, et les données associées.
+Ce document décrit les fonctionnalités exposées par l'API Django `users` du projet **ft_transcendence**, incluant les endpoints disponibles, leurs usages, et les données associées.
 
 ---
 
@@ -20,7 +20,7 @@ Ce document décrit les fonctionnalités exposées par l'API Django `users_manag
 
 ## Introduction
 
-L'application Django `users_management` gère les aspects liés aux utilisateurs dans le projet ft_transcendence.  
+L'application Django `users` gère les aspects liés aux utilisateurs dans le projet ft_transcendence.  
 Elle offre des fonctionnalités telles que l'inscription, la connexion, la gestion des profils et des relations d'amitié entre utilisateurs.
 
 ---
@@ -55,6 +55,8 @@ Le modèle `User` représente les utilisateurs de l'application. Il est basé su
 | `avatar`         | `ImageField`        | Chemin vers l'image d'avatar.            |
 | `status`         | `String`            | Statut (en ligne, hors ligne, en partie).|
 | `blocked_users`  | `ManyToManyField`   | Liste des utilisateurs bloqués.          |
+| `is_2fa_enable`  | `Bool`              | 2fa                                      |
+| `totp_secret`    | `String`            | 2fa                                      |
 
 #### Statuts possibles (`STATUS_CHOICES`)
 - **`online`** : L'utilisateur est en ligne.
@@ -137,7 +139,7 @@ Le modèle `Relationship` représente les relations entre deux utilisateurs dans
 ### Gestion des utilisateurs
 
 1. **Liste des utilisateurs**
-   - **URL** : `/api/v1/users/users/`
+   - **URL** : `/api/v1/users/accounts/`
    - **Méthode** : `GET`
    - **Réponse** :
      ```json
@@ -153,7 +155,7 @@ Le modèle `Relationship` représente les relations entre deux utilisateurs dans
      ```
 
 2. **Détails d'un utilisateur**
-   - **URL** : `/api/v1/users/users/<id>/`
+   - **URL** : `/api/v1/users/accounts/<id>/`
    - **Méthode** : `GET`
    - **Réponse** :
      ```json
@@ -167,7 +169,7 @@ Le modèle `Relationship` représente les relations entre deux utilisateurs dans
      ```
 
 3. **Créer un utilisateur**
-   - **URL** : `/api/v1/users/users/`
+   - **URL** : `/api/v1/users/accounts/`
    - **Méthode** : `POST`
    - **Corps de la requête** :
      ```json
@@ -235,12 +237,12 @@ curl -X GET http://localhost/users_api/users/ \
 -H "Authorization: Bearer <token_jwt>"
 ```
 
-# Documentation de l'API `users_management`
+# Documentation de l'API `auth`
 
 ## Endpoints
 
 1. **Login**
-   - **Description** : `Login with email, password and totp if 2fa is enable`
+   - **Description** : `Login with email, password and "totp" if 2fa is enable`
    - **URL** : `/api/v1/auth/login`
    - **Method** : `POST`
    - **Response** :
@@ -335,5 +337,4 @@ curl -X GET http://localhost/users_api/users/ \
      ]
      ```
 
----
 
