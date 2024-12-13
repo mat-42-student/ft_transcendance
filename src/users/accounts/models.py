@@ -3,10 +3,6 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
-import random
-import datetime
-import pyotp
-
 
 # User model manager
 class UserManager(BaseUserManager):
@@ -33,19 +29,6 @@ class User(AbstractBaseUser):
         ('offline', 'Offline'),
         ('in_game', 'In Game'),
     ]
-
-    """TOTP"""
-    totp_secret = models.CharField(max_length=16, null=True, blank=True)
-
-    def generate_totp_secret(self):
-        totp = pyotp.TOTP(pyotp.random_base32())
-        self.totp_secret = totp.secret
-        self.save()
-        return totp.secret
-
-    def get_totp_qr_code_url(self):
-        totp = pyotp.TOTP(self.totp_secret)
-        return totp.provisioning_uri(name=self.username, issuer_name="YourApp")
     
     username = models.CharField(
         max_length=50, 
@@ -80,6 +63,11 @@ class User(AbstractBaseUser):
     )
     is_2fa_enabled = models.BooleanField(
         default=False
+    )
+    totp_secret = models.CharField(
+        max_length=32,
+        null=True,
+        blank=True
     )
     
     # Champs d'authentification standard de Django

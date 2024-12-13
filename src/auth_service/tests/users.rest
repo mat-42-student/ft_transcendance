@@ -1,32 +1,5 @@
 POST https://localhost:3000/api/v1/users/register/
 Content-Type: application/json
 
-{"username": "tom", "email": "tom@mail.com", "password": "Test123*", "confirm_password": "Test123*"}
+{"username": "bob", "email": "bob@mail.com", "password": "Test123*", "confirm_password": "Test123*"}
 
-###
-
-POST https://localhost:3000/api/v1/users/
-Content-Type: application/json
-
-{"email": "test3@mail.fr", "password": "test3"}
-
-###
-
-POST https://localhost:3000/api/v1/users/
-Content-Type: application/json
-
-{"email": "test1@mail.fr"}
-
-###
-
-GET https://localhost:3000/api/v1/users/
-Content-Type: application/json
-
-{}
-
-###
-
-POST https://localhost:3000/api/v1/users/
-Content-Type: application/json
-
-{}
