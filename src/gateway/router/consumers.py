@@ -135,6 +135,8 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 "status": "info"
             }
         }
+        print(f"Sending data to deep_social: {data}")
+        await self.redis_client.publish("deep_social", dumps(data))
 
     async def send_online_status(self, status):
         """Send all friends our status"""

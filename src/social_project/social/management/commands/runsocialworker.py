@@ -54,10 +54,10 @@ class Command(BaseCommand):
         data['header']['dest'] = 'front' # data destination after deep processing
         user_id = data['header']['id']
         friends = self.get_friend_list(user_id)
-        if data['body']['status'] == 'info':
+        if data['body']['status'] == 'info': # User's first connection, get all friends status
             await self.send_friends_status(user_id, friends)
             return
-        self.user_status[user_id] = data['body']['status'] #update current user status
+        self.user_status[user_id] = data['body']['status'] # Update current user status
         if not friends:
             print(f"No friends found for user: {user_id}")
             return
@@ -66,7 +66,7 @@ class Command(BaseCommand):
                 await self.send_my_status(user_id, friend)
 
     def get_friend_list(self, user_id):
-        """Request friendlist from container 'users'"""
+        """ Request friendlist from container 'users' """
         self.user_status.update({"1" : "online", "2": "ingame", "3": "offline"})
         return ["1", "2", "3"]
     
@@ -81,7 +81,7 @@ class Command(BaseCommand):
         #     print(f"Requête échouée avec le statut {response.status_code}")
 
     async def send_friends_status(self, user_id, friends):
-        """send to user_id the status of all his friends"""
+        """ publish status of all friends and adress them to 'user_id' """
         for friend in friends:
             data = {
                 "header": {
@@ -99,7 +99,7 @@ class Command(BaseCommand):
             
 
     async def send_my_status(self, user_id, friend):
-        """publish status of 'user_id' and adress it to 'friend'"""
+        """ publish status of 'user_id' and adress it to 'friend' """
         data = {
             "header": {
                 "service": "social",
