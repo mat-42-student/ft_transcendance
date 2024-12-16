@@ -1,4 +1,5 @@
 import json
+import requests
 from signal import signal, SIGTERM, SIGINT
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
@@ -15,6 +16,7 @@ class Command(BaseCommand):
         arun(self.main())
 
     async def main(self):
+        self.running = True
         try:
             self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
@@ -22,12 +24,12 @@ class Command(BaseCommand):
             print(f"Subscribing to channel: {self.group_name}")
             await self.pubsub.subscribe(self.group_name)
             self.listen_task = create_task(self.listen())
-            while True:
-                await asleep(10)
+            while self.running:
+                await asleep(1)
         except  Exception as e:
             print(e)
         finally:
-            await self.signal_handler()
+            await self.cleanup_redis()
 
     async def listen(self):
         print(f"Listening for messages...")
@@ -67,20 +69,47 @@ class Command(BaseCommand):
 
     def is_muted(self, exp, recipient) -> bool :
         """is exp muted by recipient ?"""
-        # Check db relationship
+        # response = requests.get(f"/users_api/users/{recipient}/", timeout=10)
+        # if response.status_code == 200:
+        #     try:
+        #         data = response.json()
+        #         blocked_users = data.get('blocked_users')
+        #         if blocked_users and exp in blocked_users:
+        #           return True
+        #     except requests.exceptions.RequestException as e:
+        #         print(f"Error in request : {e}")
+        #     except ValueError as e:
+        #         print("JSON conversion error :", e)
+        # else:
+        #     print(f"Request failed (status {response.status_code})")
         return False
 
     def recipient_exists(self, user):
+        """Does user exist ?"""
+        # response = requests.get(f"/users_api/users/{user}/", timeout=10)
+        # if response.status_code == 200:
+        #     try:
+        #         data = response.json()
+        #         if data.get('id') == user:
+        #           return True
+        #         return False
+        #     except requests.exceptions.RequestException as e:
+        #         print(f"Error in request : {e}")
+        #     except ValueError as e:
+        #         print("JSON conversion error :", e)
+        # else:
+        #     print(f"Request failed (status {response.status_code})")
+        # return False
         return True
 
-    def store_msg_into_db(self):
-        pass
-
-    async def signal_handler(self):
+    def signal_handler(self, sig, frame):
         try:
             self.listen_task.cancel()
         except Exception as e:
             print(e)
+        self.running = False
+
+    async def cleanup_redis(self):
         print("Cleaning up Redis connections...")
         if self.pubsub:
             await self.pubsub.unsubscribe(self.group_name)

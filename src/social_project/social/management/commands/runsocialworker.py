@@ -1,5 +1,5 @@
 import json
-# import requests
+import requests
 from signal import signal, SIGTERM, SIGINT
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
@@ -29,7 +29,7 @@ class Command(BaseCommand):
         except  Exception as e:
             print(e)
         finally:
-            await self.cleanup()
+            await self.cleanup_redis()
 
     async def listen(self):
         print(f"Listening for messages...")
@@ -92,14 +92,14 @@ class Command(BaseCommand):
         print(f"Publishing : {data}")
         await self.redis_client.publish(self.group_name, json.dumps(data))
 
-    def signal_handler(self):
-        self.running = False
+    def signal_handler(self, sig, frame):
         try:
             self.listen_task.cancel()
         except Exception as e:
             print(e)
+        self.running = False
 
-    async def cleanup(self):
+    async def cleanup_redis(self):
         print("Cleaning up Redis connections...")
         if self.pubsub:
             await self.pubsub.unsubscribe(self.group_name)
