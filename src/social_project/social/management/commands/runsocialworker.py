@@ -1,5 +1,5 @@
 import json
-import requests
+# import requests
 from signal import signal, SIGTERM, SIGINT
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
