@@ -1,4 +1,5 @@
 import json
+import requests
 from signal import signal, SIGTERM, SIGINT
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
@@ -62,9 +63,18 @@ class Command(BaseCommand):
                 await self.send_status(user_id, friend)
 
     def get_friend_list(self, user_id):
-        """Request friendlist from database"""
+        """Request friendlist from container 'users'"""
         self.user_status.update({"toto" : "online", "titi": "ingame", "tutu": "offline"})
         return ["toto", "titi", "tutu"]
+        # response = requests.get("/users_api/users/<id>/")
+        # if response.status_code == 200:
+        #     try:
+        #         data = response.json()
+        #         return data.get('friends')
+        #     except ValueError as e:
+        #         print("Erreur lors de la conversion en JSON :", e)
+        # else:
+        #     print(f"Requête échouée avec le statut {response.status_code}")
 
     async def send_status(self, user_id, friend):
         """publish status of 'user_id' and adress it to 'friend'"""
