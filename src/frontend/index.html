@@ -54,11 +54,11 @@
             <div class="chat-interface">
                 <!-- Friend's Username -->
                 <div class="chat-header">
-                    <span class="friend-name">Username</span>
+                    <input type="text" class="friend-name" id="chat-user" value="Username">
                 </div>
 
                 <!-- Messages -->
-                <div class="chat-body">
+                <div class="chat-body" id="chat-body">
                     <div class="chat-message friend-message">Salut ! Comment ça va ?</div>
                     <div class="chat-message user-message">Ça va bien, et toi ?</div>
                     <!-- Add Dynamic Message Samples -->
@@ -66,8 +66,8 @@
 
                 <!-- Chat Prompt -->
                 <div class="chat-footer">
-                    <form class="chat-form">
-                        <input type="text" placeholder="Send a message..." aria-label="Zone de message">
+                    <form class="chat-form" id="chat-form">
+                        <input id="chat-input" type="text" placeholder="Send a message..." aria-label="Zone de message">
                     </form>
                 </div>
             </div>
@@ -121,6 +121,8 @@
     </footer>
 </body>
 <script src="./script/mainWS.js"></script>
+<script src="./script/social.js"></script>
+<script src="./script/chat.js"></script>
 <!-- <script type="module" src="./script/router.js"></script>
 <script type="module" src="./script/game3d/start_engine.js"></script>
 <script type="module" src="./script/matchmaking.js"></script> -->
