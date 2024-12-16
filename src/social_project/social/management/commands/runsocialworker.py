@@ -53,19 +53,23 @@ class Command(BaseCommand):
     async def process_message(self, data):
         data['header']['dest'] = 'front' # data destination after deep processing
         user_id = data['header']['id']
-        self.user_status[user_id] = data['body']['status']
         friends = self.get_friend_list(user_id)
+        if data['body']['status'] == 'info':
+            await self.send_friends_status(user_id, friends)
+            return
+        self.user_status[user_id] = data['body']['status'] #update current user status
         if not friends:
             print(f"No friends found for user: {user_id}")
             return
         for friend in friends:
             if self.user_status.get(friend) != 'offline':
-                await self.send_status(user_id, friend)
+                await self.send_my_status(user_id, friend)
 
     def get_friend_list(self, user_id):
         """Request friendlist from container 'users'"""
-        self.user_status.update({"toto" : "online", "titi": "ingame", "tutu": "offline"})
-        return ["toto", "titi", "tutu"]
+        self.user_status.update({"1" : "online", "2": "ingame", "3": "offline"})
+        return ["1", "2", "3"]
+    
         # response = requests.get("/users_api/users/<id>/")
         # if response.status_code == 200:
         #     try:
@@ -76,7 +80,25 @@ class Command(BaseCommand):
         # else:
         #     print(f"Requête échouée avec le statut {response.status_code}")
 
-    async def send_status(self, user_id, friend):
+    async def send_friends_status(self, user_id, friends):
+        """send to user_id the status of all his friends"""
+        for friend in friends:
+            data = {
+                "header": {
+                    "service": "social",
+                    "dest": "front",
+                    "id": user_id
+                },
+                "body":{
+                    "user": friend,
+                    "status": self.user_status[friend]
+                }
+            }
+            print(f"Publishing : {data}")
+            await self.redis_client.publish(self.group_name, json.dumps(data))
+            
+
+    async def send_my_status(self, user_id, friend):
         """publish status of 'user_id' and adress it to 'friend'"""
         data = {
             "header": {

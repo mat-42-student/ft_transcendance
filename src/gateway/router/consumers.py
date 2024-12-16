@@ -30,6 +30,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             await self.connect_to_redis()
         except Exception as e:
             print(f"Connection to redis error : {e}")
+        await self.get_friends_status()
         await self.send_online_status('online')
 
     async def connect_to_redis(self):
@@ -84,7 +85,9 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         return True
 
     async def listen_to_channels(self):
-        """Listen redis to send data back to appropriate client"""
+        """Listen redis to send data back to appropriate client
+        possible 'service' values are 'mmaking', 'chat', 'social' and 'notif' """
+
         async for message in self.pubsub.listen():
             data = loads(message['data'])
             if self.right_consumer(data['header']['id']) and data['header']['dest'] == 'front':
@@ -95,11 +98,12 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                     print(f"Send error : {e}")
 
     def right_consumer(self, id):
+        """check if actual consumer is the recipient we're looking for"""
         return (id == self.consumer_name or id == self.consumer_id)
 
     async def receive_json(self, data):
         """data incoming from client ws -> publish to concerned redis group\n
-        possible 'to' values are 'auth', 'user', 'mmaking', 'chat', 'social'"""
+        possible 'service' values are 'mmaking', 'chat', 'social'"""
         if not self.valid_json_header(data):
             print(f"Data error (json) : {data}")
             return
@@ -119,7 +123,21 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             except Exception as e:
                 print(f"Publish error : {e}")
 
+    async def get_friends_status(self):
+        """get friends status"""
+        data = {
+            "header": {
+                "service": "social",
+                "dest": "back",
+                "id": self.consumer_id
+            },
+            "body":{
+                "status": "info"
+            }
+        }
+
     async def send_online_status(self, status):
+        """Send all friends our status"""
         data = {
             "header": {
                 "service": "social",
