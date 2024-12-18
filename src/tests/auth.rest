@@ -1,7 +1,7 @@
 POST https://localhost:3000/api/v1/auth/login
 Content-Type: application/json
 
-{"email": "bob@mail.com", "password": "Test123*"}
+{"email": "alice@mail.com", "password": "Test123*"}
 
 ###
 
@@ -15,7 +15,7 @@ Content-Type: application/json
 POST https://localhost:3000/api/v1/auth/refresh
 Content-Type: application/json
 
-{"email": "bob@mail.com"}
+{"email": "alice@mail.com"}
 
 ###
 
@@ -28,7 +28,7 @@ Content-Type: application/json
 
 POST https://localhost:3000/api/v1/auth/2fa/enable-2fa
 Content-Type: application/json
-Authorization: Bearer <token>
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNzM0NTM1NjMwLCJpYXQiOjE3MzQ1MzU1NzB9.HZHr5XMsBaZBlCdNdyNF9ap0CNCys43chy4CF7c3tRDWcsuEnJ86rx5KOGcQ-IZLVsqZVqjckODS2k4Hv4qfMgIEFJHMXyqVev021sPcYKFZF6zdCeF11TziVvi0614g24AeT1ydivae1CqSpINvVSAMCpOMau2RvnXWREKI_06ke20tKQl-hJy_J1tn8judzZAedMNp0y3qwo7zLl0OZcLnC41q-pk0A5_lzcOSB-9kPCaaCAbGncmMjeSV3V4-LlVqMr8bdnMIgl0Xk-AOrP0Vaq6gSfSvPNKn3efinNr5jYoCU71C2pjiqrwQMXqNRCVT62HurQ8XpblG0NEnwg
 
 {}
 
@@ -36,7 +36,7 @@ Authorization: Bearer <token>
 
 POST https://localhost:3000/api/v1/auth/2fa/disable-2fa
 Content-Type: application/json
-Authorization: Bearer <token> 
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNzM0NTM1NjMwLCJpYXQiOjE3MzQ1MzU1NzB9.HZHr5XMsBaZBlCdNdyNF9ap0CNCys43chy4CF7c3tRDWcsuEnJ86rx5KOGcQ-IZLVsqZVqjckODS2k4Hv4qfMgIEFJHMXyqVev021sPcYKFZF6zdCeF11TziVvi0614g24AeT1ydivae1CqSpINvVSAMCpOMau2RvnXWREKI_06ke20tKQl-hJy_J1tn8judzZAedMNp0y3qwo7zLl0OZcLnC41q-pk0A5_lzcOSB-9kPCaaCAbGncmMjeSV3V4-LlVqMr8bdnMIgl0Xk-AOrP0Vaq6gSfSvPNKn3efinNr5jYoCU71C2pjiqrwQMXqNRCVT62HurQ8XpblG0NEnwg
 
 {}
 

@@ -126,9 +126,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'authentication.User'
 
-CORS_ORIGIN_ALLOW_ALL = True
+# CORS settings
 CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3000",
+    "http://localhost",
+    "https://localhost",
+]
+
 APPEND_SLASH = False
 LOGIN_URL = 'two_factor:login'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

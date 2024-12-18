@@ -1,7 +1,7 @@
 POST https://localhost:3000/api/v1/users/register/
 Content-Type: application/json
 
-{"username": "alice", "email": "alice@mail.com", "password": "Test123*", "confirm_password": "Test123*"}
+{"username": "tom", "email": "tom@mail.com", "password": "Test123*", "confirm_password": "Test123*"}
 
 ###
 

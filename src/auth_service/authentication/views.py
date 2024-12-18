@@ -22,7 +22,7 @@ class LoginView(APIView):
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
-        otp = request.data.get('totp')
+        totp = request.data.get('totp')
 
         user = User.objects.filter(email=email).first()
 
@@ -33,17 +33,17 @@ class LoginView(APIView):
             raise AuthenticationFailed('Incorrect password!')
             
         if user.is_2fa_enabled:
-            if not otp:
+            if not totp:
                 return Response({'message': 'OTP is required!'}, status=400)
 
             totp = pyotp.TOTP(user.totp_secret)
-            if not totp.verify(otp):
+            if not totp.verify(totp):
                 raise AuthenticationFailed('Invalid OTP!')
 
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }
 
@@ -114,23 +114,6 @@ class Enable2FAView(APIView):
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
-        # auth_header = request.headers.get('Authorization')
-
-        # if not auth_header or not auth_header.startswith('Bearer '):
-        #     raise AuthenticationFailed('Unauthenticated!')
-
-        # access_token = auth_header.split(' ')[1]
-
-        # try:
-        #     payload = jwt.decode(access_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
-        # except jwt.ExpiredSignatureError:
-        #     raise AuthenticationFailed('Access token expired!')
-        # except jwt.InvalidTokenError:
-        #     raise AuthenticationFailed('Invalid access token!')
-
-        # user = User.objects.filter(id=payload['id']).first()
-        # if not user:
-        #     raise AuthenticationFailed('User not found!')
         user = request.user
         
         if user.is_2fa_enabled:
@@ -142,7 +125,7 @@ class Enable2FAView(APIView):
         user.save()
 
         totp = pyotp.TOTP(totp_secret)
-        provisioning_uri = totp.provisioning_uri(user.email, issuer_name="MyApp")
+        provisioning_uri = totp.provisioning_uri(user.email, issuer_name="PongApp")
 
         qr = qrcode.make(provisioning_uri)
         buffer = BytesIO()
@@ -163,23 +146,6 @@ class Disable2FAView(APIView):
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
-        # auth_header = request.headers.get('Authorization')
-
-        # if not auth_header or not auth_header.startswith('Bearer '):
-        #     raise AuthenticationFailed('Unauthenticated!')
-
-        # access_token = auth_header.split(' ')[1]
-
-        # try:
-        #     payload = jwt.decode(access_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
-        # except jwt.ExpiredSignatureError:
-        #     raise AuthenticationFailed('Access token expired!')
-        # except jwt.InvalidTokenError:
-        #     raise AuthenticationFailed('Invalid access token!')
-
-        # user = User.objects.filter(id=payload['id']).first()
-        # if not user:
-        #     raise AuthenticationFailed('User not found!')
         user = request.user
         
         user.is_2fa_enabled = False 
