@@ -18,6 +18,18 @@
 }
 
 .selection-item {
+    all: unset; /* Réinitialise tous les styles par défaut des boutons */
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem 0;
+    cursor: pointer;
+    transition: background 0.3s;
+    background: #333;
+    color: #fff;
+    border-radius: 0; /* Préserve le design actuel */
+}
+
+.selection-item {
     flex: 1;
     text-align: center;
     padding: 0.5rem 0;

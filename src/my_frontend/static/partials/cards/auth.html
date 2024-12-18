@@ -1,43 +1,16 @@
 <!-- Auth Card Content -->
 <div id="auth-form">
-    <h2 id="form-title">Sign In/Register</h2>
+    <h2 id="form-title">Sign In</h2>
     <form>
         <input type="text" id="auth-username" placeholder="Username" required>
         <input type="password" id="auth-password" placeholder="Password" required>
         <div id="confirm-password-container" class="hidden">
-            <input type="password" id="confirm-password" placeholder="Confirm Password" required>
+            <input type="password" id="confirm-password" placeholder="Confirm Password">
         </div>
-        <button type="submit" id="auth-submit">Sign In/Register</button>
+        <button type="submit" id="auth-submit">Sign In</button>
     </form>
     <p>
-        <a href="#" id="toggle-auth">Not registered yet? Register</a>
-        <a href="#" id="toggle-auth">Already registred ? Sign In</a>
+        <a href="#register" data-action="register" id="register-link">Not registered yet? Register</a>
+        <a href="#signin" data-action="signin" id="signin-link" class="hidden">Already registered? Sign In</a>
     </p>
 </div>
-
-<!-- JS -->
-
-<!-- document.getElementById('toggle-auth').addEventListener('click', (e) => {
-    e.preventDefault(); // Empêche le comportement par défaut du lien.
-
-    // Sélection des éléments nécessaires
-    const title = document.getElementById('form-title');
-    const confirmPassword = document.getElementById('confirm-password-container');
-    const submitButton = document.getElementById('auth-submit');
-    const toggleLink = document.getElementById('toggle-auth');
-
-    // Bascule entre connexion et enregistrement
-    if (title.textContent === 'Sign In') {
-        // Passer à l'enregistrement
-        title.textContent = 'Register';
-        confirmPassword.classList.remove('hidden'); // Affiche le champ de confirmation
-        submitButton.textContent = 'Register';
-        toggleLink.textContent = 'Already registered? Sign In';
-    } else {
-        // Passer à la connexion
-        title.textContent = 'Sign In';
-        confirmPassword.classList.add('hidden'); // Cache le champ de confirmation
-        submitButton.textContent = 'Sign In';
-        toggleLink.textContent = 'Not registered yet? Register';
-    }
-}); -->

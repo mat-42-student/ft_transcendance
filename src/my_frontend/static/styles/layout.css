@@ -51,8 +51,8 @@ header .container {
 }
 
 /* Home Button */
-.header-left .btn-home,
-.header-right .btn-profile {
+.header-left #btn-home,
+.header-right #btn-profile {
     color: #fff;
     text-decoration: none;
     background: #4caf50;
@@ -62,8 +62,8 @@ header .container {
     transition: background 0.3s;
 }
 
-.header-left .btn-home:hover,
-.header-right .btn-profile:hover {
+.header-left #btn-home:hover,
+.header-right #btn-profile:hover {
     background: #45a049;
 }
 
