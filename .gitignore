@@ -23,5 +23,10 @@ logs/
 # IDEs et outils
 .vscode/
 
-# Autres
+# Specifique branche `users_management`
 .DS_Store
+src/.my_env
+src/Makefile
+src/my_compose.yml
+src/my_frontend
+src/media
