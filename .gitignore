@@ -27,6 +27,6 @@ logs/
 .DS_Store
 src/Makefile
 src/my_compose.yml
-src/my_frontend
+# src/my_frontend
 src/media
 src/.my_env
