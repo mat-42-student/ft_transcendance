@@ -1,28 +1,10 @@
 services:
-  # Le service users_management en l'état n'utilise pas encore daphne ni postgres
-  users_management:
-    build: ./users_management
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./media:/media
-      - ./users_management:/app
-    env_file:
-      - .env
-    networks:
-      # - db-network
-      - nginx-network
-    restart: always
-    # depends_on:
-    #   - postgres
-    # command: daphne -b 0.0.0.0 -p 8000 users_management.asgi:application
-
   auth-service:
     build:
       context: ./auth_service
       dockerfile: Dockerfile
     volumes:
-      - ./auth_service:/app
+      - ./auth_service:/code
     depends_on:
       postgres:
         condition: service_healthy
@@ -35,19 +17,57 @@ services:
       - nginx-network
       - db-network
 
+  users:
+    build:
+      context: ./users
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./media:/media
+      - ./users:/code
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    env_file:
+      - ./users/.env
+    restart: on-failure
+    networks:
+      - db-network
+      - nginx-network
+
   chat:
     container_name: chat
     build:
       context: chat
       dockerfile: Dockerfile
+    stop_grace_period: 2s
     env_file:
-      - .env
+      - ./chat/.env
     volumes:
       - ./chat/:/code
     depends_on:
       - matchmaking
     networks:
       - db-network
+      - redis-network
+
+  social:
+    container_name: social
+    build:
+      context: social_project
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./social_project/:/code
+    depends_on:
+      # - auth-service
+      - redis
+    networks:
+      # - db-network
       - redis-network
 
   gateway:
@@ -82,7 +102,7 @@ services:
       pong:
         condition: service_started
     expose:
-      - "8000" # ??
+      - "8000"
     networks:
       - db-network
       - redis-network
@@ -94,7 +114,7 @@ services:
       context: nginx
       dockerfile: Dockerfile
     depends_on:
-      - users_management # ajout merge users_management
+      - users
       - gateway
       - matchmaking
       - pong
@@ -111,7 +131,7 @@ services:
       context: _Pong
       dockerfile: Dockerfile
     env_file:
-      - .env
+      - ./_Pong/.env
     volumes:
       - ./_Pong/:/code
     depends_on:
@@ -132,7 +152,7 @@ services:
     expose:
       - "5432"
     volumes:
-      - postgres_data:/var/lib/posgresql/data
+        - postgres_data:/var/lib/postgresql/data
     env_file:
       - .env
     networks:
@@ -153,7 +173,7 @@ services:
 
 volumes:
   postgres_data:
-  media: # ajout merge users_management
+  media:
 
 networks:
   nginx-network:

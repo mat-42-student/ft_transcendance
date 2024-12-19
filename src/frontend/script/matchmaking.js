@@ -1,24 +1,35 @@
-//import { sendGetRequest } from './requestGet.js';
+import global from 'global';
+import * as LOCAL_GAME from './localGame.js'
+import * as ROUTER from './router.js';
 
-function modeSelection(mode) {
-    if (mode === 'matchmaking') {
-        console.log("matchmaking");
-        inject_code_into_markup("../board.html", "main", "./script/wsgame.js");
-        setupWebSocket('2P');
-    }
-    else if (mode === 'tournament')
-    {
-        console.log('tournament');
-        inject_code_into_markup("../board.html", "main", "./script/wsgame.js");
-        setupWebSocket('4P')
-    }
-    else if (mode === '1v1') {
-        inject_code_into_markup("../board.html", "main", "./script/local1v1.js")
-    }
-    else if (mode === 'cpu') {
-        inject_code_into_markup("../board.html", "main", "./script/localCPU.js");
-    }
+
+// 'Export' globally so html onclick has a way of accessing these.
+window.modeMatchmaking = modeMatchmaking;
+window.modeTournament = modeTournament;
+window.mode1v1 = mode1v1;
+window.modeCPU = modeCPU;
+
+
+export function modeMatchmaking(){
+    throw "TODO: matchmaking game";
+    setupWebSocket('2P');
 }
+
+export function modeTournament() {
+    throw "TODO: tournament game";
+    setupWebSocket('4P')
+}
+
+export function mode1v1() {
+    LOCAL_GAME.startLocalGame(false);
+    ROUTER.navigateTo('/page/playing');
+}
+
+export function modeCPU() {
+    LOCAL_GAME.startLocalGame(true);
+    ROUTER.navigateTo('/page/playing');
+}
+
 
 function showLobby() {
     // Vérifier si le lobby est déjà affiché

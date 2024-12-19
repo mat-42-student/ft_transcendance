@@ -1,9 +1,10 @@
 import json
+import requests
 from signal import signal, SIGTERM, SIGINT
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep, create_task
-# from cerberus import Validator
+# from datetime import datetime, timezone
 # from models import User, BlockedUser
 
 class Command(BaseCommand):
@@ -15,6 +16,7 @@ class Command(BaseCommand):
         arun(self.main())
 
     async def main(self):
+        self.running = True
         try:
             self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
@@ -22,26 +24,26 @@ class Command(BaseCommand):
             print(f"Subscribing to channel: {self.group_name}")
             await self.pubsub.subscribe(self.group_name)
             self.listen_task = create_task(self.listen())
-            while True:
-                await asleep(10)
+            while self.running:
+                await asleep(1)
         except  Exception as e:
             print(e)
         finally:
-            await self.signal_handler()
+            await self.cleanup_redis()
 
     async def listen(self):
         print(f"Listening for messages...")
         async for msg in self.pubsub.listen():
-            if msg.get('data') :
+            if msg :
                 try:
-                    data = json.loads(msg["data"])
-                    if data['header']['to'] == 'chat':
+                    data = json.loads(msg['data'])
+                    if self.valid_chat_json(data):
                         await self.process_message(data)
                 except Exception as e:
                     print(e)
 
-    def valid_json_body(self, data):
-        if data['header']['side'] != 'back':
+    def valid_chat_json(self, data):
+        if data['header']['dest'] != 'back' or data['header']['service'] != 'chat':
             return False
         data = data.get('body')
         if not isinstance(data, dict):
@@ -51,33 +53,63 @@ class Command(BaseCommand):
         return True
 
     async def process_message(self, data):
-        if not self.valid_json_body(data):
-            return
-        data['header']['side'] = 'front' # data destination after deep processing
+        data['header']['dest'] = 'front' # data destination after deep processing
         if self.recipient_exists(data['body']['to']):
-            if self.is_muted(data['header']['from'], data['body']['to']):
+            if self.is_muted(data['header']['id'], data['body']['to']):
                 data['body']['message'] += f"You were muted by {data['body']['to']}"
             else:
-                data['header']['from'] = data['body']['to'] # username OR userID ?
+                data['body']['from'] = data['header']['id']
+                data['header']['id'] = data['body']['to'] # username OR userID
+                del data['body']['to']
                 data['body']['message'] += '(back from chat)'
         else:
-            data['body']['message'] += 'User not found'
+            data['body']['message'] = 'User not found'
         print(f"Publishing : {data}")
         await self.redis_client.publish(self.group_name, json.dumps(data))
 
     def is_muted(self, exp, recipient) -> bool :
         """is exp muted by recipient ?"""
-        # Check db relationship
+        # response = requests.get(f"/users_api/users/{recipient}/", timeout=10)
+        # if response.status_code == 200:
+        #     try:
+        #         data = response.json()
+        #         blocked_users = data.get('blocked_users')
+        #         if blocked_users and exp in blocked_users:
+        #           return True
+        #     except requests.exceptions.RequestException as e:
+        #         print(f"Error in request : {e}")
+        #     except ValueError as e:
+        #         print("JSON conversion error :", e)
+        # else:
+        #     print(f"Request failed (status {response.status_code})")
         return False
 
     def recipient_exists(self, user):
+        """Does user exist ?"""
+        # response = requests.get(f"/users_api/users/{user}/", timeout=10)
+        # if response.status_code == 200:
+        #     try:
+        #         data = response.json()
+        #         if data.get('id') == user:
+        #           return True
+        #         return False
+        #     except requests.exceptions.RequestException as e:
+        #         print(f"Error in request : {e}")
+        #     except ValueError as e:
+        #         print("JSON conversion error :", e)
+        # else:
+        #     print(f"Request failed (status {response.status_code})")
+        # return False
         return True
 
-    async def signal_handler(self):
+    def signal_handler(self, sig, frame):
         try:
             self.listen_task.cancel()
         except Exception as e:
             print(e)
+        self.running = False
+
+    async def cleanup_redis(self):
         print("Cleaning up Redis connections...")
         if self.pubsub:
             await self.pubsub.unsubscribe(self.group_name)

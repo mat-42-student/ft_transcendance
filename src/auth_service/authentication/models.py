@@ -12,6 +12,9 @@ class CustomUser(AbstractUser):
     wins = models.PositiveIntegerField(default=0)
     losses = models.PositiveIntegerField(default=0)
 
+    class Meta:
+           db_table = 'auth_table1'
+
     def generate_otp(self):
             self.otp = str(random.randint(100000, 999999))
             self.otp_expiry_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1)
@@ -19,3 +22,5 @@ class CustomUser(AbstractUser):
 
     def is_otp_expired(self):
             return self.otp_expiry_time and datetime.datetime.now(datetime.timezone.utc) > self.otp_expiry_time
+    
+
