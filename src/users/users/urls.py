@@ -20,8 +20,9 @@ router.register('relationships', RelationshipViewSet, basename='relationships')
 
 urlpatterns = [
     path('admin/', admin.site.urls), # admin landing URL
-    path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'), # token generation URL
-    path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'), # token refresh URL
+    path('users_api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'), # token generation URL
+    path('users_api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'), # token refresh URL
+    path('users_api/token/verify/', jwt_views.TokenVerifyView.as_view(), name='token_verify'), #token verify URL
     path('users_api/register/', UserRegisterView.as_view(), name='register'),  # registration URL
     path('users_api/login/', UserLoginView.as_view(), name='login'), # login URL
     path('users_api/', include(router.urls)), # router include for ViewSets

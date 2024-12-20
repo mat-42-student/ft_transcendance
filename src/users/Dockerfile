@@ -1,6 +1,7 @@
+# COMMENTER CE CODE SI CHANGEMENT, NE PAS SUPPRIMER SVP
 FROM python:3.12
 
-WORKDIR /code
+WORKDIR /app
 
 RUN pip install --upgrade pip
 
@@ -10,4 +11,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["./start.sh"]
+EXPOSE 8000
+
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+# CMD ["./start.sh"]
