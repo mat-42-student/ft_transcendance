@@ -66,10 +66,10 @@ class LoginView(APIView):
             path='/'
         )
         response.data = {
+            'success': 'true',
             'accessToken': access_token
         }
-        return response
-    
+        return response 
 class RefreshTokenView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -151,12 +151,13 @@ class Disable2FAView(APIView):
         user.is_2fa_enabled = False 
         user.save()
         return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK)
+    
 class OAuthRedirectView(APIView):
     renderer_classes = [JSONRenderer]
 
     def get(self, request):
         client_id = settings.OAUTH_CLIENT_ID
-        redirect_uri = 'http://localhost:9090/api/oauth/callback'
+        redirect_uri = 'https://localhost:3000/api/v1/oauth/callback'
         scope = 'public'
         state = 'a_random_string_for_csrf' # Create a function for that
 
@@ -168,14 +169,14 @@ class OAuthRedirectView(APIView):
             'state': state,
         }
         
-        auth_url = f'https://api.intra.42.fr/oauth/authorize?{urlencode(params)}'
+        oauth_url = f'https://api.intra.42.fr/oauth/authorize?{urlencode(params)}'
 
-        return Response({"url": auth_url}, status=status.HTTP_302_FOUND)
+        return Response({"url": oauth_url}, status=status.HTTP_302_FOUND)
 class OAuthCallbackView(APIView):
     renderer_classes = [JSONRenderer]
 
     def get(self, request):
-        code = request.GET.get('code')
+        code = request.GET.get('code')  
         state = request.GET.get('state')
 
         if state != 'a_random_string_for_csrf': # Create a function for that
@@ -186,7 +187,7 @@ class OAuthCallbackView(APIView):
             'client_id': settings.OAUTH_CLIENT_ID,
             'client_secret': settings.OAUTH_CLIENT_SECRET,
             'code': code,
-            'redirect_uri': 'http://localhost:9090/api/oauth/callback',
+            'redirect_uri': 'https://localhost:3000/api/v1/oauth/callback',
         }
 
         token_url = 'https://api.intra.42.fr/oauth/token'

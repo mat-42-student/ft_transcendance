@@ -8,6 +8,7 @@ body {
     align-items: center;
     height: 100vh;
 }
+
 .login-container {
     background: white;
     padding: 20px;  
@@ -17,12 +18,14 @@ body {
     max-width: 400px;
     display: block; /* Show the login form by default */
 }
+
 .login-container h2 {
     margin-bottom: 20px;
     color: #333;
     text-align: center;
 }
-.signin-container {
+
+.register-container {
     background: white;
     padding: 20px;  
     border-radius: 8px;
@@ -31,19 +34,23 @@ body {
     max-width: 400px;
     display: none; /* Hide the sign-in form initially */
 }
-.signin-container h2 {
+
+.register-container h2 {
     margin-bottom: 20px;
     color: #333;
     text-align: center;
 }
+
 .form-group {
     margin-bottom: 15px;
 }
+
 .form-group label {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
 }
+
 .form-group input {
     width: 100%;
     padding: 10px;
@@ -51,11 +58,15 @@ body {
     border-radius: 5px;
     font-size: 14px;
 }
+
 .form-group input:focus {
     border-color: #007bff;
     outline: none;
 }
+
 .submit-btn {
+    margin-bottom: 10px;
+    display: block;
     width: 100%;
     padding: 10px;
     background-color: #007bff;
@@ -65,9 +76,29 @@ body {
     border-radius: 5px;
     cursor: pointer;
 }
+
 .submit-btn:hover {
     background-color: #0056b3;
 }
+
+.submit-btn-oauth {
+    margin-top: 10px;
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.submit-btn-oauth:hover {
+    background-color: #0056b3;
+}
+
+
 .error-message {
     color: red;
     font-size: 14px;
@@ -75,6 +106,7 @@ body {
     margin-bottom: 10px;
     display: none;
 }
+
 .toggle {
     text-align: center;
 }
