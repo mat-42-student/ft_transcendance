@@ -73,24 +73,24 @@ WSGI_APPLICATION = 'users.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 # Params de base Django -> ne pas supprimer (commenter)
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-# Params pour /dev
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'transcendance',
-#         'USER': 'toto',
-#         'PASSWORD': 'test',
-#         'HOST': 'postgres',
-#         'PORT': '5432',
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
+
+# Params pour /dev
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'transcendance',
+        'USER': 'toto',
+        'PASSWORD': 'test',
+        'HOST': 'postgres',
+        'PORT': '5432',
+    }
+}
 
 
 # Password validation

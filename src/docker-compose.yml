@@ -18,25 +18,30 @@ services:
       - db-network
 
   users:
-    build:
-      context: ./users
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
+    container_name: users
+    image: users
+    build: ./users
+    expose:
+      - "8000"
     volumes:
       - ./media:/media
       - ./users:/code
+    env_file:
+      - .env
+    networks:
+      - db-network
+      - nginx-network
+    restart: on-failure
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 3
     depends_on:
       postgres:
         condition: service_healthy
       auth-service:
         condition: service_started
-    env_file:
-      - ./users/.env
-    restart: on-failure
-    networks:
-      - db-network
-      - nginx-network
 
   chat:
     container_name: chat
@@ -110,6 +115,7 @@ services:
 
   nginx:
     container_name: nginx
+    image: nginx
     build:
       context: nginx
       dockerfile: Dockerfile
@@ -121,6 +127,7 @@ services:
     ports:
       - "3000:443"
     volumes:
+      - ./media:/media
       - ./frontend:/usr/share/nginx/frontend
     networks:
       - nginx-network
