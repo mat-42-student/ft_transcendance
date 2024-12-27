@@ -9,6 +9,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from .models import User
 import hashlib
+from rest_framework.renderers import JSONRenderer
+
 
 from .models import User, Relationship
 from .serializers import (
@@ -23,12 +25,13 @@ from .serializers import (
 
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
+    renderer_classes = [JSONRenderer]
 
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response({"success": "true", "data": serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserViewSet(viewsets.ModelViewSet):

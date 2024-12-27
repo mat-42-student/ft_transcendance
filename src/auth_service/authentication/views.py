@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.conf import settings
+from django.http import JsonResponse
 from urllib.parse import urlencode
 import jwt
 import datetime
@@ -34,11 +35,11 @@ class LoginView(APIView):
             
         if user.is_2fa_enabled:
             if not totp:
-                return Response({'message': 'OTP is required!'}, status=400)
+                return Response({"success": False, "error": "2fa_required!"}, status=400)
 
             totp = pyotp.TOTP(user.totp_secret)
             if not totp.verify(totp):
-                raise AuthenticationFailed('Invalid OTP!')
+                return Response({"success": False, "error": "invalid_totp"}, status=400)
 
         access_payload = {
             'id': user.id,
@@ -109,7 +110,10 @@ class LogoutView(APIView):
             'message': 'success'
         }
         return response
-class Enable2FAView(APIView):
+class Enroll2FAView(APIView):
+    """
+    Setup 2fa for the user.
+    """
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
 
@@ -121,11 +125,11 @@ class Enable2FAView(APIView):
         
         totp_secret = pyotp.random_base32()
         user.totp_secret = totp_secret
-        user.is_2fa_enabled = True
+        # user.is_2fa_enabled = True
         user.save()
 
         totp = pyotp.TOTP(totp_secret)
-        provisioning_uri = totp.provisioning_uri(user.email, issuer_name="PongApp")
+        provisioning_uri = totp.provisioning_uri(user.email, issuer_name="MyPongApp")
 
         qr = qrcode.make(provisioning_uri)
         buffer = BytesIO()
@@ -135,19 +139,45 @@ class Enable2FAView(APIView):
         qr_code_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
         
         response_data = {
-            'message': '2FA has been enabled.',
+            'success': 'true',
             'provisioning_uri': provisioning_uri,
             'qr_code': qr_code_base64,
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
-class Disable2FAView(APIView):
+    
+class Verify2FAView(APIView):
+    """
+    Verify a 6-digit TOTP code from the user.
+    """
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
         user = request.user
+
+        if not user.totp_secret:
+            return Response({"error": "2FA is not setup for this user."}, status=400)
         
+        code = request.data.get('totp')
+        totp = pyotp.TOTP(user.totp_secret)
+        
+        if totp.verify(code):
+            user.is_2fa_enabled = True 
+            user.save()
+            return Response({"success": "true", "message": "2FA has been enabled."}, status=200)
+        else:
+            return Response({"error": "Invalid or expired 2FA code"}, status=401)
+
+class Disable2FAView(APIView):
+    """
+    Disable 2fa for the user.
+    """
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [JSONRenderer]
+
+    def post(self, request):
+        user = request.user
         user.is_2fa_enabled = False 
         user.save()
         return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK)

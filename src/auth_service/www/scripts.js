@@ -34,9 +34,9 @@ function handleregister() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Successfully registered!');
+            alert('Successfully registered!');;
+            toggleForm();
         } else {
-            console.log("ERROR", data);
             alert(data.message);
         }
     })
@@ -63,11 +63,12 @@ function handleLogin() {
     .then(data => {
         if (data.success) {
             sessionStorage.setItem('access_token', data.accessToken);
-            alert('Login successful!');
+            loginSuccessful();
+        } else if (data.error == '2fa_required!') {
+            alert('Please enter your 2FA code.');
+            document.getElementById('totp-group').style.display = 'block';
         } else {
-            // alert(data.message);
-            console.log('FAILED');
-            // alert("FAILED");
+            alert('Login failed: ' + data.error);
         }
     })
     .catch(error => console.error('Error:', error));
@@ -76,4 +77,62 @@ function handleLogin() {
 function handleOAuth42() {
     const oauthUrl = 'https://api.intra.42.fr/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&response_type=code';
     window.location.href = oauthUrl;
+}
+
+function loginSuccessful() {
+    const registerContainer = window.document.querySelector('.register-container');
+    const loginContainer = window.document.querySelector('.login-container');
+    const loginPage = window.document.querySelector('.login-success-page');
+
+    registerContainer.style.display = 'none';
+    loginContainer.style.display = 'none';
+    loginPage.style.display = 'block';
+}
+
+function enroll2fa() {
+    token = sessionStorage.getItem('access_token')
+
+    fetch('https://localhost:3000/api/v1/auth/2fa/enroll', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const qrCodeImage = `data:image/png;base64,${data.qr_code}`;
+            document.getElementById('qr-image').src = qrCodeImage;
+        } else {
+            console.log("ERROR", data);
+            alert(data.message);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function verify2fa() {
+    const token = sessionStorage.getItem('access_token')
+    const totp = document.getElementById('totp').value; 
+
+    fetch('https://localhost:3000/api/v1/auth/2fa/verify', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ totp }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("2fa has been enabled!")
+        } else {
+            console.log("ERROR", data);
+            alert(data.message);
+        }
+    })
+    .catch(error => console.error('Error:', error));
 }

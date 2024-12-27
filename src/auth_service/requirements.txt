@@ -24,8 +24,11 @@ pyasn1_modules==0.4.1
 pycparser==2.22
 PyJWT==2.9.0
 pyOpenSSL==24.2.1
+
+# 2FA
 pyotp==2.9.0
 qrcode==8.0
+
 requests==2.32.3
 service-identity==24.1.0
 sqlparse==0.5.1

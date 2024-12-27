@@ -25,6 +25,10 @@ body {
     text-align: center;
 }
 
+.login-success-page {
+    display: none; /*Hide this page by default */
+}
+
 .register-container {
     background: white;
     padding: 20px;  
@@ -98,6 +102,22 @@ body {
     background-color: #0056b3;
 }
 
+.two-factor-btn {
+    margin-bottom: 10px;
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.two-factor-btn:hover {
+    background-color: #0056b3;
+}
 
 .error-message {
     color: red;
@@ -109,4 +129,15 @@ body {
 
 .toggle {
     text-align: center;
+}
+
+#qr-image {
+    display: block;
+    margin: 0 auto; 
+    width: 150px; /* Adjust the width as needed */
+    height: auto; /* Maintain the aspect ratio */
+}
+
+#totp-group {
+    display: none;
 }

@@ -14,15 +14,24 @@
         <h2>Login</h2>
         <div class="error-message" id="error-message">Invalid username or password</div>
         <form id="login-form">
+
             <div class="form-group">
                 <label for="login-email">Email</label>
                 <input type="text" id="login-email" name="login-email" required>
             </div>
+
             <div class="form-group">
                 <label for="login-password">Password</label>
                 <input type="password" id="login-password" name="login-password" required>
             </div>
+
+            <div class="form-group" id="totp-group">
+                <label for="login-totp">Two-factor</label>
+                <input type="number" id="login-totp" name="login-totp">
+            </div>
+
             <button type="button" class="submit-btn" onclick="handleLogin()">Login</button>
+
         </form>
 
         <div class="oauth-container">
@@ -60,6 +69,22 @@
         </div>
     </div>
 
+    <div class="login-success-page">
+        <h1>Login Successful!</h1>
+        <button type="button" class="two-factor-btn" onclick="enroll2fa()">Generate QR Code</button>
+        <div class="2fa-setup">
+            <img src="" id="qr-image">
+            <form>
+                <div class="form-group">
+                    <label for="totp">Enter TOTP code</label>
+                    <input type="number" id="totp" name="totp" required>
+                </div>
+                <button type="button" class="submit-btn" onclick="verify2fa()">Send</button>
+            </form>
+        </div>
+    </div>
+
     <script src="scripts.js"></script>
+
 </body>
-</html>
+</html> 
