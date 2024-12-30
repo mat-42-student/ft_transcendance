@@ -40,3 +40,18 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxN
 
 {}
 
+###
+
+GET https://localhost:3000/api/v1/auth/oauth/redirect
+Content-Type: application/json
+
+{}
+
+###
+
+POST https://localhost:3000/api/v1/auth/oauth/callback
+Content-Type: application/json
+
+{}
+
+

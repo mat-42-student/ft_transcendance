@@ -34,7 +34,7 @@ function handleregister() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Successfully registered!');;
+            alert('Successfully registered!');
             toggleForm();
         } else {
             alert(data.message);
@@ -74,10 +74,76 @@ function handleLogin() {
     .catch(error => console.error('Error:', error));
 }
 
-function handleOAuth42() {
-    const oauthUrl = 'https://api.intra.42.fr/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&response_type=code';
-    window.location.href = oauthUrl;
+async function redirectToOAuth() {
+
+    try {
+      const response = await fetch('https://localhost:3000/api/v1/auth/oauth/redirect', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    
+      const data = await response.json();
+      const { url } = data;
+  
+      if (!url) {
+        throw new Error('No "url" returned from the redirect endpoint.');
+      }
+
+      console.log(url)
+  
+      window.location.href = url;
+    } catch (error) {
+      console.error(error);
+    }
 }
+
+async function handleOAuthCallback() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+  
+    if (!code || !state) {
+      console.error('Missing "code" or "state" in the callback URL.');
+      return;
+    }
+  
+    try {
+      const response = await fetch(`/api/v1/oauth/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+  
+    //   if (!response.ok) {
+    //     const errorData = await response.json();
+    //     console.error('OAuth callback failed:', errorData);
+    //     return;
+    //   }
+  
+      const data = await response.json();
+      
+      if (data.access_token) {
+        console.log('Successfully obtained tokens:', data);
+        
+        localStorage.setItem('access_token', data.access_token);
+        
+        if (data.refresh_token) {
+          localStorage.setItem('refresh_token', data.refresh_token);
+        }
+
+        // window.location.href = '/dashboard';
+      } else {
+        console.error('No tokens returned. Response data:', data);
+      }
+    } catch (err) {
+      console.error('Error while handling OAuth callback:', err);
+    }
+  }
+  
+  
 
 function loginSuccessful() {
     const registerContainer = window.document.querySelector('.register-container');

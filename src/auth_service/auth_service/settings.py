@@ -119,7 +119,6 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # OAuth 2.0
-# OAUTH_CLIENT_ID = ''
-# OAUTH_CLIENT_SECRET = ''
-# OAUTH_REDIRECT_URI = 'https://localhost:8081'
-# OAUTH_REDIRECT_URI = 'http://localhost:8080'
+OAUTH_CLIENT_ID = 'u-s4t2ud-84a349ed4a97afde2d52b8aa3de74906b2e8504fec44391bd1e117b5708b4ee4'
+OAUTH_CLIENT_SECRET = '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'
+OAUTH_REDIRECT_URI = 'https://localhost:3000/api/v1/auth/oauth/callback'

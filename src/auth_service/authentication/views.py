@@ -16,6 +16,8 @@ import pyotp
 import qrcode
 from io import BytesIO
 import base64
+import secrets
+from .utils import generate_state
 
 class LoginView(APIView):
     renderer_classes = [JSONRenderer]
@@ -110,6 +112,7 @@ class LogoutView(APIView):
             'message': 'success'
         }
         return response
+
 class Enroll2FAView(APIView):
     """
     Setup 2fa for the user.
@@ -186,47 +189,45 @@ class OAuthRedirectView(APIView):
     renderer_classes = [JSONRenderer]
 
     def get(self, request):
-        client_id = settings.OAUTH_CLIENT_ID
-        redirect_uri = 'https://localhost:3000/api/v1/oauth/callback'
-        scope = 'public'
-        state = 'a_random_string_for_csrf' # Create a function for that
-
+        state = generate_state()
+        request.session['oauth_state'] = state
         params = {
-            'client_id': client_id,
-            'redirect_uri': redirect_uri,
+            'client_id': settings.OAUTH_CLIENT_ID,
+            'redirect_uri': settings.OAUTH_REDIRECT_URI,
             'response_type': 'code',
-            'scope': scope,
+            'scope': 'public',
             'state': state,
         }
-        
-        oauth_url = f'https://api.intra.42.fr/oauth/authorize?{urlencode(params)}'
+        url = f'https://api.intra.42.fr/oauth/authorize?{urlencode(params)}'
+        return Response({"url": url}, status=status.HTTP_302_FOUND)
 
-        return Response({"url": oauth_url}, status=status.HTTP_302_FOUND)
 class OAuthCallbackView(APIView):
     renderer_classes = [JSONRenderer]
 
     def get(self, request):
-        code = request.GET.get('code')  
-        state = request.GET.get('state')
+        code = request.GET.get('code')
+        received_state = request.GET.get('state')
+        stored_state = request.session.get('oauth_state')
 
-        if state != 'a_random_string_for_csrf': # Create a function for that
-            return Response({"error": "Invalid state, possible CSRF attack"}, status=status.HTTP_400_BAD_REQUEST)
+        # if received_state != stored_state:
+        #     return Response({"error": "Invalid state, possible CSRF attack"},
+        #                     status=status.HTTP_400_BAD_REQUEST)
 
         token_data = {
             'grant_type': 'authorization_code',
             'client_id': settings.OAUTH_CLIENT_ID,
             'client_secret': settings.OAUTH_CLIENT_SECRET,
             'code': code,
-            'redirect_uri': 'https://localhost:3000/api/v1/oauth/callback',
+            'redirect_uri': settings.OAUTH_REDIRECT_URI,
         }
 
-        token_url = 'https://api.intra.42.fr/oauth/token'
-        response = requests.post(token_url, data=token_data)
+        url = 'https://api.intra.42.fr/oauth/token'
+        response = requests.post(url, data=token_data)
 
         if response.status_code == 200:
             token_info = response.json()
             access_token = token_info['access_token']
-            refresh_token = token_info.get('refresh_token')
+            refresh_token = token_info['refresh_token']
 
             request.session['access_token'] = access_token
             request.session['refresh_token'] = refresh_token
