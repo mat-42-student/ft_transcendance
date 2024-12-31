@@ -35,7 +35,7 @@
         </form>
 
         <div class="oauth-container">
-            <button type="button" class="submit-btn-oauth" id="loginWith42" onclick="redirectToOAuth()">Login with 42</button>
+            <button type="button" class="submit-btn-oauth" id="loginWith42" onclick="handleOAuth()">Login with 42</button>
         </div>
 
         <div class="toggle">
@@ -85,12 +85,6 @@
     </div>
 
     <script src="scripts.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-          handleOAuthCallback();
-        });
-    </script>
-      
 
 </body>
 </html> 

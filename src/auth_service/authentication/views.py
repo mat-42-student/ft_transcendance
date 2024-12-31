@@ -229,9 +229,18 @@ class OAuthCallbackView(APIView):
             access_token = token_info['access_token']
             refresh_token = token_info['refresh_token']
 
-            request.session['access_token'] = access_token
-            request.session['refresh_token'] = refresh_token
-
-            return Response({"access_token": access_token, "refresh_token": refresh_token}, status=status.HTTP_200_OK)
+            response = Response()
+            response.set_cookie(
+                key='refreshToken',
+                value=refresh_token, 
+                httponly=True, 
+                secure=False,
+                path='/'
+            )
+            response.data = {
+                'success': 'true',
+                'accessToken': access_token
+            }
+            return response 
         else:
             return Response({"error": "Failed to obtain access token"}, status=status.HTTP_400_BAD_REQUEST)
