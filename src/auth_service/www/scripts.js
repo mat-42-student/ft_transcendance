@@ -54,6 +54,7 @@ function handleLogin() {
 
     fetch('https://localhost:3000/api/v1/auth/login', {
         method: 'POST',
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
         },
@@ -85,6 +86,43 @@ async function handleOAuth() {
       console.error(error);
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Check if we have ?code=... in the URL
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+  
+    // 2. If we do, call your Django /callback endpoint
+    if (code && state) {
+      // Construct the URL to your Django OAuth callback
+      const callbackUrl = `https://localhost:3000/api/v1/auth/oauth/callback?code=${code}&state=${state}`;
+  
+      fetch(callbackUrl)
+        .then(response => response.json())
+        .then(data => {
+          // data should be { success: "true", accessToken: "...." } if all went well
+          if (data.accessToken) {
+            // 3. Store the access token in localStorage
+            sessionStorage.setItem('accessToken', data.accessToken);
+  
+            // The refresh token is already in the HttpOnly cookie.
+  
+            // 4. Clear the URL so you don't keep the code in the address bar
+            // One approach: set window.location without the params or navigate to another page
+            window.history.replaceState({}, document.title, window.location.pathname);
+  
+            // 5. Optionally redirect to your "dashboard" or show a success message
+            // window.location.href = "/dashboard.html"; 
+            console.log("OAuth success, token stored in localStorage!");
+          } else {
+            console.error("No accessToken returned from backend", data);
+          }
+        })
+        .catch(err => console.error("Error exchanging code for token:", err));
+    }
+  });
+  
  
 function loginSuccessful() {
     const registerContainer = window.document.querySelector('.register-container');
@@ -113,7 +151,7 @@ function enroll2fa() {
             const qrCodeImage = `data:image/png;base64,${data.qr_code}`;
             document.getElementById('qr-image').src = qrCodeImage;
         } else {
-            console.log("ERROR", data);
+            console.log("Error", data);
             alert(data.message);
         }
     })
@@ -137,9 +175,28 @@ function verify2fa() {
         if (data.success) {
             alert("2fa has been enabled!")
         } else {
-            console.log("ERROR", data);
+            console.log("Error", data);
             alert(data.message);
         }
     })
     .catch(error => console.error('Error:', error));
+}
+
+function rereshToken() {
+    fetch('https://localhost:3000/api/v1/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({"email": "test@mail.com"}),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log(data)
+        } else {
+            console.log("Error", data);
+        }
+    })
 }

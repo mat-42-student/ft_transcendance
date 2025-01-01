@@ -64,8 +64,9 @@ class LoginView(APIView):
         response.set_cookie(
             key='refreshToken',
             value=refresh_token, 
-            httponly=True, 
-            secure=False,
+            httponly=True,
+            samesite='None',
+            secure=True,
             path='/'
         )
         response.data = {
@@ -101,7 +102,10 @@ class RefreshTokenView(APIView):
         }
         new_access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
 
-        return Response({'accessToken': new_access_token})
+        return Response({
+            'success': True,
+            'accessToken': new_access_token
+        })
 class LogoutView(APIView):
     renderer_classes = [JSONRenderer]
 
