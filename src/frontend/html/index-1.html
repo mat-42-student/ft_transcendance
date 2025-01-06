@@ -3,22 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./styles/base.css">
-    <link rel="stylesheet" href="./styles/layout.css">
-    <link rel="stylesheet" href="./styles/sidebars.css">
-    <link rel="stylesheet" href="./styles/components.css">
-    <link rel="stylesheet" href="./styles/form.css">
-    <link rel="stylesheet" href="./styles/versus.css">
-    <link rel="stylesheet" href="./styles/pages/home.css">
-    <link rel="stylesheet" href="./styles/pages/profile.css">
+    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/engine.css">
     <title>Transcendence</title>
+
+    <!-- <script type="importmap">
+        {"imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+            "engine": "./script/game3d/engine.js",
+            "global": "./script/global.js",
+            "input": "./script/input.js",
+            "gameobjects": "./script/game3d/gameobjects/_exports.js"
+        }}
+    </script> -->
+
+    <!-- <script type="module" src="./script/HTMLAutoBorderElement.js"></script> -->
 </head>
 <body>
     <header>
         <div class="container">
             <!-- Homepage Button -->
             <div class="header-left">
-                <a id="btn-home">Home</a>
+                <a href="/page/home" class="btn-home nav_url">Home</a>
+                <a href="/page/matchmaking" class="btn-home nav_url">Matchmaking</a>
+                <a href="/page/chat" class="btn-home nav_url">Chat</a>
             </div>
 
             <!-- Searchbar -->
@@ -29,19 +38,21 @@
                 </form>
             </div>
 
-            <!-- User Profile Button -->
-            <div class="header-right">
-                <a id="btn-profile">Profile</a>
+            <!-- User's Profile Button -->
+            <div class="header-right nav_url">
+                <input type="text" id="user_id">
+                <button onclick="bricol_log()">Connect</button>
+                <a href="/page/profile" class="btn-profile">Profile</a>
             </div>
         </div>
     </header>
 
     <main>
-        <!-- CHAT (Left) -->
+        <!-- LEFT SIDEBAR (Chat) -->
         <aside class="sidebar left-sidebar">
             <!-- Chat Interface -->
             <div class="chat-interface">
-                <!-- Contact Username -->
+                <!-- Friend's Username -->
                 <div class="chat-header">
                     <span class="friend-name">Username</span>
                 </div>
@@ -53,7 +64,7 @@
                     <!-- Add Dynamic Message Samples -->
                 </div>
 
-                <!-- Prompt -->
+                <!-- Chat Prompt -->
                 <div class="chat-footer">
                     <form class="chat-form">
                         <input type="text" placeholder="Send a message..." aria-label="Zone de message">
@@ -62,20 +73,25 @@
             </div>
         </aside>
 
-        <!-- MAIN (Home/Profile) -->
-        <section class="main-content"></section>
+        <!-- MAIN (Home/Profile View) -->
+        <div class="main-content-container">
+            <!-- 3d engine automatic resizing -->
+            <auto-engine-border class="main-content"></auto-engine-border>
+            <!-- SPA page -->
+            <section class="main-content"></section>
+        </div>
 
-        <!-- SOCIAL (Right) -->
+        <!-- RIGHT SIDEBAR (Social)-->
         <aside class="sidebar right-sidebar">
-            <!-- Interface -->
+            <!-- Social Interface -->
             <div class="friends-interface">
                 <!-- Friend Requests Button -->
                 <div class="friend-requests">
-                    <button class="btn-friend-requests" type="button">Friend Requests</button>
+                    <button class="btn-friend-requests">Friend Requests</button>
                     <span class="request-count">0</span>
-                    <!-- (JS) Dynamically change on pending requests for authentified User -->
+                    <!-- Dynamically change number depending on pending requests for authentified User -->
                 </div>
-        
+
                 <!-- Friends List -->
                 <ul class="friends-list">
                     <!-- Dynamic Sample -->
@@ -86,10 +102,10 @@
                             <div class="friend-detail">
                                 <span class="friend-status online"></span>
                                 <button class="btn-match">
-                                    <img src="/ressources/vs.png">
+                                    <img src="/media/components/vs.png">
                                 </button>
                                 <button class="btn-chat">
-                                    <img src="/ressources/chat.png">
+                                    <img src="/media/components/chat.png">
                                 </button>
                             </div>
                         </div>
@@ -103,18 +119,9 @@
         <div class="container">
         </div>
     </footer>
-
-    <!-- Dynamic Card -->
-    <div id="dynamic-card-container" class="hidden">
-        <!-- Background Opacity Overlay -->
-        <div class="overlay"></div>
-        <div class="card">
-            <button id="close-dynamic-card" class="close-btn">X</button>
-            <div id="dynamic-card-content"></div> <!-- Dynamic content goes here -->
-        </div>
-    </div>
-
-    <script type="module" src="./scripts/main.js"></script>
-    <script type="module" src="./script/mainWS.js"></script>
 </body>
+<script src="./script/mainWS.js"></script>
+<!-- <script type="module" src="./script/router.js"></script>
+<script type="module" src="./script/game3d/start_engine.js"></script>
+<script type="module" src="./script/matchmaking.js"></script> -->
 </html>

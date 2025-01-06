@@ -1,3 +1,4 @@
+# COMMENTER CE CODE SI CHANGEMENT, NE PAS SUPPRIMER SVP
 FROM python:3.12
 
 WORKDIR /code
@@ -11,3 +12,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 CMD ["./start.sh"]
+
+# CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
