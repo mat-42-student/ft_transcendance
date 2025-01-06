@@ -22,11 +22,15 @@ export async function navigateTo(hash) {
     if ((!mainContent) || (!route)) return;
 
     if (hash == '#profile') {
+        console.log("hash == profile");
         if (await isAuthenticated() == false) {
+            console.log("profile + pas authentifié");
             window.history.replaceState({}, '', `#signin`);
+            // hash = '#signin';
             initDynamicCard('auth');
             return;
         } else {
+            console.log("profile + authentifié");
             try {
                 const response = await fetch(route);
                 const html = await response.text();

@@ -1,4 +1,6 @@
 import { closeDynamicCard } from '../components/dynamic_card.js';
+import { openWebSocket } from '../websocket.js';
+import { fetchFriends } from './users.js';
 
 // Vérifie si l'utilisateur est authentifié en regardant le token dans sessionStorage
 export async function isAuthenticated() {
@@ -85,8 +87,11 @@ export async function handleAuthSubmit(event) {
         if (response.ok) {
             const data = await response.json();
             sessionStorage.setItem('authToken', data.access);  // Stocke le token JWT
+            sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
             console.log("Connexion réussie !");
             window.location.hash = '#profile';
+            // openWebSocket(); // Ouvre le WebSocket après connexion réussie
+            fetchFriends(); // Charge la liste d'amis après authentification
             // updateUI();
             // fetchUsers();
         } else {
