@@ -4,7 +4,6 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
 
-
 # User model manager
 class UserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
@@ -21,9 +20,8 @@ class UserManager(BaseUserManager):
         return self.create_user(username, password, **extra_fields)
     
     class Meta:
-        db_table = 'accounts1'
-
-
+        db_table = 'user_manager'
+    
 # User model (inherits Django user model)
 class User(AbstractBaseUser):
     STATUS_CHOICES = [
@@ -42,10 +40,10 @@ class User(AbstractBaseUser):
         validators=[MinLengthValidator(5)]
     )
     email = models.EmailField(
-        max_length=254,  # Longueur standard pour les emails
-        blank=True,      # Champ non obligatoire pour le moment
-        null=True,       # Permet de stocker NULL dans la base si le champ est vide
-        unique=True,     # Pour assurer l'unicité
+        max_length=254,
+        blank=True,
+        null=True,
+        unique=True,
     )
     avatar = models.ImageField(
         upload_to="avatars/", 
@@ -63,6 +61,14 @@ class User(AbstractBaseUser):
         related_name='blocked_by',
         through='BlockedUser'
     )
+    is_2fa_enabled = models.BooleanField(
+        default=False
+    )
+    totp_secret = models.CharField(
+        max_length=32,
+        null=True,
+        blank=True
+    )
     
     # Champs d'authentification standard de Django
     is_active = models.BooleanField(default=True)
@@ -74,11 +80,11 @@ class User(AbstractBaseUser):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['password']
 
-    class Meta:
-        db_table = 'accounts2'
-
     def __str__(self):
         return self.username
+
+    class Meta:
+        db_table = 'users'
     
 # BlockedUser model -> personnalisé pour gérer indexation dans db (améliore perf)
 class BlockedUser(models.Model):
@@ -97,9 +103,8 @@ class BlockedUser(models.Model):
     blocked_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'accounts3'
+        db_table = 'blocked_users'
         unique_together = ('from_user', 'to_user')
-
 
 # Relationship model
 class Relationship(models.Model):
@@ -131,7 +136,7 @@ class Relationship(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'accounts4'
+        db_table = 'relationship'
         unique_together = ('from_user', 'to_user')
 
     def clean(self):

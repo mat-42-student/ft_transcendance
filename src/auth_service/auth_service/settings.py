@@ -1,12 +1,8 @@
 from pathlib import Path
-from datetime import timedelta
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-r)*s-=2l!4jiwy_qk5xk+s)s9@l*$c8fb@!1k#!@u_nh7(yq=2'
@@ -14,13 +10,12 @@ SECRET_KEY = 'django-insecure-r)*s-=2l!4jiwy_qk5xk+s)s9@l*$c8fb@!1k#!@u_nh7(yq=2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")
 JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")
 JWT_ALGORITHM = 'RS256'
 
-# Application definition
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,10 +35,15 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'authentication.authentication.JWTAuthentication',
+    ],
+}
 
 ROOT_URLCONF = 'auth_service.urls'
 
@@ -65,9 +65,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'auth_service.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -78,9 +75,6 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -97,21 +91,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
 STATIC_URL = 'static/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -120,20 +105,20 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #     'http://localhost:9090',
 # ]
 
-AUTH_USER_MODEL = 'authentication.CustomUser'
+AUTH_USER_MODEL = 'authentication.User'
+
+# CORS settings
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5500",
+#     "http://127.0.0.1:5500",
+# ]
+# CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-APPEND_SLASH = False
-LOGIN_URL = 'two_factor:login'
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# OAuth2 credentials from 42
-OAUTH_CLIENT_ID = 'u-s4t2ud-395be1fd1fa4dac90db7f60d657bd1cdf9de8fd967e6846ddf50c4b58c0a6602'
-OAUTH_CLIENT_SECRET = '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'
-# OAUTH_REDIRECT_URI = 'https://localhost:8081'
-OAUTH_REDIRECT_URI = 'http://localhost:8080'
-
-
-
+# OAuth 2.0
+OAUTH_CLIENT_ID = 'u-s4t2ud-84a349ed4a97afde2d52b8aa3de74906b2e8504fec44391bd1e117b5708b4ee4'
+OAUTH_CLIENT_SECRET = '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'
+OAUTH_REDIRECT_URI = 'http://localhost:5500/login.html'

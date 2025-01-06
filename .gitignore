@@ -1,26 +1,7 @@
-# Fichiers sensibles
-.env
-./src/django/code/.env
-
-# Environnement virtuel Python
-**env/
-
-# Fichiers générés par Django
-**/__pycache__/
-**/*.pyc
-**/*.pyo
-db.sqlite3
-
-# Fichiers statiques et médias
-**/staticfiles/
-# static/
+venvs/
+.DS_Store
+/__pycache__/
 media/
-
-# Logs
-*.log
-logs/
-
-# IDEs et outils
 .vscode/
 
 # Specifique branche `users_management`

@@ -42,6 +42,12 @@ services:
         condition: service_healthy
       auth-service:
         condition: service_started
+    env_file:
+      - ./users/.env
+    restart: on-failure
+    networks:
+      - nginx-network
+      - db-network
 
   chat:
     container_name: chat
