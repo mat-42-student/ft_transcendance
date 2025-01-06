@@ -28,6 +28,7 @@ export default {
 		right: 500, bottom: 500,
 	},
 
+
 	/** is there active gameplay? or is it paused for any reason */
 	get isRunning() {
 		return (!__isWaitingForGameStart
@@ -37,13 +38,63 @@ export default {
 		);
 	},
 
+	onStartRunning: null,
+	onStopRunning: null,
+
 	set isWaitingForGameStart(value) {
+		if (value == __isWaitingForGameStart)
+			return;
+
+		let previouslyRunning = engine.isRunning;
 		__isWaitingForGameStart = value;
 		const cl = 'waiting-game-start';
-		if (value)
+		if (value == true)
 			__html_loading_text.classList.add(cl);
 		else
 			__html_loading_text.classList.remove(cl);
+
+		if (previouslyRunning != engine.isRunning) {
+			if (value == true && engine.onStartRunning != null) {
+				engine.onStartRunning();
+			} else if (value == false && engine.onStopRunning != null) {
+				engine.onStopRunning();
+			}
+		}
+	},
+	set isConnecting(value) {
+		if (value == __isConnecting)
+			return;
+
+		let previouslyRunning = engine.isRunning;
+		__isConnecting = value;
+		const cl = 'connecting';
+		if (value == true)
+			__html_loading_text.classList.add(cl);
+		else
+			__html_loading_text.classList.remove(cl);
+
+		if (previouslyRunning != engine.isRunning) {
+			if (value == true && engine.onStartRunning != null) {
+				engine.onStartRunning();
+			} else if (value == false && engine.onStopRunning != null) {
+				engine.onStopRunning();
+			}
+		}
+	},
+	set isPaused(value) {
+		if (value == __isPaused)
+			return;
+
+		let previouslyRunning = engine.isRunning;
+		__isPaused = value;
+
+		if (previouslyRunning != engine.isRunning) {
+			if (value == true && engine.onStartRunning != null) {
+				engine.onStartRunning();
+			} else if (value == false && engine.onStopRunning != null) {
+				engine.onStopRunning();
+			}
+		}
 	},
 
 
@@ -71,14 +122,9 @@ export default {
 			__html_borderCopy.id = 'engine-border-copy';
 			__html_container.appendChild(__html_borderCopy);
 
-			//TODO wip loading rework (add new stuff)
 			__html_loading_text = document.createElement("div");
 			__html_loading_text.id = 'engine-loading-text';
 			__html_borderCopy.appendChild(__html_loading_text);
-			// Connecting
-			// Loading 3D content
-			// Waiting for other player
-			// Paused? (hidden - but there needs to be a generic 'is running' property that checks everything. And a hidden property for the pre match / game countdown.)
 		}
 
 		{  // Setup ThreeJS
@@ -319,20 +365,39 @@ function __updateAutoResolution(delta) {
 
 
 function __decreaseLoadingCounter() {
+	let previouslyRunning = engine.isRunning;
 	__loadingCounter--;
+
 	if (__loadingCounter < 0) { __loadingCounter = 0; }  // idk, just in case
 
 	if (__loadingCounter == 0) {
-		//TODO signal load complete?
 		__html_loading_text.classList.remove('loading');
+	}
+
+	if (previouslyRunning != engine.isRunning) {
+		if (value == true && engine.onStartRunning != null) {
+			engine.onStartRunning();
+		} else if (value == false && engine.onStopRunning != null) {
+			engine.onStopRunning();
+		}
 	}
 }
 
 
 function __increaseLoadingCounter() {
+	let previouslyRunning = engine.isRunning;
+
 	if (__loadingCounter == 0) {
-		//TODO signal beginning of loading phase
 		__html_loading_text.classList.add('loading');
 	}
+
+	if (previouslyRunning != engine.isRunning) {
+		if (value == true && engine.onStartRunning != null) {
+			engine.onStartRunning();
+		} else if (value == false && engine.onStopRunning != null) {
+			engine.onStopRunning();
+		}
+	}
+
 	__loadingCounter++;
 }
