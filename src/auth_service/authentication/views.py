@@ -89,7 +89,7 @@ class RefreshTokenView(APIView):
             raise AuthenticationFailed('User not found!')
 
         try:
-            payload = jwt.decode(refresh_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
+            jwt.decode(refresh_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Refresh token expired!')
         except jwt.InvalidTokenError:
@@ -97,7 +97,7 @@ class RefreshTokenView(APIView):
 
         access_payload = {
             'id': user.id,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }
         new_access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
@@ -154,9 +154,6 @@ class Enroll2FAView(APIView):
         return Response(response_data, status=status.HTTP_200_OK)
     
 class Verify2FAView(APIView):
-    """
-    Verify a 6-digit TOTP code from the user.
-    """
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
 
@@ -177,9 +174,6 @@ class Verify2FAView(APIView):
             return Response({"error": "Invalid or expired 2FA code"}, status=401)
 
 class Disable2FAView(APIView):
-    """
-    Disable 2fa for the user.
-    """
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
 

@@ -15,7 +15,7 @@ from accounts.views import (
 
 router = routers.SimpleRouter()
 router.register('users', UserViewSet, basename='users')
-router.register('relationships', RelationshipViewSet, basename='relationships')
+router.register('users/relationships', RelationshipViewSet, basename='relationships')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

@@ -88,32 +88,19 @@ async function handleOAuth() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Check if we have ?code=... in the URL
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     const state = params.get('state');
   
-    // 2. If we do, call your Django /callback endpoint
     if (code && state) {
-      // Construct the URL to your Django OAuth callback
       const callbackUrl = `https://localhost:3000/api/v1/auth/oauth/callback?code=${code}&state=${state}`;
   
       fetch(callbackUrl)
         .then(response => response.json())
         .then(data => {
-          // data should be { success: "true", accessToken: "...." } if all went well
           if (data.accessToken) {
-            // 3. Store the access token in localStorage
             sessionStorage.setItem('accessToken', data.accessToken);
-  
-            // The refresh token is already in the HttpOnly cookie.
-  
-            // 4. Clear the URL so you don't keep the code in the address bar
-            // One approach: set window.location without the params or navigate to another page
             window.history.replaceState({}, document.title, window.location.pathname);
-  
-            // 5. Optionally redirect to your "dashboard" or show a success message
-            // window.location.href = "/dashboard.html"; 
             console.log("OAuth success, token stored in localStorage!");
           } else {
             console.error("No accessToken returned from backend", data);
@@ -121,9 +108,8 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(err => console.error("Error exchanging code for token:", err));
     }
-  });
+});
   
- 
 function loginSuccessful() {
     const registerContainer = window.document.querySelector('.register-container');
     const loginContainer = window.document.querySelector('.login-container');
@@ -160,7 +146,7 @@ function enroll2fa() {
 
 function verify2fa() {
     const token = sessionStorage.getItem('access_token')
-    const totp = document.getElementById('totp').value; 
+    const totp = document.getElementById('totp').value;
 
     fetch('https://localhost:3000/api/v1/auth/2fa/verify', {
         method: 'POST',
