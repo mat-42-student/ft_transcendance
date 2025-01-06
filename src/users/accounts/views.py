@@ -66,6 +66,7 @@ class UserViewSet(viewsets.ModelViewSet):
             else:    
                 serializer = UserDetailSerializer(user)
             return Response(serializer.data)
+        
         # Si le client n'est pas authentifié, utilise le serializer public
         serializer = UserDetailSerializer(user)
         return Response(serializer.data)

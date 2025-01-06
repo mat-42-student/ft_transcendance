@@ -1,7 +1,7 @@
 POST https://localhost:3000/api/v1/auth/login
 Content-Type: application/json
 
-{"email": "test@mail.com", "password": "Test123*"}
+{"email": "alice@mail.com", "password": "Test123*"}
 
 ###
 
