@@ -374,12 +374,8 @@ function __decreaseLoadingCounter() {
 		__html_loading_text.classList.remove('loading');
 	}
 
-	if (previouslyRunning != engine.isRunning) {
-		if (value == true && engine.onStartRunning != null) {
-			engine.onStartRunning();
-		} else if (value == false && engine.onStopRunning != null) {
-			engine.onStopRunning();
-		}
+	if (previouslyRunning != engine.isRunning && engine.onStartRunning != null) {
+		engine.onStartRunning();
 	}
 }
 
@@ -391,13 +387,9 @@ function __increaseLoadingCounter() {
 		__html_loading_text.classList.add('loading');
 	}
 
-	if (previouslyRunning != engine.isRunning) {
-		if (value == true && engine.onStartRunning != null) {
-			engine.onStartRunning();
-		} else if (value == false && engine.onStopRunning != null) {
-			engine.onStopRunning();
-		}
-	}
-
 	__loadingCounter++;
+
+	if (previouslyRunning != engine.isRunning && engine.onStopRunning != null) {
+		engine.onStopRunning();
+	}
 }
