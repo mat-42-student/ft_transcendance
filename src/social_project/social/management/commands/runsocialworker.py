@@ -70,7 +70,7 @@ class Command(BaseCommand):
         self.user_status.update({"1" : "online", "2": "ingame", "3": "offline"})
         return ["1", "2", "3"]
     
-        # response = requests.get("/users_api/users/<id>/")
+        # response = requests.get("/api/v1/users/<id>/")
         # if response.status_code == 200:
         #     try:
         #         data = response.json()

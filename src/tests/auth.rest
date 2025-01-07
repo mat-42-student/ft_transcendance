@@ -1,7 +1,7 @@
 POST https://localhost:3000/api/v1/auth/login
 Content-Type: application/json
 
-{"email": "alice@mail.com", "password": "Test123*"}
+{"email": "tom2@mail.com", "password": "Test123*"}
 
 ###
 
@@ -15,7 +15,7 @@ Content-Type: application/json
 POST https://localhost:3000/api/v1/auth/refresh
 Content-Type: application/json
 
-{"email": "test@mail.com"}
+{"email": "john@mail.com"}
 
 ###
 
@@ -28,7 +28,7 @@ Content-Type: application/json
 
 POST https://localhost:3000/api/v1/auth/2fa/enroll
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJ0b20iLCJleHAiOjE3MzUzMDk5NzAsImlhdCI6MTczNTMwOTY3MH0.emNIZyvirBts7XmqylP1ZJcZ2o9ZHwsjLriBLBkgKnvou4UXacgZTyCineBi6BOTAplo3UfcmcRgzTsvJ-sip4hJK2701mqef5EEI7mv5edU4VOoGNM4VywXhaSVpTbv9goAufXwkFYrSA3ov8bV8_UlALRVt3Tr39cEdkwYYsf3yghCRELsODHWSPniMcCjI1oDiWscDc-4Dg2CgvPbpN_NxurzGAov_ry18p5u7ZNCgKZntO8W38HnsX1A-PJPsajhRhanAYWNy63WYjsVDWZMqjwomhrh0jR83ZnK8v6Uiz1PtWOWir-PbxJroQTFPRmDgA5Q3nkCt0qCl701Qg
+Authorization: Bearer
 
 {}
 
@@ -36,8 +36,7 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hb
 
 POST https://localhost:3000/api/v1/auth/2fa/disable-2fa
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNzM0NTM1NjMwLCJpYXQiOjE3MzQ1MzU1NzB9.HZHr5XMsBaZBlCdNdyNF9ap0CNCys43chy4CF7c3tRDWcsuEnJ86rx5KOGcQ-IZLVsqZVqjckODS2k4Hv4qfMgIEFJHMXyqVev021sPcYKFZF6zdCeF11TziVvi0614g24AeT1ydivae1CqSpINvVSAMCpOMau2RvnXWREKI_06ke20tKQl-hJy_J1tn8judzZAedMNp0y3qwo7zLl0OZcLnC41q-pk0A5_lzcOSB-9kPCaaCAbGncmMjeSV3V4-LlVqMr8bdnMIgl0Xk-AOrP0Vaq6gSfSvPNKn3efinNr5jYoCU71C2pjiqrwQMXqNRCVT62HurQ8XpblG0NEnwg
-
+Authorization: Bearer
 {}
 
 ###
@@ -51,6 +50,21 @@ Content-Type: application/json
 
 GET https://localhost:3000/api/v1/auth/oauth/callback
 Content-Type: application/json
+
+{}
+
+###
+
+POST https://localhost:3000/api/v1/auth/login
+Content-Type: application/json
+
+{"email": "alice@mail.com", "password": "Test123*"}
+
+###
+
+POST https://localhost:3000/api/v1/auth/verify
+Content-Type: application/json
+Authorization: Bearer yJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJ0b20yIiwiZXhwIjoxNzM2MjYyMTkzLCJpYXQiOjE3MzYyNjE4OTN9.EHqeAFoWaI_h3T65W1MPmkVbnxnOo3l1GaeUshnjoE9pS4G7tCYUhgQumEW7kkG8E0NmO9KPaqkl9b1Zup8H90y7TqonlSJG1HTLorwTLQQV0YHtJ16niB-sMOO-j-AhhlJuajpzMinwS53cltub_d3KvNQbAPTdy0u627neE_0UMb89dZPISD1dYqJqwkzrHGVrwTh4dAhiyXlfhmC8e_B99l-Um77nj4f5sYEZ9U6eILjieDuABnZwd8dfHBChp_w2YrB_xOBnMM0dk2NgtATiB7Oz-uihr9mAWNfoyQUJ7Sdy4kr-ibJv4rSt9bFJmezqSP1bprCFFOHIgzjosQ
 
 {}
 

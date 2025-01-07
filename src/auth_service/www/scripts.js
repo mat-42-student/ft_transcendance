@@ -169,13 +169,15 @@ function verify2fa() {
 }
 
 function rereshToken() {
+    const emailInput = document.getElementById('email2').value;
+
     fetch('https://localhost:3000/api/v1/auth/refresh', {
         method: 'POST',
         credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({"email": "test@mail.com"}),
+        body: JSON.stringify({"email": emailInput}),
     })
     .then(response => response.json())
     .then(data => {

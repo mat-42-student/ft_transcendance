@@ -19,6 +19,29 @@ import base64
 import secrets
 from .utils import generate_state
 
+class VerifyTokenView(APIView):
+    renderer_classes = [JSONRenderer]
+
+    def post(self, request):
+        auth_header = request.headers.get('Authorization')
+
+        if not auth_header or not auth_header.startswith('Bearer '):
+            raise AuthenticationFailed('Missing or invalid Authorization header!')
+        
+        access_token = auth_header.split(' ')[1]
+
+        if (access_token is None):
+           raise AuthenticationFailed('Missing token!')
+
+        try:
+            jwt.decode(access_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Refresh token expired!')
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed('Invalid refresh token!')
+
+        return Response({'success': 'true'}, status=status.HTTP_200_OK)
+
 class LoginView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -113,14 +136,11 @@ class LogoutView(APIView):
         response = Response()
         response.delete_cookie('refreshToken')
         response.data = {
-            'message': 'success'
+            'success': 'true'
         }
         return response
 
 class Enroll2FAView(APIView):
-    """
-    Setup 2fa for the user.
-    """
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
 
@@ -132,7 +152,7 @@ class Enroll2FAView(APIView):
         
         totp_secret = pyotp.random_base32()
         user.totp_secret = totp_secret
-        # user.is_2fa_enabled = True
+        user.is_2fa_enabled = True
         user.save()
 
         totp = pyotp.TOTP(totp_secret)

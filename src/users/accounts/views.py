@@ -68,7 +68,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         
         # Si le client n'est pas authentifié, utilise le serializer public
-        serializer = UserDetailSerializer(user)
+        serializer = UserDetailSerializer(user)  # !!
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):

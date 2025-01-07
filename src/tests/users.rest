@@ -1,4 +1,4 @@
-POST https://localhost:3000/api/v1/users/register/
+POST https://localhost:3000/api/v1/users/register
 Content-Type: application/json
 
 {"username": "tom2", "email": "tom2@mail.com", "password": "Test123*", "confirm_password": "Test123*"}
@@ -6,14 +6,14 @@ Content-Type: application/json
 ###
 
 
-GET https://localhost:3000/api/v1/users/3
+GET https://localhost:3000/api/v1/users/2
 Content-Type: application/json
 
 {}
 
 ###
 
-GET https://localhost:3000/api/v1/users/1
+GET https://localhost:3000/api/v1/users/
 Content-Type: application/json
 
 {}

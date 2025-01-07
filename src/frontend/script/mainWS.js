@@ -48,7 +48,7 @@ function create_user(username) {
     };
 
     // Effectuer la requête POST
-    fetch("https://localhost:3000/api/auth/signup", {
+    fetch("https://localhost:3000/api/v1/users/register", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"  // Spécifie que les données sont en JSON
@@ -77,7 +77,7 @@ function auth(username) {
     };
 
     // Effectuer la requête POST
-    fetch("https://localhost:3000/api/auth/login", {
+    fetch("https://localhost:3000/api/v1/auth/login", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"  // Spécifie que les données sont en JSON

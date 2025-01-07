@@ -69,7 +69,7 @@ class Command(BaseCommand):
 
     def is_muted(self, exp, recipient) -> bool :
         """is exp muted by recipient ?"""
-        # response = requests.get(f"/users_api/users/{recipient}/", timeout=10)
+        # response = requests.get(f"/api/v1/users/{recipient}/", timeout=10)
         # if response.status_code == 200:
         #     try:
         #         data = response.json()
@@ -86,7 +86,7 @@ class Command(BaseCommand):
 
     def recipient_exists(self, user):
         """Does user exist ?"""
-        # response = requests.get(f"/users_api/users/{user}/", timeout=10)
+        # response = requests.get(f"/api/v1/users/{user}/", timeout=10)
         # if response.status_code == 200:
         #     try:
         #         data = response.json()
