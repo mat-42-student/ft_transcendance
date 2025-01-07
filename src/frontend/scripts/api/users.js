@@ -65,22 +65,35 @@ function addChatButtonListeners() {
                 return;
             }
 
-            // Récupère le nom d'utilisateur (username) du 'friend-item'
+            // Met à jour le nom dans l'interface de chat
             const username = friendItem.querySelector('.friend-name').textContent;
             if (!username) {
                 console.error("Nom d'utilisateur introuvable dans 'friend-item'.");
                 return;
             }
-
-            // Met à jour le nom dans l'interface de chat
             const chatFriendName = document.querySelector('.chat-header .friend-name');
-            console.log(`ici: ${chatFriendName}`);
             if (chatFriendName) {
                 chatFriendName.textContent = username;
                 console.log(`Nom d'utilisateur mis à jour : ${username}`);
             } else {
-                console.log("Erreur pas friend-name");
+                console.error("Erreur : élément '.friend-name' introuvable.");
             }
+
+            // Récupère les amis depuis sessionStorage
+            const friends = JSON.parse(sessionStorage.getItem('friends') || '[]');
+
+            // Trouve les infos du User concerné
+            const friendData = friends.find((friend) => friend.username === username);
+            if (!friendData) {
+                console.error("Impossible de trouver les informations pour cet utilisateur :", username);
+                return;
+            }
+
+            // Crée une Map contenant les informations du User
+            const friendInfoMap = new Map(Object.entries(friendData));
+
+            // Affiche les informations dans le terminal
+            console.log("Informations du User :", Array.from(friendInfoMap.entries()));
         });
     });
 }
