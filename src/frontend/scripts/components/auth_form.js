@@ -36,6 +36,7 @@ export function initAuthFormListeners() {
 function updateAuthForm(mode) {
     const formTitle = document.getElementById('form-title');
     const confirmPasswordContainer = document.getElementById('confirm-password-container');
+    const confirmUsernameContainer = document.getElementById('username-container');
     const authSubmit = document.getElementById('auth-submit');
     const registerLink = document.querySelector('a[data-action="register"]');
     const signinLink = document.querySelector('a[data-action="signin"]');
@@ -49,6 +50,7 @@ function updateAuthForm(mode) {
     if (mode === 'register') {
         formTitle.textContent = 'Register';
         confirmPasswordContainer.classList.remove('hidden'); // Affiche la confirmation du mot de passe
+        confirmUsernameContainer.classList.remove('hidden'); // Affiche le username
         confirmPasswordInput.setAttribute('required', 'required');
         authSubmit.textContent = 'Register';
 
@@ -58,6 +60,7 @@ function updateAuthForm(mode) {
     } else { // Par défaut : mode "signin"
         formTitle.textContent = 'Sign In';
         confirmPasswordContainer.classList.add('hidden'); // Cache la confirmation du mot de passe
+        confirmUsernameContainer.classList.add('hidden'); // Cache le username
         confirmPasswordInput.removeAttribute('required');
         authSubmit.textContent = 'Sign In';
 

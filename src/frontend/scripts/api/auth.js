@@ -4,25 +4,25 @@ import { launchMainSocket } from '../mainWS.js';
 
 // Vérifie si l'utilisateur est authentifié en regardant le token dans sessionStorage
 export async function isAuthenticated() {
-    const token = sessionStorage.getItem('authToken');
+    const token = sessionStorage.getItem('accessToken');
     if (!token) {
         return false;
     }
 
     try {
-        const response = await fetch('/users_api/token/verify/', {
+        const response = await fetch('/api/v1/auth/verify', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'token': `${token}`,
+                'Authorization': `Bearer ${token}`,
             },
-            body: JSON.stringify({ token }),
+            body: JSON.stringify({}),
         });
 
         if (response.ok) {
             return true;
         } else {
-            sessionStorage.removeItem('authToken');
+            sessionStorage.removeItem('accessToken');
             return false;
         }
     } catch (error) {
@@ -32,8 +32,29 @@ export async function isAuthenticated() {
 }
 
 // Logout function
+// export function logout() {
+//     sessionStorage.removeItem('accessToken');
+//     console.log("Déconnecté avec succès !");
+//     window.location.hash = '#home';
+//     // updateUI();
+// }
+
 export function logout() {
-    sessionStorage.removeItem('authToken');
+    fetch('https://localhost:3000/api/v1/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            sessionStorage.removeItem('accessToken');
+        }
+    })
+    .catch(error => console.error('Error:', error));
     console.log("Déconnecté avec succès !");
     window.location.hash = '#home';
     // updateUI();
@@ -44,11 +65,12 @@ export async function handleAuthSubmit(event) {
     event.preventDefault(); // Empêche le rechargement de la page
 
     const username = document.getElementById('auth-username').value.trim();
+    const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value.trim();
     const confirm_password = document.getElementById('auth-confirm-password').value.trim();
     const hash = window.location.hash;
 
-    if (!username || !password) {
+    if (!email || !password) {
         alert('Veuillez remplir tous les champs obligatoires.');
         return;
     }
@@ -67,11 +89,11 @@ export async function handleAuthSubmit(event) {
     let apiUrl, payload;
 
     if (hash === '#register') {
-        apiUrl = '/users_api/register/';
-        payload = { username, password, confirm_password };
+        apiUrl = '/api/v1/users/register';
+        payload = { username, email, password, confirm_password };
     } else if (hash === '#signin') {
-        apiUrl = '/users_api/login/';
-        payload = { username, password };
+        apiUrl = '/api/v1/auth/login';
+        payload = { email, password };
     } else {
         console.error('Action inconnue pour le formulaire d\'authentification.');
         return;
@@ -86,12 +108,9 @@ export async function handleAuthSubmit(event) {
 
         if (response.ok) {
             const data = await response.json();
-            sessionStorage.setItem('authToken', data.access);  // Stocke le token JWT
-            sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
+            sessionStorage.setItem('accessToken', data.accessToken);
             console.log("Connexion réussie !");
-            window.location.hash = '#profile';
-            launchMainSocket(data.user_id); // Ouvre le WebSocket après connexion réussie
-            fetchFriends(); // Charge la liste d'amis après authentification
+            window.location.hash = '#profile'; // I got an issue with this redirection while trying to store my token in session storage
             // updateUI();
             // fetchUsers();
         } else {

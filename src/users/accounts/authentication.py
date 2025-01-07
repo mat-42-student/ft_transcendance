@@ -5,10 +5,6 @@ import jwt
 from .models import User
 
 class JWTAuthentication(BaseAuthentication):
-    """
-    Custom authentication class for JWT-based authentication.
-    """
-
     def authenticate(self, request):
         auth_header = request.headers.get('Authorization')
 
@@ -35,8 +31,4 @@ class JWTAuthentication(BaseAuthentication):
         return (user, None)
 
     def authenticate_header(self, request):
-        """
-        Returns the value for the `WWW-Authenticate` header in a 401 response.
-        """
         return 'Bearer'
-
