@@ -12,8 +12,8 @@ ball_div = document.getElementById("ball");
 
 field.setAttribute('tabindex', '0'); // Make playground focusable
 // Add event listeners for keydown
-field.addEventListener('keydown', keydown)
-field.addEventListener('keyup', keyup)
+field.addEventListener('keydown', keydown);
+field.addEventListener('keyup', keyup);
 field.focus();
 
 

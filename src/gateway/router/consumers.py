@@ -19,7 +19,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             self.get_user_infos()
         if self.consumer_id is None:
             print("User is not authenticated. Aborting")
-            self.close()
+            await self.close(code=4401)
         try:
             await self.accept()
             self.connected = True
@@ -53,25 +53,34 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         self.listen_task.cancel()
 
     def get_user_infos(self):
-        data = self.checkAuth()
-        if data:
-            self.consumer_id =  data.get('id')
-            self.consumer_name = data.get('username')
-        else:
-            return None
+        # Julien's endpoint
+        params = parse_qs(self.scope['query_string'].decode())
+        if params:
+            self.consumer_id = int(params['id'][0]) if 'id' in params and params['id'] else None
+            self.consumer_name = self.consumer_id
+            return True
+        return False
+        # Nilo's endpoint
+        # data = self.checkAuth()
+        # if data:
+        #     self.consumer_id =  data.get('id')
+        #     self.consumer_name = data.get('username')
+        # else:
+        #     return None
 
     def checkAuth(self):
-        self.public_key = "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnvGKZgRN72lJMBIMq8MtxHTjKzJV/3WpHj52TiVYhD43Z+Z720BH257gqBni5Vpsph96EhBHmiDqDuJKr1x5KWz1tDG2A8RQszEPfpryTRXZKnv33wMfLo+h9qo6yXvh8BT9It/zk5mNoqugTmH+oBo7qr8emuBFXXoHIPF+AhcCpFoSETuTBe3ufAlT8v2LjKdw/NDzxm3KBd7s/3nA/+euQ97gWB1ZlwHFC9gb0e5zCW6Clh7YCPEQ1OJ/YmzUsowVObQYqrPh0SLuv1qmUqLdFdEYr1wO0jYPiZeDP6Hf8oH2s6dVoczMWvQvqr10xc9TPCefefPNE2lqpH2IrQIDAQAB-----END PUBLIC KEY-----"
-        params = parse_qs(self.scope['query_string'].decode())
-        self.token = params.get('access_token', [None])[0]
-        try:
-            payload = jwt.decode(self.token, self.public_key, algorithms=['RS256'])
-            return payload
-        except jwt.ExpiredSignatureError as e:
-            print(e)
-        except jwt.InvalidTokenError as e:
-            print(e)
-        return None
+        return True
+        # self.public_key = "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnvGKZgRN72lJMBIMq8MtxHTjKzJV/3WpHj52TiVYhD43Z+Z720BH257gqBni5Vpsph96EhBHmiDqDuJKr1x5KWz1tDG2A8RQszEPfpryTRXZKnv33wMfLo+h9qo6yXvh8BT9It/zk5mNoqugTmH+oBo7qr8emuBFXXoHIPF+AhcCpFoSETuTBe3ufAlT8v2LjKdw/NDzxm3KBd7s/3nA/+euQ97gWB1ZlwHFC9gb0e5zCW6Clh7YCPEQ1OJ/YmzUsowVObQYqrPh0SLuv1qmUqLdFdEYr1wO0jYPiZeDP6Hf8oH2s6dVoczMWvQvqr10xc9TPCefefPNE2lqpH2IrQIDAQAB-----END PUBLIC KEY-----"
+        # params = parse_qs(self.scope['query_string'].decode())
+        # self.token = params.get('access_token', [None])[0]
+        # try:
+        #     payload = jwt.decode(self.token, self.public_key, algorithms=['RS256'])
+        #     return payload
+        # except jwt.ExpiredSignatureError as e:
+        #     print(e)
+        # except jwt.InvalidTokenError as e:
+        #     print(e)
+        # return None
 
     def valid_json_header(self, data):
         if not isinstance(data, dict):
