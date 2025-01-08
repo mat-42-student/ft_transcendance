@@ -223,12 +223,13 @@ class UserLoginSerializer(serializers.Serializer):
 
 # Relationship 'detail' serializer
 class RelationshipSerializer(serializers.ModelSerializer):
-    from_user = serializers.StringRelatedField()
-    to_user = serializers.StringRelatedField()
+    from_user = UserDetailSerializer(read_only=True)
+    to_user = UserDetailSerializer(read_only=True)
 
     class Meta:
         model = Relationship
-        fields = ['from_user', 'to_user', 'status', 'created_at']
+        fields = ['id', 'from_user', 'to_user', 'status', 'created_at']
+        read_only_fields = ['id', 'from_user', 'to_user', 'status', 'created_at']
 
 
 # User Relationship 'list' serializer
