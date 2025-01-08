@@ -26,12 +26,12 @@ from .serializers import (
     UserPrivateDetailSerializer, 
     UserBlockedSerializer, 
     UserUpdateSerializer, 
+    UserLoginSerializer,
     UserRegistrationSerializer, 
     RelationshipSerializer
 )
 
 # User registration APIView
-=======
 # class UserRegisterView(APIView):
 #     permission_classes = [AllowAny]
 #     renderer_classes = [JSONRenderer]
