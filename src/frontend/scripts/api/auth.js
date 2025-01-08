@@ -113,6 +113,7 @@ export async function handleAuthSubmit(event) {
             window.location.hash = '#profile'; // I got an issue with this redirection while trying to store my token in session storage
             // updateUI();
             // fetchUsers();
+            launchMainSocket(data.accessToken);
         } else {
             const errorData = await response.json();  // Récupère le corps de la réponse d'erreur
             // alert(`Erreur : ${errorData.message || 'Une erreur est survenue.'}`);

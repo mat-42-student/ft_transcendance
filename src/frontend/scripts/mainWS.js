@@ -1,9 +1,9 @@
 import { ChatApp } from './chat.js';
 import { SocialApp } from './social.js';
 
-export function launchMainSocket(id) {
-    console.log("Joining wss://" + window.location.hostname + ":3000/ws/ with user_id : \n" + id);
-    const socketURL = "wss://" + window.location.hostname + ":3000/ws/?id=" + id;
+export function launchMainSocket(token) {
+    console.log("Joining wss://" + window.location.hostname + ":3000/ws/");
+    const socketURL = "wss://" + window.location.hostname + ":3000/ws/?t=" + token;
     const mainSocket = new WebSocket(socketURL);
     const chat = new ChatApp(mainSocket);
     const social = new SocialApp(mainSocket);
