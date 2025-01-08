@@ -6,11 +6,7 @@ export async function fetchFriends() {
     }
 
     try {
-<<<<<<< Updated upstream
-        const response = await fetch('/users_api/relationships/my-relationships', {
-=======
         const response = await fetch('api/v1/users/relationships/my-relationships', {
->>>>>>> Stashed changes
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
