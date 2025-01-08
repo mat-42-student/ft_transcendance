@@ -1,14 +1,30 @@
 import django.db.models as models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+<<<<<<< Updated upstream
 
+=======
+from django.conf import settings
+from .authentication import JWTAuthentication
+>>>>>>> Stashed changes
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
+<<<<<<< Updated upstream
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
+=======
+from rest_framework.permissions import AllowAny
+from rest_framework.renderers import JSONRenderer
+from .models import User
+import jwt
+import hashlib
+import datetime
+
+
+>>>>>>> Stashed changes
 
 from .models import User, Relationship
 from .serializers import (
@@ -22,8 +38,22 @@ from .serializers import (
     RelationshipSerializer
 )
 
+<<<<<<< Updated upstream
 
 # User registration APIView
+=======
+# class UserRegisterView(APIView):
+#     permission_classes = [AllowAny]
+#     renderer_classes = [JSONRenderer]
+
+#     def post(self, request):
+#         serializer = UserRegistrationSerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response({"success": "true", "data": serializer.data}, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+>>>>>>> Stashed changes
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -31,6 +61,7 @@ class UserRegisterView(APIView):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+<<<<<<< Updated upstream
             print(user)
             user.refresh_from_db() # Rafraîchir l'objet utilisateur pour s'assurer que toutes les données sont chargées
             print(user.__class__)
@@ -40,6 +71,34 @@ class UserRegisterView(APIView):
                 'access': str(refresh.access_token),
                 'user_id': user.id,  # Inclure l'ID de l'utilisateur dans la réponse
             }, status=status.HTTP_201_CREATED)
+=======
+
+            # Générer un token JWT pour l'utilisateur
+            access_payload = {
+                'id': user.id,
+                'username': user.username,
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),
+                'iat': datetime.datetime.now(datetime.timezone.utc),
+            }
+
+            refresh_payload = {
+                'id': user.id,
+                'username': user.username,
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
+                'iat': datetime.datetime.now(datetime.timezone.utc),
+            }
+
+            access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+            refresh_token = jwt.encode(refresh_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+
+            return Response({
+                "success": "true",
+                "data": serializer.data,
+                "accessToken": access_token,
+                "refreshToken": refresh_token
+            }, status=status.HTTP_201_CREATED)
+        
+>>>>>>> Stashed changes
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
