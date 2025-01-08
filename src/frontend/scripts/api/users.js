@@ -71,11 +71,7 @@ function addChatButtonListeners() {
                 console.error("Nom d'utilisateur introuvable dans 'friend-item'.");
                 return;
             }
-
-<<<<<<< Updated upstream
-=======
             
->>>>>>> Stashed changes
             // Récupère les amis depuis sessionStorage
             const friends = JSON.parse(sessionStorage.getItem('friends') || '[]');
 
