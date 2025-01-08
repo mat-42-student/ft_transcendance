@@ -84,6 +84,8 @@ export async function handleAuthSubmit(event) {
             body: JSON.stringify(payload),
         });
 
+        console.log(JSON.stringify(payload));
+
         if (response.ok) {
             const data = await response.json();
             sessionStorage.setItem('authToken', data.access);  // Stocke le token JWT

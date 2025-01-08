@@ -6,7 +6,11 @@ export async function fetchFriends() {
     }
 
     try {
+<<<<<<< Updated upstream
         const response = await fetch('/users_api/relationships/my-relationships', {
+=======
+        const response = await fetch('api/v1/users/relationships/my-relationships', {
+>>>>>>> Stashed changes
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -72,6 +76,10 @@ function addChatButtonListeners() {
                 return;
             }
 
+<<<<<<< Updated upstream
+=======
+            
+>>>>>>> Stashed changes
             // Récupère les amis depuis sessionStorage
             const friends = JSON.parse(sessionStorage.getItem('friends') || '[]');
 
