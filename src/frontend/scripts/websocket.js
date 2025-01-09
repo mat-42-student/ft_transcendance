@@ -1,7 +1,7 @@
 let websocket = null;
 
 export function openWebSocket() {
-    const token = sessionStorage.getItem('authToken');
+    const token = sessionStorage.getItem('accessToken');
     if (!token) {
         console.error("Impossible d'ouvrir un WebSocket : utilisateur non authentifié.");
         return;
