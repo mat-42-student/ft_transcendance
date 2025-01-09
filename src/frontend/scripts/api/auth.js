@@ -10,11 +10,7 @@ export async function isAuthenticated() {
     }
 
     try {
-<<<<<<< Updated upstream
-        const response = await fetch('/users_api/token/verify/', {
-=======
         const response = await fetch('https://localhost:3000/api/v1/auth/verify', {
->>>>>>> Stashed changes
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
