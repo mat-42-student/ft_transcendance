@@ -53,13 +53,13 @@ class Command(BaseCommand):
     async def process_message(self, data):
         data['header']['dest'] = 'front' # data destination after deep processing
         user_id = data['header']['id']
-        self.user_status[user_id] = data['body']['status'] # Update current user status
         friends = self.get_friend_list(user_id)
-        if not friends:
-            print(f"No friends found for user: {user_id}")
-            return
         if data['body']['status'] == 'info': # User's first connection, get all friends status
             await self.send_friends_status(user_id, friends)
+            return
+        self.user_status[user_id] = data['body']['status'] # Update current user status
+        if not friends:
+            print(f"No friends found for user: {user_id}")
             return
         for friend in friends:
             if self.user_status.get(friend) != 'offline':
@@ -67,16 +67,18 @@ class Command(BaseCommand):
 
     def get_friend_list(self, user_id):
         """ Request friendlist from container 'users' """
-        try:
-            response = requests.get(f"http://users:8000/api/v1/users/{user_id}/")
-            response.raise_for_status()
-            data = response.json()
-            return data.get('friends')
-        except ValueError as e:
-            print("Erreur lors de la conversion en JSON :", e)
-        except requests.RequestException as e:
-            print(f"Erreur dans la requete GET : {e}")
-        return None
+        self.user_status.update({"1" : "online", "2": "ingame", "3": "offline"})
+        return ["1", "2", "3"]
+    
+        # response = requests.get("/api/v1/users/<id>/")
+        # if response.status_code == 200:
+        #     try:
+        #         data = response.json()
+        #         return data.get('friends')
+        #     except ValueError as e:
+        #         print("Erreur lors de la conversion en JSON :", e)
+        # else:
+        #     print(f"Requête échouée avec le statut {response.status_code}")
 
     async def send_friends_status(self, user_id, friends):
         """ publish status of all friends and adress them to 'user_id' """

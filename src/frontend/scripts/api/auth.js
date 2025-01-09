@@ -120,7 +120,6 @@ export async function handleAuthSubmit(event) {
             fetchFriends(); // Charge la liste d'amis après authentification
             // updateUI();
             // fetchUsers();
-            launchMainSocket(data.accessToken);
         } else {
             const errorData = await response.json();  // Récupère le corps de la réponse d'erreur
             // alert(`Erreur : ${errorData.message || 'Une erreur est survenue.'}`);

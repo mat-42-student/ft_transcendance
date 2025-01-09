@@ -4,7 +4,7 @@ from json import dumps, loads
 from channels.generic.websocket import AsyncJsonWebsocketConsumer # type: ignore
 from redis.asyncio import from_url
 from asyncio import create_task
-from .consts import REDIS_GROUPS, JWT_PUBLIC_KEY
+from .consts import REDIS_GROUPS
 from datetime import datetime, timezone
 from urllib.parse import parse_qs
 import jwt
@@ -15,10 +15,11 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
 
     async def connect(self):
         self.connected = False
-        if not self.get_user_infos():
+        if self.checkAuth():
+            self.get_user_infos()
+        if self.consumer_id is None:
             print("User is not authenticated. Aborting")
             await self.close(code=4401)
-            return
         try:
             await self.accept()
             self.connected = True
@@ -52,37 +53,34 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         self.listen_task.cancel()
 
     def get_user_infos(self):
-        # # Julien's endpoint
-        # params = parse_qs(self.scope['query_string'].decode())
-        # if params:
-        #     self.consumer_id = int(params['id'][0]) if 'id' in params and params['id'] else None
-        #     self.consumer_name = self.consumer_id
-        #     return True
-        # return False
-
-        # Nilo's endpoint
-        data = self.checkAuth()
-        if data:
-            self.consumer_id =  data.get('id')
-            self.consumer_name = data.get('username')
+        # Julien's endpoint
+        params = parse_qs(self.scope['query_string'].decode())
+        if params:
+            self.consumer_id = int(params['id'][0]) if 'id' in params and params['id'] else None
+            self.consumer_name = self.consumer_id
             return True
-        else:
-            return False
+        return False
+        # Nilo's endpoint
+        # data = self.checkAuth()
+        # if data:
+        #     self.consumer_id =  data.get('id')
+        #     self.consumer_name = data.get('username')
+        # else:
+        #     return None
 
     def checkAuth(self):
-        params = parse_qs(self.scope['query_string'].decode())
-        print(f"params : {params}")
-        token = params.get('t', [None])[0]
-        print(f"token : {token}")
-        try:
-            payload = jwt.decode(token, JWT_PUBLIC_KEY, algorithms=['RS256'])
-            return payload
-        except jwt.ExpiredSignatureError as e:
-            print(e)
-        except jwt.InvalidTokenError as e:
-            print(f"Invalid token error : {e}")
-        print("Wrong token")
-        return None
+        return True
+        # self.public_key = "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnvGKZgRN72lJMBIMq8MtxHTjKzJV/3WpHj52TiVYhD43Z+Z720BH257gqBni5Vpsph96EhBHmiDqDuJKr1x5KWz1tDG2A8RQszEPfpryTRXZKnv33wMfLo+h9qo6yXvh8BT9It/zk5mNoqugTmH+oBo7qr8emuBFXXoHIPF+AhcCpFoSETuTBe3ufAlT8v2LjKdw/NDzxm3KBd7s/3nA/+euQ97gWB1ZlwHFC9gb0e5zCW6Clh7YCPEQ1OJ/YmzUsowVObQYqrPh0SLuv1qmUqLdFdEYr1wO0jYPiZeDP6Hf8oH2s6dVoczMWvQvqr10xc9TPCefefPNE2lqpH2IrQIDAQAB-----END PUBLIC KEY-----"
+        # params = parse_qs(self.scope['query_string'].decode())
+        # self.token = params.get('access_token', [None])[0]
+        # try:
+        #     payload = jwt.decode(self.token, self.public_key, algorithms=['RS256'])
+        #     return payload
+        # except jwt.ExpiredSignatureError as e:
+        #     print(e)
+        # except jwt.InvalidTokenError as e:
+        #     print(e)
+        # return None
 
     def valid_json_header(self, data):
         if not isinstance(data, dict):
