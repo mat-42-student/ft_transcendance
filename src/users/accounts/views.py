@@ -1,15 +1,22 @@
 import django.db.models as models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.conf import settings
 from .authentication import JWTAuthentication
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
-from .models import User
-import hashlib
 from rest_framework.renderers import JSONRenderer
+from .models import User
+import jwt
+import hashlib
+import datetime
+
 
 
 from .models import User, Relationship
@@ -19,9 +26,22 @@ from .serializers import (
     UserPrivateDetailSerializer, 
     UserBlockedSerializer, 
     UserUpdateSerializer, 
+    UserLoginSerializer,
     UserRegistrationSerializer, 
     RelationshipSerializer
 )
+
+# User registration APIView
+# class UserRegisterView(APIView):
+#     permission_classes = [AllowAny]
+#     renderer_classes = [JSONRenderer]
+
+#     def post(self, request):
+#         serializer = UserRegistrationSerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response({"success": "true", "data": serializer.data}, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]

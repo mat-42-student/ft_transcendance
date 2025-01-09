@@ -106,11 +106,18 @@ export async function handleAuthSubmit(event) {
             body: JSON.stringify(payload),
         });
 
+        console.log(JSON.stringify(payload));
+
         if (response.ok) {
             const data = await response.json();
             sessionStorage.setItem('accessToken', data.accessToken);
-            console.log("Connexion réussie !");
             window.location.hash = '#profile'; // I got an issue with this redirection while trying to store my token in session storage
+            // sessionStorage.setItem('authToken', data.access);  // Stocke le token JWT
+            sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
+            console.log("Connexion réussie !");
+            window.location.hash = '#profile';
+            // openWebSocket(); // Ouvre le WebSocket après connexion réussie
+            fetchFriends(); // Charge la liste d'amis après authentification
             // updateUI();
             // fetchUsers();
             launchMainSocket(data.accessToken);

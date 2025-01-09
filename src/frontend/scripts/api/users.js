@@ -6,7 +6,7 @@ export async function fetchFriends() {
     }
 
     try {
-        const response = await fetch('/users_api/relationships/my-relationships', {
+        const response = await fetch('api/v1/users/relationships/my-relationships', {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -71,7 +71,7 @@ function addChatButtonListeners() {
                 console.error("Nom d'utilisateur introuvable dans 'friend-item'.");
                 return;
             }
-
+            
             // Récupère les amis depuis sessionStorage
             const friends = JSON.parse(sessionStorage.getItem('friends') || '[]');
 

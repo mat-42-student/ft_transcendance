@@ -27,7 +27,7 @@ services:
       - ./media:/media
       - ./users:/code
     env_file:
-      - .env
+      - ./auth_service/.env
     networks:
       - db-network
       - nginx-network

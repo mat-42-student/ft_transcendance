@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
             initDynamicCard('requests');
         });
     }
-
+    
     friendButtons.forEach((button) => {
         button.addEventListener('click', (event) => {
             const friendElement = event.target.closest('.friend-item');

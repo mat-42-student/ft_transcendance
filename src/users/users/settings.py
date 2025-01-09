@@ -16,9 +16,9 @@ DEBUG = True
 # Autorise uniquement localhost pour le serveur de développement
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
+JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")
 JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")
 JWT_ALGORITHM = 'RS256'
-
 
 # Application definition
 INSTALLED_APPS = [
@@ -142,9 +142,5 @@ AUTH_USER_MODEL = 'accounts.User'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = '/media'
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost",  # Assurez-vous d'inclure le domaine du frontend
-]
 
 CORS_ALLOW_ALL_ORIGINS = True
