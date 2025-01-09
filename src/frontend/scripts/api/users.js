@@ -1,5 +1,5 @@
 export async function fetchFriends() {
-    const token = sessionStorage.getItem('authToken');
+    const token = sessionStorage.getItem('accessToken');
     if (!token) {
         console.error("Impossible de récupérer les amis : utilisateur non authentifié.");
         return;

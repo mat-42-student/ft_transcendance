@@ -10,7 +10,7 @@ export async function isAuthenticated() {
     }
 
     try {
-        const response = await fetch('/api/v1/auth/verify', {
+        const response = await fetch('https://localhost:3000/api/v1/auth/verify', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -110,12 +110,13 @@ export async function handleAuthSubmit(event) {
 
         if (response.ok) {
             const data = await response.json();
-            sessionStorage.setItem('authToken', data.access);  // Stocke le token JWT
+            // console.log(`token given: ` + data.accessToken);
+            sessionStorage.setItem('accessToken', data.accessToken);  // Stocke le token JWT
             sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
             console.log("Connexion réussie !");
             window.location.hash = '#profile';
             // openWebSocket(); // Ouvre le WebSocket après connexion réussie
-            fetchFriends(); // Charge la liste d'amis après authentification
+            // fetchFriends(); // Charge la liste d'amis après authentification
             // updateUI();
             // fetchUsers();
         } else {
