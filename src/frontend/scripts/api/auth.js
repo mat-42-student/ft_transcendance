@@ -10,7 +10,7 @@ export async function isAuthenticated() {
     }
 
     try {
-        const response = await fetch('https://localhost:3000/api/v1/auth/verify', {
+        const response = await fetch('/api/v1/auth/verify', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
