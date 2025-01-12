@@ -171,7 +171,7 @@ Le modèle `Relationship` représente les relations entre deux utilisateurs dans
      ```
 
 3. **Créer un utilisateur**
-   - **URL** : `/api/v1/users/`
+   - **URL** : `/api/v1/users/register`
    - **Méthode** : `POST`
    - **Corps de la requête** :
      ```json
@@ -196,7 +196,7 @@ Le modèle `Relationship` représente les relations entre deux utilisateurs dans
 ### Amis et relations sociales
 
 1. **Inviter un ami**
-   - **URL** : `/api/v1/users/relationships/<id>/add_friend/`
+   - **URL** : `c`
    - **Méthode** : `POST`
    - **Réponse** :
      ```json
