@@ -5,7 +5,7 @@ export class SocialApp{
         this.myId = document.getElementById('user_id');
     }
 
-    chatIncomingMsg(data) {
+    incomingMsg(data) {
         console.log("here social.js");
         console.log(JSON.stringify(data));
     }

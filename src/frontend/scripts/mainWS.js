@@ -25,14 +25,11 @@ export function launchMainSocket(token) {
         // console.log(JSON.stringify(data, null, 2));
         switch (data['header']['service']) {
             case 'chat':
-                chat.chatIncomingMsg(data);
+                chat.incomingMsg(data);
                 break;
             case 'social':
-                social.chatIncomingMsg(data);
+                social.incomingMsg(data);
                 break
-            // case 'mmaking':
-            //     go_mmaking(data);
-            //     break;
             default:
               console.log('Could not handle incoming JSON');
           }
