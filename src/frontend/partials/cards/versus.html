@@ -1,0 +1,79 @@
+<!-- Versus Card Content -->
+<div id="game-menu">
+    <h2>Start a Game</h2>
+
+    <!-- Random Matchmaking -->
+    <button id="random-match-btn" class="primary-btn">Find Random Match</button>
+
+    <!-- Search and Friends Section -->
+    <div class="search-invite-container">
+        <!-- Search bar to find users -->
+        <div class="search-section">
+            <input type="text" id="search-user" placeholder="Search username..." aria-label="Search user">
+            <button id="search-btn" class="secondary-btn">Search</button>
+        </div>
+
+        <!-- Friends list with avatars -->
+        <div class="friends-section">
+            <h3>Your Online Friends</h3>
+            <ul id="online-friends-list">
+                <!-- Dynamic friend items -->
+                <!-- Example of a single friend -->
+                <li class="friend-item">
+                    <img src="/media/avatars/default.png" alt="Friend Avatar" class="friend-avatar">
+                    <span class="friend-username">FriendUsername</span>
+                    <button class="invite-btn">Invite</button>
+                </li>
+                <!-- Additional items will be populated dynamically -->
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<!-- document.addEventListener('DOMContentLoaded', () => {
+    // Simulated list of friends (replace with your API call)
+    const onlineFriends = [
+        { username: 'Alice', avatar: '/media/avatars/alice.png' },
+        { username: 'Bob', avatar: '/media/avatars/bob.png' },
+        { username: 'Charlie', avatar: '/media/avatars/charlie.png' },
+    ];
+
+    const friendsList = document.getElementById('online-friends-list');
+
+    // Populate online friends list
+    onlineFriends.forEach(friend => {
+        const friendItem = document.createElement('li');
+        friendItem.className = 'friend-item';
+        friendItem.innerHTML = `
+            <img src="${friend.avatar}" alt="${friend.username}'s Avatar" class="friend-avatar">
+            <span class="friend-username">${friend.username}</span>
+            <button class="invite-btn">Invite</button>
+        `;
+        friendsList.appendChild(friendItem);
+    });
+
+    // Handle random match button
+    document.getElementById('random-match-btn').addEventListener('click', () => {
+        alert('Finding a random match...');
+    });
+
+    // Handle search functionality
+    document.getElementById('search-btn').addEventListener('click', () => {
+        const searchInput = document.getElementById('search-user').value;
+        if (searchInput) {
+            alert(`Searching for user: ${searchInput}`);
+            // Replace this alert with actual search logic.
+        } else {
+            alert('Please enter a username to search.');
+        }
+    });
+
+    // Handle invite button clicks
+    friendsList.addEventListener('click', (event) => {
+        if (event.target.classList.contains('invite-btn')) {
+            const username = event.target.previousElementSibling.textContent;
+            alert(`Invitation sent to ${username}`);
+        }
+    });
+}); -->

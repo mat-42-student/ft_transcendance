@@ -3,7 +3,11 @@
 // Données utilisateur à envoyer
 async function sendPostRequest(){
 
+<<<<<<< HEAD
     const url = 'https://' + window.location.hostname + ':3000/matchmaking/users/';  // Remplacez par l'URL correcte de votre API
+=======
+    const url = 'https://' + window.location.hostname + ':3000/api/v1/users/';  // Remplacez par l'URL correcte de votre API
+>>>>>>> origin/dev
     const userData = {
         name: "test1",
         mail: "test2@test.com",

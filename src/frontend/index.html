@@ -1,10 +1,16 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./styles/base.css">
+    <link rel="stylesheet" href="./styles/layout.css">
+    <link rel="stylesheet" href="./styles/sidebars.css">
+    <link rel="stylesheet" href="./styles/components.css">
+    <link rel="stylesheet" href="./styles/form.css">
+    <link rel="stylesheet" href="./styles/versus.css">
+    <link rel="stylesheet" href="./styles/pages/home.css">
+    <link rel="stylesheet" href="./styles/pages/profile.css">
     <title>Transcendence</title>
 </head>
 <body>
@@ -12,7 +18,7 @@
         <div class="container">
             <!-- Homepage Button -->
             <div class="header-left">
-                <a href="/home" class="btn-home nav_url">Home</a>
+                <a id="btn-home">Home</a>
             </div>
 
             <!-- Searchbar -->
@@ -23,19 +29,19 @@
                 </form>
             </div>
 
-            <!-- User's Profile Button -->
-            <div class="header-right nav_url">
-                <a href="#profile" class="btn-profile">Profile</a>
+            <!-- User Profile Button -->
+            <div class="header-right">
+                <a id="btn-profile">Profile</a>
             </div>
         </div>
     </header>
 
     <main>
-        <!-- LEFT SIDEBAR (Chat) -->
+        <!-- CHAT (Left) -->
         <aside class="sidebar left-sidebar">
             <!-- Chat Interface -->
             <div class="chat-interface">
-                <!-- Friend's Username -->
+                <!-- Contact Username -->
                 <div class="chat-header">
                     <span class="friend-name">Username</span>
                 </div>
@@ -47,7 +53,7 @@
                     <!-- Add Dynamic Message Samples -->
                 </div>
 
-                <!-- Chat Prompt -->
+                <!-- Prompt -->
                 <div class="chat-footer">
                     <form class="chat-form">
                         <input type="text" placeholder="Send a message..." aria-label="Zone de message">
@@ -56,18 +62,18 @@
             </div>
         </aside>
 
-        <!-- MAIN (Home/Profile View) -->
+        <!-- MAIN (Home/Profile) -->
         <section class="main-content"></section>
 
-        <!-- RIGHT SIDEBAR (Social)-->
+        <!-- SOCIAL (Right) -->
         <aside class="sidebar right-sidebar">
-            <!-- Social Interface -->
+            <!-- Interface -->
             <div class="friends-interface">
                 <!-- Friend Requests Button -->
                 <div class="friend-requests">
-                    <button class="btn-friend-requests">Friend Requests</button>
+                    <button class="btn-friend-requests" type="button">Friend Requests</button>
                     <span class="request-count">0</span>
-                    <!-- Dynamically change number depending on pending requests for authentified User -->
+                    <!-- (JS) Dynamically change on pending requests for authentified User -->
                 </div>
         
                 <!-- Friends List -->
@@ -80,10 +86,10 @@
                             <div class="friend-detail">
                                 <span class="friend-status online"></span>
                                 <button class="btn-match">
-                                    <img src="/media/components/vs.png">
+                                    <img src="/ressources/vs.png">
                                 </button>
                                 <button class="btn-chat">
-                                    <img src="/media/components/chat.png">
+                                    <img src="/ressources/chat.png">
                                 </button>
                             </div>
                         </div>
@@ -97,9 +103,20 @@
         <div class="container">
         </div>
     </footer>
+<<<<<<< HEAD
+=======
+
+    <!-- Dynamic Card -->
+    <div id="dynamic-card-container" class="hidden">
+        <!-- Background Opacity Overlay -->
+        <div class="overlay"></div>
+        <div class="card">
+            <button id="close-dynamic-card" class="close-btn">X</button>
+            <div id="dynamic-card-content"></div> <!-- Dynamic content goes here -->
+        </div>
+    </div>
+
+    <script type="module" src="./scripts/main.js"></script>
+>>>>>>> origin/dev
 </body>
-<script src="./script/constsAndFuncts.js"></script>
-<script src="./script/mainWS.js"></script>
-<script src="./script/router.js"></script>
-<script src="./script/create_user.js"></script>
 </html>

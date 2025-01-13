@@ -4,7 +4,7 @@ services:
       context: ./auth_service
       dockerfile: Dockerfile
     volumes:
-      - ./auth_service:/app
+      - ./auth_service:/code
     depends_on:
       postgres:
         condition: service_healthy
@@ -17,19 +17,62 @@ services:
       - nginx-network
       - db-network
 
+  users:
+    container_name: users
+    image: users
+    build: ./users
+    expose:
+      - "8000"
+    volumes:
+      - ./media:/media
+      - ./users:/code
+    env_file:
+      - ./auth_service/.env
+    networks:
+      - db-network
+      - nginx-network
+    restart: on-failure
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 3
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+
   chat:
     container_name: chat
     build:
       context: chat
       dockerfile: Dockerfile
+    stop_grace_period: 2s
     env_file:
-      - .env
+      - ./chat/.env
     volumes:
       - ./chat/:/code
     depends_on:
       - matchmaking
     networks:
       - db-network
+      - redis-network
+
+  social:
+    container_name: social
+    build:
+      context: social_project
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./social_project/:/code
+    depends_on:
+      # - auth-service
+      - redis
+    networks:
+      # - db-network
       - redis-network
 
   gateway:
@@ -64,7 +107,7 @@ services:
       pong:
         condition: service_started
     expose:
-      - "8000" # ??
+      - "8000"
     networks:
       - db-network
       - redis-network
@@ -72,16 +115,19 @@ services:
 
   nginx:
     container_name: nginx
+    image: nginx
     build:
       context: nginx
       dockerfile: Dockerfile
     depends_on:
+      - users
       - gateway
       - matchmaking
       - pong
     ports:
       - "3000:443"
     volumes:
+      - ./media:/media
       - ./frontend:/usr/share/nginx/frontend
     networks:
       - nginx-network
@@ -92,7 +138,7 @@ services:
       context: _Pong
       dockerfile: Dockerfile
     env_file:
-      - .env
+      - ./_Pong/.env
     volumes:
       - ./_Pong/:/code
     depends_on:
@@ -113,7 +159,7 @@ services:
     expose:
       - "5432"
     volumes:
-      - postgres_data:/var/lib/posgresql/data
+        - postgres_data:/var/lib/postgresql/data
     env_file:
       - .env
     networks:
@@ -134,6 +180,7 @@ services:
 
 volumes:
   postgres_data:
+  media:
 
 networks:
   nginx-network:

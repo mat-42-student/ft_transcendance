@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/engine.css">
+    <title>Transcendence</title>
+
+    <!-- <script type="importmap">
+        {"imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+            "engine": "./script/game3d/engine.js",
+            "global": "./script/global.js",
+            "input": "./script/input.js",
+            "gameobjects": "./script/game3d/gameobjects/_exports.js"
+        }}
+    </script> -->
+
+    <!-- <script type="module" src="./script/HTMLAutoBorderElement.js"></script> -->
+</head>
+<body>
+    <header>
+        <div class="container">
+            <!-- Homepage Button -->
+            <div class="header-left">
+                <a href="/page/home" class="btn-home nav_url">Home</a>
+                <a href="/page/matchmaking" class="btn-home nav_url">Matchmaking</a>
+                <a href="/page/chat" class="btn-home nav_url">Chat</a>
+            </div>
+
+            <!-- Searchbar -->
+            <div class="header-center">
+                <form class="search-form" action="#" method="GET">
+                    <input type="text" name="search" placeholder="Search..." aria-label="Recherche">
+                    <button type="submit">🔍</button>
+                </form>
+            </div>
+
+            <!-- User's Profile Button -->
+            <div class="header-right nav_url">
+                <input type="text" id="user_id">
+                <button onclick="bricol_log()">Connect</button>
+                <a href="/page/profile" class="btn-profile">Profile</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- LEFT SIDEBAR (Chat) -->
+        <aside class="sidebar left-sidebar">
+            <!-- Chat Interface -->
+            <div class="chat-interface">
+                <!-- Friend's Username -->
+                <div class="chat-header">
+                    <span class="friend-name">Username</span>
+                </div>
+
+                <!-- Messages -->
+                <div class="chat-body">
+                    <div class="chat-message friend-message">Salut ! Comment ça va ?</div>
+                    <div class="chat-message user-message">Ça va bien, et toi ?</div>
+                    <!-- Add Dynamic Message Samples -->
+                </div>
+
+                <!-- Chat Prompt -->
+                <div class="chat-footer">
+                    <form class="chat-form">
+                        <input type="text" placeholder="Send a message..." aria-label="Zone de message">
+                    </form>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN (Home/Profile View) -->
+        <div class="main-content-container">
+            <!-- 3d engine automatic resizing -->
+            <auto-engine-border class="main-content"></auto-engine-border>
+            <!-- SPA page -->
+            <section class="main-content"></section>
+        </div>
+
+        <!-- RIGHT SIDEBAR (Social)-->
+        <aside class="sidebar right-sidebar">
+            <!-- Social Interface -->
+            <div class="friends-interface">
+                <!-- Friend Requests Button -->
+                <div class="friend-requests">
+                    <button class="btn-friend-requests">Friend Requests</button>
+                    <span class="request-count">0</span>
+                    <!-- Dynamically change number depending on pending requests for authentified User -->
+                </div>
+
+                <!-- Friends List -->
+                <ul class="friends-list">
+                    <!-- Dynamic Sample -->
+                    <li class="friend-item">
+                        <img class="friend-avatar" src="/media/avatars/default.png">
+                        <div class="friend-info">
+                            <span class="friend-name">Contact</span>
+                            <div class="friend-detail">
+                                <span class="friend-status online"></span>
+                                <button class="btn-match">
+                                    <img src="/media/components/vs.png">
+                                </button>
+                                <button class="btn-chat">
+                                    <img src="/media/components/chat.png">
+                                </button>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+    </main>
+
+    <footer>
+        <div class="container">
+        </div>
+    </footer>
+</body>
+<script src="./script/mainWS.js"></script>
+<!-- <script type="module" src="./script/router.js"></script>
+<script type="module" src="./script/game3d/start_engine.js"></script>
+<script type="module" src="./script/matchmaking.js"></script> -->
+</html>
