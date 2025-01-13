@@ -7,17 +7,12 @@ from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 from .models import User
 import jwt
-import hashlib
 import datetime
-
-
 
 from .models import User, Relationship
 from .serializers import (
@@ -26,12 +21,11 @@ from .serializers import (
     UserPrivateDetailSerializer, 
     UserBlockedSerializer, 
     UserUpdateSerializer, 
-    UserLoginSerializer,
     UserRegistrationSerializer, 
     RelationshipSerializer
 )
 
-# User registration APIView
+
 # class UserRegisterView(APIView):
 #     permission_classes = [AllowAny]
 #     renderer_classes = [JSONRenderer]
@@ -50,10 +44,46 @@ class UserRegisterView(APIView):
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response({"success": "true", "data": serializer.data}, status=status.HTTP_201_CREATED)
+            print('hello')
+            user = serializer.save()
+            user.refresh_from_db() # Rafraîchir l'objet utilisateur pour s'assurer que toutes les données sont chargées
+
+            # Générer un token JWT pour l'utilisateur
+            access_payload = {
+                'id': user.id,
+                'username': user.username,
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),
+                'iat': datetime.datetime.now(datetime.timezone.utc),
+            }
+
+            refresh_payload = {
+                'id': user.id,
+                'username': user.username,
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
+                'iat': datetime.datetime.now(datetime.timezone.utc),
+            }
+
+            access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+            refresh_token = jwt.encode(refresh_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+
+            response = Response()
+            response.set_cookie(
+                key='refreshToken',
+                value=refresh_token, 
+                httponly=True,
+                samesite='None',
+                secure=True,
+                path='/'
+            )
+            response.data = {
+                'success': 'true',
+                'accessToken': access_token
+            }
+            return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+# User ViewSet
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
 
@@ -61,7 +91,7 @@ class UserViewSet(viewsets.ModelViewSet):
         """Définit les permissions pour chaque action."""
         if self.action in ['list', 'retrieve']:
             return [AllowAny()]
-        return [JWTAuthentication()]  # Authentification requise pour toutes les autres actions
+        return [IsAuthenticated()]  # Authentification requise pour toutes les autres actions
 
     def get_serializer_class(self):
         """Définit le serializer selon l'action."""
@@ -88,7 +118,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         
         # Si le client n'est pas authentifié, utilise le serializer public
-        serializer = UserDetailSerializer(user)  # !!
+        serializer = UserDetailSerializer(user)
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
@@ -151,7 +181,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 # Relationship ViewSet
 class RelationshipViewSet(viewsets.ViewSet):
-    permission_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=['get'], url_path='my-relationships')
     def get_user_relationships(self, request):

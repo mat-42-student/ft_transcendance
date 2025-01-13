@@ -1,14 +1,14 @@
 POST https://localhost:3000/api/v1/auth/login
 Content-Type: application/json
 
-{"email": "tom2@mail.com", "password": "Test123*"}
+{"email": "tom1@mail.com", "password": "Test123*"}
 
 ###
 
 POST https://localhost:3000/api/v1/auth/login
 Content-Type: application/json
 
-{"email": "bob@mail.com", "password": "Test123*", "totp": "1234"}
+{"email": "tom2@mail.com", "password": "Test123*", "totp": "1234"}
 
 ###
 
@@ -64,7 +64,7 @@ Content-Type: application/json
 
 POST https://localhost:3000/api/v1/auth/verify
 Content-Type: application/json
-Authorization: Bearer yJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJ0b20yIiwiZXhwIjoxNzM2MjYyMTkzLCJpYXQiOjE3MzYyNjE4OTN9.EHqeAFoWaI_h3T65W1MPmkVbnxnOo3l1GaeUshnjoE9pS4G7tCYUhgQumEW7kkG8E0NmO9KPaqkl9b1Zup8H90y7TqonlSJG1HTLorwTLQQV0YHtJ16niB-sMOO-j-AhhlJuajpzMinwS53cltub_d3KvNQbAPTdy0u627neE_0UMb89dZPISD1dYqJqwkzrHGVrwTh4dAhiyXlfhmC8e_B99l-Um77nj4f5sYEZ9U6eILjieDuABnZwd8dfHBChp_w2YrB_xOBnMM0dk2NgtATiB7Oz-uihr9mAWNfoyQUJ7Sdy4kr-ibJv4rSt9bFJmezqSP1bprCFFOHIgzjosQ
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0b20yIiwiZXhwIjoxNzM2NzA1NTcyLCJpYXQiOjE3MzY3MDUyNzJ9.juo8zgSTeDui0u1rxU9SiEy6ZJOcgBU7_yIiIyjiURB4jzgV6a5V95VnNBNS7sfUPAxR5o9DUiAh8DDU-B2TEK4Dzhp4s9Vjm2Ni1kutsdl29dqY8xrs9A9Vw5-huKWp2OGhy1iHXeIG-i6whDKsu9TlKu4y5Kk3JnvcXJw6bCS9XqNQDiSqaw_OmJgtu2h6RmyEvc1mx2lyKdIkJv8HKlGK-NysHvDYdRU9zlyyF2lP5jApMdhoOJ9vhdnIqskkhEbK7H-_gXm5QshIlmVtel87p8cuLQa5h_ruWM9Ym_IXbjR3udBpL3gkCJ7yp4T_MLSpdzzJiX5QmO3x1sR5jw
 
 {}
 

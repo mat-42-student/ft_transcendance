@@ -10,7 +10,7 @@ export async function isAuthenticated() {
     }
 
     try {
-        const response = await fetch('/api/v1/auth/verify', {
+        const response = await fetch('/api/v1/auth/verify/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ export async function isAuthenticated() {
 // }
 
 export function logout() {
-    fetch('https://localhost:3000/api/v1/auth/logout', {
+    fetch('https://localhost:3000/api/v1/auth/logout/', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -89,10 +89,10 @@ export async function handleAuthSubmit(event) {
     let apiUrl, payload;
 
     if (hash === '#register') {
-        apiUrl = '/api/v1/users/register';
+        apiUrl = '/api/v1/users/register/';
         payload = { username, email, password, confirm_password };
     } else if (hash === '#signin') {
-        apiUrl = '/api/v1/auth/login';
+        apiUrl = '/api/v1/auth/login/';
         payload = { email, password };
     } else {
         console.error('Action inconnue pour le formulaire d\'authentification.');
@@ -110,14 +110,13 @@ export async function handleAuthSubmit(event) {
 
         if (response.ok) {
             const data = await response.json();
-            sessionStorage.setItem('accessToken', data.accessToken);
-            window.location.hash = '#profile'; // I got an issue with this redirection while trying to store my token in session storage
-            // sessionStorage.setItem('authToken', data.access);  // Stocke le token JWT
+            // console.log(`token given: ` + data.accessToken);
+            sessionStorage.setItem('accessToken', data.accessToken);  // Stocke le token JWT
             sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
             console.log("Connexion réussie !");
             window.location.hash = '#profile';
             // openWebSocket(); // Ouvre le WebSocket après connexion réussie
-            fetchFriends(); // Charge la liste d'amis après authentification
+            // fetchFriends(); // Charge la liste d'amis après authentification
             // updateUI();
             // fetchUsers();
         } else {
