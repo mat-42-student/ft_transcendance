@@ -206,21 +206,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user
 
 
-# User login serializer
-class UserLoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField()
-
-    def validate(self, data):
-        try:
-            user = User.objects.get(username=data['username'])
-            if not user.check_password(data['password']):
-                raise serializers.ValidationError("Mot de passe incorrect.")
-        except User.DoesNotExist:
-            raise serializers.ValidationError("Utilisateur non trouvé.")
-        return data
-
-
 # Relationship 'detail' serializer
 class RelationshipSerializer(serializers.ModelSerializer):
     from_user = UserDetailSerializer(read_only=True)

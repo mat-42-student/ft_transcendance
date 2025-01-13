@@ -7,17 +7,12 @@ from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 from .models import User
-# import jwt
-# import hashlib
-# import datetime
-
-
+import jwt
+import datetime
 
 from .models import User, Relationship
 from .serializers import (
@@ -26,23 +21,10 @@ from .serializers import (
     UserPrivateDetailSerializer, 
     UserBlockedSerializer, 
     UserUpdateSerializer, 
-    UserLoginSerializer,
     UserRegistrationSerializer, 
     RelationshipSerializer
 )
 
-
-# User registration APIView
-class UserRegisterView(APIView):
-    permission_classes = [AllowAny]
-    renderer_classes = [JSONRenderer]
-
-    def post(self, request):
-        serializer = UserRegistrationSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"success": "true", "data": serializer.data}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # class UserRegisterView(APIView):
 #     permission_classes = [AllowAny]
@@ -51,62 +33,54 @@ class UserRegisterView(APIView):
 #     def post(self, request):
 #         serializer = UserRegistrationSerializer(data=request.data)
 #         if serializer.is_valid():
-#             user = serializer.save()
-#             print(user)
-#             user.refresh_from_db() # Rafraîchir l'objet utilisateur pour s'assurer que toutes les données sont chargées
-#             print(user.__class__)
-#             refresh = RefreshToken.for_user(user)
-#             return Response({
-#                 'refresh': str(refresh),
-#                 'access': str(refresh.access_token),
-#                 'user_id': user.id,  # Inclure l'ID de l'utilisateur dans la réponse
-#             }, status=status.HTTP_201_CREATED)
-
-#             # Générer un token JWT pour l'utilisateur
-#             access_payload = {
-#                 'id': user.id,
-#                 'username': user.username,
-#                 'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),
-#                 'iat': datetime.datetime.now(datetime.timezone.utc),
-#             }
-
-#             refresh_payload = {
-#                 'id': user.id,
-#                 'username': user.username,
-#                 'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
-#                 'iat': datetime.datetime.now(datetime.timezone.utc),
-#             }
-
-#             access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
-#             refresh_token = jwt.encode(refresh_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
-
-#             return Response({
-#                 "success": "true",
-#                 "data": serializer.data,
-#                 "accessToken": access_token,
-#                 "refreshToken": refresh_token
-#             }, status=status.HTTP_201_CREATED)
+#             serializer.save()
+#             return Response({"success": "true", "data": serializer.data}, status=status.HTTP_201_CREATED)
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class UserRegisterView(APIView):
+    permission_classes = [AllowAny]
+    renderer_classes = [JSONRenderer]
 
-# User login APIView
-# class UserLoginView(APIView):
-#     permission_classes = [AllowAny]
+    def post(self, request):
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            print('hello')
+            user = serializer.save()
+            user.refresh_from_db() # Rafraîchir l'objet utilisateur pour s'assurer que toutes les données sont chargées
 
-#     def post(self, request):
-#         serializer = UserLoginSerializer(data=request.data)
-#         if serializer.is_valid():
-#             print("Utilisateur existe et identifiants correctes")
-#             username = serializer.validated_data['username'] # Obtenir l'utilisateur à partir du serializer
-#             user = User.objects.get(username=username)
+            # Générer un token JWT pour l'utilisateur
+            access_payload = {
+                'id': user.id,
+                'username': user.username,
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),
+                'iat': datetime.datetime.now(datetime.timezone.utc),
+            }
 
-#             refresh = RefreshToken.for_user(user)
-#             return Response({
-#                 'refresh': str(refresh),
-#                 'access': str(refresh.access_token),
-#                 'user_id': user.id,  # Inclure l'ID de l'utilisateur dans la réponse
-#             }, status=status.HTTP_200_OK)
-#         return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            refresh_payload = {
+                'id': user.id,
+                'username': user.username,
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
+                'iat': datetime.datetime.now(datetime.timezone.utc),
+            }
+
+            access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+            refresh_token = jwt.encode(refresh_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+
+            response = Response()
+            response.set_cookie(
+                key='refreshToken',
+                value=refresh_token, 
+                httponly=True,
+                samesite='None',
+                secure=True,
+                path='/'
+            )
+            response.data = {
+                'success': 'true',
+                'accessToken': access_token
+            }
+            return response
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # User ViewSet
@@ -207,7 +181,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 # Relationship ViewSet
 class RelationshipViewSet(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated()]
+    permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=['get'], url_path='my-relationships')
     def get_user_relationships(self, request):

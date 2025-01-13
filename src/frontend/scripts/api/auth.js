@@ -10,7 +10,7 @@ export async function isAuthenticated() {
     }
 
     try {
-        const response = await fetch('/api/v1/auth/verify', {
+        const response = await fetch('/api/v1/auth/verify/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ export async function isAuthenticated() {
 // }
 
 export function logout() {
-    fetch('https://localhost:3000/api/v1/auth/logout', {
+    fetch('https://localhost:3000/api/v1/auth/logout/', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -89,10 +89,10 @@ export async function handleAuthSubmit(event) {
     let apiUrl, payload;
 
     if (hash === '#register') {
-        apiUrl = '/api/v1/users/register';
+        apiUrl = '/api/v1/users/register/';
         payload = { username, email, password, confirm_password };
     } else if (hash === '#signin') {
-        apiUrl = '/api/v1/auth/login';
+        apiUrl = '/api/v1/auth/login/';
         payload = { email, password };
     } else {
         console.error('Action inconnue pour le formulaire d\'authentification.');
