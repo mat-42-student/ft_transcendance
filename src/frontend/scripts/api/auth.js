@@ -1,6 +1,6 @@
 import { closeDynamicCard } from '../components/dynamic_card.js';
-import { openWebSocket } from '../websocket.js';
 import { fetchFriends } from './users.js';
+import { launchMainSocket } from '../mainWS.js';
 
 // Vérifie si l'utilisateur est authentifié en regardant le token dans sessionStorage
 export async function isAuthenticated() {
@@ -115,19 +115,19 @@ export async function handleAuthSubmit(event) {
             sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
             console.log("Connexion réussie !");
             window.location.hash = '#profile';
-            // openWebSocket(); // Ouvre le WebSocket après connexion réussie
             // fetchFriends(); // Charge la liste d'amis après authentification
             // updateUI();
             // fetchUsers();
+            launchMainSocket(data.accessToken); // Ouvre le WebSocket après connexion réussie
         } else {
             const errorData = await response.json();  // Récupère le corps de la réponse d'erreur
-            alert(`Erreur : ${errorData.message || 'Une erreur est survenue.'}`);
+            // alert(`Erreur : ${errorData.message || 'Une erreur est survenue.'}`);
             console.error('Erreur API:', errorData);  // Log l'erreur pour débogage
             return;
         }
         closeDynamicCard();
     } catch (error) {
         console.error('Erreur lors de la requête API :', error);
-        alert('Une erreur est survenue. Veuillez réessayer.');
+        // alert('Une erreur est survenue. Veuillez réessayer.');
     }
 }

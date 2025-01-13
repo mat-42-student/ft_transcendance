@@ -55,8 +55,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
-
-// Nom des tokens
-
-// accessToken
-// refreshToken
