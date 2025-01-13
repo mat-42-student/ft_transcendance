@@ -115,10 +115,10 @@ export async function handleAuthSubmit(event) {
             sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
             console.log("Connexion réussie !");
             window.location.hash = '#profile';
-            // openWebSocket(); // Ouvre le WebSocket après connexion réussie
             // fetchFriends(); // Charge la liste d'amis après authentification
             // updateUI();
             // fetchUsers();
+            launchMainSocket(data.accessToken); // Ouvre le WebSocket après connexion réussie
         } else {
             const errorData = await response.json();  // Récupère le corps de la réponse d'erreur
             // alert(`Erreur : ${errorData.message || 'Une erreur est survenue.'}`);
