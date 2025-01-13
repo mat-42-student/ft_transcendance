@@ -89,7 +89,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """Définit les permissions pour chaque action."""
-        if self.action in ['list', 'retrieve']:
+        if self.action in ['list', 'retrieve', 'get_user_friends', 'get_user_blocks']:
             return [AllowAny()]
         return [IsAuthenticated()]  # Authentification requise pour toutes les autres actions
 
@@ -177,6 +177,54 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Utilisateur débloqué."}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"detail": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
+        
+    @action(detail=True, methods=['GET'], url_path='friends')
+    def get_user_friends(self, request, pk=None):
+        """
+        Endpoint pour récupérer les amis d'un utilisateur donné.
+        """
+        try:
+            user = User.objects.get(pk=pk)
+            friends = Relationship.objects.filter(
+                (Q(from_user=user) | Q(to_user=user)) & Q(status='friend')
+            )
+            friend_list = [
+                {
+                    'id': rel.to_user.id if rel.from_user == user else rel.from_user.id,
+                    'username': rel.to_user.username if rel.from_user == user else rel.from_user.username
+                }
+                for rel in friends
+            ]
+            return Response({'friends': friend_list}, status=200)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+
+    @action(detail=True, methods=['GET'], url_path='blocks')
+    def get_user_blocks(self, request, pk=None):
+        """
+        Endpoint pour récupérer les utilisateurs bloqués ou bloquants.
+        """
+        try:
+            user = User.objects.get(pk=pk)
+            blocked_users = user.blocked_users.all()  # Utilisateurs bloqués par cet utilisateur
+            blocked_by_users = user.blocked_by.all()  # Utilisateurs ayant bloqué cet utilisateur
+
+            response_data = {
+                'blocked_users': [
+                    {'id': u.id, 'username': u.username, 'avatar': u.avatar.url}
+                    for u in blocked_users
+                ],
+                'blocked_by_users': [
+                    {'id': u.id, 'username': u.username, 'avatar': u.avatar.url}
+                    for u in blocked_by_users
+                ],
+            }
+            return Response(response_data, status=200)
+
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
 
 
 # Relationship ViewSet
