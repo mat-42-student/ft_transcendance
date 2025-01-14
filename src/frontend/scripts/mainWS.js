@@ -13,7 +13,6 @@ export function launchMainSocket(token) {
     };
 
     mainSocket.onopen = async function(e) {
-        // Ask for friends status ??
     };
 
     mainSocket.onclose = async function(e) { 

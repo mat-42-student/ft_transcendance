@@ -53,34 +53,33 @@ class Command(BaseCommand):
     async def process_message(self, data):
         data['header']['dest'] = 'front' # data destination after deep processing
         user_id = data['header']['id']
-        friends = self.get_friend_list(user_id)
-        if data['body']['status'] == 'info': # User's first connection, get all friends status
-            await self.send_friends_status(user_id, friends)
-            return
-        self.user_status[user_id] = data['body']['status'] # Update current user status
-        if not friends:
+        friends_data = self.get_friend_list(user_id)
+        if not friends_data:
             print(f"No friends found for user: {user_id}")
             return
+        friends = [item['id'] for item in friends_data]
+        if data['body']['status'] == 'info': # User's first connection, get all friends status
+            await self.send_me_my_friends_status(user_id, friends)
+            data['body']['status'] = 'online' # useful for next line cauz 'info' is not a real status
+        self.user_status[user_id] = data['body']['status'] # Update current user status
         for friend in friends:
             if self.user_status.get(friend) != 'offline':
                 await self.send_my_status(user_id, friend)
 
     def get_friend_list(self, user_id):
         """ Request friendlist from container 'users' """
-        self.user_status.update({"1" : "online", "2": "ingame", "3": "offline"})
-        return ["1", "2", "3"]
-    
-        # response = requests.get("/api/v1/users/<id>/")
-        # if response.status_code == 200:
-        #     try:
-        #         data = response.json()
-        #         return data.get('friends')
-        #     except ValueError as e:
-        #         print("Erreur lors de la conversion en JSON :", e)
-        # else:
-        #     print(f"Requête échouée avec le statut {response.status_code}")
+        response = requests.get(f"http://users:8000/api/v1/users/{user_id}/friends/")
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                return data.get('friends')
+            except ValueError as e:
+                print("Erreur lors de la conversion en JSON :", e)
+        else:
+            print(f"Error {response.status_code}")
+            return None
 
-    async def send_friends_status(self, user_id, friends):
+    async def send_me_my_friends_status(self, user_id, friends):
         """ publish status of all friends and adress them to 'user_id' """
         for friend in friends:
             data = {
@@ -91,12 +90,11 @@ class Command(BaseCommand):
                 },
                 "body":{
                     "user": friend,
-                    "status": self.user_status[friend]
+                    "status": self.user_status.get(friend, "offline")
                 }
             }
-            print(f"Publishing : {data}")
+            print(f"getting my friends status : {data}")
             await self.redis_client.publish(self.group_name, json.dumps(data))
-            
 
     async def send_my_status(self, user_id, friend):
         """ publish status of 'user_id' and adress it to 'friend' """
@@ -108,10 +106,10 @@ class Command(BaseCommand):
             },
             "body":{
                 "user": user_id,
-                "status": self.user_status[user_id]
+                "status": self.user_status.get(user_id, "offline")
             }
         }
-        print(f"Publishing : {data}")
+        print(f"Publishing my status to all my friends: {data}")
         await self.redis_client.publish(self.group_name, json.dumps(data))
 
     def signal_handler(self, sig, frame):
