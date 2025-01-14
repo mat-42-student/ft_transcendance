@@ -1,4 +1,4 @@
-export async function fetchFriends() {
+export async function fetchFriends(user) {
     const token = sessionStorage.getItem('accessToken');
     if (!token) {
         console.error("Impossible de récupérer les amis : utilisateur non authentifié.");
@@ -6,7 +6,7 @@ export async function fetchFriends() {
     }
 
     try {
-        const response = await fetch('api/v1/users/relationships/my-relationships', {
+        const response = await fetch('api/v1/users/relationships/my-relationships/', {
             headers: {
                 'Authorization': `Bearer ${token}`,
             },
@@ -23,7 +23,8 @@ export async function fetchFriends() {
                 return;
             }
 
-            const userId = parseInt(sessionStorage.getItem('userId'), 10);
+            // const userId = parseInt(sessionStorage.getItem('userId'), 10);
+            const userId = user;
             if (!userId) {
                 console.error("Impossible de déterminer l'utilisateur connecté.");
                 return;

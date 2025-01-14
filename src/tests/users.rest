@@ -21,8 +21,9 @@ Content-Type: application/json
 
 ###
 
-POST https://localhost:3000/api/v1/users/relationships/1/accept_friend/
+POST https://localhost:3000/api/v1/users/relationships/1/add-friend/
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0b20xIiwiZXhwIjoxNzM2ODYyOTU3LCJpYXQiOjE3MzY4NjI2NTd9.C3ztUJSgFrKRruXWQAC5cayionjTXgq-VDk-Yr79QZ5ETpevcM_UQ1et3wajFmrOCe5yZhU8Em7XcmqT1M6S2hXGm941Or8VAd3AqWK_vKKfD_6w55JBQJ6Rj3NIwd1KYaW8Ex49CeNIrks-awhQlWWjYw_0lpezjcQQhPeme-8RgVQhnjtJnUPmbCxV7rJb6Ype7NHMZ4Ph6aWUjSzq3Sf-7Uaw50EV7zlMXlDF0krhwSR7ef28xekylie_GBAU9yV5lf0nKsH_FrRwtLgRCkUmfp6PATM60rU1ti84Hy8sItfF7XTZZ5Xz3huJcNJYqht_n70_aovYlgMFp061Uw
 
 {}
 
