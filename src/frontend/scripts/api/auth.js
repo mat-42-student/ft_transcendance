@@ -61,6 +61,19 @@ export function logout() {
     // updateUI();
 }
 
+function extractUserIdFromJWT(token) {
+    const parts = token.split('.');
+  
+    if (parts.length !== 3) {
+      throw new Error('Invalid JWT format');
+    }
+
+    const payload = parts[1];
+    const decodedPayload = atob(payload);
+    const parsedPayload = JSON.parse(decodedPayload);
+    return parsedPayload.id;
+}
+
 // Fonction d'envoi des requêtes API pour connexion ou enregistrement
 export async function handleAuthSubmit(event) {
     event.preventDefault(); // Empêche le rechargement de la page
@@ -116,7 +129,13 @@ export async function handleAuthSubmit(event) {
             sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
             console.log("Connexion réussie !");
             window.location.hash = '#profile';
-            // fetchFriends(); // Charge la liste d'amis après authentification
+
+            console.log(data.accessToken);
+
+            let userId = extractUserIdFromJWT(data.accessToken);
+
+
+            fetchFriends(userId); // Charge la liste d'amis après authentification
             // updateUI();
             // fetchUsers();
 			client.token = data.accessToken;
