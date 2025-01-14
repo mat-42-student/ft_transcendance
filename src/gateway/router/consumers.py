@@ -118,18 +118,11 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         if not self.valid_json_header(data):
             print(f"Data error (json) : {data}")
             return
-<<<<<<< HEAD
-        # data['header']['dest'] = 'back'
-        data['body']['id'] = self.consumer_id
-        group = REDIS_GROUPS.get(data['header']['service'])
-        if group is not None:
-=======
         group = REDIS_GROUPS.get(data['header']['service'])
         if group:
             data['header']['dest'] = 'back'
             data['header']['id'] = self.consumer_id
             data['body']['timestamp'] = datetime.now(timezone.utc).isoformat()
->>>>>>> origin/dev
             await self.forward_with_redis(data, group)
             return
         print("Unknown recipient, message lost")
