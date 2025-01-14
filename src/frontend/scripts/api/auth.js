@@ -1,6 +1,7 @@
 import { closeDynamicCard } from '../components/dynamic_card.js';
 import { fetchFriends } from './users.js';
-import { launchMainSocket } from '../mainWS.js';
+import { MainSocket } from '../mainWS.js';
+import { client } from '../main.js'
 
 // Vérifie si l'utilisateur est authentifié en regardant le token dans sessionStorage
 export async function isAuthenticated() {
@@ -118,7 +119,8 @@ export async function handleAuthSubmit(event) {
             // fetchFriends(); // Charge la liste d'amis après authentification
             // updateUI();
             // fetchUsers();
-            launchMainSocket(data.accessToken); // Ouvre le WebSocket après connexion réussie
+			client.token = data.accessToken;
+			client.connectWS(); // Ouvre le WebSocket après connexion réussie
         } else {
             const errorData = await response.json();  // Récupère le corps de la réponse d'erreur
             // alert(`Erreur : ${errorData.message || 'Une erreur est survenue.'}`);
