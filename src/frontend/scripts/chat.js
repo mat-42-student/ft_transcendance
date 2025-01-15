@@ -30,7 +30,7 @@ export class ChatApp{
         }
     }
 
-    chatIncomingMsg(data) {
+    incomingMsg(data) {
     // Triggered when I receive a message from my friend
     console.log(JSON.stringify(data));
         this.storeMessage(data);
