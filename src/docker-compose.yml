@@ -31,7 +31,7 @@ services:
     networks:
       - db-network
       - nginx-network
-      - social-network
+      - deep-network
     restart: on-failure
     # healthcheck:
     #   test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
@@ -59,6 +59,7 @@ services:
     networks:
       - db-network
       - redis-network
+      - deep-network
 
   social:
     container_name: social
@@ -75,7 +76,7 @@ services:
     networks:
       # - db-network
       - redis-network
-      - social-network
+      - deep-network
 
 
 
@@ -115,7 +116,8 @@ services:
     networks:
       - db-network
       - redis-network
-      - nginx-network
+      - deep-network
+      - nginx-network # obsolete ?
 
   nginx:
     container_name: nginx
@@ -193,5 +195,5 @@ networks:
     driver: bridge
   redis-network:
     driver: bridge
-  social-network:
+  deep-network:
     driver: bridge

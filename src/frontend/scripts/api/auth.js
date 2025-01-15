@@ -125,15 +125,14 @@ export async function handleAuthSubmit(event) {
             const data = await response.json();
             // console.log(`token given: ` + data.accessToken);
             sessionStorage.setItem('accessToken', data.accessToken);  // Stocke le token JWT
-            sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
             console.log("Connexion réussie !");
             window.location.hash = '#profile';
-
+            
             console.log(data.accessToken);
-
+            
             let userId = extractUserIdFromJWT(data.accessToken);
-
-
+            sessionStorage.setItem('userId', userId);    // Stocke l'ID de l'utilisateur connecté
+            
             fetchFriends(userId); // Charge la liste d'amis après authentification
             // updateUI();
             // fetchUsers();

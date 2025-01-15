@@ -93,6 +93,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
 
         async for message in self.pubsub.listen():
             data = loads(message['data'])
+            print(f"Listen Redis: {data}")
             if self.right_consumer(data['header']['id']) and data['header']['dest'] == 'front':
                 try:
                     print(f"Sending: {data}")
@@ -105,8 +106,8 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         return (id == self.consumer_name or id == self.consumer_id)
 
     async def receive_json(self, data):
-        """data incoming from client ws -> publish to concerned redis group\n
-        possible 'service' values are 'mmaking', 'chat', 'social'"""
+        """Data incoming from client ws => publish to concerned redis group.\n
+        Possible 'service' values are 'mmaking', 'chat', 'social'"""
         if not self.valid_json_header(data):
             print(f"Data error (json) : {data}")
             return

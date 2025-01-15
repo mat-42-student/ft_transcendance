@@ -93,7 +93,9 @@ function addChatButtonListeners() {
             const chatFriendName = document.querySelector('.chat-header .friend-name');
             if (chatFriendName) {
                 const usernameFromMap = friendInfoMap.get('username'); // Récupère le username depuis la Map
+                const userIdFromMap = friendInfoMap.get('id');
                 chatFriendName.textContent = usernameFromMap;
+                chatFriendName.setAttribute('userId', userIdFromMap);
                 console.log(`Nom d'utilisateur mis à jour avec friendInfoMap : ${usernameFromMap}`);
             } else {
                 console.error("Erreur : élément '.friend-name' introuvable.");

@@ -13,7 +13,7 @@ export class ChatApp{
         this.chatInput = document.getElementById('chat-input');
         this.chatUser = document.getElementById('chat-user');
         this.chatBody = document.getElementById('chat-body');
-        this.myId = document.getElementById('user_id');
+        this.myId = sessionStorage.getItem("userId");
         this.chatForm.addEventListener('submit', this.chatFormListener.bind(this));
     }
 
@@ -21,20 +21,23 @@ export class ChatApp{
     // Triggered when I send a message to my friend
         event.preventDefault(); // don't send the form
         let message = this.chatInput.value.trim();
-        let dest = this.chatUser.value;
-        if (message !== '') {
+        let dest = this.chatUser.getAttribute('userId');
+        if (dest && message !== '') {
             this.storeMyMessage(message);
             this.postMyMessage(message);
             this.sendMsg(dest, message);
             this.chatInput.value = '';
         }
+        else
+            console.error("dest: " + dest + "\nmsg: " + message);
     }
 
     incomingMsg(data) {
     // Triggered when I receive a message from my friend
-    console.log(JSON.stringify(data));
+        console.log(JSON.stringify(data));
         this.storeMessage(data);
-        if (this.myId.value == data.header.id) // faux ?! il faut check ['body']['from']
+        // if (this.myId == data.header.id) // faux ?! il faut check ['body']['from']
+        if (this.chatUser == data.body.from) // faux ?! il faut check ['body']['from']
             this.postFriendMessage(data);
         else
             this.addUnreadMessage(data.body.from);
@@ -52,7 +55,7 @@ export class ChatApp{
         if (!this.storedMessages.has(this.activeChatUserId))
             this.storedMessages.set(this.activeChatUserId, []);
         this.storedMessages.get(this.activeChatUserId).push(data.body);
-        console.log("stored in map["+ this.activeChatUserId + "]:" + JSON.stringify(data.body));
+        // console.log("stored in map["+ this.activeChatUserId + "]:" + JSON.stringify(data.body));
     }
 
     storeMessage(data){
@@ -61,7 +64,7 @@ export class ChatApp{
         if (!this.storedMessages.has(user))
             this.storedMessages.set(user, []);        
         this.storedMessages.get(user).push(data.body);
-        console.log("stored in map["+ user + "]:" + JSON.stringify(data.body));
+        // console.log("stored in map["+ user + "]:" + JSON.stringify(data.body));
     }
 
     postFriendMessage(data){
@@ -111,6 +114,7 @@ export class ChatApp{
                 'message': message,
             }
         };
+        // console.log(data);
         await this.mainSocket.send(JSON.stringify(data));
     }
 }
