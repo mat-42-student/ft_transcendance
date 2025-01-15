@@ -122,7 +122,7 @@ function displayFriendsList() {
             <img class="friend-avatar" src="/media/avatars/${friend.avatar}" alt="${friend.username}">
             <div class="friend-info">
                 <span class="friend-name">${friend.username}</span>
-                <div class="friend-detail">
+                <div class="friend-detail" data-user-id="${friend.id}">
                     <span class="friend-status ${friend.status}"></span>
                     <button class="btn-match"><img src="/ressources/vs.png"></button>
                     <button class="btn-chat"><img src="/ressources/chat.png"></button>

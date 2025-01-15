@@ -27,11 +27,10 @@ export function launchMainSocket(token) {
                 chat.incomingMsg(data);
                 break;
             case 'social':
-                social.incomingMsg(data);
+                social.incomingMsg(data.body);
                 break
             default:
               console.log('Could not handle incoming JSON');
           }
-          
     };
 }

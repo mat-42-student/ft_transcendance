@@ -315,18 +315,22 @@ footer .container {
     vertical-align: middle; /* Aligne au centre pour une meilleure apparence */
 }
 
-
-
 /* Statuts possibles */
 .friend-status.online {
-    background: green; /* Vert pour en ligne */
+    background: lightgreen;
 }
 
 .friend-status.ingame {
-    background: blue; /* Rouge pour hors ligne */
+    background: darkred;
 }
 
+.friend-status.pending {
+    background: yellow;
+}
 
+.friend-status.offline {
+    background: grey;
+}
 
 /* detail */
 .friend-detail {
