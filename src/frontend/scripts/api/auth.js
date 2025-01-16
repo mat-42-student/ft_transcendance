@@ -60,7 +60,20 @@ export function logout() {
     // updateUI();
 }
 
-function extractUserIdFromJWT(token) {
+// function extractUserIdFromJWT(token) {
+//     const parts = token.split('.');
+  
+//     if (parts.length !== 3) {
+//       throw new Error('Invalid JWT format');
+//     }
+
+//     const payload = parts[1];
+//     const decodedPayload = atob(payload);
+//     const parsedPayload = JSON.parse(decodedPayload);
+//     return parsedPayload.id;
+// }
+
+function extractUserDataFromJWT(token) {
     const parts = token.split('.');
   
     if (parts.length !== 3) {
@@ -70,7 +83,11 @@ function extractUserIdFromJWT(token) {
     const payload = parts[1];
     const decodedPayload = atob(payload);
     const parsedPayload = JSON.parse(decodedPayload);
-    return parsedPayload.id;
+    return {'id':parsedPayload.id, 'username':parsedPayload.username};
+}
+
+export function changeProfileBtn(label){
+    document.getElementById('btn-profile').innerText = label;
 }
 
 // Fonction d'envoi des requêtes API pour connexion ou enregistrement
@@ -128,12 +145,14 @@ export async function handleAuthSubmit(event) {
             console.log("Connexion réussie !");
             window.location.hash = '#profile';
             
-            console.log(data.accessToken);
+            let userData = extractUserDataFromJWT(data.accessToken);
+            console.log(userData);
+            // let userId = extractUserIdFromJWT(data.accessToken);
+            sessionStorage.setItem('userId', userData.id);
+            sessionStorage.setItem('userName', userData.username);
             
-            let userId = extractUserIdFromJWT(data.accessToken);
-            sessionStorage.setItem('userId', userId);    // Stocke l'ID de l'utilisateur connecté
-            
-            fetchFriends(userId); // Charge la liste d'amis après authentification
+            changeProfileBtn(userData['username']);
+            fetchFriends(userData.id); // Charge la liste d'amis après authentification
             // updateUI();
             // fetchUsers();
             launchMainSocket(data.accessToken); // Ouvre le WebSocket après connexion réussie

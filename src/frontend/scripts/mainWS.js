@@ -21,7 +21,7 @@ export function launchMainSocket(token) {
 
     mainSocket.onmessage = async function(e) {
         let data = JSON.parse(e.data);
-        // console.log(JSON.stringify(data, null, 2));
+        console.log("From mainWs " + JSON.stringify(data, null, 2));
         switch (data['header']['service']) {
             case 'chat':
                 chat.incomingMsg(data);

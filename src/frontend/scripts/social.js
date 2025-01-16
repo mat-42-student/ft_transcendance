@@ -6,7 +6,7 @@ export class SocialApp{
     }
 
     incomingMsg(data) {
-        console.log("social incoming msg for user : " + data.user + " status " + data.status);
+        // console.log("social incoming msg for user : " + data.user + " status " + data.status);
         const friendItem = document.querySelector(`.friend-detail[data-user-id="${data.user}"]`);
         if (friendItem) {
             const statusSpan = friendItem.querySelector('.friend-status');

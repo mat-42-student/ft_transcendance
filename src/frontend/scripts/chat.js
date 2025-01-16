@@ -4,7 +4,7 @@ export class ChatApp{
         this.doDOMThings();
         this.mainSocket = mainSocket;
         this.storedMessages = new Map(); // map to store messages with keys = userid and value = array of messages
-        this.unreadMessages = new Map(); // map to count/display unread messages
+        // this.unreadMessages = new Map(); // map to count/display unread messages. OBSOLETE
         this.activeChatUserId = 0; // Change value by calling loadHistory 
     }
 
@@ -21,7 +21,7 @@ export class ChatApp{
     // Triggered when I send a message to my friend
         event.preventDefault(); // don't send the form
         let message = this.chatInput.value.trim();
-        let dest = this.chatUser.getAttribute('userId');
+        let dest = this.chatUser.dataset.userId;
         if (dest && message !== '') {
             this.storeMyMessage(message);
             this.postMyMessage(message);
@@ -34,13 +34,15 @@ export class ChatApp{
 
     incomingMsg(data) {
     // Triggered when I receive a message from my friend
-        console.log(JSON.stringify(data));
+        console.log("Incoming msg from " + data.body.from + "\nData is :" + JSON.stringify(data));
+        this.activeChatUserId = document.getElementById("chat-user").dataset.userId;
+        console.log("Active chat user is : " + this.activeChatUserId + "\n");
         this.storeMessage(data);
         // if (this.myId == data.header.id) // faux ?! il faut check ['body']['from']
-        if (this.chatUser == data.body.from) // faux ?! il faut check ['body']['from']
+        if (this.chatUser == data.body.from)
             this.postFriendMessage(data);
         else
-            this.addUnreadMessage(data.body.from);
+            this.hasUnreadMessage(data.body.from);
     }
 
     storeMyMessage(msg){
@@ -91,14 +93,23 @@ export class ChatApp{
         });
     }
 
-    addUnreadMessage(id) {
+    // addUnreadMessage(id) {
     // increment number of unread messages
-        if (this.unreadMessages.has(id))
-            this.unreadMessages.set(id, this.unreadMessages.get(id) + 1);
-        else
-            this.unreadMessages.set(id, 1);
+    //     if (this.unreadMessages.has(id))
+    //         this.unreadMessages.set(id, this.unreadMessages.get(id) + 1);
+    //     else
+    //         this.unreadMessages.set(id, 1);
+    // }
+
+    hasUnreadMessage(friend) {
+    // Make chat btn with friend to blink or be red or something
+        const strBtn = '.friend-detail[data-user-id="' + friend + '"] .btn-chat';
+        console.log(strBtn);
+        const chatButton = document.querySelector('.friend-detail[data-user-id="' + friend + '"] .btn-chat');
+        chatButton.style.backgroundColor = 'red';
+        chatButton.style.color = 'white';
     }
-    
+
     getUnreadMessage(id) {
         if (this.unreadMessages.has(id))
             return this.unreadMessages.get(id);
@@ -114,7 +125,7 @@ export class ChatApp{
                 'message': message,
             }
         };
-        // console.log(data);
+        console.log("Chat sending : " + data);
         await this.mainSocket.send(JSON.stringify(data));
     }
 }
