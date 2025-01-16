@@ -31,14 +31,6 @@ export async function isAuthenticated() {
     }
 }
 
-// Logout function
-// export function logout() {
-//     sessionStorage.removeItem('accessToken');
-//     console.log("Déconnecté avec succès !");
-//     window.location.hash = '#home';
-//     // updateUI();
-// }
-
 export function logout() {
     fetch('https://localhost:3000/api/v1/auth/logout/', {
         method: 'POST',
@@ -149,4 +141,65 @@ export async function handleAuthSubmit(event) {
         console.error('Erreur lors de la requête API :', error);
         // alert('Une erreur est survenue. Veuillez réessayer.');
     }
+}
+
+// --- 2FA ---
+export function enroll2fa() {
+    const token = sessionStorage.getItem('accessToken');
+    const qrSection = document.getElementById('qr-section');
+    const verificationSection = document.getElementById('verification-section');
+    const infoSection = document.getElementById('info-section');
+
+    fetch('https://localhost:3000/api/v1/auth/2fa/enroll/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const qrCodeImage = `data:image/png;base64,${data.qr_code}`;
+            document.getElementById('qr-image').src = qrCodeImage;
+            qrSection.style.display = 'block';
+            verificationSection.style.display = 'block';
+            infoSection.style.display = 'none';
+        } else {
+            console.log("Error", data);
+            alert(data.message);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+export function verify2fa() {
+    const token = sessionStorage.getItem('accessToken')
+    const totp = document.getElementById('totp-code').value;
+    const successPage = document.getElementById('2fa-success');
+    const qrSection = document.getElementById('qr-section');
+    const verificationSection = document.getElementById('verification-section');
+
+
+    fetch('https://localhost:3000/api/v1/auth/2fa/verify/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ totp }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log("2fa has been enabled!")
+            successPage.style.display = 'block';
+            qrSection.style.display = 'none';
+            verificationSection.style.display = 'none';
+        } else {
+            console.log("Error", data);
+        }
+    })
+    .catch(error => console.error('Error:', error));
 }

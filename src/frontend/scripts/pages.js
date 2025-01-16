@@ -38,6 +38,12 @@ export function setupProfilePage() {
                     initDynamicCard('unblock');
                 });
             });
+
+            document.querySelectorAll('.btn-2fa').forEach(button => {
+                button.addEventListener('click', () => {
+                    initDynamicCard('2fa');
+                });
+            });
         }
     }, 100); // Retry every 100ms until elements are available
 }
