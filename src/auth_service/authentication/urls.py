@@ -4,6 +4,7 @@ from .views import *
 urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
+    path('refresh/', RefreshTokenView.as_view(), name='refresh'),
     path('verify/', VerifyTokenView.as_view(), name='verify'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('2fa/enroll/', Enroll2FAView.as_view(), name='2fa-enroll'),

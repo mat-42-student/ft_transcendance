@@ -1,6 +1,6 @@
 import { setupNavigation, navigateTo } from './nav.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
-import { isAuthenticated } from './api/auth.js';
+import { isAuthenticated, verify2fa } from './api/auth.js';
 import { fetchFriends } from './api/users.js';
 import { MainSocket } from './mainWS.js';
 
@@ -25,11 +25,13 @@ export let client = new Client();
 
 //slet client = new Client();
 
+
 document.addEventListener('DOMContentLoaded', () => {
     const homeButton = document.getElementById('btn-home');
     const profileButton = document.getElementById('btn-profile');
     const requestsButton = document.querySelector('.btn-friend-requests');
     const friendButtons = document.querySelectorAll('.friend-item');
+
 
     // Initial setup
     setupNavigation();
@@ -68,6 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
             initDynamicCard('requests');
         });
     }
+
+
     
     friendButtons.forEach((button) => {
         button.addEventListener('click', (event) => {
