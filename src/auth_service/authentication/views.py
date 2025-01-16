@@ -48,7 +48,7 @@ class LoginView(APIView):
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
-        totp = request.data.get('totp')
+        code = request.data.get('totp')
 
         user = User.objects.filter(email=email).first()
 
@@ -59,11 +59,12 @@ class LoginView(APIView):
             raise AuthenticationFailed('Incorrect password!')
             
         if user.is_2fa_enabled:
-            if not totp:
+            if not code:
                 return Response({"success": False, "error": "2fa_required!"}, status=400)
 
+
             totp = pyotp.TOTP(user.totp_secret)
-            if not totp.verify(totp):
+            if not totp.verify(code):
                 return Response({"success": False, "error": "invalid_totp"}, status=400)
 
         access_payload = {

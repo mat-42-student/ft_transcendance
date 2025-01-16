@@ -73,6 +73,7 @@ export async function handleAuthSubmit(event) {
     const username = document.getElementById('auth-username').value.trim();
     const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value.trim();
+    const totpContainer = document.getElementById('totp-container');
     const confirm_password = document.getElementById('auth-confirm-password').value.trim();
     const hash = window.location.hash;
 
@@ -112,7 +113,7 @@ export async function handleAuthSubmit(event) {
             body: JSON.stringify(payload),
         });
 
-        console.log(JSON.stringify(payload));
+        console.log(JSON.stringify(payload)); // DEBUG
 
         if (response.ok) {
             const data = await response.json();
@@ -132,13 +133,57 @@ export async function handleAuthSubmit(event) {
             // fetchUsers();
 			client.token = data.accessToken;
 			client.connectWS(); // Ouvre le WebSocket après connexion réussie
+            closeDynamicCard();
         } else {
             const errorData = await response.json();  // Récupère le corps de la réponse d'erreur
+
+            if (errorData && errorData.error === '2fa_required!') {
+                const totp = document.getElementById('auth-totp').value.trim();
+                apiUrl = '/api/v1/auth/login/';
+                payload = { email, password, totp };
+                totpContainer.classList.remove('hidden');
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', },
+                    body: JSON.stringify(payload),
+                });
+
+                console.log(JSON.stringify(payload)); // DEBUG
+
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // console.log(`token given: ` + data.accessToken);
+                    sessionStorage.setItem('accessToken', data.accessToken);  // Stocke le token JWT
+                    sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
+                    console.log("Connexion réussie !");
+                    window.location.hash = '#profile';
+        
+                    console.log(data.accessToken);
+        
+                    let userId = extractUserIdFromJWT(data.accessToken);
+        
+        
+                    fetchFriends(userId); // Charge la liste d'amis après authentification
+                    // updateUI();
+                    // fetchUsers();
+                    client.token = data.accessToken;
+                    client.connectWS(); // Ouvre le WebSocket après connexion réussie
+                    closeDynamicCard();
+                } else {
+                    const errorData = await response.json();  // Récupère le corps de la réponse d'erreur
+                    console.error('Erreur API:', errorData); // Log l'erreur pour débogage
+                    return;
+                }
+
+            } else {
+                console.error('Erreur API:', errorData); // Log l'erreur pour débogage
+                return;
+            }
             // alert(`Erreur : ${errorData.message || 'Une erreur est survenue.'}`);
-            console.error('Erreur API:', errorData);  // Log l'erreur pour débogage
-            return;
         }
-        closeDynamicCard();
+        // closeDynamicCard();
     } catch (error) {
         console.error('Erreur lors de la requête API :', error);
         // alert('Une erreur est survenue. Veuillez réessayer.');
