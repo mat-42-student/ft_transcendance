@@ -12,12 +12,19 @@ class Client{
 		this.token = null;
 	}
 
-	connectWS(token){
-		if (token != null)
+	connectWS(){
+
+		if (this.token != null)
 		{
-			this.token = token;
-			this.mainSocket = new MainSocket(token);
+			console.log(this.token);
+			this.mainSocket = new MainSocket(this.token);
+
 		}
+	}
+
+	getmainSocket()
+	{
+		return (this.mainSocket);
 	}
 }
 
