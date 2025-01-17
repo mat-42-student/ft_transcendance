@@ -34,15 +34,14 @@ export class ChatApp{
 
     incomingMsg(data) {
     // Triggered when I receive a message from my friend
-        console.log("Incoming msg from " + data.body.from + "\nData is :" + JSON.stringify(data));
+        const friend = data.body.from;
+        //a supprimer quand loadHistory fonctionne
         this.activeChatUserId = document.getElementById("chat-user").dataset.userId;
-        console.log("Active chat user is : " + this.activeChatUserId + "\n");
         this.storeMessage(data);
-        // if (this.myId == data.header.id) // faux ?! il faut check ['body']['from']
-        if (this.chatUser == data.body.from)
+        if (this.activeChatUserId == friend)
             this.postFriendMessage(data);
         else
-            this.hasUnreadMessage(data.body.from);
+            this.hasUnreadMessage(friend);
     }
 
     storeMyMessage(msg){
@@ -83,6 +82,13 @@ export class ChatApp{
         this.chatBody.appendChild(myDiv);
     }
 
+    changeChatUser(friend){
+        const chatImg = document.querySelector('.friend-detail[data-user-id="' + friend + '"] .btn-chat img');
+        chatImg.src = "/ressources/chat.png";
+        this.chatBody.replaceChildren(); 
+        this.loadHistory(friend);
+    }
+
     loadHistory(friend) {
         this.activeChatUserId = friend;
         this.storedMessages.get(friend).array.forEach(element => {
@@ -103,11 +109,8 @@ export class ChatApp{
 
     hasUnreadMessage(friend) {
     // Make chat btn with friend to blink or be red or something
-        const strBtn = '.friend-detail[data-user-id="' + friend + '"] .btn-chat';
-        console.log(strBtn);
-        const chatButton = document.querySelector('.friend-detail[data-user-id="' + friend + '"] .btn-chat');
-        chatButton.style.backgroundColor = 'red';
-        chatButton.style.color = 'white';
+        const chatImg = document.querySelector('.friend-detail[data-user-id="' + friend + '"] .btn-chat img');
+        chatImg.src = "/ressources/chat_new_msg.png";
     }
 
     getUnreadMessage(id) {
