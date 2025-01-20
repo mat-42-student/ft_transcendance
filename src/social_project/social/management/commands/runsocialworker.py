@@ -20,9 +20,11 @@ class Command(BaseCommand):
         try:
             self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
-            self.group_name = "deep_social"
-            print(f"Subscribing to channel: {self.group_name}")
-            await self.pubsub.subscribe(self.group_name)
+            self.gateway_group = "deep_social"
+            self.info_group = "info_social"
+            print(f"Subscribing to channel: {self.gateway_group}")
+            await self.pubsub.subscribe(self.gateway_group)
+            await self.pubsub.subscribe(self.info_group)
             self.listen_task = create_task(self.listen())
             while self.running:
                 await asleep(1)
@@ -37,6 +39,9 @@ class Command(BaseCommand):
             if msg:
                 try:
                     data = json.loads(msg['data'])
+                    if msg['channel'] == "mmaking_social":
+                        self.mmaking_process(data)
+                        return
                     if self.valid_social_json(data):
                         await self.process_message(data)
                 except Exception as e:
@@ -66,6 +71,19 @@ class Command(BaseCommand):
             if self.user_status.get(friend) != 'offline':
                 await self.send_my_status(user_id, friend)
 
+    async def mmaking_process(self, data):
+        user_id = data.get('user_id', None)
+        if user_id:
+            response = {
+                "user_id": user_id,
+                "status": self.user_status.get(user_id, "offline")
+            }
+        else:
+            response = {
+                "error": "GFY"
+            }
+        await self.redis_client.publish(self.info_group, json.dumps(response))
+
     def get_friend_list(self, user_id):
         """ Request friendlist from container 'users' """
         response = requests.get(f"http://users:8000/api/v1/users/{user_id}/friends/")
@@ -94,7 +112,7 @@ class Command(BaseCommand):
                 }
             }
             print(f"getting my friends status : {data}")
-            await self.redis_client.publish(self.group_name, json.dumps(data))
+            await self.redis_client.publish(self.gateway_group, json.dumps(data))
 
     async def send_my_status(self, user_id, friend):
         """ publish status of 'user_id' and adress it to 'friend' """
@@ -110,7 +128,7 @@ class Command(BaseCommand):
             }
         }
         print(f"Publishing my status to all my friends: {data}")
-        await self.redis_client.publish(self.group_name, json.dumps(data))
+        await self.redis_client.publish(self.gateway_group, json.dumps(data))
 
     def signal_handler(self, sig, frame):
         try:
@@ -122,7 +140,7 @@ class Command(BaseCommand):
     async def cleanup_redis(self):
         print("Cleaning up Redis connections...")
         if self.pubsub:
-            await self.pubsub.unsubscribe(self.group_name)
+            await self.pubsub.unsubscribe(self.gateway_group)
             await self.pubsub.close()
         if self.redis_client:
             await self.redis_client.close()
