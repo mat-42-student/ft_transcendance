@@ -1,11 +1,14 @@
 import { handleHashChange, initAuthFormListeners } from './auth_form.js';
+import { enroll2fa } from '../api/auth.js';
+import { verify2fa } from '../api/auth.js';
 
 const dynamicCardRoutes = {
     'auth': './partials/cards/auth.html',
     'versus': './partials/cards/versus.html',
     'requests': './partials/cards/friend_requests.html',
     'block': './partials/cards/block.html',
-    'unblock': './partials/cards/unblock.html'
+    'unblock': './partials/cards/unblock.html',
+    '2fa': './partials/cards/2fa.html'
 };
 
 export function closeDynamicCard() {
@@ -18,7 +21,7 @@ export async function initDynamicCard(routeKey) {
     const cardContainer = document.getElementById('dynamic-card-container');
     const cardContent = document.getElementById('dynamic-card-content');
 
-    // // Changer historique de vue hash
+    // Changer historique de vue hash
     // history.pushState({ routeKey }, '', `#${routeKey}`);
     
     // Vérifier si la route existe
@@ -41,6 +44,23 @@ export async function initDynamicCard(routeKey) {
 
         // Afficher la carte dynamique
         cardContainer.classList.remove('hidden');
+
+        // TEST 2FA
+        const twoFactorEnrollButton = document.getElementById('btn-enroll-2fa'); 
+        const twoFactorVerifyButton = document.getElementById('btn-verify-2fa');
+
+        if (twoFactorEnrollButton) {
+            twoFactorEnrollButton.addEventListener('click', () => {
+                enroll2fa();
+            });
+        }
+    
+        if (twoFactorVerifyButton) {
+            twoFactorVerifyButton.addEventListener('click', () => {
+                verify2fa();
+                
+            });
+        }
 
         if (routeKey == 'auth') {
             // Définir un hash par défaut pour signin

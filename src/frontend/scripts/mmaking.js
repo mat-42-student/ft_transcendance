@@ -7,12 +7,12 @@ export class Mmaking
 		this.listening_button_match_Random();
 	}
 
-	async listening_button_match_Random()
+	listening_button_match_Random()
 	{
 		const randomBtn = document.getElementById('versus');
 		if (!randomBtn)
 			return ;
-		randomBtn.addEventListener('click', ()=>
+		randomBtn.addEventListener('click', async ()=>
 		{
 			const data = {
 				'id' : 0
@@ -22,7 +22,7 @@ export class Mmaking
 
 	}
 
-    async sendMsg(dest, message) {
+    sendMsg(dest, message) {
         let data = {
             'header': {
                 'service': 'mmaking',
@@ -32,7 +32,7 @@ export class Mmaking
                 'message': message,
             }
         };
-        await this.mainSocket.send(JSON.stringify(data));
+        this.mainS.send(JSON.stringify(data));
     }
 
 	Build_Salon()

@@ -14,6 +14,7 @@ import datetime
 import requests
 import pyotp
 import qrcode
+from qrcode.constants import ERROR_CORRECT_L
 from io import BytesIO
 import base64
 import secrets
@@ -41,14 +42,13 @@ class VerifyTokenView(APIView):
             raise AuthenticationFailed('Invalid refresh token!')
 
         return Response({'success': 'true'}, status=status.HTTP_200_OK)
-
 class LoginView(APIView):
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
-        totp = request.data.get('totp')
+        code = request.data.get('totp')
 
         user = User.objects.filter(email=email).first()
 
@@ -59,11 +59,12 @@ class LoginView(APIView):
             raise AuthenticationFailed('Incorrect password!')
             
         if user.is_2fa_enabled:
-            if not totp:
+            if not code:
                 return Response({"success": False, "error": "2fa_required!"}, status=400)
 
+
             totp = pyotp.TOTP(user.totp_secret)
-            if not totp.verify(totp):
+            if not totp.verify(code):
                 return Response({"success": False, "error": "invalid_totp"}, status=400)
 
         access_payload = {
@@ -139,7 +140,6 @@ class LogoutView(APIView):
             'success': 'true'
         }
         return response
-
 class Enroll2FAView(APIView):
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
@@ -147,22 +147,30 @@ class Enroll2FAView(APIView):
     def post(self, request):
         user = request.user
         
-        if user.is_2fa_enabled:
-            return Response({'message': '2FA is already enabled.'}, status=status.HTTP_400_BAD_REQUEST)
+        # if user.is_2fa_enabled:
+        #     return Response({'message': '2FA is already enabled.'}, status=status.HTTP_400_BAD_REQUEST)
         
         totp_secret = pyotp.random_base32()
         user.totp_secret = totp_secret
-        user.is_2fa_enabled = True
+        # user.is_2fa_enabled = True
         user.save()
 
         totp = pyotp.TOTP(totp_secret)
         provisioning_uri = totp.provisioning_uri(user.email, issuer_name="MyPongApp")
 
-        qr = qrcode.make(provisioning_uri)
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=ERROR_CORRECT_L,
+            box_size=10,
+            border=1,
+        )
+        
+        qr.add_data(provisioning_uri)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
         buffer = BytesIO()
-        qr.save(buffer, format='PNG')
+        img.save(buffer, format='PNG')
         buffer.seek(0)
-
         qr_code_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
         
         response_data = {

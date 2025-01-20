@@ -1,7 +1,7 @@
 POST https://localhost:3000/api/v1/auth/login/
 Content-Type: application/json
 
-{"email": "tom1@mail.com", "password": "Test123*"}
+{"email": "tom@mail.com", "password": "Test123*"}
 
 ###
 
@@ -15,7 +15,7 @@ Content-Type: application/json
 POST https://localhost:3000/api/v1/auth/refresh/
 Content-Type: application/json
 
-{"email": "john@mail.com"}
+{"email": "tom@mail.com"}
 
 ###
 
@@ -26,17 +26,18 @@ Content-Type: application/json
 
 ###
 
-POST https://localhost:3000/api/v1/auth/2fa/enroll
+POST https://localhost:3000/api/v1/auth/2fa/enroll/
 Content-Type: application/json
-Authorization: Bearer
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJ0b20iLCJleHAiOjE3MzY4NjgxNzUsImlhdCI6MTczNjg2Nzg3NX0.eheJraZT_c8yeYMVJ5cyVDdRfEQv7Zihwx8L3-P4LudtIJj4vutvv-hYNx42Wujro7MiqNh5ERDKxDTzY_8gGg-M6K4_RmUyMOLTTsdCqLh0lIAp720p_F_xo6uzJ4rT322NG74HD5m39Q083K2Z5EU4YyWYh64gwfDuiko991NsOTl9VrMMDAkTDXN7otdq36qHxJI-UvqQcp5Wkg-9BP_-xqlYDXeVdYwZE_dWHj6C54akjM6X8iAhkbcF5XcfPG5le4ar2vmKKC14WPFYjsbKIj2oftqloE5dd72rCCocbgy2AK_ryhDJQAZ3gyS1VTrEqlIPcUk7WDrsVEadwQ
 
 {}
 
 ###
 
-POST https://localhost:3000/api/v1/auth/2fa/disable-2fa/
+POST https://localhost:3000/api/v1/auth/2fa/disable/
 Content-Type: application/json
-Authorization: Bearer
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNzM2ODY4NTE0LCJpYXQiOjE3MzY4NjgyMTR9.hD9hs3gZK2ip7lk1BcSs43-8i8uLgHfVZzUSSfCWbQYTKrDKlBhc0CMcMcUkZu7ezPyuHaT9kHT9VJaE6IjzwYkzQUEK3k7T-SU_gs8lp-YP5T10WTkNoGiOjHqGanIf3vIjG7Wyh126qNxLDKQ9ruT9avLxf315GKkg1DZe2MO2C6Jfe8wVg0fz15r4fqzYOfvPguotQAjGvBvpCsc1AWbqo02j0-4ljBILZsz_RA1Pz3vRbr4y7ialjF05po2XOIiGgRMXEvjlAGqu29njDUqcpZcExQTi53bEtKpxBj-mN2bXbwxzwggjNmuNyZk9-nCUDa9KaXkGbnpbS7A84Q
+
 {}
 
 ###

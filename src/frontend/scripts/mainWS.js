@@ -8,23 +8,23 @@ export class MainSocket {
 	{
 		console.log("Joining wss://" + window.location.hostname + ":3000/ws/ with token : \n" + token);
 		this.socketURL = "wss://" + window.location.hostname + ":3000/ws/?t=" + token;
-		this.mainSocket = new WebSocket(socketURL);
-		this.chat = new ChatApp(mainSocket);
-		this.social = new SocialApp(mainSocket);
-		this.mmaking = new Mmaking(mainSocket);
+		this.mainSocket = new WebSocket(this.socketURL);
+		this.chat = new ChatApp(this.mainSocket);
+		this.social = new SocialApp(this.mainSocket);
 
-		mainSocket.onerror = async function(e) {
+
+		this.mainSocket.onerror = async (e)=> {
 			console.error(e.message);
 		};
 
-        mainSocket.onopen = async function(e) {
+        this.mainSocket.onopen = async function(e) {
         };
 
-		mainSocket.onclose = async function(e) { 
+		this.mainSocket.onclose = async (e)=> { 
 			console.log("MainWS is disconnected")
 		};
 
-		mainSocket.onmessage = async function(e) {
+		this.mainSocket.onmessage = async (e)=> {
 			let data = JSON.parse(e.data);
 			// console.log(JSON.stringify(data, null, 2));
 			switch (data['header']['service']) {
