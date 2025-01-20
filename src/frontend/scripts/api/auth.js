@@ -124,10 +124,12 @@ export async function handleAuthSubmit(event) {
 
         if (response.ok) {
             const data = await response.json();
-            // console.log(`token given: ` + data.accessToken);
+            console.log(`token given: ` + data.accessToken);
             sessionStorage.setItem('accessToken', data.accessToken);  // Stocke le token JWT
             sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
             console.log("Connexion réussie !");
+			client.token = data.accessToken;
+			client.connectWS(); // Ouvre le WebSocket après connexion réussie
             window.location.hash = '#profile';
 
             console.log(data.accessToken);
@@ -138,8 +140,7 @@ export async function handleAuthSubmit(event) {
             fetchFriends(userId); // Charge la liste d'amis après authentification
             // updateUI();
             // fetchUsers();
-			client.token = data.accessToken;
-			client.connectWS(); // Ouvre le WebSocket après connexion réussie
+
         } else {
             const errorData = await response.json();  // Récupère le corps de la réponse d'erreur
             // alert(`Erreur : ${errorData.message || 'Une erreur est survenue.'}`);
