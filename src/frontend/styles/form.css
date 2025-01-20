@@ -36,6 +36,23 @@
     background-color: #0056b3;
 }
 
+#dynamic-card-content button#oauth-submit {
+    width: 100%;
+    padding: 10px;
+    background-color: #000000;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+}
+
+#dynamic-card-content button#oauth-submit:hover {
+    background-color: #393b3e;
+}
+
 #dynamic-card-content p a {
     display: block;
     margin-top: 15px;
@@ -59,3 +76,4 @@
         transform: scale(1);
     }
 }
+
