@@ -2,6 +2,28 @@ import { setupNavigation, navigateTo } from './nav.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
 import { isAuthenticated } from './api/auth.js';
 import { fetchFriends } from './api/users.js';
+import { MainSocket } from './mainWS.js';
+
+class Client{
+
+	constructor() {
+		this.mainSocket = null;
+		this.userId = null;
+		this.token = null;
+	}
+
+	connectWS(token){
+		if (token != null)
+		{
+			this.token = token;
+			this.mainSocket = new MainSocket(token);
+		}
+	}
+}
+
+export let client = new Client();
+
+//slet client = new Client();
 
 document.addEventListener('DOMContentLoaded', () => {
     const homeButton = document.getElementById('btn-home');

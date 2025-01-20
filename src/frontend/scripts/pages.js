@@ -2,11 +2,11 @@ import { initDynamicCard } from "./components/dynamic_card.js";
 import { isAuthenticated, logout } from "./api/auth.js";
 
 export function setupHomePage() {
-    document.querySelectorAll('.btn-versus').forEach(button => {
-        button.addEventListener('click', () => {
-            initDynamicCard('versus');
-        });
-    });
+    // document.querySelectorAll('.btn-versus').forEach(button => {
+    //     button.addEventListener('click', () => {
+    //         initDynamicCard('versus');
+    //     });
+    // });
 }
 
 export function setupProfilePage() {
