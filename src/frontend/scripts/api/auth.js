@@ -121,10 +121,7 @@ export async function handleAuthSubmit(event) {
             sessionStorage.setItem('accessToken', data.accessToken);  // Stocke le token JWT
             sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
             console.log("Connexion réussie !");
-			client.token = data.accessToken;
-			client.connectWS(); // Ouvre le WebSocket après connexion réussie
             window.location.hash = '#profile';
-
             console.log(data.accessToken);
 
             let userId = extractUserIdFromJWT(data.accessToken);
