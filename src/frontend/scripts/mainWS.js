@@ -17,9 +17,8 @@ export class MainSocket {
 			console.error(e.message);
 		};
 
-		this.mainSocket.onopen = async (e)=> {
-			// Ask for friends status ??
-		};
+        this.mainSocket.onopen = async function(e) {
+        };
 
 		this.mainSocket.onclose = async (e)=> { 
 			console.log("MainWS is disconnected")
@@ -30,15 +29,17 @@ export class MainSocket {
 			// console.log(JSON.stringify(data, null, 2));
 			switch (data['header']['service']) {
 				case 'chat':
-					this.chat.chatIncomingMsg(data);
+					this.chat.incomingMsg(data);
 					break;
 				case 'social':
-					this.social.chatIncomingMsg(data);
+					this.social.incomingMsg(data);
+					break
+				case 'mmaking':
+					console.log(data);
 					break;
 				default:
 				console.log('Could not handle incoming JSON');
 			}
-			
-		};
-	}
+		};       
+    };
 }

@@ -32,7 +32,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         except Exception as e:
             print(f"Connection to redis error : {e}")
         await self.get_friends_status()
-        await self.send_online_status('online')
+        # await self.send_online_status('online')
 
     async def connect_to_redis(self):
         try:
@@ -54,14 +54,6 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         self.listen_task.cancel()
 
     def get_user_infos(self):
-        # Julien's endpoint
-        # params = parse_qs(self.scope['query_string'].decode())
-        # if params:
-        #     self.consumer_id = int(params['id'][0]) if 'id' in params and params['id'] else None
-        #     self.consumer_name = self.consumer_id
-        #     return True
-        # return False
-        # Nilo's endpoint
         data = self.checkAuth()
         if data:
             self.consumer_id =  data.get('id')
@@ -135,7 +127,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 print(f"Publish error : {e}")
 
     async def get_friends_status(self):
-        """get friends status"""
+        """get friends status AND publish my own status"""
         data = {
             "header": {
                 "service": "social",
@@ -163,9 +155,3 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         }
         print(f"Sending data to deep_social: {data}")
         await self.redis_client.publish("deep_social", dumps(data))
-
-    # try:
-    #     response = requests.get("http://matchmaking:8000/api/test/")
-    #     print(response)
-    # except Exception as e:
-    #     print(f"GET error : {e}")

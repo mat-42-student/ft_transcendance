@@ -1,0 +1,57 @@
+<!-- <div id="2FA-login-form">
+    <h2 id="2FA-login-title">Setup 2FA</h2>
+    <form id="2FA-login-form">
+        <button type="button" id="btn-enroll-2fa">Generate QR Code</button>
+        <div class="2fa-setup">
+            <img src="" id="qr-image">
+            <form>
+                <div class="form-group">
+                    <label for="totp">Enter TOTP code</label>
+                    <input type="number" id="totp" name="totp" required>
+                </div>
+                <button type="button" id="btn-verify-2fa" class="submit-btn">Send</button>
+            </form>
+        </div>
+    </form>
+</div> -->
+
+<div class="two-factor-card" id="two-factor-card">
+    <div class="info-section" id="info-section">
+        <h2>Enable Two-Factor Authentication</h2>
+        <br>
+        <p>
+        Two-Factor Authentication (2FA) adds an extra layer of security. After enabling 2FA, 
+        you’ll need a Time-based One-Time Password (TOTP) from an authenticator app 
+        (e.g., Google Authenticator, Authy, Microsoft Authenticator) when you log in.
+        </p>
+        <br>
+        <ol>
+            <li>Click <strong>Generate QR Code</strong> to get your unique setup QR.</li>
+            <br>
+            <li>Open your authenticator app and scan the QR code.</li>
+            <br>
+            <li>Enter the TOTP code displayed in your app to finish verification.</li>
+        </ol>
+        <br><br>
+        <!-- Button to request and display the QR code -->
+        <button type="button" id="btn-enroll-2fa">Generate QR Code</button>
+    </div>
+  
+    <!-- Section to display the QR image once generated -->
+    <div class="qr-section" id="qr-section" style="display: none; margin-top: 1em;">
+      <img src="" id="qr-image" style="width: 250px; height: auto;" alt="2FA QR Code" />
+    </div>
+  
+    <!-- Form to verify user’s TOTP code -->
+    <div class="verification-section" id="verification-section" style="display: none; margin-top: 1em;">
+      <label for="totp-code">Enter the code from your authenticator app:</label>
+      <input type="text" id="totp-code" name="totp-code" required />
+      
+      <button type="button" id="btn-verify-2fa" class="submit-btn">Verify 2FA</button>
+    </div>
+
+    <div class="2fa-success" id="2fa-success" style="display: none">
+        <h2>2FA Enabled</h2>
+    </div>
+  </div>
+

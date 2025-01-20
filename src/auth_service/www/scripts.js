@@ -52,7 +52,7 @@ function handleLogin() {
         return;
     }
 
-    fetch('https://localhost:3000/api/v1/auth/login', {
+    fetch('https://localhost:3000/api/v1/auth/login/', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -77,7 +77,7 @@ function handleLogin() {
 
 async function handleOAuth() {
     try {
-      const response = await fetch('https://localhost:3000/api/v1/auth/oauth/redirect');
+      const response = await fetch('https://localhost:3000/api/v1/auth/oauth/redirect/');
       const data = await response.json();
   
       window.location.href = data.url;
@@ -123,7 +123,7 @@ function loginSuccessful() {
 function enroll2fa() {
     token = sessionStorage.getItem('access_token')
 
-    fetch('https://localhost:3000/api/v1/auth/2fa/enroll', {
+    fetch('https://localhost:3000/api/v1/auth/2fa/enroll/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -148,7 +148,7 @@ function verify2fa() {
     const token = sessionStorage.getItem('access_token')
     const totp = document.getElementById('totp').value;
 
-    fetch('https://localhost:3000/api/v1/auth/2fa/verify', {
+    fetch('https://localhost:3000/api/v1/auth/2fa/verify/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -171,7 +171,7 @@ function verify2fa() {
 function rereshToken() {
     const emailInput = document.getElementById('email2').value;
 
-    fetch('https://localhost:3000/api/v1/auth/refresh', {
+    fetch('https://localhost:3000/api/v1/auth/refresh/', {
         method: 'POST',
         credentials: 'include',
         headers: {

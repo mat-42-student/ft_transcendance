@@ -48,11 +48,11 @@ function updateAuthForm(mode) {
     }
 
     if (mode === 'register') {
-        formTitle.textContent = 'Register';
+        formTitle.textContent = 'Sign Up';
         confirmPasswordContainer.classList.remove('hidden'); // Affiche la confirmation du mot de passe
         confirmUsernameContainer.classList.remove('hidden'); // Affiche le username
         confirmPasswordInput.setAttribute('required', 'required');
-        authSubmit.textContent = 'Register';
+        authSubmit.textContent = 'Sign Up';
 
         // Affiche uniquement le lien pour la connexion
         registerLink.classList.add('hidden');
