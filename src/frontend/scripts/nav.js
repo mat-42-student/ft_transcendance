@@ -1,6 +1,10 @@
 import { setupHomePage, setupProfilePage } from "./pages.js";
 import { initDynamicCard } from './components/dynamic_card.js';
 import { isAuthenticated } from './api/auth.js';
+import { Mmaking } from "./mmaking.js";
+import { client } from './main.js'
+
+let mmaking = null;
 
 const routes = {
     '#home': './partials/home.html',
@@ -55,6 +59,8 @@ export async function navigateTo(hash) {
             const response = await fetch(route);
             const html = await response.text();
             document.querySelector('.main-content').innerHTML = html;
+			if (client.getmainSocket())
+				mmaking = new Mmaking(client.getmainSocket().mainSocket);
         } catch (error) {
             console.error('Error loading page:', error);
             return;

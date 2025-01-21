@@ -5,11 +5,18 @@
         <div id="username-container" class="hidden">
             <input type="text" id="auth-username" placeholder="Username">
         </div>
+
         <input type="email" id="auth-email" placeholder="Email" required>
         <input type="password" id="auth-password" placeholder="Password" required>
+
         <div id="confirm-password-container" class="hidden">
             <input type="password" id="auth-confirm-password" placeholder="Confirm Password">
         </div>
+
+        <div id="totp-container" class="hidden">
+            <input type="number" id="auth-totp" placeholder="TOTP">
+        </div>
+
         <button type="submit" id="auth-submit">Sign In</button>
     </form>
     <p>

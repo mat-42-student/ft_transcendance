@@ -2,11 +2,11 @@ import { initDynamicCard } from "./components/dynamic_card.js";
 import { isAuthenticated, logout } from "./api/auth.js";
 
 export function setupHomePage() {
-    document.querySelectorAll('.btn-versus').forEach(button => {
-        button.addEventListener('click', () => {
-            initDynamicCard('versus');
-        });
-    });
+    // document.querySelectorAll('.btn-versus').forEach(button => {
+    //     button.addEventListener('click', () => {
+    //         initDynamicCard('versus');
+    //     });
+    // });
 }
 
 export function setupProfilePage() {
@@ -36,6 +36,12 @@ export function setupProfilePage() {
             document.querySelectorAll('.btn-unblock').forEach(button => {
                 button.addEventListener('click', () => {
                     initDynamicCard('unblock');
+                });
+            });
+
+            document.querySelectorAll('.btn-2fa').forEach(button => {
+                button.addEventListener('click', () => {
+                    initDynamicCard('2fa');
                 });
             });
         }

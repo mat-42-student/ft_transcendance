@@ -1,6 +1,7 @@
 import { closeDynamicCard } from '../components/dynamic_card.js';
 import { fetchFriends } from './users.js';
-import { launchMainSocket } from '../mainWS.js';
+import { MainSocket } from '../mainWS.js';
+import { client } from '../main.js'
 
 // Vérifie si l'utilisateur est authentifié en regardant le token dans sessionStorage
 export async function isAuthenticated() {
@@ -31,14 +32,6 @@ export async function isAuthenticated() {
     }
 }
 
-// Logout function
-// export function logout() {
-//     sessionStorage.removeItem('accessToken');
-//     console.log("Déconnecté avec succès !");
-//     window.location.hash = '#home';
-//     // updateUI();
-// }
-
 export function logout() {
     fetch('https://localhost:3000/api/v1/auth/logout/', {
         method: 'POST',
@@ -60,6 +53,19 @@ export function logout() {
     // updateUI();
 }
 
+function extractUserIdFromJWT(token) {
+    const parts = token.split('.');
+  
+    if (parts.length !== 3) {
+      throw new Error('Invalid JWT format');
+    }
+
+    const payload = parts[1];
+    const decodedPayload = atob(payload);
+    const parsedPayload = JSON.parse(decodedPayload);
+    return parsedPayload.id;
+}
+
 // Fonction d'envoi des requêtes API pour connexion ou enregistrement
 export async function handleAuthSubmit(event) {
     event.preventDefault(); // Empêche le rechargement de la page
@@ -67,6 +73,7 @@ export async function handleAuthSubmit(event) {
     const username = document.getElementById('auth-username').value.trim();
     const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value.trim();
+    const totpContainer = document.getElementById('totp-container');
     const confirm_password = document.getElementById('auth-confirm-password').value.trim();
     const hash = window.location.hash;
 
@@ -106,28 +113,139 @@ export async function handleAuthSubmit(event) {
             body: JSON.stringify(payload),
         });
 
-        console.log(JSON.stringify(payload));
+        console.log(JSON.stringify(payload)); // DEBUG
 
         if (response.ok) {
             const data = await response.json();
-            // console.log(`token given: ` + data.accessToken);
+            console.log(`token given: ` + data.accessToken);
             sessionStorage.setItem('accessToken', data.accessToken);  // Stocke le token JWT
             sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
             console.log("Connexion réussie !");
             window.location.hash = '#profile';
-            // fetchFriends(); // Charge la liste d'amis après authentification
+            console.log(data.accessToken);
+
+            let userId = extractUserIdFromJWT(data.accessToken);
+
+
+            fetchFriends(userId); // Charge la liste d'amis après authentification
             // updateUI();
             // fetchUsers();
-            launchMainSocket(data.accessToken); // Ouvre le WebSocket après connexion réussie
+			client.token = data.accessToken;
+			client.connectWS(); // Ouvre le WebSocket après connexion réussie
+            closeDynamicCard();
         } else {
             const errorData = await response.json();  // Récupère le corps de la réponse d'erreur
+
+            if (errorData && errorData.error === '2fa_required!') {
+                const totp = document.getElementById('auth-totp').value.trim();
+                apiUrl = '/api/v1/auth/login/';
+                payload = { email, password, totp };
+                totpContainer.classList.remove('hidden');
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', },
+                    body: JSON.stringify(payload),
+                });
+
+                console.log(JSON.stringify(payload)); // DEBUG
+
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // console.log(`token given: ` + data.accessToken);
+                    sessionStorage.setItem('accessToken', data.accessToken);  // Stocke le token JWT
+                    sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
+                    console.log("Connexion réussie !");
+                    window.location.hash = '#profile';
+        
+                    console.log(data.accessToken);
+        
+                    let userId = extractUserIdFromJWT(data.accessToken);
+        
+        
+                    fetchFriends(userId); // Charge la liste d'amis après authentification
+                    // updateUI();
+                    // fetchUsers();
+                    client.token = data.accessToken;
+                    client.connectWS(); // Ouvre le WebSocket après connexion réussie
+                    closeDynamicCard();
+                } else {
+                    const errorData = await response.json();  // Récupère le corps de la réponse d'erreur
+                    console.error('Erreur API:', errorData); // Log l'erreur pour débogage
+                    return;
+                }
+
+            } else {
+                console.error('Erreur API:', errorData); // Log l'erreur pour débogage
+                return;
+            }
             // alert(`Erreur : ${errorData.message || 'Une erreur est survenue.'}`);
-            console.error('Erreur API:', errorData);  // Log l'erreur pour débogage
-            return;
         }
-        closeDynamicCard();
+        // closeDynamicCard();
     } catch (error) {
         console.error('Erreur lors de la requête API :', error);
         // alert('Une erreur est survenue. Veuillez réessayer.');
     }
+}
+
+// --- 2FA ---
+export function enroll2fa() {
+    const token = sessionStorage.getItem('accessToken');
+    const qrSection = document.getElementById('qr-section');
+    const verificationSection = document.getElementById('verification-section');
+    const infoSection = document.getElementById('info-section');
+
+    fetch('https://localhost:3000/api/v1/auth/2fa/enroll/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const qrCodeImage = `data:image/png;base64,${data.qr_code}`;
+            document.getElementById('qr-image').src = qrCodeImage;
+            qrSection.style.display = 'block';
+            verificationSection.style.display = 'block';
+            infoSection.style.display = 'none';
+        } else {
+            console.log("Error", data);
+            alert(data.message);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+export function verify2fa() {
+    const token = sessionStorage.getItem('accessToken')
+    const totp = document.getElementById('totp-code').value;
+    const successPage = document.getElementById('2fa-success');
+    const qrSection = document.getElementById('qr-section');
+    const verificationSection = document.getElementById('verification-section');
+
+
+    fetch('https://localhost:3000/api/v1/auth/2fa/verify/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ totp }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log("2fa has been enabled!")
+            successPage.style.display = 'block';
+            qrSection.style.display = 'none';
+            verificationSection.style.display = 'none';
+        } else {
+            console.log("Error", data);
+        }
+    })
+    .catch(error => console.error('Error:', error));
 }

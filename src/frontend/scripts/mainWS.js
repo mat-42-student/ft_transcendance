@@ -1,41 +1,45 @@
 import { ChatApp } from './chat.js';
 import { SocialApp } from './social.js';
+import { Mmaking } from './mmaking.js';
 
-export function launchMainSocket(token) {
-    console.log("Joining wss://" + window.location.hostname + ":3000/ws/ with token : \n" + token);
-    const socketURL = "wss://" + window.location.hostname + ":3000/ws/?t=" + token;
-    const mainSocket = new WebSocket(socketURL);
-    const chat = new ChatApp(mainSocket);
-    const social = new SocialApp(mainSocket);
+export class MainSocket {
 
-    mainSocket.onerror = async function(e) {
-        console.error(e.message);
-    };
+	constructor(token)
+	{
+		console.log("Joining wss://" + window.location.hostname + ":3000/ws/ with token : \n" + token);
+		this.socketURL = "wss://" + window.location.hostname + ":3000/ws/?t=" + token;
+		this.mainSocket = new WebSocket(this.socketURL);
+		this.chat = new ChatApp(this.mainSocket);
+		this.social = new SocialApp(this.mainSocket);
 
-    mainSocket.onopen = async function(e) {
-        // Ask for friends status ??
-    };
 
-    mainSocket.onclose = async function(e) { 
-        console.log("MainWS is disconnected")
-    };
+		this.mainSocket.onerror = async (e)=> {
+			console.error(e.message);
+		};
 
-    mainSocket.onmessage = async function(e) {
-        let data = JSON.parse(e.data);
-        // console.log(JSON.stringify(data, null, 2));
-        switch (data['header']['service']) {
-            case 'chat':
-                chat.chatIncomingMsg(data);
-                break;
-            case 'social':
-                social.chatIncomingMsg(data);
-                break
-            // case 'mmaking':
-            //     go_mmaking(data);
-            //     break;
-            default:
-              console.log('Could not handle incoming JSON');
-          }
-          
+        this.mainSocket.onopen = async function(e) {
+        };
+
+		this.mainSocket.onclose = async (e)=> { 
+			console.log("MainWS is disconnected")
+		};
+
+		this.mainSocket.onmessage = async (e)=> {
+			let data = JSON.parse(e.data);
+			// console.log(JSON.stringify(data, null, 2));
+			switch (data['header']['service']) {
+				case 'chat':
+					this.chat.incomingMsg(data);
+					break;
+				case 'social':
+					this.social.incomingMsg(data);
+					break
+				case 'mmaking':
+					console.log(data);
+					break;
+				default:
+				console.log('Could not handle incoming JSON');
+			}
+		};       
     };
 }
