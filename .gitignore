@@ -23,10 +23,12 @@ logs/
 # IDEs et outils
 .vscode/
 
-# Specifique branche `users_management`
+# Jlecorne
 .DS_Store
 src/Makefile
 src/my_compose.yml
 src/my_frontend
 src/media
 src/.my_env
+src/nginx/MyDockerfile
+src/nginx/local.conf
