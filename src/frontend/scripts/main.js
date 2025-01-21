@@ -12,18 +12,12 @@ class Client{
 		this.token = null;
 	}
 
-	connectWS(){
-
+	connectWS() {
 		if (this.token != null)
-		{
-			console.log(this.token);
 			this.mainSocket = new MainSocket(this.token);
-
-		}
 	}
 
-	getmainSocket()
-	{
+	getmainSocket()	{
 		return (this.mainSocket);
 	}
 }
@@ -64,22 +58,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
     // Event listener for closing the dynamic card
     const closeButton = document.getElementById('close-dynamic-card');
     if (closeButton) {
         closeButton.addEventListener('click', closeDynamicCard);
     }
-
     // Event listeners for cards
     if (requestsButton) {
         requestsButton.addEventListener('click', () => {
             initDynamicCard('requests');
         });
     }
-
-
-    
     friendButtons.forEach((button) => {
         button.addEventListener('click', (event) => {
             const friendElement = event.target.closest('.friend-item');

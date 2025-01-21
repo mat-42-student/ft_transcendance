@@ -22,7 +22,7 @@ class Command(BaseCommand):
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
             self.gateway_group = "deep_social"
             self.info_group = "info_social"
-            print(f"Subscribing to channel: {self.gateway_group}")
+            print(f"Subscribing to channels: {self.gateway_group}, {self.info_group}")
             await self.pubsub.subscribe(self.gateway_group)
             await self.pubsub.subscribe(self.info_group)
             self.listen_task = create_task(self.listen())
@@ -60,16 +60,29 @@ class Command(BaseCommand):
         user_id = data['header']['id']
         friends_data = self.get_friend_list(user_id)
         if not friends_data:
-            print(f"No friends found for user: {user_id}")
+            # print(f"No friends found for user: {user_id}")
+            await self.update_status(user_id, data['body']['status'])
             return
         friends = [item['id'] for item in friends_data]
         if data['body']['status'] == 'info': # User's first connection, get all friends status
             await self.send_me_my_friends_status(user_id, friends)
-            data['body']['status'] = 'online' # useful for next line cauz 'info' is not a real status
-        self.user_status[user_id] = data['body']['status'] # Update current user status
+        await self.update_status(user_id, data['body']['status'])
         for friend in friends:
-            if self.user_status.get(friend) != 'offline':
+            if self.user_status.get(friend, "offline") != 'offline':
                 await self.send_my_status(user_id, friend)
+
+    async def update_status(self, user_id, status):
+        """ Update self.user_status map.\n
+        If user was pending and goes offline, we have to report this to mmaking container """
+        if status == 'info':
+            status = 'online' # user wanted infos but is online
+        if status == "offline" and self.user_status.get(user_id) == "pending":
+            await self.redis_client.publish(self.info_group, json.dumps({
+                "user_id": user_id,
+                "status": "offline"
+            }))
+        self.user_status[user_id] = status # Update current user status
+
 
     async def mmaking_process(self, data):
         user_id = data.get('user_id', None)
@@ -111,7 +124,7 @@ class Command(BaseCommand):
                     "status": self.user_status.get(friend, "offline")
                 }
             }
-            print(f"getting my friends status : {data}")
+            # print(f"getting my friends status : {data}")
             await self.redis_client.publish(self.gateway_group, json.dumps(data))
 
     async def send_my_status(self, user_id, friend):
@@ -127,7 +140,7 @@ class Command(BaseCommand):
                 "status": self.user_status.get(user_id, "offline")
             }
         }
-        print(f"Publishing my status to all my friends: {data}")
+        # print(f"Publishing my status to my online friends: {data}")
         await self.redis_client.publish(self.gateway_group, json.dumps(data))
 
     def signal_handler(self, sig, frame):

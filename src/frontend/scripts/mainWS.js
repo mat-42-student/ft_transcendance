@@ -6,7 +6,7 @@ export class MainSocket {
 
 	constructor(token)
 	{
-		console.log("Joining wss://" + window.location.hostname + ":3000/ws/ with token : \n" + token);
+		// console.log("Joining wss://" + window.location.hostname + ":3000/ws/ with token : \n" + token);
 		this.socketURL = "wss://" + window.location.hostname + ":3000/ws/?t=" + token;
 		this.mainSocket = new WebSocket(this.socketURL);
 		this.chat = new ChatApp(this.mainSocket);
@@ -32,7 +32,7 @@ export class MainSocket {
 					this.chat.incomingMsg(data);
 					break;
 				case 'social':
-					this.social.incomingMsg(data);
+					this.social.incomingMsg(data.body);
 					break
 				case 'mmaking':
 					console.log(data);

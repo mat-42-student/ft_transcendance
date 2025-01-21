@@ -111,6 +111,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             # print(f"Listen Redis on consumer {self.consumer_id}: {data}")
             if self.right_consumer(data['header']['id']) and data['header']['dest'] == 'front':
                 try:
+                    del data['header']['dest']
                     # print(f"Sending: {data}")
                     await self.send_json(data)
                 except Exception as e:

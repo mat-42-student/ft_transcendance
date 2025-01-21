@@ -30,3 +30,5 @@ src/my_compose.yml
 src/my_frontend
 src/media
 src/.my_env
+
+*.pdf
