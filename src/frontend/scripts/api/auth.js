@@ -23,7 +23,6 @@ export async function isAuthenticated() {
         if (response.ok) {
             return true;
         } else {
-            // sessionStorage.removeItem('accessToken');
             state.client.accessToken = null;
             return false;
         }
@@ -45,7 +44,6 @@ export function logout() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // sessionStorage.removeItem('accessToken');
             state.client.accessToken = null;
         }
     })

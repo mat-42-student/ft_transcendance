@@ -60,11 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
             initDynamicCard('requests');
         });
     }
-    friendButtons.forEach((button) => {
-        button.addEventListener('click', (event) => {
-            const friendElement = event.target.closest('.friend-item');
-            const friendUsername = friendElement.querySelector('.friend-name').textContent.trim();
-            initChatWithFriend(friendUsername);
-        });
-    });
+    // friendButtons.forEach((button) => {
+    //     button.addEventListener('click', (event) => {
+    //         const friendElement = event.target.closest('.friend-item');
+    //         const friendUsername = friendElement.querySelector('.friend-name').textContent.trim();
+    //         initChatWithFriend(friendUsername);
+    //     });
+    // });
 });

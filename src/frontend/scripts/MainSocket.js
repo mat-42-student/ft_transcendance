@@ -13,8 +13,8 @@ export class MainSocket {
 		// console.log("Joining wss://" + window.location.hostname + ":3000/ws/ with token : \n" + token);
 		let socketURL = "wss://" + window.location.hostname + ":3000/ws/?t=" + state.client.accessToken;
 		this.socket = new WebSocket(socketURL);
-		state.chatApp = new ChatApp(this.socket);
-		state.socialApp = new SocialApp(this.socket);
+		state.chatApp = new ChatApp();
+		state.socialApp = new SocialApp();
 
 		this.socket.onerror = async (e)=> {
 			console.error(e.message);
@@ -46,4 +46,8 @@ export class MainSocket {
 			}
 		};       
     };
+
+	send(data) {
+		this.socket.send(data);
+	}
 }

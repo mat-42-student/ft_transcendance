@@ -4,6 +4,6 @@ export class Client{
 		this.userId = null;
         this.userName = null;
 		this.accessToken = null;
-        this.friendlist = new Map();
+        this.friendlist = null;
 	}
 }

@@ -1,8 +1,9 @@
+import { state } from './main.js'
+
 export class ChatApp{
 
-    constructor(mainSocket){
+    constructor(){
         this.doDOMThings();
-        this.mainSocket = mainSocket;
         this.storedMessages = new Map(); // map to store messages with keys = userid and value = array of messages
         // this.unreadMessages = new Map(); // map to count/display unread messages. OBSOLETE
         this.activeChatUserId = 0; // Change value by calling loadHistory 
@@ -13,7 +14,6 @@ export class ChatApp{
         this.chatInput = document.getElementById('chat-input');
         this.chatUser = document.getElementById('chat-user');
         this.chatBody = document.getElementById('chat-body');
-        this.myId = sessionStorage.getItem("userId");
         this.chatForm.addEventListener('submit', this.chatFormListener.bind(this));
     }
 
@@ -129,6 +129,6 @@ export class ChatApp{
             }
         };
         // console.log("Chat sending : " + data);
-        await this.mainSocket.send(JSON.stringify(data));
+        await state.mainSocket.send(JSON.stringify(data));
     }
 }

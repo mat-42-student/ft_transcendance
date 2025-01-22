@@ -25,7 +25,6 @@ export async function fetchFriends(user) {
                 return;
             }
 
-            // const userId = parseInt(sessionStorage.getItem('userId'), 10);
             const userId = user;
             if (!userId) {
                 console.error("Impossible de déterminer l'utilisateur connecté.");
@@ -38,13 +37,10 @@ export async function fetchFriends(user) {
                 return rel.from_user.id === userId ? rel.to_user : rel.from_user;
             });
 
-            // console.log("Liste des amis :", friends); //debug
+            console.log("Liste des amis recue :", JSON.stringify(friends)); //debug
 
-            // Stocker les amis dans sessionStorage
-            sessionStorage.setItem('friends', JSON.stringify(friends));
-            // console.log("Amis stockés dans sessionStorage."); //debug
-
-            // Fonction d'affichage
+            // Stocker les amis dans state.client
+            state.client.friendlist = new Map(friends.map(user => [user.id, user]));
             displayFriendsList();
         } else {
             console.error("Erreur lors de la récupération des amis :", response.status);
@@ -75,11 +71,8 @@ function addChatButtonListeners() {
                 return;
             }
             
-            // Récupère les amis depuis sessionStorage
-            const friends = JSON.parse(sessionStorage.getItem('friends') || '[]');
-
             // Trouve les infos du User concerné
-            const friendData = friends.find((friend) => friend.username === username);
+            const friendData = state.client.friendlist.find((friend) => friend.username === username);
             if (!friendData) {
                 console.error("Impossible de trouver les informations pour cet utilisateur :", username);
                 return;
@@ -110,16 +103,13 @@ function displayFriendsList() {
     const friendsList = document.querySelector('.friends-list');
     friendsList.innerHTML = ''; // Efface la liste existante
 
-    // Récupère les amis depuis sessionStorage
-    const friends = JSON.parse(sessionStorage.getItem('friends') || '[]');
-
-    if (friends.length === 0) {
+    if (state.client.friendlist == null) {
         friendsList.innerHTML = '<p>Aucun ami trouvé.</p>';
         return;
     }
 
     // Génère la liste des amis
-    friends.forEach((friend) => {
+    state.client.friendlist.forEach((friend) => {
         const friendItem = document.createElement('li');
         friendItem.classList.add('friend-item');
         friendItem.innerHTML = `

@@ -1,8 +1,6 @@
 export class SocialApp{
 
-    constructor(mainSocket){
-        this.mainSocket = mainSocket;
-        // this.myId = document.getElementById('user_id');
+    constructor(){
     }
 
     incomingMsg(data) {
