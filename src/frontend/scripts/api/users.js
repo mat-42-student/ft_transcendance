@@ -25,8 +25,7 @@ export async function fetchFriends(user) {
                 return;
             }
 
-            const userId = user;
-            if (!userId) {
+            if (!state.client.userId) {
                 console.error("Impossible de déterminer l'utilisateur connecté.");
                 return;
             }
@@ -34,12 +33,8 @@ export async function fetchFriends(user) {
             // Filtrer et mapper les amis
             const friends = friendsData.map(rel => {
                 // Vérifie si l'utilisateur connecté est `from_user` ou `to_user`
-                return rel.from_user.id === userId ? rel.to_user : rel.from_user;
+                return rel.from_user.id === state.client.userId ? rel.to_user : rel.from_user;
             });
-
-            console.log("Liste des amis recue :", JSON.stringify(friends)); //debug
-
-            // Stocker les amis dans state.client
             state.client.friendlist = new Map(friends.map(user => [user.id, user]));
             displayFriendsList();
         } else {
@@ -70,7 +65,7 @@ function addChatButtonListeners() {
                 console.error("Nom d'utilisateur introuvable dans 'friend-item'.");
                 return;
             }
-            
+
             // Trouve les infos du User concerné
             const friendData = state.client.friendlist.find((friend) => friend.username === username);
             if (!friendData) {

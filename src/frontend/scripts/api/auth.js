@@ -145,7 +145,7 @@ export async function handleAuthSubmit(event) {
             state.client.userName = userData.username;
             
             changeProfileBtn(state.client.userName);
-            fetchFriends(state.client.userId);
+            fetchFriends();
             // updateUI();
             // fetchUsers();
 			state.mainSocket = new MainSocket();
@@ -177,7 +177,7 @@ export async function handleAuthSubmit(event) {
                     state.client.userId = userData.id;
                     state.client.userName = userData.username;
         
-                    fetchFriends(state.client.userId); // Charge la liste d'amis après authentification
+                    fetchFriends(); // Charge la liste d'amis après authentification
                     // updateUI();
                     // fetchUsers();
                     state.client.accessToken = data.accessToken;
