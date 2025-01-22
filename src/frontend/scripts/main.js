@@ -1,31 +1,22 @@
 import { setupNavigation, navigateTo } from './nav.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
-import { isAuthenticated, verify2fa } from './api/auth.js';
-import { fetchFriends } from './api/users.js';
-import { MainSocket } from './mainWS.js';
+import { isAuthenticated } from './api/auth.js'; //, verify2fa
+import { Client } from './Client.js';
+// import { fetchFriends } from './api/users.js';
+// import { MainSocket } from './MainSocket.js';
+// import { ChatApp } from './Chat.js';
+// import { SocialApp } from './Social.js';
+// import { Mmaking } from './mmaking.js';
 
-class Client{
-
-	constructor() {
-		this.mainSocket = null;
-		this.userId = null;
-		this.token = null;
-	}
-
-	connectWS() {
-		if (this.token != null)
-			this.mainSocket = new MainSocket(this.token);
-	}
-
-	getmainSocket()	{
-		return (this.mainSocket);
-	}
-}
-
-export let client = new Client();
-
-//slet client = new Client();
-
+export const state = {
+    client: new Client(),
+    mainSocket: null,
+    chatApp: null,
+    socialApp: null,
+    mmaking: null,
+    // gameSocket = null
+  };
+  
 
 document.addEventListener('DOMContentLoaded', () => {
     const homeButton = document.getElementById('btn-home');
@@ -46,14 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (profileButton) {
         profileButton.addEventListener('click', async (e) => {
-            console.log("click on PROFILE btn"); // debug
+            // console.log("click on PROFILE btn"); // debug
             e.preventDefault(); // Empêche la navigation par défaut
             if (await isAuthenticated() == false) {
-                console.log("initDynamicCard(auth)");
+                // console.log("initDynamicCard(auth)");
                 initDynamicCard('auth');
                 return;
             } else {
-                console.log("navigateTo(#profile)");
+                // console.log("navigateTo(#profile)");
                 navigateTo('#profile');
             }
         });

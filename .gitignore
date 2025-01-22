@@ -33,4 +33,6 @@ src/.my_env
 src/nginx/MyDockerfile
 src/nginx/local.conf
 
+# mdjemaa
 *.pdf
+psql_friends_cmd.txt

@@ -1,10 +1,9 @@
 import { setupHomePage, setupProfilePage } from "./pages.js";
 import { initDynamicCard } from './components/dynamic_card.js';
 import { isAuthenticated } from './api/auth.js';
-import { Mmaking } from "./mmaking.js";
-import { client } from './main.js'
+import { state } from "./main.js";
 
-let mmaking = null;
+// let mmaking = null;
 
 const routes = {
     '#home': './partials/home.html',
@@ -14,7 +13,7 @@ const routes = {
 export function setupNavigation() {
     window.addEventListener('popstate', (e) => {
         e.preventDefault();
-        console.log("popstate enclanché");
+        // console.log("popstate enclanché");
         navigateTo(window.location.hash || '#home'); // Navigate to hash or #home if hash isn't valid
     });
 }
@@ -26,15 +25,15 @@ export async function navigateTo(hash) {
     if ((!mainContent) || (!route)) return;
 
     if (hash == '#profile') {
-        console.log("hash == profile");
+        // console.log("hash == profile");
         if (await isAuthenticated() == false) {
-            console.log("profile + pas authentifié");
+            // console.log("profile + pas authentifié");
             window.history.replaceState({}, '', `#signin`);
             // hash = '#signin';
             initDynamicCard('auth');
             return;
         } else {
-            console.log("profile + authentifié");
+            // console.log("profile + authentifié");
             try {
                 const response = await fetch(route);
                 const html = await response.text();
@@ -59,8 +58,8 @@ export async function navigateTo(hash) {
             const response = await fetch(route);
             const html = await response.text();
             document.querySelector('.main-content').innerHTML = html;
-			if (client.getmainSocket())
-				mmaking = new Mmaking(client.getmainSocket().mainSocket);
+			// if (client.getmainSocket())
+			// 	mmaking = new Mmaking(client.getmainSocket().mainSocket);
         } catch (error) {
             console.error('Error loading page:', error);
             return;

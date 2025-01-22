@@ -1,5 +1,7 @@
+import { state } from '../main.js'
+
 export async function fetchFriends(user) {
-    const token = sessionStorage.getItem('accessToken');
+    const token = state.client.accessToken;
     if (!token) {
         console.error("Impossible de récupérer les amis : utilisateur non authentifié.");
         return;
@@ -14,7 +16,7 @@ export async function fetchFriends(user) {
 
         if (response.ok) {
             const data = await response.json();
-            console.log("Données retournées par l'API :", data);
+            // console.log("Données retournées par l'API :", data);
 
             // Vérifie que la clé "friends" est présente et est un tableau
             const friendsData = data.friends || [];
@@ -36,11 +38,11 @@ export async function fetchFriends(user) {
                 return rel.from_user.id === userId ? rel.to_user : rel.from_user;
             });
 
-            console.log("Liste des amis :", friends); //debug
+            // console.log("Liste des amis :", friends); //debug
 
             // Stocker les amis dans sessionStorage
             sessionStorage.setItem('friends', JSON.stringify(friends));
-            console.log("Amis stockés dans sessionStorage."); //debug
+            // console.log("Amis stockés dans sessionStorage."); //debug
 
             // Fonction d'affichage
             displayFriendsList();
@@ -87,7 +89,7 @@ function addChatButtonListeners() {
             const friendInfoMap = new Map(Object.entries(friendData));
 
             // Affiche les informations dans le terminal
-            console.log("Informations du User :", Array.from(friendInfoMap.entries()));
+            // console.log("Informations du User :", Array.from(friendInfoMap.entries()));
 
             // Utilise friendInfoMap pour mettre à jour le nom dans l'interface de chat
             const chatFriendName = document.querySelector('.chat-header .friend-name');
@@ -96,7 +98,7 @@ function addChatButtonListeners() {
                 const userIdFromMap = friendInfoMap.get('id');
                 chatFriendName.textContent = usernameFromMap;
                 chatFriendName.setAttribute('data-user-id', userIdFromMap);
-                console.log(`Nom d'utilisateur mis à jour avec friendInfoMap : ${usernameFromMap}`);
+                // console.log(`Nom d'utilisateur mis à jour avec friendInfoMap : ${usernameFromMap}`);
             } else {
                 console.error("Erreur : élément '.friend-name' introuvable.");
             }

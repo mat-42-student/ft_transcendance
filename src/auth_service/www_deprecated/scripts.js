@@ -22,7 +22,7 @@ function handleregister() {
         return;
     }
 
-    console.log(username, email, password, confirm_password);
+    // console.log(username, email, password, confirm_password);
 
     fetch('https://localhost:3000/api/v1/users/register/', {
         method: 'POST',

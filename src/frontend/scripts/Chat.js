@@ -128,7 +128,7 @@ export class ChatApp{
                 'message': message,
             }
         };
-        console.log("Chat sending : " + data);
+        // console.log("Chat sending : " + data);
         await this.mainSocket.send(JSON.stringify(data));
     }
 }
