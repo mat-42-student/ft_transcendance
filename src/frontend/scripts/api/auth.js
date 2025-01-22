@@ -33,6 +33,8 @@ export async function isAuthenticated() {
 }
 
 export function logout() {
+    state.mainSocket.socket.close();
+    changeProfileBtn("Log in")
     fetch('https://localhost:3000/api/v1/auth/logout/', {
         method: 'POST',
         credentials: 'include',
