@@ -9,7 +9,8 @@ const dynamicCardRoutes = {
     'requests': './partials/cards/friend_requests.html',
     'block': './partials/cards/block.html',
     'unblock': './partials/cards/unblock.html',
-    '2fa': './partials/cards/2fa.html'
+    '2fa': './partials/cards/2fa.html',
+    'oauth': './partials/cards/oauth.html'
 };
 
 export function closeDynamicCard() {
@@ -77,7 +78,8 @@ export async function initDynamicCard(routeKey) {
                 });
             }
 
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', () => {
+                    console.log('HI :)'); // DEBUG
                     const params = new URLSearchParams(window.location.search);
                     const code = params.get('code');
                     const state = params.get('state');

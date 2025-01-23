@@ -180,7 +180,6 @@ class Enroll2FAView(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
-    
 class Verify2FAView(APIView):
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
@@ -267,6 +266,6 @@ class OAuthCallbackView(APIView):
                 'success': 'true',
                 'accessToken': access_token
             }
-            return response 
+            return response
         else:
             return Response({"error": "Failed to obtain access token"}, status=status.HTTP_400_BAD_REQUEST)
