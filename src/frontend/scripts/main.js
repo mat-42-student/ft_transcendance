@@ -1,43 +1,26 @@
 import { setupNavigation, navigateTo } from './nav.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
-import { isAuthenticated, verify2fa } from './api/auth.js';
-import { fetchFriends } from './api/users.js';
-import { MainSocket } from './mainWS.js';
+import { isAuthenticated } from './api/auth.js';
+import { Client } from './Client.js';
 
-class Client{
-
-	constructor() {
-		this.mainSocket = null;
-		this.userId = null;
-		this.token = null;
-	}
-
-	connectWS(token){
-		if (token != null)
-		{
-			this.token = token;
-			this.mainSocket = new MainSocket(token);
-		}
-	}
-}
-
-export let client = new Client();
-
-//slet client = new Client();
-
-
+export const state = {
+    client: new Client(),
+    mainSocket: null,
+    chatApp: null,
+    socialApp: null,
+    mmakingApp: null,
+    // gameSocket = null
+  };
+  
 document.addEventListener('DOMContentLoaded', () => {
     const homeButton = document.getElementById('btn-home');
     const profileButton = document.getElementById('btn-profile');
     const requestsButton = document.querySelector('.btn-friend-requests');
     const friendButtons = document.querySelectorAll('.friend-item');
 
-
-    // Initial setup
     setupNavigation();
     navigateTo('#home');
 
-    // Event listeners for header buttons
     if (homeButton) {
         homeButton.addEventListener('click', () => {
             navigateTo('#home');
@@ -45,39 +28,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (profileButton) {
         profileButton.addEventListener('click', async (e) => {
-            console.log("click on PROFILE btn"); // debug
-            e.preventDefault(); // Empêche la navigation par défaut
+            e.preventDefault();
             if (await isAuthenticated() == false) {
-                console.log("initDynamicCard(auth)");
                 initDynamicCard('auth');
                 return;
             } else {
-                console.log("navigateTo(#profile)");
                 navigateTo('#profile');
             }
         });
     }
-
-    // Event listener for closing the dynamic card
     const closeButton = document.getElementById('close-dynamic-card');
     if (closeButton) {
         closeButton.addEventListener('click', closeDynamicCard);
     }
-
-    // Event listeners for cards
     if (requestsButton) {
         requestsButton.addEventListener('click', () => {
             initDynamicCard('requests');
         });
     }
-
-
-    
-    friendButtons.forEach((button) => {
-        button.addEventListener('click', (event) => {
-            const friendElement = event.target.closest('.friend-item');
-            const friendUsername = friendElement.querySelector('.friend-name').textContent.trim();
-            initChatWithFriend(friendUsername);
-        });
-    });
+    // friendButtons.forEach((button) => {
+    //     button.addEventListener('click', (event) => {
+    //         const friendElement = event.target.closest('.friend-item');
+    //         const friendUsername = friendElement.querySelector('.friend-name').textContent.trim();
+    //         initChatWithFriend(friendUsername);
+    //     });
+    // });
 });

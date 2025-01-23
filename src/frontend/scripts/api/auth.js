@@ -1,12 +1,12 @@
 // import { initDynamicCard } from "./components/dynamic_card.js";
 import { closeDynamicCard } from '../components/dynamic_card.js';
 import { fetchFriends } from './users.js';
-import { MainSocket } from '../mainWS.js';
-import { client } from '../main.js'
+import { MainSocket } from '../MainSocket.js';
+import { state } from '../main.js'
 
-// Vérifie si l'utilisateur est authentifié en regardant le token dans sessionStorage
+// Vérifie si l'utilisateur est authentifié par la presence de accessToken
 export async function isAuthenticated() {
-    const token = sessionStorage.getItem('accessToken');
+    const token = state.client.accessToken;
     if (!token) {
         return false;
     }
@@ -24,7 +24,7 @@ export async function isAuthenticated() {
         if (response.ok) {
             return true;
         } else {
-            sessionStorage.removeItem('accessToken');
+            state.client.accessToken = null;
             return false;
         }
     } catch (error) {
@@ -34,6 +34,8 @@ export async function isAuthenticated() {
 }
 
 export function logout() {
+    state.mainSocket.socket.close();
+    changeProfileBtn("Log in")
     fetch('https://localhost:3000/api/v1/auth/logout/', {
         method: 'POST',
         credentials: 'include',
@@ -45,16 +47,29 @@ export function logout() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            sessionStorage.removeItem('accessToken');
+            state.client.accessToken = null;
         }
     })
     .catch(error => console.error('Error:', error));
-    console.log("Déconnecté avec succès !");
+    // console.log("Déconnecté avec succès !");
     window.location.hash = '#home';
     // updateUI();
 }
 
-function extractUserIdFromJWT(token) {
+// function extractUserIdFromJWT(token) {
+//     const parts = token.split('.');
+  
+//     if (parts.length !== 3) {
+//       throw new Error('Invalid JWT format');
+//     }
+
+//     const payload = parts[1];
+//     const decodedPayload = atob(payload);
+//     const parsedPayload = JSON.parse(decodedPayload);
+//     return parsedPayload.id;
+// }
+
+function extractUserDataFromJWT(token) {
     const parts = token.split('.');
   
     if (parts.length !== 3) {
@@ -64,7 +79,11 @@ function extractUserIdFromJWT(token) {
     const payload = parts[1];
     const decodedPayload = atob(payload);
     const parsedPayload = JSON.parse(decodedPayload);
-    return parsedPayload.id;
+    return {'id':parsedPayload.id, 'username':parsedPayload.username};
+}
+
+export function changeProfileBtn(label){
+    document.getElementById('btn-profile').innerText = label;
 }
 
 // Fonction d'envoi des requêtes API pour connexion ou enregistrement
@@ -114,26 +133,23 @@ export async function handleAuthSubmit(event) {
             body: JSON.stringify(payload),
         });
 
-        console.log(JSON.stringify(payload)); // DEBUG
+        // console.log(JSON.stringify(payload)); // DEBUG
 
         if (response.ok) {
             const data = await response.json();
             // console.log(`token given: ` + data.accessToken);
-            sessionStorage.setItem('accessToken', data.accessToken);  // Stocke le token JWT
-            sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
-            console.log("Connexion réussie !");
+            state.client.accessToken = data.accessToken;
             window.location.hash = '#profile';
-
-            console.log(data.accessToken);
-
-            let userId = extractUserIdFromJWT(data.accessToken);
-
-
-            fetchFriends(userId); // Charge la liste d'amis après authentification
+            
+            let userData = extractUserDataFromJWT(data.accessToken);
+            state.client.userId = userData.id;
+            state.client.userName = userData.username;
+            
+            changeProfileBtn(state.client.userName);
+            fetchFriends();
             // updateUI();
             // fetchUsers();
-			client.token = data.accessToken;
-			client.connectWS(); // Ouvre le WebSocket après connexion réussie
+			state.mainSocket = new MainSocket();
             closeDynamicCard();
         } else {
             const errorData = await response.json();  // Récupère le corps de la réponse d'erreur
@@ -150,25 +166,23 @@ export async function handleAuthSubmit(event) {
                     body: JSON.stringify(payload),
                 });
 
-                console.log(JSON.stringify(payload)); // DEBUG
+                // console.log(JSON.stringify(payload)); // DEBUG
+
 
                 if (response.ok) {
                     const data = await response.json();
-                    // console.log(`token given: ` + data.accessToken);
-                    sessionStorage.setItem('accessToken', data.accessToken);  // Stocke le token JWT
-                    sessionStorage.setItem('userId', data.user_id);    // Stocke l'ID de l'utilisateur connecté
-                    console.log("Connexion réussie !");
+                    state.client.accessToken = data.accessToken;
                     window.location.hash = '#profile';
         
-                    console.log(data.accessToken);
+                    let userData = extractUserDataFromJWT(data.accessToken);
+                    state.client.userId = userData.id;
+                    state.client.userName = userData.username;
         
-                    let userId = extractUserIdFromJWT(data.accessToken);
-        
-                    fetchFriends(userId); // Charge la liste d'amis après authentification
+                    fetchFriends(); // Charge la liste d'amis après authentification
                     // updateUI();
                     // fetchUsers();
-                    client.token = data.accessToken;
-                    client.connectWS(); // Ouvre le WebSocket après connexion réussie
+                    state.client.accessToken = data.accessToken;
+                    state.mainSocket = new MainSocket();
                     closeDynamicCard();
                 } else {
                     const errorData = await response.json();  // Récupère le corps de la réponse d'erreur
@@ -191,7 +205,7 @@ export async function handleAuthSubmit(event) {
 
 // 2FA
 export function enroll2fa() {
-    const token = sessionStorage.getItem('accessToken');
+    const token = state.client.accessToken;
     const qrSection = document.getElementById('qr-section');
     const verificationSection = document.getElementById('verification-section');
     const infoSection = document.getElementById('info-section');
@@ -213,15 +227,15 @@ export function enroll2fa() {
             verificationSection.style.display = 'block';
             infoSection.style.display = 'none';
         } else {
-            console.log("Error", data);
-            alert(data.message);
+            console.error("Error", data);
+            // alert(data.message);
         }
     })
     .catch(error => console.error('Error:', error));
 }
 
 export function verify2fa() {
-    const token = sessionStorage.getItem('accessToken')
+    const token = state.client.accessToken;
     const totp = document.getElementById('totp-code').value;
     const successPage = document.getElementById('2fa-success');
     const qrSection = document.getElementById('qr-section');
@@ -244,7 +258,7 @@ export function verify2fa() {
             qrSection.style.display = 'none';
             verificationSection.style.display = 'none';
         } else {
-            console.log("Error", data);
+            console.error("Error", data);
         }
     })
     .catch(error => console.error('Error:', error));

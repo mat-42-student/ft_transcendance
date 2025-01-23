@@ -39,6 +39,8 @@ class Command(BaseCommand):
                     data = json.loads(msg['data'])
                     if self.valid_chat_json(data):
                         await self.process_message(data)
+                    # else:
+                    #     print(f"Error parsing : {data}")
                 except Exception as e:
                     print(e)
 
@@ -54,7 +56,9 @@ class Command(BaseCommand):
 
     async def process_message(self, data):
         data['header']['dest'] = 'front' # data destination after deep processing
-        if self.recipient_exists(data['body']['to']):
+        print(f"getting {data['body']}")
+        # if self.recipient_exists(data['body']['to']):
+        try:
             if self.is_muted(data['header']['id'], data['body']['to']):
                 data['body']['message'] += f"You were muted by {data['body']['to']}"
             else:
@@ -62,45 +66,51 @@ class Command(BaseCommand):
                 data['header']['id'] = data['body']['to'] # username OR userID
                 del data['body']['to']
                 data['body']['message'] += '(back from chat)'
-        else:
-            data['body']['message'] = 'User not found'
-        print(f"Publishing : {data}")
+        except Exception as e:
+            print(e)
+            data['body']['message'] = str(e)
+        print(f"Sending back : {data}")
         await self.redis_client.publish(self.group_name, json.dumps(data))
 
     def is_muted(self, exp, recipient) -> bool :
-        """is exp muted by recipient ?"""
-        # response = requests.get(f"/api/v1/users/{recipient}/", timeout=10)
-        # if response.status_code == 200:
-        #     try:
-        #         data = response.json()
-        #         blocked_users = data.get('blocked_users')
-        #         if blocked_users and exp in blocked_users:
-        #           return True
-        #     except requests.exceptions.RequestException as e:
-        #         print(f"Error in request : {e}")
-        #     except ValueError as e:
-        #         print("JSON conversion error :", e)
-        # else:
-        #     print(f"Request failed (status {response.status_code})")
+        """is exp muted by recipient ? Raises an UserNotFoundException if recipient doesnt exist"""
+        response = requests.get(f"http://users:8000/api/v1/users/{recipient}/blocks/")
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get('error'):
+                    raise ValueError("Recipient not found")
+                blocked_users = data.get('blocked_users')
+                if blocked_users and exp in blocked_users:
+                  return True
+            except requests.exceptions.RequestException as e:
+                print(f"Error in request : {e}")
+            except ValueError as e:
+                print("JSON conversion error :", e)
+        else:
+            print(f"Request failed (status {response.status_code})")
         return False
 
-    def recipient_exists(self, user):
-        """Does user exist ?"""
-        # response = requests.get(f"/api/v1/users/{user}/", timeout=10)
-        # if response.status_code == 200:
-        #     try:
-        #         data = response.json()
-        #         if data.get('id') == user:
-        #           return True
-        #         return False
-        #     except requests.exceptions.RequestException as e:
-        #         print(f"Error in request : {e}")
-        #     except ValueError as e:
-        #         print("JSON conversion error :", e)
-        # else:
-        #     print(f"Request failed (status {response.status_code})")
-        # return False
-        return True
+    # def recipient_exists(self, user):
+    #     """Does user exist ?"""
+    #     url = f""
+    #     print(url)
+    #     response = requests.get(url)
+    #     # response = requests.get(f"http://users:8000/api/v1/users/151/blocks/")
+    #     if response.status_code == 200:
+    #         try:
+    #             data = response.json()
+    #             print(f"data {data}")
+    #             if data.get('id') == user:
+    #               return True
+    #             return False
+    #         except requests.exceptions.RequestException as e:
+    #             print(f"Error in request : {e}")
+    #         except ValueError as e:
+    #             print("JSON conversion error :", e)
+    #     else:
+    #         print(f"Request failed (status {response.status_code})")
+    #     return False
 
     def signal_handler(self, sig, frame):
         try:

@@ -30,7 +30,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         try:
             await self.connect_to_redis()
         except Exception as e:
-            print(f"Connection to redis error : {e}")
+            print(f"Connexion to redis error : {e}")
         await self.get_friends_status()
         # await self.send_online_status('online')
 
@@ -64,9 +64,9 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
     def checkAuth(self):
         self.public_key = JWT_PUBLIC_KEY
         params = parse_qs(self.scope['query_string'].decode())
-        print (f"params {params}")
+        # print (f"params {params}")
         self.token = params.get('t', [None])[0]
-        print (f"token {self.token}")
+        # print (f"token {self.token}")
         try:
             payload = jwt.decode(self.token, self.public_key, algorithms=['RS256'])
             return payload
@@ -75,6 +75,21 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         except jwt.InvalidTokenError as e:
             print(e)
         return None
+
+    async def receive_json(self, data):
+        """Data incoming from client ws => publish to concerned redis group.\n
+        Possible 'service' values are 'mmaking', 'chat', 'social'"""
+        if not self.valid_json_header(data):
+            print(f"Data error (json) : {data}")
+            return
+        group = REDIS_GROUPS.get(data['header']['service'])
+        if group:
+            data['header']['dest'] = 'back'
+            data['header']['id'] = self.consumer_id
+            data['body']['timestamp'] = datetime.now(timezone.utc).isoformat()
+            await self.forward_with_redis(data, group)
+            return
+        print("Unknown recipient, message lost")
 
     def valid_json_header(self, data):
         if not isinstance(data, dict):
@@ -93,31 +108,18 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
 
         async for message in self.pubsub.listen():
             data = loads(message['data'])
+            # print(f"Listen Redis on consumer {self.consumer_id}: {data}")
             if self.right_consumer(data['header']['id']) and data['header']['dest'] == 'front':
                 try:
-                    print(f"Sending: {data}")
+                    del data['header']['dest']
+                    # print(f"Sending: {data}")
                     await self.send_json(data)
                 except Exception as e:
                     print(f"Send error : {e}")
 
     def right_consumer(self, id):
         """check if actual consumer is the recipient we're looking for"""
-        return (id == self.consumer_name or id == self.consumer_id)
-
-    async def receive_json(self, data):
-        """data incoming from client ws -> publish to concerned redis group\n
-        possible 'service' values are 'mmaking', 'chat', 'social'"""
-        if not self.valid_json_header(data):
-            print(f"Data error (json) : {data}")
-            return
-        group = REDIS_GROUPS.get(data['header']['service'])
-        if group:
-            data['header']['dest'] = 'back'
-            data['header']['id'] = self.consumer_id
-            data['body']['timestamp'] = datetime.now(timezone.utc).isoformat()
-            await self.forward_with_redis(data, group)
-            return
-        print("Unknown recipient, message lost")
+        return (str(id) == self.consumer_name or int(id) == self.consumer_id)
 
     async def forward_with_redis(self, data, group):
             try:
@@ -138,7 +140,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 "status": "info"
             }
         }
-        print(f"Sending data to deep_social: {data}")
+        # print(f"Sending data to deep_social: {data}")
         await self.redis_client.publish("deep_social", dumps(data))
 
     async def send_online_status(self, status):
@@ -153,5 +155,5 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 "status": status
             }
         }
-        print(f"Sending data to deep_social: {data}")
+        # print(f"Sending data to deep_social: {data}")
         await self.redis_client.publish("deep_social", dumps(data))

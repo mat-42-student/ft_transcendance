@@ -2,37 +2,37 @@ from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 import asyncio
 from .matchmaking import matchmaking
-from asyncio import run as arun 
+from asyncio import run as arun, sleep as asleep, create_task
+from signal import signal, SIGTERM, SIGINT
 
 class Command(BaseCommand):
 	help = "Commande pour écouter un canal Redis avec Pub/Sub"   
 
 	def handle(self, *args, **kwargs):
-		# Démarre la boucle asyncio avec arun
-		arun(self.main())   
+		signal(SIGINT, self.signal_handler)
+		signal(SIGTERM, self.signal_handler)
+		arun(self.main())
 
 	async def main(self):
-		self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
-		self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
-		self.group_name = "deep_mmaking"        
-		print(f"Subscribing to channel: {self.group_name}")
-		await self.pubsub.subscribe(self.group_name)        # Lancement des tâches
-		self.shutdown_event = asyncio.Event()
-		
-		listener_task = asyncio.create_task(self.listen())
-		shutdown_task = asyncio.create_task(self.wait_for_shutdown())
+		self.running = True
 		try:
-			# Création et attente explicite de la tâche de listener
-			await asyncio.wait([listener_task, shutdown_task], return_when=asyncio.FIRST_COMPLETED)
+			self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
+			self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
+			self.group_name = "deep_mmaking"        
+			print(f"Subscribing to channel: {self.group_name}")
+			await self.pubsub.subscribe(self.group_name)
+			self.listen_task = create_task(self.listen())
+			while self.running:
+				await asleep(1)
+		except Exception as e:
+			print(e)
 		finally:
-			# Nettoyage des ressources
-			await self.cleanup()    
+			await self.cleanup_redis()
+
 	async def listen(self):
 		self.user = {}
 		print("Listening for messages...")
 		async for msg in self.pubsub.listen():
-			if self.shutdown_event.is_set():
-				break
 			if msg : #and msg['type'] == 'message':  # Filtre uniquement les messages réels
 				value = await matchmaking(msg)
 				self.user.update(value)
@@ -40,17 +40,17 @@ class Command(BaseCommand):
 				for key, value in self.user.items():
 					print(f'dictionnaire user {key}, {value}')
 	
-	async def cleanup(self):
-		print("Cleaning up Redis connections...")
-		await self.pubsub.close()
-		await self.redis_client.close()
-
-	async def wait_for_shutdown(self):
+	def signal_handler(self, sig, frame):
 		try:
-			while not self.shutdown_event.is_set():
-				await asyncio.sleep(1)
-		except asyncio.CancelledError:
-			pass
-		print("Shutdown task completed.")
-		self.shutdown_event.set()
-	
+			self.listen_task.cancel()
+		except Exception as e:
+			print(e)
+		self.running = False
+
+	async def cleanup_redis(self):
+		print("Cleaning up Redis connections...")
+		if self.pubsub:
+			await self.pubsub.unsubscribe(self.group_name)
+			await self.pubsub.close()
+		if self.redis_client:
+			await self.redis_client.close()
