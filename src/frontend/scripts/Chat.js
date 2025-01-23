@@ -21,11 +21,10 @@ export class ChatApp{
     // Triggered when I send a message to my friend
         event.preventDefault(); // don't send the form
         let message = this.chatInput.value.trim();
-        let dest = this.chatUser.dataset.userId;
-        if (dest && message !== '') {
+        if (this.activeChatUserId && message !== '') {
             this.storeMyMessage(message);
             this.postMyMessage(message);
-            this.sendMsg(dest, message);
+            this.sendMsg(this.activeChatUserId, message);
             this.chatInput.value = '';
         }
         else
@@ -35,8 +34,6 @@ export class ChatApp{
     incomingMsg(data) {
     // Triggered when I receive a message from my friend
         const friend = data.body.from;
-        //a supprimer quand loadHistory fonctionne
-        this.activeChatUserId = document.getElementById("chat-user").dataset.userId;
         this.storeMessage(data);
         if (this.activeChatUserId == friend)
             this.postFriendMessage(data);
@@ -69,9 +66,10 @@ export class ChatApp{
     }
 
     postFriendMessage(data){
+        // console.log(data);
         let myDiv = document.createElement('div');
         myDiv.className = "chat-message friend-message";
-        myDiv.textContent = data.body.message;
+        myDiv.textContent = data;
         this.chatBody.appendChild(myDiv);
     }
 
@@ -82,16 +80,24 @@ export class ChatApp{
         this.chatBody.appendChild(myDiv);
     }
 
-    changeChatUser(friend){
-        const chatImg = document.querySelector('.friend-detail[data-user-id="' + friend + '"] .btn-chat img');
-        chatImg.src = "/ressources/chat.png";
-        this.chatBody.replaceChildren(); 
-        this.loadHistory(friend);
+    changeChatUser(friendId){
+        // const chatImg = document.querySelector('.friend-detail[data-user-id="' + friend + '"] .btn-chat img');
+        // chatImg.src = "/ressources/chat.png";
+        if(friendId === this.activeChatUserId)
+            return;
+        const friend = state.client.friendlist.get(friendId);
+        this.chatUser.innerText = friend.username; // render !
+        this.chatBody.replaceChildren();
+        this.activeChatUserId = friend.id;
+        this.noUnreadMessage(friend.id);
+        this.loadHistory(friend.id);
     }
 
-    loadHistory(friend) {
-        this.activeChatUserId = friend;
-        this.storedMessages.get(friend).array.forEach(element => {
+    loadHistory(friendId) {
+        let messages = this.storedMessages.get(friendId);
+        if (!messages)
+            return;
+        messages.forEach(element => {
             if (element.from == "myself")
                 this.postMyMessage(element.message);
             else
@@ -113,10 +119,16 @@ export class ChatApp{
         chatImg.src = "/ressources/chat_new_msg.png";
     }
 
-    getUnreadMessage(id) {
-        if (this.unreadMessages.has(id))
-            return this.unreadMessages.get(id);
+    noUnreadMessage(friend) {
+    // Make chat btn with friend to blink or be red or something
+        const chatImg = document.querySelector('.friend-detail[data-user-id="' + friend + '"] .btn-chat img');
+        chatImg.src = "/ressources/chat.png";
     }
+
+    // getUnreadMessage(id) {
+    //     if (this.unreadMessages.has(id))
+    //         return this.unreadMessages.get(id);
+    // }
 
     async sendMsg(dest, message) {
         let data = {

@@ -8,7 +8,7 @@ export const state = {
     mainSocket: null,
     chatApp: null,
     socialApp: null,
-    mmaking: null,
+    mmakingApp: null,
     // gameSocket = null
   };
   
