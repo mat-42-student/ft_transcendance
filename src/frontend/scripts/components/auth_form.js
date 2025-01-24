@@ -41,6 +41,7 @@ function updateAuthForm(mode) {
     const registerLink = document.querySelector('a[data-action="register"]');
     const signinLink = document.querySelector('a[data-action="signin"]');
     const confirmPasswordInput = document.getElementById('auth-confirm-password');
+    const signInWith42Button = document.getElementById('oauth-submit');
 
     // Définir mode par défaut si absent ou incorrect
     if (!mode || (mode !== 'register' && mode !== 'signin')) {
@@ -57,11 +58,14 @@ function updateAuthForm(mode) {
         // Affiche uniquement le lien pour la connexion
         registerLink.classList.add('hidden');
         signinLink.classList.remove('hidden');
+
+        signInWith42Button.classList.add('hidden');
     } else { // Par défaut : mode "signin"
         formTitle.textContent = 'Sign In';
         confirmPasswordContainer.classList.add('hidden'); // Cache la confirmation du mot de passe
         confirmUsernameContainer.classList.add('hidden'); // Cache le username
         confirmPasswordInput.removeAttribute('required');
+        signInWith42Button.classList.remove('hidden');
         authSubmit.textContent = 'Sign In';
 
         // Affiche uniquement le lien pour l'inscription

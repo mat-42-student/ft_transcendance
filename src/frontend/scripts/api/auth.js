@@ -1,3 +1,4 @@
+// import { initDynamicCard } from "./components/dynamic_card.js";
 import { closeDynamicCard } from '../components/dynamic_card.js';
 import { fetchFriends } from './users.js';
 import { MainSocket } from '../MainSocket.js';
@@ -202,7 +203,7 @@ export async function handleAuthSubmit(event) {
     }
 }
 
-// --- 2FA ---
+// 2FA
 export function enroll2fa() {
     const token = state.client.accessToken;
     const qrSection = document.getElementById('qr-section');
@@ -262,3 +263,39 @@ export function verify2fa() {
     })
     .catch(error => console.error('Error:', error));
 }
+
+// OAuth 2.0
+export async function handleOAuth() {
+    try {
+      const response = await fetch('https://localhost:3000/api/v1/auth/oauth/redirect/');
+      const data = await response.json();
+  
+      window.location.href = data.url; // full page reload!!
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    
+    if (code && state) {
+      const callbackUrl = `https://localhost:3000/api/v1/auth/oauth/callback?code=${code}&state=${state}`;
+  
+      fetch(callbackUrl)
+        .then(response => response.json())
+        .then(data => {
+          if (data.accessToken) {
+            sessionStorage.setItem('accessToken', data.accessToken);
+            window.history.replaceState({}, document.title, window.location.pathname);
+            console.log("OAuth success, token stored in session storage!");
+          } else {
+            console.error("No accessToken returned from backend", data);
+          }
+        })
+        .catch(err => console.error("Error exchanging code for token:", err));
+    }
+});

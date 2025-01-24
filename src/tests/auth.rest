@@ -49,7 +49,7 @@ Content-Type: application/json
 
 ###
 
-GET https://localhost:3000/api/v1/auth/oauth/callback
+GET https://localhost:3000/api/v1/auth/oauth/callback/
 Content-Type: application/json
 
 {}
