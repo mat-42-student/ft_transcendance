@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
+import json
 import asyncio
 from .matchmaking import matchmaking
 from asyncio import run as arun, sleep as asleep, create_task
@@ -18,9 +19,11 @@ class Command(BaseCommand):
 		try:
 			self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
 			self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
-			self.group_name = "deep_mmaking"        
-			print(f"Subscribing to channel: {self.group_name}")
-			await self.pubsub.subscribe(self.group_name)
+			self.channel_front = "deep_mmaking"
+			self.channel_social = "info_social"
+			print(f"Subscribing to channel: {self.channel_front}")
+			await self.pubsub.subscribe(self.channel_front)
+			await self.pubsub.subscribe(self.channel_social)
 			self.listen_task = create_task(self.listen())
 			while self.running:
 				await asleep(1)
@@ -31,14 +34,19 @@ class Command(BaseCommand):
 
 	async def listen(self):
 		self.user = {}
+		self.message = None
 		print("Listening for messages...")
 		async for msg in self.pubsub.listen():
 			if msg : #and msg['type'] == 'message':  # Filtre uniquement les messages réels
-				value = await matchmaking(msg)
-				self.user.update(value)
-				print(f"Message received: {msg['data']}")
+				message = json.loads(msg.get('data'))
+				newPlayer = await matchmaking(msg)
+
+				self.parse_typeGame(message)
+				self.user.update(newPlayer)
+
 				for key, value in self.user.items():
-					print(f'dictionnaire user {key}, {value}')
+					print(f'Userid {key}, {value} \n')
+
 	
 	def signal_handler(self, sig, frame):
 		try:
@@ -54,3 +62,42 @@ class Command(BaseCommand):
 			await self.pubsub.close()
 		if self.redis_client:
 			await self.redis_client.close()
+
+	async def check_statusPlayer(player):
+		response_timeout = 2
+		data = {
+			'user_id': player.id
+		}
+		self.redis_client.publish(self.channel_social, json.dumps(data))
+		while (response_timeout > 0)
+			status = await self.redis_client.get(player.id)
+			if (status)
+				return (status)
+			asleep(0.5)
+			reponse_timeout -= 0.5
+		return (None)
+
+	def setup_statusPlayer(player)
+		data = {
+			'header':{
+				'service': 'social'
+				'dest': 'back'
+				'id': player.id,
+			},
+			'body':{
+				'status': 'pending',
+				'status': 'test'
+			}
+		}
+		player.status = 'pending'
+		self.redis_client.pubish(channel_front, json.dumps(data))
+
+	def parse_typeGame(message, newPlayer):
+	{
+		# Check the content of body
+		if (message.get('body') && message['body'].get('type_game') && message['body'].get('status')):
+			# Check the status of Player
+			if (check_statusPlayer(newPlayer) == 'online')
+				setup_statusPlayer(player)
+					
+	}

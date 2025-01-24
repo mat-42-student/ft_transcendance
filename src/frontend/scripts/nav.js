@@ -58,8 +58,8 @@ export async function navigateTo(hash) {
             const response = await fetch(route);
             const html = await response.text();
             document.querySelector('.main-content').innerHTML = html;
-			// if (client.getmainSocket())
-			// 	mmaking = new Mmaking(client.getmainSocket().mainSocket);
+			if(state.mmakingApp)
+				state.mmakingApp.refresh_eventlisteners();
         } catch (error) {
             console.error('Error loading page:', error);
             return;

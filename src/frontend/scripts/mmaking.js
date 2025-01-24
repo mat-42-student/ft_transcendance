@@ -1,9 +1,15 @@
+import { state } from './main.js';
+
 export class Mmaking
 {
 	constructor(mainSocket)
 	{
-		this.mainS = mainSocket;
-		this.token = localStorage.getItem("accessToken");
+
+	}
+
+
+	refresh_eventlisteners()
+	{
 		this.listening_button_match_Random();
 	}
 
@@ -15,25 +21,26 @@ export class Mmaking
 		randomBtn.addEventListener('click', async ()=>
 		{
 			const data = {
-				'id' : 0
-			}
+				'status': "pending",
+				'type_game': "1vs1R"
+			};
 			this.sendMsg('back', data)
 		});
 
 	}
 
     sendMsg(dest, message) {
-        let data = {
-            'header': {
-                'service': 'mmaking',
-            },
-            'body': {
-                'to':dest,
-                'message': message,
-            }
-        };
-        this.mainS.send(JSON.stringify(data));
-    }
+
+		const data = {
+			'header': {  //Mandatory part
+			'service': 'mmaking',
+			'dest': 'back',
+			'id': state.client.userId
+			},
+			'body': message
+		};
+	state.mainSocket.send(JSON.stringify(data));
+	}
 
 	Build_Salon()
 	{
