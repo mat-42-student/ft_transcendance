@@ -80,7 +80,6 @@ function displayFriendsList() {
         friendsList.innerHTML = '<p>Aucun ami trouvé.</p>';
         return;
     }
-
     state.client.friendlist.forEach((friend) => {
         const friendItem = document.createElement('li');
         friendItem.classList.add('friend-item');
@@ -102,7 +101,6 @@ function displayFriendsList() {
         friendItem.querySelector('.btn-match').addEventListener('click', () => {
             state.mmakingApp.function(friend.id);
         });
-
     });
 
     // Ajoute les écouteurs aux boutons 'btn-chat'

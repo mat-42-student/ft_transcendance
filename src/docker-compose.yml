@@ -78,8 +78,6 @@ services:
       - redis-network
       - deep-network
 
-
-
   gateway:
     container_name: gateway
     build:
