@@ -101,9 +101,6 @@ export class ChatApp{
     renderChat() {
         const friend = state.client.friendlist.get(this.activeChatUserId);
         this.chatUser.innerText = friend.username;
-        document.getElementById('chat-vs').addEventListener('click', () => {
-            state.mmakingApp.function(friend.id);
-        });
         this.chatBody.replaceChildren();
         this.noUnreadMessage(this.activeChatUserId);
         this.loadHistory(this.activeChatUserId);
