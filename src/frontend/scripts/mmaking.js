@@ -21,7 +21,7 @@ export class Mmaking
 		randomBtn.addEventListener('click', async ()=>
 		{
 			const data = {
-				'status': "pending",
+				'status': "online",
 				'type_game': "1vs1R"
 			};
 			this.sendMsg('back', data)

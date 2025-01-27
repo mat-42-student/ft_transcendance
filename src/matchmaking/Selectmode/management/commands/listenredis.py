@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 import json
 import asyncio
-from .matchmaking import matchmaking
+from .matchmaking import Player
 from asyncio import run as arun, sleep as asleep, create_task
 from signal import signal, SIGTERM, SIGINT
 
@@ -39,9 +39,10 @@ class Command(BaseCommand):
 		async for msg in self.pubsub.listen():
 			if msg : #and msg['type'] == 'message':  # Filtre uniquement les messages réels
 				message = json.loads(msg.get('data'))
-				newPlayer = await matchmaking(msg)
+				print(message)
+				newPlayer = Player()
 
-				self.parse_typeGame(message)
+				self.parse_typeGame(message, newPlayer)
 				self.user.update(newPlayer)
 
 				for key, value in self.user.items():
@@ -63,25 +64,25 @@ class Command(BaseCommand):
 		if self.redis_client:
 			await self.redis_client.close()
 
-	async def check_statusPlayer(player):
+	async def check_statusPlayer(self, player):
 		response_timeout = 2
 		data = {
 			'user_id': player.id
 		}
 		self.redis_client.publish(self.channel_social, json.dumps(data))
-		while (response_timeout > 0)
+		while (response_timeout > 0):
 			status = await self.redis_client.get(player.id)
-			if (status)
+			if (status):
 				return (status)
 			asleep(0.5)
 			reponse_timeout -= 0.5
 		return (None)
 
-	def setup_statusPlayer(player)
+	def setup_statusPlayer(self, player):
 		data = {
 			'header':{
-				'service': 'social'
-				'dest': 'back'
+				'service': 'social',
+				'dest': 'back',
 				'id': player.id,
 			},
 			'body':{
@@ -90,14 +91,13 @@ class Command(BaseCommand):
 			}
 		}
 		player.status = 'pending'
-		self.redis_client.pubish(channel_front, json.dumps(data))
+		self.redis_client.pubish(self.channel_front, json.dumps(data))
 
-	def parse_typeGame(message, newPlayer):
-	{
+	def parse_typeGame(self, message, newPlayer):
 		# Check the content of body
-		if (message.get('body') && message['body'].get('type_game') && message['body'].get('status')):
+		
+		if (message.get('body') and message['body'].get('type_game')):
 			# Check the status of Player
-			if (check_statusPlayer(newPlayer) == 'online')
-				setup_statusPlayer(player)
-					
-	}
+			if (self.check_statusPlayer(newPlayer) == 'online'):
+				self.setup_statusPlayer(newPlayer)
+				print(f'{newPlayer}')
