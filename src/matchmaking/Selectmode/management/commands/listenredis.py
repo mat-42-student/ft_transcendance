@@ -21,6 +21,8 @@ class Command(BaseCommand):
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
             self.channel_front = "deep_mmaking"
             self.channel_social = "info_social"
+            self.user = {}
+            self.message = None
             print(f"Subscribing to channel: {self.channel_front}")
             await self.pubsub.subscribe(self.channel_front)
             await self.pubsub.subscribe(self.channel_social)
@@ -33,18 +35,23 @@ class Command(BaseCommand):
             await self.cleanup_redis()
 
     async def listen(self):
-        self.user = {}
-        self.message = None
+
         print("Listening for messages...")
         async for msg in self.pubsub.listen():
             if msg : #and msg['type'] == 'message':  # Filtre uniquement les messages réels
+
+                if (msg['channel'] == self.channel_social): # Do nothing if msg is send on info_social
+                    return 
+                
                 message = json.loads(msg.get('data'))
                 print(message)
                 newPlayer = Player()
-
+                count = 0
                 verif = await self.verifConditions(message, newPlayer)
                 if(not verif):
-                    self.SelectTypeGame(message['body'], newPlayer)
+                    print(f"{count}")
+                    self.SelectTypeGame(message, newPlayer)
+                    count += 1
 
     
     def signal_handler(self, sig, frame):
@@ -60,7 +67,7 @@ class Command(BaseCommand):
             await self.pubsub.unsubscribe(self.group_name)
             await self.pubsub.close()
         if self.redis_client:
-            await self.redis_client.close()
+            self.redis_client.close()
 
     async def check_statusPlayer(self, message):
         header = message['header']
@@ -68,7 +75,7 @@ class Command(BaseCommand):
             'user_id': header['id']
         }
         await self.redis_client.publish(self.channel_social, json.dumps(data))
-        await asleep(0.5)
+        #await asleep(0.5)
         try:
             status = await self.redis_client.get(header['id'])
             if (status is not None):
@@ -104,22 +111,28 @@ class Command(BaseCommand):
                 return (True)
         return (False)
     
-    # Research and verify conditions for the type_game selected
-    def SelectTypeGame(self, data, player):
-        print(f'SelecTypeGame -> {data}')
-        if (data.get('type_game') == '1vs1R'): # 1vs1R
-            self.user.update({player.user_id: player})
-            print(f'Player: {player}')
+    async def random1vs1(self):
+        result = False
+        async for id, player in self.user.items() :
+            if (id != self.player.user_id and player.type_game == '1vs1R'):
+                return (True)
 
-        elif (data.get('type_game') == 'invite'): # Invite
-            invite = data.get['type_game']['invite']
+    # Research and verify conditions for the type_game selected
+    async def SelectTypeGame(self, data, player):
+        header = data['header']
+        body = data['body']
+        if (body.get('type_game') == '1vs1R'): # 1vs1R
+            player.user_id = header['id']
+            self.user.update({player.user_id: player})
+        elif (body.get('type_game') == 'invite'): # Invite
+            invite = body.get['type_game']['invite']
             if (invite.get('guest_id') is not None):
                 # Research guest_id, verify this status and send invitation
                 print(f'{invite}')
             elif (invite.get('host_id') is not None):
                 # Research host_id to send the response by guest_id
                 print(f'{invite}')
-        elif (data.get('type_game') == 'tournament'):
+        elif (body.get('type_game') == 'tournament'):
             # Research Player with opponents < 4 and the type_game is tournament
             print(f'tournament')
 
