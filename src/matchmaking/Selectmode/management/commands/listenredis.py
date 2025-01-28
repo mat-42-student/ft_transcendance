@@ -2,7 +2,10 @@ from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 import json
 import asyncio
+import time
 from .matchmaking import Player
+from .Salon import Salon
+from .Random1vs1 import Random1vs1
 from asyncio import run as arun, sleep as asleep, create_task
 from signal import signal, SIGTERM, SIGINT
 
@@ -21,12 +24,16 @@ class Command(BaseCommand):
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
             self.channel_front = "deep_mmaking"
             self.channel_social = "info_social"
-            self.user = {}
+            self.random1vs1 = Random1vs1()
+            self.tournament = {}
+            self.invite = {}
             self.message = None
             print(f"Subscribing to channel: {self.channel_front}")
             await self.pubsub.subscribe(self.channel_front)
             await self.pubsub.subscribe(self.channel_social)
             self.listen_task = create_task(self.listen())
+            self.random1vs1_task = create_task(self.random1vs1.monitor())
+
             while self.running:
                 await asleep(1)
         except Exception as e:
@@ -40,23 +47,25 @@ class Command(BaseCommand):
         async for msg in self.pubsub.listen():
             if msg : #and msg['type'] == 'message':  # Filtre uniquement les messages réels
 
-                if (msg['channel'] == self.channel_social): # Do nothing if msg is send on info_social
-                    return 
-                
-                message = json.loads(msg.get('data'))
-                print(message)
-                newPlayer = Player()
-                count = 0
-                verif = await self.verifConditions(message, newPlayer)
-                if(not verif):
-                    print(f"{count}")
-                    self.SelectTypeGame(message, newPlayer)
-                    count += 1
+                try:
+                    print(msg)
+  
+                    if (msg.get('channel') != self.channel_social): # Do nothing if msg is send on info_social
+                        message = json.loads(msg.get('data'))
+                        newPlayer = Player()
+                        verif =  await self.verifConditions(message, newPlayer)
+                        if(not verif):
+                            await self.SelectTypeGame(message, newPlayer)
+                        
+                        print("listen again...")
+                except Exception as e:
+                    print(e)
 
     
     def signal_handler(self, sig, frame):
         try:
             self.listen_task.cancel()
+            self.random1vs1.cancel()
         except Exception as e:
             print(e)
         self.running = False
@@ -64,10 +73,11 @@ class Command(BaseCommand):
     async def cleanup_redis(self):
         print("Cleaning up Redis connections...")
         if self.pubsub:
-            await self.pubsub.unsubscribe(self.group_name)
+            await self.pubsub.unsubscribe(self.channel_front)
+            await self.pubsub.unsubscribe(self.channel_social)
             await self.pubsub.close()
         if self.redis_client:
-            self.redis_client.close()
+            await self.redis_client.close()
 
     async def check_statusPlayer(self, message):
         header = message['header']
@@ -75,16 +85,17 @@ class Command(BaseCommand):
             'user_id': header['id']
         }
         await self.redis_client.publish(self.channel_social, json.dumps(data))
-        #await asleep(0.5)
+        # await asleep(0.5)
         try:
             status = await self.redis_client.get(header['id'])
             if (status is not None):
                 return (status)
         except asyncio.TimeoutError:
             print("Timeout atteint lors de l'attente de Redis.")
-            return None
+        
+        return None
 
-    def setup_statusPlayer(self, message, player):
+    async def setup_statusPlayer(self, message, player):
         header = message['header']
         data = {
             'header':{
@@ -98,7 +109,7 @@ class Command(BaseCommand):
             }
         }
         player.status = 'pending'
-        self.redis_client.publish(self.channel_front, json.dumps(data))
+        await self.redis_client.publish(self.channel_front, json.dumps(data))
 
     async def verifConditions(self, message, newPlayer):
         # Check the content of body
@@ -106,16 +117,23 @@ class Command(BaseCommand):
             print(f'Check get body and type_game is true')
             # Check the status of Player
             if (await self.check_statusPlayer(message) == 'online'):
-                self.setup_statusPlayer(message, newPlayer)
+                await self.setup_statusPlayer(message, newPlayer)
                 print(f'{newPlayer}')
                 return (True)
         return (False)
     
-    async def random1vs1(self):
-        result = False
-        async for id, player in self.user.items() :
-            if (id != self.player.user_id and player.type_game == '1vs1R'):
-                return (True)
+    # async def random1vs1(self):
+    #     result = False
+    #     salon = Salon()
+    #     print("Random1vs1")
+    #     for id, player in self.random1vs1.players.items() :
+    #         if (player.type_game == '1vs1R'):
+    #             salon.players.update({id: player})
+    #             if (len(salon.players) == 2 ):
+    #                 print("start the game")
+                    
+                    #create the game in database and send start the game to container Game
+                    #self.random1vs1.game.update(game_id: Salon)
 
     # Research and verify conditions for the type_game selected
     async def SelectTypeGame(self, data, player):
@@ -123,7 +141,10 @@ class Command(BaseCommand):
         body = data['body']
         if (body.get('type_game') == '1vs1R'): # 1vs1R
             player.user_id = header['id']
-            self.user.update({player.user_id: player})
+            await self.random1vs1.add(player.user_id, player)
+            if (len(self.random1vs1.players) > 1):
+                await self.random1vs1.event.wait()
+            print(f'{player}')
         elif (body.get('type_game') == 'invite'): # Invite
             invite = body.get['type_game']['invite']
             if (invite.get('guest_id') is not None):
@@ -135,5 +156,6 @@ class Command(BaseCommand):
         elif (body.get('type_game') == 'tournament'):
             # Research Player with opponents < 4 and the type_game is tournament
             print(f'tournament')
+        print("End SelectGame")
 
             
