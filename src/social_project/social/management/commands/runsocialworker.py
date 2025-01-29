@@ -40,8 +40,8 @@ class Command(BaseCommand):
                 try:
                     data = json.loads(msg['data'])
                     if msg.get('channel') == "info_social":
-                        self.mmaking_process(data)
-                        return
+                        self.get_info_process(data)
+                        continue
                     if self.valid_social_json(data):
                         await self.process_message(data)
                 except Exception as e:
@@ -84,11 +84,12 @@ class Command(BaseCommand):
         self.user_status[user_id] = status # Update current user status
 
 
-    async def mmaking_process(self, data):
-        user_id = data.get('user_id', None)
+    async def get_info_process(self, data):
+        user_id = data.get('user_id')
         if user_id:
             status = self.user_status.get(user_id, "offline")
-        await self.redis_client.set(user_id, status, ex = 2)
+        key = f"user_{user_id}_status"
+        await self.redis_client.set(key, status, ex = 2)
 
     def get_friend_list(self, user_id):
         """ Request friendlist from container 'users' """

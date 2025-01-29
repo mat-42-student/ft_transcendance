@@ -10,7 +10,9 @@ export const state = {
     socialApp: null,
     mmakingApp: null,
     // gameSocket = null
-  };
+};
+
+state.client.setState(state);
 
 document.addEventListener('DOMContentLoaded', () => {
     const homeButton = document.getElementById('btn-home');
@@ -54,3 +56,4 @@ document.addEventListener('DOMContentLoaded', () => {
     //     });
     // });
 });
+

@@ -1,8 +1,7 @@
-// import { initDynamicCard } from "./components/dynamic_card.js";
 import { closeDynamicCard } from '../components/dynamic_card.js';
 import { fetchFriends } from './users.js';
 import { MainSocket } from '../MainSocket.js';
-import { state } from '../main.js'
+import { state } from '../main.js';
 
 // Vérifie si l'utilisateur est authentifié par la presence de accessToken
 export async function isAuthenticated() {
@@ -35,7 +34,7 @@ export async function isAuthenticated() {
 
 export function logout() {
     state.mainSocket.socket.close();
-    changeProfileBtn("Log in")
+    state.client.renderProfileBtn();
     fetch('https://localhost:3000/api/v1/auth/logout/', {
         method: 'POST',
         credentials: 'include',
@@ -54,36 +53,6 @@ export function logout() {
     // console.log("Déconnecté avec succès !");
     window.location.hash = '#home';
     // updateUI();
-}
-
-// function extractUserIdFromJWT(token) {
-//     const parts = token.split('.');
-  
-//     if (parts.length !== 3) {
-//       throw new Error('Invalid JWT format');
-//     }
-
-//     const payload = parts[1];
-//     const decodedPayload = atob(payload);
-//     const parsedPayload = JSON.parse(decodedPayload);
-//     return parsedPayload.id;
-// }
-
-function extractUserDataFromJWT(token) {
-    const parts = token.split('.');
-  
-    if (parts.length !== 3) {
-      throw new Error('Invalid JWT format');
-    }
-
-    const payload = parts[1];
-    const decodedPayload = atob(payload);
-    const parsedPayload = JSON.parse(decodedPayload);
-    return {'id':parsedPayload.id, 'username':parsedPayload.username};
-}
-
-export function changeProfileBtn(label){
-    document.getElementById('btn-profile').innerText = label;
 }
 
 // Fonction d'envoi des requêtes API pour connexion ou enregistrement
@@ -139,13 +108,10 @@ export async function handleAuthSubmit(event) {
             const data = await response.json();
             // console.log(`token given: ` + data.accessToken);
             state.client.accessToken = data.accessToken;
+            state.client.fillUserDataFromJWT(data.accessToken);
             window.location.hash = '#profile';
             
-            let userData = extractUserDataFromJWT(data.accessToken);
-            state.client.userId = userData.id;
-            state.client.userName = userData.username;
-            
-            changeProfileBtn(state.client.userName);
+            state.client.renderProfileBtn();
             fetchFriends();
             // updateUI();
             // fetchUsers();
@@ -172,13 +138,11 @@ export async function handleAuthSubmit(event) {
                 if (response.ok) {
                     const data = await response.json();
                     state.client.accessToken = data.accessToken;
+                    state.client.fillUserDataFromJWT();
                     window.location.hash = '#profile';
         
-                    let userData = extractUserDataFromJWT(data.accessToken);
-                    state.client.userId = userData.id;
-                    state.client.userName = userData.username;
-        
                     fetchFriends(); // Charge la liste d'amis après authentification
+                    state.client.renderProfileBtn();
                     // updateUI();
                     // fetchUsers();
                     state.client.accessToken = data.accessToken;
@@ -289,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(response => response.json())
         .then(data => {
           if (data.accessToken) {
-            sessionStorage.setItem('accessToken', data.accessToken);
+            state.client.accessToken = data.accessToken;
             window.history.replaceState({}, document.title, window.location.pathname);
             console.log("OAuth success, token stored in session storage!");
           } else {

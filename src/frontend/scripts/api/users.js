@@ -1,6 +1,6 @@
-import { state } from '../main.js'
+import { state } from '../main.js';
 
-export async function fetchFriends(user) {
+export async function fetchFriends() {
     const token = state.client.accessToken;
     if (!token) {
         console.error("Impossible de récupérer les amis : utilisateur non authentifié.");
@@ -28,7 +28,7 @@ export async function fetchFriends(user) {
                 return rel.from_user.id === state.client.userId ? rel.to_user : rel.from_user;
             });
             state.client.friendlist = new Map(friends.map(user => [user.id, user]));
-            displayFriendsList();
+            state.socialApp.displayFriendsList();
         } else {
             console.error("Erreur lors de la récupération des amis :", response.status);
         }
@@ -72,37 +72,3 @@ export async function fetchFriends(user) {
 //         });
 //     });
 // }
-
-function displayFriendsList() {
-    const friendsList = document.querySelector('.friends-list');
-    friendsList.innerHTML = ''; // Efface la liste existante
-    if (state.client.friendlist == null) {
-        friendsList.innerHTML = '<p>Aucun ami trouvé.</p>';
-        return;
-    }
-    state.client.friendlist.forEach((friend) => {
-        const friendItem = document.createElement('li');
-        friendItem.classList.add('friend-item');
-        friendItem.innerHTML = `
-            <img class="friend-avatar" src="/media/avatars/${friend.avatar}" alt="${friend.username}">
-            <div class="friend-info">
-                <span class="friend-name">${friend.username}</span>
-                <div class="friend-detail" data-user-id="${friend.id}">
-                    <span class="friend-status ${friend.status}"></span>
-                    <button class="btn-match"><img src="/ressources/vs.png"></button>
-                    <button class="btn-chat"><img src="/ressources/chat.png"></button>
-                </div>
-            </div>
-        `;
-        friendsList.appendChild(friendItem);
-        friendItem.querySelector('.btn-chat').addEventListener('click', () => {
-            state.chatApp.changeChatUser(friend.id);
-        });
-        friendItem.querySelector('.btn-match').addEventListener('click', () => {
-            state.mmakingApp.function(friend.id);
-        });
-    });
-
-    // Ajoute les écouteurs aux boutons 'btn-chat'
-    // addChatButtonListeners();
-}

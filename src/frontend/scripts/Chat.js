@@ -1,4 +1,4 @@
-import { state } from './main.js'
+import { state } from './main.js';
 
 export class ChatApp{
 
@@ -99,9 +99,11 @@ export class ChatApp{
     }
 
     renderChat() {
-        const friend = state.client.friendlist.get(this.activeChatUserId);
-        this.chatUser.innerText = friend.username;
         this.chatBody.replaceChildren();
+        const friend = state.client.friendlist.get(this.activeChatUserId);
+        if (!friend)
+            return;
+        this.chatUser.innerText = friend.username;
         this.noUnreadMessage(this.activeChatUserId);
         this.loadHistory(this.activeChatUserId);
     }
