@@ -1,7 +1,7 @@
 import { ChatApp } from './Chat.js';
 import { SocialApp } from './Social.js';
 import { state } from './main.js';
-// import { delay } from './main.js';
+import { delay } from './main.js';
 
 export class MainSocket {
 
@@ -12,7 +12,7 @@ export class MainSocket {
 		}
 		state.socialApp = new SocialApp();
 		state.chatApp = new ChatApp();
-        // delay(1);
+        delay(1);
 		let socketURL = "wss://" + window.location.hostname + ":3000/ws/?t=" + state.client.accessToken;
 		this.socket = new WebSocket(socketURL);
 		// state.mmakingApp = new MmakingApp();
