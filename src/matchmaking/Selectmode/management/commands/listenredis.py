@@ -24,7 +24,7 @@ class Command(BaseCommand):
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
             self.channel_front = "deep_mmaking"
             self.channel_social = "info_social"
-            self.random1vs1 = Random1vs1()
+            self.random1vs1 = Random1vs1(self.redis_client, self.channel_front, self.channel_social)
             self.tournament = {}
             self.invite = {}
             self.message = None
@@ -121,19 +121,6 @@ class Command(BaseCommand):
                 print(f'{newPlayer}')
                 return (True)
         return (False)
-    
-    # async def random1vs1(self):
-    #     result = False
-    #     salon = Salon()
-    #     print("Random1vs1")
-    #     for id, player in self.random1vs1.players.items() :
-    #         if (player.type_game == '1vs1R'):
-    #             salon.players.update({id: player})
-    #             if (len(salon.players) == 2 ):
-    #                 print("start the game")
-                    
-                    #create the game in database and send start the game to container Game
-                    #self.random1vs1.game.update(game_id: Salon)
 
     # Research and verify conditions for the type_game selected
     async def SelectTypeGame(self, data, player):

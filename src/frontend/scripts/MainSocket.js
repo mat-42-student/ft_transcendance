@@ -41,7 +41,7 @@ export class MainSocket {
 					state.socialApp.incomingMsg(data.body);
 					break
 				case 'mmaking':
-					console.log(data);
+					state.mmakingApp.incomingMsg(data);
 					break;
 				default:
 				console.warn('mainSocket : could not handle incoming JSON' + JSON.stringify(data, null, 2));

@@ -1,4 +1,5 @@
 import { state } from './main.js';
+import { initDynamicCard } from './components/dynamic_card.js';
 
 export class Mmaking
 {
@@ -25,6 +26,7 @@ export class Mmaking
 				'type_game': "1vs1R"
 			};
 			this.sendMsg('back', data)
+			await initDynamicCard('versus')
 		});
 
 	}
@@ -42,8 +44,26 @@ export class Mmaking
 	state.mainSocket.send(JSON.stringify(data));
 	}
 
-	Build_Salon()
+	incomingMsg(data)
+	{
+
+		if (data.body.status == 'ingame')
+		{
+			this.setOpponent('toto', '/ressouces/match.png')
+		}
+	}
+
+	launch_game()
 	{
 		 
+	}
+
+	setOpponent(name, photo) {
+		document.getElementById("opponent-name").textContent = name;
+		document.getElementById("opponent-photo").src = photo;
+		document.getElementById("opponent-info").style.display = "block";
+		document.getElementById("status").textContent = "Adversaire trouvé !";
+		document.getElementById("loader").style.display = "none";
+		document.getElementById("waiting-text").textContent = "Préparez-vous à jouer !";
 	}
 }
