@@ -1,20 +1,21 @@
 import { ChatApp } from './Chat.js';
 import { SocialApp } from './Social.js';
 import { state } from './main.js';
+// import { delay } from './main.js';
 
 export class MainSocket {
 
-	constructor()
-	{
+	constructor() {
 		if (!state.client.accessToken) {
 			console.error("client.accessToken unavailable");
 			return;
 		}
-		// console.log("Joining wss://" + window.location.hostname + ":3000/ws/ with token : \n" + token);
+		state.socialApp = new SocialApp();
+		state.chatApp = new ChatApp();
+        // delay(1);
 		let socketURL = "wss://" + window.location.hostname + ":3000/ws/?t=" + state.client.accessToken;
 		this.socket = new WebSocket(socketURL);
-		state.chatApp = new ChatApp();
-		state.socialApp = new SocialApp();
+		// state.mmakingApp = new MmakingApp();
 
 		this.socket.onerror = async (e)=> {
 			console.error(e.message);
@@ -50,4 +51,15 @@ export class MainSocket {
 	send(data) {
 		this.socket.send(data);
 	}
+
+    close() {
+        state.chatApp.close();
+        state.chatApp = null;
+        state.socialApp.close();
+		state.socialApp = null;
+		// state.mmakingApp.close();
+		// state.mmakingApp = null;
+        this.socket.close();
+        this.socket = null;
+    }
 }

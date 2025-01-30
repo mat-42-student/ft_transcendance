@@ -6,7 +6,7 @@ export class ChatApp{
         this.doDOMThings();
         this.storedMessages = new Map(); // map to store messages with keys = userid and value = array of messages
         // this.unreadMessages = new Map(); // map to count/display unread messages. OBSOLETE
-        this.activeChatUserId = 0; // Change value by calling loadHistory 
+        this.activeChatUserId = null; // Change value by calling loadHistory 
     }
 
     doDOMThings() {
@@ -27,8 +27,6 @@ export class ChatApp{
             this.sendMsg(this.activeChatUserId, message);
             this.chatInput.value = '';
         }
-        else
-            console.error("this.activeChatUserId: " + this.activeChatUserId + "\nmsg: " + message);
     }
 
     incomingMsg(data) {
@@ -78,16 +76,14 @@ export class ChatApp{
     }
 
     changeChatUser(friendId){
-        // const chatImg = document.querySelector('.friend-detail[data-user-id="' + friend + '"] .btn-chat img');
-        // chatImg.src = "/ressources/chat.png";
         if(friendId === this.activeChatUserId)
             return;
         this.activeChatUserId = friendId;
         this.renderChat();
     }
 
-    loadHistory(friendId) {
-        let messages = this.storedMessages.get(friendId);
+    loadHistory() {
+        let messages = this.storedMessages.get(Number(this.activeChatUserId));
         if (!messages)
             return;
         messages.forEach(element => {
@@ -98,14 +94,25 @@ export class ChatApp{
         });
     }
 
+    close() {
+        this.chatInput = null;
+        this.chatUser = null;
+        this.chatForm.removeEventListener('submit', this.chatFormListener.bind(this));
+        this.chatForm = null;
+        this.activeChatUserId = null;
+        this.storedMessages = null;
+        this.chatBody.replaceChildren();
+        this.chatBody = null;
+    }
+
     renderChat() {
         this.chatBody.replaceChildren();
-        const friend = state.client.friendlist.get(this.activeChatUserId);
+        const friend = state.socialApp.getFriend(this.activeChatUserId);
         if (!friend)
             return;
         this.chatUser.innerText = friend.username;
-        this.noUnreadMessage(this.activeChatUserId);
-        this.loadHistory(this.activeChatUserId);
+        this.noUnreadMessage();
+        this.loadHistory();
     }
 
     // addUnreadMessage(id) {
@@ -122,9 +129,9 @@ export class ChatApp{
         chatImg.src = "/ressources/chat_new_msg.png";
     }
 
-    noUnreadMessage(friend) {
+    noUnreadMessage() {
     // Make chat btn with friend to blink or be red or something
-        const chatImg = document.querySelector('.friend-detail[data-user-id="' + friend + '"] .btn-chat img');
+        const chatImg = document.querySelector('.friend-detail[data-user-id="' + this.activeChatUserId + '"] .btn-chat img');
         chatImg.src = "/ressources/chat.png";
     }
 

@@ -1,4 +1,4 @@
-// import { state } from './main';
+import { MainSocket } from './MainSocket.js';
 
 export class Client{
 
@@ -6,7 +6,6 @@ export class Client{
 		this.userId = null;
         this.userName = null;
 		this.accessToken = null;
-        this.friendlist = null;
 		this.state = null;
 	}
 
@@ -14,15 +13,36 @@ export class Client{
 		this.state = state;
 	}
 
-	globalRender() {
-		this.renderProfileBtn();
-		this.state.socialApp.displayFriendsList();
-		this.state.chatApp.renderChat();
-	}
+    login(token) {
+        this.accessToken = token;
+        try {
+            this.fillUserDataFromJWT();
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+        this.renderProfileBtn();
+        this.state.mainSocket = new MainSocket();
+    }
+
+    logout() {
+        this.userId = null;
+        this.userName = null;
+		this.accessToken = null;
+        this.state.mainSocket.close(); // handles sub-objects (social, chat, mmaking) closure
+        this.state.mainSocket = null;  
+        this.renderProfileBtn();
+    }
+
+    // globalRender() {
+	// 	this.renderProfileBtn();
+	// 	this.state.socialApp.displayFriendsList();
+	// 	this.state.chatApp.renderChat();
+	// }
 
 	renderProfileBtn(){
-		const label = this.state.client.userName || "Sign in";
-		document.getElementById('btn-profile').innerText = label;
+        const label = this.state.client.userName || "Sign in";
+    	document.getElementById('btn-profile').innerText = label;
 	}
 
 	fillUserDataFromJWT() {

@@ -1,6 +1,4 @@
 import { closeDynamicCard } from '../components/dynamic_card.js';
-import { fetchFriends } from './users.js';
-import { MainSocket } from '../MainSocket.js';
 import { state } from '../main.js';
 
 // Vérifie si l'utilisateur est authentifié par la presence de accessToken
@@ -33,8 +31,7 @@ export async function isAuthenticated() {
 }
 
 export function logout() {
-    state.mainSocket.socket.close();
-    state.client.renderProfileBtn();
+    state.client.logout();
     fetch('https://localhost:3000/api/v1/auth/logout/', {
         method: 'POST',
         credentials: 'include',
@@ -50,14 +47,12 @@ export function logout() {
         }
     })
     .catch(error => console.error('Error:', error));
-    // console.log("Déconnecté avec succès !");
     window.location.hash = '#home';
-    // updateUI();
 }
 
 // Fonction d'envoi des requêtes API pour connexion ou enregistrement
 export async function handleAuthSubmit(event) {
-    event.preventDefault(); // Empêche le rechargement de la page
+    event.preventDefault();
 
     const username = document.getElementById('auth-username').value.trim();
     const email = document.getElementById('auth-email').value.trim();
@@ -71,7 +66,6 @@ export async function handleAuthSubmit(event) {
         return;
     }
 
-    // Définit un hash par défaut si absent
     if (!hash || (hash !== '#register' && hash !== '#signin')) {
         hash = '#signin';
         window.location.hash = hash;
@@ -101,24 +95,19 @@ export async function handleAuthSubmit(event) {
             headers: { 'Content-Type': 'application/json', },
             body: JSON.stringify(payload),
         });
-
-        // console.log(JSON.stringify(payload)); // DEBUG
-
         if (response.ok) {
             const data = await response.json();
-            // console.log(`token given: ` + data.accessToken);
-            state.client.accessToken = data.accessToken;
-            state.client.fillUserDataFromJWT(data.accessToken);
+            try {
+                state.client.login(data.accessToken);
+            }
+            catch (error) {
+                console.error(error);
+            }
             window.location.hash = '#profile';
-            
-            state.client.renderProfileBtn();
-            fetchFriends();
-            // updateUI();
             // fetchUsers();
-			state.mainSocket = new MainSocket();
             closeDynamicCard();
         } else {
-            const errorData = await response.json();  // Récupère le corps de la réponse d'erreur
+            const errorData = await response.json();
 
             if (errorData && errorData.error === '2fa_required!') {
                 const totp = document.getElementById('auth-totp').value.trim();
@@ -131,39 +120,30 @@ export async function handleAuthSubmit(event) {
                     headers: { 'Content-Type': 'application/json', },
                     body: JSON.stringify(payload),
                 });
-
-                // console.log(JSON.stringify(payload)); // DEBUG
-
-
                 if (response.ok) {
                     const data = await response.json();
-                    state.client.accessToken = data.accessToken;
-                    state.client.fillUserDataFromJWT();
+                    try {
+                        state.client.login(data.accessToken);
+                    }
+                    catch (error) {
+                        console.error(error);
+                    }
                     window.location.hash = '#profile';
-        
-                    fetchFriends(); // Charge la liste d'amis après authentification
-                    state.client.renderProfileBtn();
-                    // updateUI();
                     // fetchUsers();
-                    state.client.accessToken = data.accessToken;
-                    state.mainSocket = new MainSocket();
-                    closeDynamicCard();
+                    closeDynamicCard();        
                 } else {
-                    const errorData = await response.json();  // Récupère le corps de la réponse d'erreur
-                    console.error('Erreur API:', errorData); // Log l'erreur pour débogage
+                    const errorData = await response.json();
+                    console.error('Erreur API:', errorData);
                     return;
                 }
 
             } else {
-                console.error('Erreur API:', errorData); // Log l'erreur pour débogage
+                console.error('Erreur API:', errorData);
                 return;
             }
-            // alert(`Erreur : ${errorData.message || 'Une erreur est survenue.'}`);
         }
-        // closeDynamicCard();
     } catch (error) {
         console.error('Erreur lors de la requête API :', error);
-        // alert('Une erreur est survenue. Veuillez réessayer.');
     }
 }
 
@@ -192,7 +172,6 @@ export function enroll2fa() {
             infoSection.style.display = 'none';
         } else {
             console.error("Error", data);
-            // alert(data.message);
         }
     })
     .catch(error => console.error('Error:', error));
