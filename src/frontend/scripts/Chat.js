@@ -20,7 +20,7 @@ export class ChatApp{
     chatFormListener(event) {
     // Triggered when I send a message to my friend
         event.preventDefault(); // don't send the form
-        let message = this.chatInput.value.trim();
+        let message = this.chatInput.value.trim() || '';
         if (this.activeChatUserId && message !== '') {
             this.storeMyMessage(message);
             this.postMyMessage(message);

@@ -4,7 +4,6 @@ from signal import signal, SIGTERM, SIGINT
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep, create_task
-# from models import User, BlockedUser
 
 class Command(BaseCommand):
     help = "Async pub/sub redis worker. Listens 'deep_social' channel"
@@ -28,7 +27,7 @@ class Command(BaseCommand):
             self.listen_task = create_task(self.listen())
             while self.running:
                 await asleep(1)
-        except  Exception as e:
+        except Exception as e:
             print(e)
         finally:
             await self.cleanup_redis()
@@ -40,7 +39,7 @@ class Command(BaseCommand):
                 try:
                     data = json.loads(msg['data'])
                     if msg.get('channel') == "info_social":
-                        self.get_info_process(data)
+                        await self.get_info_process(data)
                         continue
                     if self.valid_social_json(data):
                         await self.process_message(data)
@@ -89,6 +88,7 @@ class Command(BaseCommand):
         if user_id:
             status = self.user_status.get(user_id, "offline")
         key = f"user_{user_id}_status"
+        print(f"publish info : {key, status}")
         await self.redis_client.set(key, status, ex = 2)
 
     def get_friend_list(self, user_id):
