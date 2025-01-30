@@ -39,7 +39,7 @@ class Command(BaseCommand):
             if msg:
                 try:
                     data = json.loads(msg['data'])
-                    if msg['channel'] == "mmaking_social":
+                    if msg.get('channel') == "info_social":
                         self.mmaking_process(data)
                         return
                     if self.valid_social_json(data):
@@ -87,15 +87,8 @@ class Command(BaseCommand):
     async def mmaking_process(self, data):
         user_id = data.get('user_id', None)
         if user_id:
-            response = {
-                "user_id": user_id,
-                "status": self.user_status.get(user_id, "offline")
-            }
-        else:
-            response = {
-                "error": "GFY"
-            }
-        await self.redis_client.publish(self.info_group, json.dumps(response))
+            status = self.user_status.get(user_id, "offline")
+        await self.redis_client.set(user_id, status, ex = 2)
 
     def get_friend_list(self, user_id):
         """ Request friendlist from container 'users' """
@@ -120,7 +113,7 @@ class Command(BaseCommand):
                     "id": user_id
                 },
                 "body":{
-                    "user": friend,
+                    "user_id": friend,
                     "status": self.user_status.get(friend, "offline")
                 }
             }
@@ -136,7 +129,7 @@ class Command(BaseCommand):
                 "id": friend
             },
             "body":{
-                "user": user_id,
+                "user_id": user_id,
                 "status": self.user_status.get(user_id, "offline")
             }
         }

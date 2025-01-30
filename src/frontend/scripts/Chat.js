@@ -28,7 +28,7 @@ export class ChatApp{
             this.chatInput.value = '';
         }
         else
-            console.error("dest: " + dest + "\nmsg: " + message);
+            console.error("this.activeChatUserId: " + this.activeChatUserId + "\nmsg: " + message);
     }
 
     incomingMsg(data) {
@@ -36,7 +36,7 @@ export class ChatApp{
         const friend = data.body.from;
         this.storeMessage(data);
         if (this.activeChatUserId == friend)
-            this.postFriendMessage(data);
+            this.postFriendMessage(data.body.message);
         else
             this.hasUnreadMessage(friend);
     }
@@ -53,7 +53,6 @@ export class ChatApp{
         if (!this.storedMessages.has(this.activeChatUserId))
             this.storedMessages.set(this.activeChatUserId, []);
         this.storedMessages.get(this.activeChatUserId).push(data.body);
-        // console.log("stored in map["+ this.activeChatUserId + "]:" + JSON.stringify(data.body));
     }
 
     storeMessage(data){
@@ -62,11 +61,9 @@ export class ChatApp{
         if (!this.storedMessages.has(user))
             this.storedMessages.set(user, []);        
         this.storedMessages.get(user).push(data.body);
-        // console.log("stored in map["+ user + "]:" + JSON.stringify(data.body));
     }
 
     postFriendMessage(data){
-        // console.log(data);
         let myDiv = document.createElement('div');
         myDiv.className = "chat-message friend-message";
         myDiv.textContent = data;
@@ -85,12 +82,8 @@ export class ChatApp{
         // chatImg.src = "/ressources/chat.png";
         if(friendId === this.activeChatUserId)
             return;
-        const friend = state.client.friendlist.get(friendId);
-        this.chatUser.innerText = friend.username; // render !
-        this.chatBody.replaceChildren();
-        this.activeChatUserId = friend.id;
-        this.noUnreadMessage(friend.id);
-        this.loadHistory(friend.id);
+        this.activeChatUserId = friendId;
+        this.renderChat();
     }
 
     loadHistory(friendId) {
@@ -103,6 +96,17 @@ export class ChatApp{
             else
                 this.postFriendMessage(element.message);
         });
+    }
+
+    renderChat() {
+        const friend = state.client.friendlist.get(this.activeChatUserId);
+        this.chatUser.innerText = friend.username;
+        document.getElementById('chat-vs').addEventListener('click', () => {
+            state.mmakingApp.function(friend.id);
+        });
+        this.chatBody.replaceChildren();
+        this.noUnreadMessage(this.activeChatUserId);
+        this.loadHistory(this.activeChatUserId);
     }
 
     // addUnreadMessage(id) {

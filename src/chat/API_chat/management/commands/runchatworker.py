@@ -65,7 +65,7 @@ class Command(BaseCommand):
                 data['body']['from'] = data['header']['id']
                 data['header']['id'] = data['body']['to'] # username OR userID
                 del data['body']['to']
-                data['body']['message'] += '(back from chat)'
+                data['body']['message']
         except Exception as e:
             print(e)
             data['body']['message'] = str(e)

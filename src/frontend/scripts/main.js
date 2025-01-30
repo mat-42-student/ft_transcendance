@@ -11,7 +11,7 @@ export const state = {
     mmakingApp: null,
     // gameSocket = null
   };
-  
+
 document.addEventListener('DOMContentLoaded', () => {
     const homeButton = document.getElementById('btn-home');
     const profileButton = document.getElementById('btn-profile');
