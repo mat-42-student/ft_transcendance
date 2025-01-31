@@ -52,7 +52,7 @@ class UserRegisterView(APIView):
             access_payload = {
                 'id': user.id,
                 'username': user.username,
-                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
                 'iat': datetime.datetime.now(datetime.timezone.utc),
             }
 

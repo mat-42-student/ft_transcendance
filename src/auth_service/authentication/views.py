@@ -19,6 +19,8 @@ from io import BytesIO
 import base64
 import secrets
 from .utils import generate_state
+from .utils import revoke_token
+from .utils import is_token_revoked
 
 class VerifyTokenView(APIView):
     renderer_classes = [JSONRenderer]
@@ -70,7 +72,7 @@ class LoginView(APIView):
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }
 
@@ -102,44 +104,78 @@ class RefreshTokenView(APIView):
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
-        refresh_token = request.COOKIES.get('refreshToken')
+        old_refresh_token = request.COOKIES.get('refreshToken')
+
+        if is_token_revoked(old_refresh_token):
+            raise AuthenticationFailed('Token has been revoked')
+
         email = request.data.get('email')
 
         user = User.objects.filter(email=email).first()
 
-        if not refresh_token:
+        if not old_refresh_token:
             raise AuthenticationFailed('Refresh token missing!')
         if not user:
             raise AuthenticationFailed('User not found!')
 
         try:
-            jwt.decode(refresh_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
+            jwt.decode(old_refresh_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Refresh token expired!')
         except jwt.InvalidTokenError:
             raise AuthenticationFailed('Invalid refresh token!')
+        
+        revoke_token(old_refresh_token)  
 
         access_payload = {
             'id': user.id,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }
-        new_access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
 
-        return Response({
-            'success': True,
+        refresh_payload = {
+            'id': user.id,
+            'username': user.username,
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
+            'iat': datetime.datetime.now(datetime.timezone.utc),
+        }
+
+        new_access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+        new_refresh_token = jwt.encode(refresh_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+
+        response = Response()
+        response.set_cookie(
+            key='refreshToken',
+            value=new_refresh_token,
+            httponly=True,
+            samesite='None',
+            secure=True,
+            path='/'
+        )
+        response.data = {
+            'success': 'true',
             'accessToken': new_access_token
-        })
+        }
+        return response
+
+
 class LogoutView(APIView):
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
+        refresh_token = request.COOKIES.get('refreshToken')
+        if refresh_token:
+            revoked = revoke_token(refresh_token)
+            if revoked:
+                response = Response(status=status.HTTP_205_RESET_CONTENT)
+                response.delete_cookie('refreshToken')
+                response.data = {
+                    'success': 'true'
+                }
+                return response
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
         response = Response()
-        response.delete_cookie('refreshToken')
-        response.data = {
-            'success': 'true'
-        }
-        return response
 class Enroll2FAView(APIView):
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
