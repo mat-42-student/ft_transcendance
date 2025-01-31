@@ -4,8 +4,6 @@ from signal import signal, SIGTERM, SIGINT
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep, create_task
-# from datetime import datetime, timezone
-# from models import User, BlockedUser
 
 class Command(BaseCommand):
     help = "Listen to 'deep_chat' pub/sub redis channel"
