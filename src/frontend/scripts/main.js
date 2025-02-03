@@ -10,7 +10,9 @@ export const state = {
     socialApp: null,
     mmakingApp: null,
     // gameSocket = null
-  };
+};
+
+state.client.setState(state);
 
 document.addEventListener('DOMContentLoaded', () => {
     const homeButton = document.getElementById('btn-home');
@@ -46,11 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
             initDynamicCard('requests');
         });
     }
-    // friendButtons.forEach((button) => {
-    //     button.addEventListener('click', (event) => {
-    //         const friendElement = event.target.closest('.friend-item');
-    //         const friendUsername = friendElement.querySelector('.friend-name').textContent.trim();
-    //         initChatWithFriend(friendUsername);
-    //     });
-    // });
 });
+
+// wait for n sec
+export function delay(n) {
+    return new Promise(function(resolve) {
+      setTimeout(resolve, n * 1000);
+    });
+  }

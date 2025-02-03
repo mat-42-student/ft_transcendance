@@ -4,7 +4,6 @@ from signal import signal, SIGTERM, SIGINT
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep, create_task
-# from models import User, BlockedUser
 
 class Command(BaseCommand):
     help = "Async pub/sub redis worker. Listens 'deep_social' channel"
@@ -28,7 +27,7 @@ class Command(BaseCommand):
             self.listen_task = create_task(self.listen())
             while self.running:
                 await asleep(1)
-        except  Exception as e:
+        except Exception as e:
             print(e)
         finally:
             await self.cleanup_redis()
@@ -40,8 +39,8 @@ class Command(BaseCommand):
                 try:
                     data = json.loads(msg['data'])
                     if msg.get('channel') == "info_social":
-                        self.mmaking_process(data)
-                        return
+                        await self.get_info_process(data)
+                        continue
                     if self.valid_social_json(data):
                         await self.process_message(data)
                 except Exception as e:
@@ -84,11 +83,13 @@ class Command(BaseCommand):
         self.user_status[user_id] = status # Update current user status
 
 
-    async def mmaking_process(self, data):
-        user_id = data.get('user_id', None)
+    async def get_info_process(self, data):
+        user_id = data.get('user_id')
         if user_id:
             status = self.user_status.get(user_id, "offline")
-        await self.redis_client.set(user_id, status, ex = 2)
+        key = f"user_{user_id}_status"
+        print(f"publish info : {key, status}")
+        await self.redis_client.set(key, status, ex = 2)
 
     def get_friend_list(self, user_id):
         """ Request friendlist from container 'users' """

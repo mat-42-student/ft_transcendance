@@ -8,7 +8,6 @@ class JWTAuthentication(BaseAuthentication):
     """
     Custom authentication class for JWT-based authentication.
     """
-
     def authenticate(self, request):
         auth_header = request.headers.get('Authorization')
 

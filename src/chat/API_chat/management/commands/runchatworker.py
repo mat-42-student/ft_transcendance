@@ -4,8 +4,6 @@ from signal import signal, SIGTERM, SIGINT
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep, create_task
-# from datetime import datetime, timezone
-# from models import User, BlockedUser
 
 class Command(BaseCommand):
     help = "Listen to 'deep_chat' pub/sub redis channel"
@@ -56,7 +54,7 @@ class Command(BaseCommand):
 
     async def process_message(self, data):
         data['header']['dest'] = 'front' # data destination after deep processing
-        print(f"getting {data['body']}")
+        # print(f"getting {data['body']}")
         # if self.recipient_exists(data['body']['to']):
         try:
             if self.is_muted(data['header']['id'], data['body']['to']):
@@ -69,7 +67,7 @@ class Command(BaseCommand):
         except Exception as e:
             print(e)
             data['body']['message'] = str(e)
-        print(f"Sending back : {data}")
+        # print(f"Sending back : {data}")
         await self.redis_client.publish(self.group_name, json.dumps(data))
 
     def is_muted(self, exp, recipient) -> bool :

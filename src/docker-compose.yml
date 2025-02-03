@@ -1,5 +1,6 @@
 services:
   auth-service:
+    container_name: auth-service
     build:
       context: ./auth_service
       dockerfile: Dockerfile
@@ -16,6 +17,7 @@ services:
     networks:
       - nginx-network
       - db-network
+      - redis-network
 
   users:
     container_name: users
@@ -39,8 +41,6 @@ services:
     #   timeout: 5s
     #   retries: 3
     depends_on:
-      postgres:
-        condition: service_healthy
       auth-service:
         condition: service_started
 
@@ -52,14 +52,15 @@ services:
     stop_grace_period: 2s
     env_file:
       - ./chat/.env
+    depends_on:
+      - redis
     volumes:
       - ./chat/:/code
-    depends_on:
-      - matchmaking
     networks:
       - db-network
       - redis-network
       - deep-network
+    restart: on-failure
 
   social:
     container_name: social
@@ -71,12 +72,11 @@ services:
     volumes:
       - ./social_project/:/code
     depends_on:
-      # - auth-service
       - redis
     networks:
-      # - db-network
       - redis-network
       - deep-network
+    restart: on-failure
 
   gateway:
     container_name: gateway
@@ -96,6 +96,7 @@ services:
       - nginx-network
       - db-network
       - redis-network
+    restart: on-failure
 
   matchmaking:
     container_name: matchmaking
@@ -107,6 +108,8 @@ services:
     volumes:
       - ./matchmaking:/code
     depends_on:
+      postgres:
+        condition: service_healthy
       pong:
         condition: service_started
     expose:
@@ -116,6 +119,7 @@ services:
       - redis-network
       - deep-network
       - nginx-network # obsolete ?
+    restart: on-failure
 
   nginx:
     container_name: nginx
@@ -123,18 +127,18 @@ services:
     build:
       context: nginx
       dockerfile: Dockerfile
-    depends_on:
-      - users
-      - gateway
-      - matchmaking
-      - pong
     ports:
       - "3000:443"
+    depends_on:
+      - users
+      - auth-service
+      - matchmaking
     volumes:
       - ./media:/media
       - ./frontend:/usr/share/nginx/frontend
     networks:
       - nginx-network
+    restart: on-failure
 
   pong:
     container_name: pong
@@ -146,16 +150,14 @@ services:
     volumes:
       - ./_Pong/:/code
     depends_on:
-      redis:
-        condition: service_started
-      postgres:
-        condition: service_healthy
+      - redis
     expose:
       - "8006"
     networks:
       - nginx-network
       - db-network
       - redis-network
+    restart: on-failure
 
   postgres:
     container_name: postgres
@@ -170,9 +172,10 @@ services:
       - db-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d transcendance -U toto"]
-      interval: 3s
-      timeout: 2s
+      interval: 1s
+      timeout: 1s
       retries: 5
+    restart: on-failure
 
   redis:
     container_name: redis
@@ -181,6 +184,7 @@ services:
       - "6379"
     networks:
       - redis-network
+    restart: on-failure
 
 volumes:
   postgres_data:
