@@ -8,3 +8,8 @@ class Salon():
         for value in self.players.values():
             return(f'Salon : {value} type_game: {self.type_game}')
 
+    def getDictPlayers(self):
+        players = {}
+        for key, player in self.players.items():
+            players.update({key: player.getDict()})
+        return (players)

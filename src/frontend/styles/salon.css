@@ -25,3 +25,20 @@
     margin: 0;
     font-size: 18px;
 }
+
+.player-info h3 {
+    margin: 0;
+    font-size: 18px;
+}
+.cancel-button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.cancel-button:hover {
+    background-color: #c0392b;
+}

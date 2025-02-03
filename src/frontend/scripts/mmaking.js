@@ -1,11 +1,10 @@
 import { state } from './main.js';
-import { initDynamicCard } from './components/dynamic_card.js';
-
+import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
 export class Mmaking
 {
 	constructor(mainSocket)
 	{
-
+		this.waited_page = null;
 	}
 
 
@@ -25,13 +24,14 @@ export class Mmaking
 				'status': "online",
 				'type_game': "1vs1R"
 			};
-			this.sendMsg('back', data)
-			await initDynamicCard('versus')
+			await this.sendMsg(data)
+			this.waited_page = await initDynamicCard('versus')
+			document.getElementById("cancel-button").addEventListener("click", this.cancel_game.bind(this));
 		});
 
 	}
 
-    sendMsg(dest, message) {
+    async sendMsg(message) {
 
 		const data = {
 			'header': {  //Mandatory part
@@ -41,7 +41,7 @@ export class Mmaking
 			},
 			'body': message
 		};
-	state.mainSocket.send(JSON.stringify(data));
+	await state.mainSocket.send(JSON.stringify(data));
 	}
 
 	incomingMsg(data)
@@ -49,7 +49,9 @@ export class Mmaking
 
 		if (data.body.status == 'ingame')
 		{
-			this.setOpponent('toto', '/ressouces/match.png')
+			console.log(data);
+			for (const [key, value] of Object.entries(data.body.opponents))
+				this.setOpponent(value.username, '../../ressources/match.png')
 		}
 	}
 
@@ -58,12 +60,32 @@ export class Mmaking
 		 
 	}
 
+	async cancel_game()
+	{
+		document.getElementById("status").textContent = "Recherche annulée";
+		document.getElementById("loader").style.display = "none";
+		document.getElementById("waiting-text").textContent = "Vous avez annulé la recherche.";
+		document.getElementById("cancel-button").style.display = "none";
+
+		const data = {
+			'status': "pending",
+			'type_game': "1vs1R",
+			'cancel': true
+		};
+
+
+		this.sendMsg(data)
+		
+		closeDynamicCard();
+	}
+
 	setOpponent(name, photo) {
+		document.getElementById("opponent-info").style.display = "block";
 		document.getElementById("opponent-name").textContent = name;
 		document.getElementById("opponent-photo").src = photo;
-		document.getElementById("opponent-info").style.display = "block";
 		document.getElementById("status").textContent = "Adversaire trouvé !";
 		document.getElementById("loader").style.display = "none";
 		document.getElementById("waiting-text").textContent = "Préparez-vous à jouer !";
+		document.getElementById("cancel-button").style.display = "none";
 	}
 }

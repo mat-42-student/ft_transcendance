@@ -3,7 +3,7 @@ from redis.asyncio import from_url
 import json
 import asyncio
 import time
-from .matchmaking import Player
+from .Player import Player
 from .Salon import Salon
 from .Random1vs1 import Random1vs1
 from asyncio import run as arun, sleep as asleep, create_task
@@ -32,7 +32,7 @@ class Command(BaseCommand):
             await self.pubsub.subscribe(self.channel_front)
             await self.pubsub.subscribe(self.channel_social)
             self.listen_task = create_task(self.listen())
-            self.random1vs1_task = create_task(self.random1vs1.monitor())
+            # self.random1vs1_task = create_task(self.random1vs1.monitor())
 
             while self.running:
                 await asleep(1)
@@ -48,7 +48,6 @@ class Command(BaseCommand):
             if msg : #and msg['type'] == 'message':  # Filtre uniquement les messages réels
 
                 try:
-                    print(msg)
   
                     if (msg.get('channel') != self.channel_social): # Do nothing if msg is send on info_social
                         message = json.loads(msg.get('data'))
@@ -65,7 +64,7 @@ class Command(BaseCommand):
     def signal_handler(self, sig, frame):
         try:
             self.listen_task.cancel()
-            self.random1vs1.cancel()
+            #self.random1vs1.cancel()
         except Exception as e:
             print(e)
         self.running = False
@@ -79,15 +78,15 @@ class Command(BaseCommand):
         if self.redis_client:
             await self.redis_client.close()
 
-    async def check_statusPlayer(self, message):
-        header = message['header']
+    async def check_statusPlayer(self, id):
         data = {
-            'user_id': header['id']
+            'user_id': id
         }
         await self.redis_client.publish(self.channel_social, json.dumps(data))
         # await asleep(0.5)
         try:
-            status = await self.redis_client.get(header['id'])
+            status = await self.redis_client.get(id)
+            print(f'GET status = {status}')
             if (status is not None):
                 return (status)
         except asyncio.TimeoutError:
@@ -116,33 +115,46 @@ class Command(BaseCommand):
         if (message.get('body') and message['body'].get('type_game')):
             print(f'Check get body and type_game is true')
             # Check the status of Player
-            if (await self.check_statusPlayer(message) == 'online'):
+            status = await self.check_statusPlayer(message['header']['id'])
+            if ( status == 'online'):
                 await self.setup_statusPlayer(message, newPlayer)
                 print(f'{newPlayer}')
                 return (True)
+            else:
+                try:
+                    if (message.get('body').get('cancel')):
+                        print(f'Delete user -> {self.random1vs1.salon.players[message['header']['id']]}')
+                        del self.random1vs1.salon.players[message['header']['id']]
+                        return True
+                except Exception as e:
+                    print(e)
+
         return (False)
 
     # Research and verify conditions for the type_game selected
     async def SelectTypeGame(self, data, player):
         header = data['header']
         body = data['body']
+        player.user_id = header['id']
+        player.token = header['token']
         if (body.get('type_game') == '1vs1R'): # 1vs1R
-            player.user_id = header['id']
-            await self.random1vs1.add(player.user_id, player)
-            if (len(self.random1vs1.players) > 1):
-                await self.random1vs1.event.wait()
+            if (body.get('cancel') == True):
+                player.cancel = True
+            else:
+                await self.random1vs1.monitor_1vs1R(player)
             print(f'{player}')
         elif (body.get('type_game') == 'invite'): # Invite
             invite = body.get['type_game']['invite']
             if (invite.get('guest_id') is not None):
                 # Research guest_id, verify this status and send invitation
-                print(f'{invite}')
+                if (self.check_statusPlayer(invite.get('user_id'))):
+                    print(f'{invite}')
             elif (invite.get('host_id') is not None):
                 # Research host_id to send the response by guest_id
                 print(f'{invite}')
         elif (body.get('type_game') == 'tournament'):
             # Research Player with opponents < 4 and the type_game is tournament
             print(f'tournament')
-        print("End SelectGame")
+
 
             

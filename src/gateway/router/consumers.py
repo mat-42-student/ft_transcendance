@@ -86,6 +86,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         if group:
             data['header']['dest'] = 'back'
             data['header']['id'] = self.consumer_id
+            data['header']['token'] = self.token
             data['body']['timestamp'] = datetime.now(timezone.utc).isoformat()
             await self.forward_with_redis(data, group)
             return
@@ -112,6 +113,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             if self.right_consumer(data['header']['id']) and data['header']['dest'] == 'front':
                 try:
                     del data['header']['dest']
+                    # del data['header']['token']
                     # print(f"Sending: {data}")
                     await self.send_json(data)
                 except Exception as e:
