@@ -1,21 +1,21 @@
 POST https://localhost:3000/api/v1/auth/login/
 Content-Type: application/json
 
-{"email": "tom@mail.com", "password": "Test123*"}
+{"email": "tim@mail.com", "password": "Test123*"}
 
 ###
 
 POST https://localhost:3000/api/v1/auth/login/
 Content-Type: application/json
 
-{"email": "tom2@mail.com", "password": "Test123*", "totp": "1234"}
+{"email": "tom@mail.com", "password": "Test123*", "totp": "1234"}
 
 ###
 
 POST https://localhost:3000/api/v1/auth/refresh/
 Content-Type: application/json
 
-{"email": "tom@mail.com"}
+{"email": "tim@mail.com"}
 
 ###
 

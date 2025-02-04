@@ -17,6 +17,7 @@ services:
     networks:
       - nginx-network
       - db-network
+      - redis-network
 
   users:
     container_name: users

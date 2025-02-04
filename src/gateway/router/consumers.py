@@ -113,7 +113,6 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 try:
                     del data['header']['dest']
                     del data['header']['token']
-                    # print(f"Sending: {data}")
                     await self.send_json(data)
                 except Exception as e:
                     print(f"Send error : {e}")
