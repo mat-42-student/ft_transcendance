@@ -82,7 +82,6 @@ class Command(BaseCommand):
             }))
         self.user_status[user_id] = status # Update current user status
 
-
     async def get_info_process(self, data):
         user_id = data.get('user_id')
         if user_id:

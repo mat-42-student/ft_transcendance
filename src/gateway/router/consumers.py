@@ -1,14 +1,11 @@
-import requests
-from uuid import uuid4
 from json import dumps, loads
 from channels.generic.websocket import AsyncJsonWebsocketConsumer # type: ignore
 from redis.asyncio import from_url
-from asyncio import create_task
+from asyncio import create_task, sleep as asleep
 from .consts import REDIS_GROUPS, JWT_PUBLIC_KEY
 from datetime import datetime, timezone
 from urllib.parse import parse_qs
 import jwt
-# from jwt import ExpiredSignatureError, InvalidTokenError
 
 class GatewayConsumer(AsyncJsonWebsocketConsumer):
     """Main websocket"""
@@ -45,8 +42,11 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             raise Exception
 
     async def disconnect(self, close_code):
+        # If user was in a game, gameSocket will instantly set status to 'ingame' wether they're offline
+        # So we just wait a bit to let mainSocket have the last word
         if not self.connected:
             return
+        await asleep(0.5)
         await self.send_online_status('offline')
         await self.pubsub.unsubscribe() # unsubscribe all channels
         await self.pubsub.close()
@@ -86,6 +86,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         if group:
             data['header']['dest'] = 'back'
             data['header']['id'] = self.consumer_id
+            data['header']['token'] = self.token
             data['body']['timestamp'] = datetime.now(timezone.utc).isoformat()
             await self.forward_with_redis(data, group)
             return
@@ -105,13 +106,13 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
     async def listen_to_channels(self):
         """Listen redis to send data back to appropriate client
         possible 'service' values are 'mmaking', 'chat', 'social' and 'notif' """
-
         async for message in self.pubsub.listen():
             data = loads(message['data'])
             # print(f"Listen Redis on consumer {self.consumer_id}: {data}")
             if self.right_consumer(data['header']['id']) and data['header']['dest'] == 'front':
                 try:
                     del data['header']['dest']
+                    del data['header']['token']
                     # print(f"Sending: {data}")
                     await self.send_json(data)
                 except Exception as e:

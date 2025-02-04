@@ -9,7 +9,7 @@ export const state = {
     chatApp: null,
     socialApp: null,
     mmakingApp: null,
-    // gameSocket = null
+    gameApp: null
 };
 
 state.client.setState(state);
@@ -55,4 +55,4 @@ export function delay(n) {
     return new Promise(function(resolve) {
       setTimeout(resolve, n * 1000);
     });
-  }
+}

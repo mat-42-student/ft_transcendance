@@ -1,15 +1,17 @@
 import json
-from asyncio import create_task
+import jwt
+from asyncio import create_task, sleep as asleep
+from redis.asyncio import from_url
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from urllib.parse import parse_qs
 from .Game import Game
-from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT
-from channels.generic.websocket import AsyncJsonWebsocketConsumer # type: ignore
-from .models import User, Salon, Mode
+from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT, JWT_PUBLIC_KEY
 
 class PongConsumer(AsyncJsonWebsocketConsumer):
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def init(self):
         self.player_id = None
+        self.player_name = None
         self.game_id = None
         self.nb_players = 0
         self.in_game = False
@@ -19,21 +21,102 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         self.game_mode = None
 
     async def connect(self):
-        self.game_id = self.scope["url_route"]["kwargs"]["game_id"]
-        self.room_group_name = f"game_{self.game_id}"
+        self.init()
+        await self.get_user_infos()
+        await self.join_redis_channels()
+        await self.check_game_info()
+        try:
+            await self.accept()
+            await self.send_online_status('ingame')
+            self.room_group_name = f"game_{self.game_id}"
+            await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        except Exception as e:
+            print(e)
 
-        # Join room group
-        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
-        await self.accept()
+    async def get_user_infos(self):
+        data = self.checkAuth()
+        if data:
+            self.player_id =  data.get('id')
+            self.player_name = data.get('username')
+        if self.player_id is None:
+            print("Invalid token. Aborting")
+            await self.close(code=4401)
+        print(f"User {self.player_id} is authenticated as {self.player_name}")
+
+    def checkAuth(self):
+        self.public_key = JWT_PUBLIC_KEY
+        params = parse_qs(self.scope['query_string'].decode())
+        self.token = params.get('t', [None])[0]
+        try:
+            payload = jwt.decode(self.token, self.public_key, algorithms=['RS256'])
+            return payload
+        except jwt.ExpiredSignatureError as e:
+            print(e)
+        except jwt.InvalidTokenError as e:
+            print(e)
+        return None
+
+    async def join_redis_channels(self):
+        try:
+            self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
+            self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
+            await self.pubsub.subscribe('info_mmaking')
+            # await self.pubsub.subscribe('deep_mmaking')
+        except Exception as e:
+            print(e)
+
+    async def check_game_info(self):
+        # ask mmaking for expected players in game_id
+        self.game_id = self.scope["url_route"]["kwargs"]["game_id"]
+        data = {"game_id": self.game_id}
+        await self.redis_client.publish("info_mmaking", json.dumps(data))
+        expected_players = None
+        attempts = 0
+        while expected_players is None and attempts < 5:
+            attempts += 1
+            expected_players = await self.redis_client.get(f"game_{self.game_id}_players")
+            if expected_players is None:
+                await asleep(0.5)
+        if expected_players is None:
+            print("No answer from mmaking")
+            await self.close(code=4401)
+            return
+        try:
+            expected_players = json.loads(expected_players)
+        except json.JSONDecodeError as e:
+            print("Invalid JSON:", e)
+            await self.close(code=4401)
+            return
+        if self.player_id not in expected_players:
+            print("Unexpected player")
+            await self.close(code=4401)        
+
+    async def disconnect(self, close_code):
+            await self.send_online_status('online')
+
+    async def send_online_status(self, status):
+        """Send all friends our status"""
+        data = {
+            "header": {
+                "service": "social",
+                "dest": "back",
+                "id": self.player_id
+            },
+            "body":{
+                "status": status
+            }
+        }
+        # print(f"Sending data to deep_social: {data}")
+        await self.redis_client.publish("deep_social", json.dumps(data))
 
     # Receive message from WebSocket (from client): immediate publish into lobby
-    async def receive(self, text_data):
+    async def receive_json(self, data):
         await self.channel_layer.group_send(
-            self.room_group_name, {"type": "handle.message", "message": text_data}
+            self.room_group_name, {"type": "handle.message", "message": data}
         )
 
     async def handle_message(self, data):
-        data = json.loads(data["message"])
+        data = data["message"]
         if data["action"] == "move":
             return await self.moveplayer(data)
         if data["action"] == "init":
@@ -43,26 +126,11 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         if data["action"] == "wannaplay!":
             return await self.wannaplay(data["from"])
 
-    async def get_and_check_info_from_db(self, player):
-        # TODO : check from database if player (identified from his JWT) is in actual lobby
-        # DONE : then get lobby's mode
-        # print(f"{GREEN}getAndCheck. game_id: {self.game_id}{RESET}")
-        try:
-            self.salon = await Salon.objects.aget(id=self.game_id)
-            self.mode = await Mode.objects.aget(salon=self.salon)
-            self.game_mode = self.mode.mode
-            print(f"{YELLOW}{self.salon}{RESET}")
-            print(self.mode)
-            return 1 
-        except:
-            print(f"{RED}No lobby matching id={self.game_id}{RESET}")
-            return 0
-
     async def wannaplay(self, player):
         self.nb_players += 1
         if self.player_id is None:
             self.player_id = player
-        allgood = await self.get_and_check_info_from_db(player)
+        allgood = await self.get_and_check_info_from_mmaking(player)
         if not allgood:
             return
         print(f"{self.player_id} wannaplay on channel {self.room_group_name}. Currently {self.nb_players} players in lobby")
