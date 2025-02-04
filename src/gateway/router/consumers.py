@@ -112,7 +112,8 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             if self.right_consumer(data['header']['id']) and data['header']['dest'] == 'front':
                 try:
                     del data['header']['dest']
-                    del data['header']['token']
+                    if data['header'].get('token'):
+                        del data['header']['token']
                     await self.send_json(data)
                 except Exception as e:
                     print(f"Send error : {e}")
@@ -123,7 +124,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
 
     async def forward_with_redis(self, data, group):
             try:
-                print(f"Sending data to {group}: {data}")
+                # print(f"Sending data to {group}: {data}")
                 await self.redis_client.publish(group, dumps(data))
             except Exception as e:
                 print(f"Publish error : {e}")

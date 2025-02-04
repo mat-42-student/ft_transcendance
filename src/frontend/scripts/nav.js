@@ -60,6 +60,8 @@ export async function navigateTo(hash) {
             document.querySelector('.main-content').innerHTML = html;
 			if(state.mmakingApp)
 				state.mmakingApp.refresh_eventlisteners();
+            if (state.gameApp) // for testing purpose, DELETE on branch dev
+                state.gameApp.addEventlistener(); // for testing purpose, DELETE on branch dev
         } catch (error) {
             console.error('Error loading page:', error);
             return;

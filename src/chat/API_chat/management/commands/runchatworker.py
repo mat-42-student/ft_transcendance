@@ -67,7 +67,7 @@ class Command(BaseCommand):
         except Exception as e:
             print(e)
             data['body']['message'] = str(e)
-        # print(f"Sending back : {data}")
+        print(f"Sending back : {data}")
         await self.redis_client.publish(self.group_name, json.dumps(data))
 
     def is_muted(self, exp, recipient) -> bool :

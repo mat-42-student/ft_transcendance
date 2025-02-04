@@ -19,6 +19,7 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         self.game = None
         self.side = None
         self.game_mode = None
+        self.room_group_name = None
 
     async def connect(self):
         self.init()
@@ -90,9 +91,6 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         if self.player_id not in expected_players:
             print("Unexpected player")
             await self.close(code=4401)        
-
-    async def disconnect(self, close_code):
-            await self.send_online_status('online')
 
     async def send_online_status(self, status):
         """Send all friends our status"""
@@ -180,9 +178,11 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         if self.master and not self.game.over: # game is ending because master left
             print(f"{RED}Game #{self.game.id} over (player {self.player_id} left){RESET}")        
             await self.disconnect_endgame(self.player_id)
-        await self.channel_layer.group_send(
-            self.room_group_name, {"type": "disconnect.now", "from": self.player_id}
-        )
+        if self.room_group_name:
+            await self.channel_layer.group_send(
+                self.room_group_name, {"type": "disconnect.now", "from": self.player_id}
+            )
+        await self.send_online_status('online')
 
     async def disconnect_now(self, event):
     # If self.game.over, game was stopped beacuse maxscore has been reached
