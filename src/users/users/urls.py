@@ -8,7 +8,8 @@ from rest_framework import routers
 from rest_framework_simplejwt import views as jwt_views
 
 from accounts.views import (
-    UserRegisterView, 
+    UserRegisterView,
+    UserRegisterOauthView,
     UserViewSet,
     RelationshipViewSet,
 )
@@ -20,6 +21,7 @@ router.register('users/relationships', RelationshipViewSet, basename='relationsh
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/users/register/', UserRegisterView.as_view(), name='register'),
+    path('api/v1/users/register/oauth/', UserRegisterOauthView.as_view(), name='register-oauth'),
     path('api/v1/', include(router.urls)),
 ]
 

@@ -32,7 +32,7 @@ class User(AbstractBaseUser):
     
     username = models.CharField(
         max_length=50, 
-        unique=True, 
+        unique=True,
         validators=[MinLengthValidator(3)]
     )
     password = models.CharField( # Utilisation d'un mot de passe hashé -> SUPPRIMER pour laisser django gérer hashage ou utiliser set_password()

@@ -7,7 +7,6 @@ urlpatterns = [
     path('refresh/', RefreshTokenView.as_view(), name='refresh'),
     path('verify/', VerifyTokenView.as_view(), name='verify'),
     path('public-key/', PublicKeyView.as_view(), name='public-key'),
-    path('logout/', LogoutView.as_view(), name='logout'),
     path('2fa/enroll/', Enroll2FAView.as_view(), name='2fa-enroll'),
     path('2fa/verify/', Verify2FAView.as_view(), name='2fa-verify'),
     path('2fa/disable/', Disable2FAView.as_view(), name='2fa-disable'),

@@ -234,7 +234,37 @@ document.addEventListener('DOMContentLoaded', () => {
           if (data.accessToken) {
             state.client.accessToken = data.accessToken;
             window.history.replaceState({}, document.title, window.location.pathname);
-            console.log("OAuth success, token stored in session storage!");
+            
+            let fetchedData;
+
+            // Fetch user's info from 42's API
+            fetch("https://api.intra.42.fr/v2/me", {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${state.accessToken}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                fetchedData = JSON.parse(data);
+            })
+            .catch(error => console.error('Fetch error:', error));
+
+            // Extract email from fetchedData
+            let userEmail = fetchedData.email;
+
+            // Create the user
+            fetch("https://localhost:3000/api/v1/users/register/oauth/", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: userEmail
+                })
+            })
+            .then
+
           } else {
             console.error("No accessToken returned from backend", data);
           }
@@ -242,3 +272,4 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(err => console.error("Error exchanging code for token:", err));
     }
 });
+

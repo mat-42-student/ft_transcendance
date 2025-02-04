@@ -22,6 +22,7 @@ from .serializers import (
     UserBlockedSerializer, 
     UserUpdateSerializer, 
     UserRegistrationSerializer, 
+    UserRegistrationOauthSerializer, 
     RelationshipSerializer
 )
 
@@ -44,7 +45,6 @@ class UserRegisterView(APIView):
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
-            print('hello')
             user = serializer.save()
             user.refresh_from_db() # Rafraîchir l'objet utilisateur pour s'assurer que toutes les données sont chargées
 
@@ -80,6 +80,18 @@ class UserRegisterView(APIView):
                 'accessToken': access_token
             }
             return response
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class UserRegisterOauthView(APIView):
+    permission_classes = [AllowAny]
+    renderer_classes = [JSONRenderer]
+
+    def post(self, request):
+        serializer = UserRegistrationOauthSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            user.refresh_from_db()
+            return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
