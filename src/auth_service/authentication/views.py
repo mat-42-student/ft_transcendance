@@ -22,6 +22,28 @@ from .utils import generate_state
 from .utils import revoke_token
 from .utils import is_token_revoked
 
+class PublicKeyView(APIView):
+    """
+    Return a public key to the client, and let him choose if he want it as oneline or not.
+    i.e. GET /public-key/?form=oneline
+    """
+    def get(self, request):
+        public_key = """
+        -----BEGIN PUBLIC KEY-----
+        MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnvGKZgRN72lJMBIMq8MtxHTjK
+        zJV/3WpHj52TiVYhD43Z+Z720BH257gqBni5Vpsph96EhBHmiDqDuJKr1x5KWz1tDG2A8
+        RQszEPfpryTRXZKnv33wMfLo+h9qo6yXvh8BT9It/zk5mNoqugTmH+oBo7qr8emuBFXXo
+        HIPF+AhcCpFoSETuTBe3ufAlT8v2LjKdw/NDzxm3KBd7s/3nA/+euQ97gWB1ZlwHFC9gb
+        0e5zCW6Clh7YCPEQ1OJ/YmzUsowVObQYqrPh0SLuv1qmUqLdFdEYr1wO0jYPiZeDP6Hf8
+        oH2s6dVoczMWvQvqr10xc9TPCefefPNE2lqpH2IrQIDAQAB
+        -----END PUBLIC KEY-----
+        """
+
+        if request.GET.get("form") == "oneline":
+            public_key = public_key.replace("\n", "").replace(" ", "")
+
+        return JsonResponse({'public_key': public_key.strip()}, status=status.HTTP_200_OK)
+
 class VerifyTokenView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -157,8 +179,6 @@ class RefreshTokenView(APIView):
             'accessToken': new_access_token
         }
         return response
-
-
 class LogoutView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -235,7 +255,6 @@ class Verify2FAView(APIView):
             return Response({"success": "true", "message": "2FA has been enabled."}, status=200)
         else:
             return Response({"error": "Invalid or expired 2FA code"}, status=401)
-
 class Disable2FAView(APIView):
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
@@ -244,8 +263,7 @@ class Disable2FAView(APIView):
         user = request.user
         user.is_2fa_enabled = False 
         user.save()
-        return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK)
-    
+        return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK)  
 class OAuthRedirectView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -261,7 +279,6 @@ class OAuthRedirectView(APIView):
         }
         url = f'https://api.intra.42.fr/oauth/authorize?{urlencode(params)}'
         return Response({"url": url}, status=status.HTTP_302_FOUND)
-
 class OAuthCallbackView(APIView):
     renderer_classes = [JSONRenderer]
 
