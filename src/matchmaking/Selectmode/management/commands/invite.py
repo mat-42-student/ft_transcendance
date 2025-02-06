@@ -1,13 +1,11 @@
 import asyncio
 import json
-class Invite():
-    def __init__(self, redis, channel_front, channel_social):
-        self.hosts = None
-        self.guests = None
-        self.salon = None
-        self.redis = redis
-        self.channelFront = channel_front
-        self.channelSocial = channel_social
+class Guest():
+    def __init__(self, player):
+        self.player = player
+        self.hosts = {}
+        self.accepted = False
+
 
     
     def monitor_host(self, host, guest):
