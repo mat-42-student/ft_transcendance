@@ -69,4 +69,11 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwidXNlcm5hb
 
 {}
 
+###
+
+GET https://localhost:3000/api/v1/auth/public-key/?form=oneline
+Content-Type: application/json
+
+{}
+
 
