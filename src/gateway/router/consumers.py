@@ -48,6 +48,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         if not self.connected:
             return
         await self.send_online_status('offline')
+        await self.send_mmaking_disconnection()
         await self.pubsub.unsubscribe() # unsubscribe all channels
         await self.pubsub.close()
         await self.redis_client.close()
@@ -140,8 +141,8 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 "status": "info"
             }
         }
-        # print(f"Sending data to deep_social: {data}")
-        await self.redis_client.publish("deep_social", dumps(data))
+        # print(f"Sending data to {REDIS_GROUPS.get("social")}: {data}")
+        await self.redis_client.publish(REDIS_GROUPS.get("social"), dumps(data))
 
     async def send_online_status(self, status):
         """Send all friends our status"""
@@ -155,5 +156,20 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 "status": status
             }
         }
-        # print(f"Sending data to deep_social: {data}")
-        await self.redis_client.publish("deep_social", dumps(data))
+        # print(f"Sending data to {REDIS_GROUPS.get("social")}: {data}")
+        await self.redis_client.publish(REDIS_GROUPS.get("social"), dumps(data))
+
+    async def send_mmaking_disconnection(self):
+        """Send mmaking disco info"""
+        data = {
+            "header": {
+                "service": "mmaking",
+                "dest": "back",
+                "id": self.consumer_id
+            },
+            "body":{
+                "cancel": True
+            }
+        }
+        # print(f"Sending data to {REDIS_GROUPS.get("mmaking")}: {data}")
+        await self.redis_client.publish(REDIS_GROUPS.get("mmaking"), dumps(data))
