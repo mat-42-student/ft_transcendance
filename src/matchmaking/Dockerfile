@@ -1,11 +1,11 @@
-FROM python:latest
+FROM django-base
 
-RUN apt update -y
+# RUN apt update -y
 
 WORKDIR /code
 
-COPY requirements.txt .
+# COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+# RUN pip install --no-cache-dir -r requirements.txt
 
 CMD ["./start.sh"]
