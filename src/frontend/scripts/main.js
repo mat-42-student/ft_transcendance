@@ -50,6 +50,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// page unload // necessary ??
+window.addEventListener('beforeunload', function(event) {
+    if (state.mainSocket.socket)
+        state.mainSocket.close();
+    if (state.gameApp.socket)
+        state.gameApp.close();
+});
+
+
 // wait for n sec
 export function delay(n) {
     return new Promise(function(resolve) {
