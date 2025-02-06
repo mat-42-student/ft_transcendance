@@ -21,6 +21,8 @@ import secrets
 from .utils import generate_state
 from .utils import revoke_token
 from .utils import is_token_revoked
+from django.shortcuts import redirect
+from django.http import HttpResponse
 
 class PublicKeyView(APIView):
     """
@@ -264,9 +266,24 @@ class Disable2FAView(APIView):
         user.is_2fa_enabled = False 
         user.save()
         return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK)  
-class OAuthRedirectView(APIView):
-    renderer_classes = [JSONRenderer]
 
+# class OAuthRedirectView(APIView):
+#     renderer_classes = [JSONRenderer]
+
+#     def get(self, request):
+#         state = generate_state()
+#         request.session['oauth_state'] = state
+#         params = {
+#             'client_id': settings.OAUTH_CLIENT_ID,
+#             'redirect_uri': settings.OAUTH_REDIRECT_URI,
+#             'response_type': 'code',
+#             'scope': 'public',
+#             'state': state,
+#         }
+#         url = f'https://api.intra.42.fr/oauth/authorize?{urlencode(params)}'
+#         return Response({"url": url}, status=status.HTTP_302_FOUND)
+    
+class OAuthRedirectView(APIView):    
     def get(self, request):
         state = generate_state()
         request.session['oauth_state'] = state
@@ -278,15 +295,60 @@ class OAuthRedirectView(APIView):
             'state': state,
         }
         url = f'https://api.intra.42.fr/oauth/authorize?{urlencode(params)}'
-        return Response({"url": url}, status=status.HTTP_302_FOUND)
-class OAuthCallbackView(APIView):
-    renderer_classes = [JSONRenderer]
+        return redirect(url)
+    
+# class OAuthCallbackView(APIView):
+#     renderer_classes = [JSONRenderer]
 
+#     def get(self, request):
+#         code = request.GET.get('code')
+#         received_state = request.GET.get('state')
+#         stored_state = request.session.get('oauth_state')
+
+#         # if received_state != stored_state:
+#         #     return Response({"error": "Invalid state, possible CSRF attack"},
+#         #                     status=status.HTTP_400_BAD_REQUEST)
+
+#         token_data = {
+#             'grant_type': 'authorization_code',
+#             'client_id': settings.OAUTH_CLIENT_ID,
+#             'client_secret': settings.OAUTH_CLIENT_SECRET,
+#             'code': code,
+#             'redirect_uri': settings.OAUTH_REDIRECT_URI,
+#         }
+
+#         url = 'https://api.intra.42.fr/oauth/token'
+#         response = requests.post(url, data=token_data)
+
+#         if response.status_code == 200:
+#             token_info = response.json()
+#             access_token = token_info['access_token']
+#             refresh_token = token_info['refresh_token']
+
+#             response = Response()
+#             response.set_cookie(
+#                 key='refreshToken',
+#                 value=refresh_token, 
+#                 httponly=True, 
+#                 secure=False,
+#                 path='/'
+#             )
+#             response.data = {
+#                 'success': 'true',
+#                 'accessToken': access_token
+#             }
+#             return response
+#         else:
+#             return Response({"error": "Failed to obtain access token"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class OAuthCallbackView(APIView):
     def get(self, request):
         code = request.GET.get('code')
         received_state = request.GET.get('state')
         stored_state = request.session.get('oauth_state')
 
+        # Validate the state if needed
         # if received_state != stored_state:
         #     return Response({"error": "Invalid state, possible CSRF attack"},
         #                     status=status.HTTP_400_BAD_REQUEST)
@@ -299,26 +361,43 @@ class OAuthCallbackView(APIView):
             'redirect_uri': settings.OAUTH_REDIRECT_URI,
         }
 
-        url = 'https://api.intra.42.fr/oauth/token'
-        response = requests.post(url, data=token_data)
+        token_url = 'https://api.intra.42.fr/oauth/token'
+        token_response = requests.post(token_url, data=token_data)
 
-        if response.status_code == 200:
-            token_info = response.json()
+        if token_response.status_code == 200:
+            token_info = token_response.json()
             access_token = token_info['access_token']
             refresh_token = token_info['refresh_token']
 
-            response = Response()
+            html_content = f"""
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>Redirecting...</title>
+            </head>
+            <body>
+                <script>
+                    localStorage.setItem('accessToken', "{access_token}");
+                    window.location.href = "/";
+                </script>
+                <p>Redirecting...</p>
+            </body>
+            </html>
+            """
+
+            response = HttpResponse(html_content, content_type="text/html")
             response.set_cookie(
                 key='refreshToken',
                 value=refresh_token, 
                 httponly=True, 
-                secure=False,
+                secure=True,  # Use True in production with HTTPS
                 path='/'
             )
-            response.data = {
-                'success': 'true',
-                'accessToken': access_token
-            }
             return response
+
         else:
-            return Response({"error": "Failed to obtain access token"}, status=status.HTTP_400_BAD_REQUEST)
+            return HttpResponse(
+                "Failed to obtain access token", 
+                status=status.HTTP_400_BAD_REQUEST
+            )

@@ -4,23 +4,62 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
 
-# User model manager
+# class UserManager(BaseUserManager):
+#     def create_user(self, username, password=None, **extra_fields):
+#         if not username:
+#             raise ValueError('Le champ username ne peut pas être vide')
+#         user = self.model(username=username, **extra_fields)
+#         user.set_password(password)
+#         user.save(using=self._db)
+#         return user
+
+#     def create_superuser(self, username, password=None, **extra_fields):
+#         extra_fields.setdefault('is_staff', True)
+#         extra_fields.setdefault('is_superuser', True)
+#         return self.create_user(username, password, **extra_fields)
+    
+#     class Meta:
+#         db_table = 'user_manager'
+
 class UserManager(BaseUserManager):
-    def create_user(self, username, password=None, **extra_fields):
+    def create_user(self, email, username=None, password=None, **extra_fields):
+        """
+        Creates and saves a User with the given email.
+        If username is not provided, it is generated (e.g., from the email).
+        If no password is provided (as in an OAuth registration), an unusable password is set.
+        """
+        if not email:
+            raise ValueError('Users must have an email address')
+        
+        email = self.normalize_email(email)
+        
+        # Generate a username if one is not provided
         if not username:
-            raise ValueError('Le champ username ne peut pas être vide')
-        user = self.model(username=username, **extra_fields)
-        user.set_password(password)
+            username = email.split('@')[0]
+            # Optionally, add logic here to ensure the username is unique.
+        
+        user = self.model(email=email, username=username, **extra_fields)
+        
+        if password:
+            user.set_password(password)  # This properly hashes the password.
+        else:
+            user.set_unusable_password()  # This disables password-based login.
+        
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, password=None, **extra_fields):
+    def create_superuser(self, email, username, password, **extra_fields):
+        """
+        Creates and saves a superuser.
+        """
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(username, password, **extra_fields)
-    
-    class Meta:
-        db_table = 'user_manager'
+        
+        if not password:
+            raise ValueError('Superusers must have a password.')
+        
+        return self.create_user(email, username, password, **extra_fields)
+
     
 # User model (inherits Django user model)
 class User(AbstractBaseUser):
@@ -33,16 +72,11 @@ class User(AbstractBaseUser):
     username = models.CharField(
         max_length=50, 
         unique=True,
-        validators=[MinLengthValidator(3)]
-    )
-    password = models.CharField( # Utilisation d'un mot de passe hashé -> SUPPRIMER pour laisser django gérer hashage ou utiliser set_password()
-        max_length=128, 
-        validators=[MinLengthValidator(5)]
+        validators=[MinLengthValidator(3)],
+        blank=True
     )
     email = models.EmailField(
         max_length=254,
-        blank=True,
-        null=True,
         unique=True,
     )
     avatar = models.ImageField(
@@ -70,18 +104,20 @@ class User(AbstractBaseUser):
         blank=True
     )
     
-    # Champs d'authentification standard de Django
+    # Standard Django auth fields
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
 
     objects = UserManager()
 
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['password']
+    # Use email as the unique identifier for authentication.
+    USERNAME_FIELD = "email"
+    # When creating a superuser using Django’s CLI, it will prompt for a username.
+    REQUIRED_FIELDS = ["username"]
 
     def __str__(self):
-        return self.username
+        return self.username or self.email
 
     class Meta:
         db_table = 'users'

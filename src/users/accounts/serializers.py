@@ -209,28 +209,14 @@ class UserRegistrationOauthSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['oauth', 'email']
-        extra_kwargs = {
-            'username': {
-                'min_length': 2, 
-                'max_length': 50,
-                'label': 'Username'
-            },
-            'email': {
-                'min_length': 5, 
-                'max_length': 100,
-                'label': 'Email'
-            },
-        }
 
     def validate(self, data):
         if data['oauth'] != True:
-            raise serializers.ValidationError("No OAuth registration.")
+            raise serializers.ValidationError("No OAuth 2.0 registration.")
         return data
 
     def create(self, validated_data):
-        user = User.objects.create_user(
-            email=validated_data['email']
-        )
+        user = User.objects.create_user(email=validated_data['email'])
         user.save()
         return user
 

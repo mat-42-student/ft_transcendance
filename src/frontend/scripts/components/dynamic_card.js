@@ -1,7 +1,10 @@
 import { handleHashChange, initAuthFormListeners } from './auth_form.js';
+import { waitForToken } from '../api/auth.js';
 import { enroll2fa } from '../api/auth.js';
 import { verify2fa } from '../api/auth.js';
 import { handleOAuth } from '../api/auth.js';
+import { state } from '../main.js';
+
 
 const dynamicCardRoutes = {
     'auth': './partials/cards/auth.html',
@@ -70,38 +73,95 @@ export async function initDynamicCard(routeKey) {
             }
 
             // OAuth 2.0
-            const oauthButton = document.getElementById('oauth-submit');
+            // const oauthButton = document.getElementById('oauth-submit');
             
-            if (oauthButton) {
-                oauthButton.addEventListener('click', () => {
-                    handleOAuth();
-                });
-            }
+            // if (oauthButton) {
+            //     oauthButton.addEventListener('click', () => {
+            //         handleOAuth();
+            //     });
+            // }
 
-            document.addEventListener('DOMContentLoaded', () => {
-                    console.log('HI :)'); // DEBUG
-                    const params = new URLSearchParams(window.location.search);
-                    const code = params.get('code');
-                    const state = params.get('state');
-                  
-                    if (code && state) {
-                      const callbackUrl = `https://localhost:3000/api/v1/auth/oauth/callback?code=${code}&state=${state}`;
-                  
-                      fetch(callbackUrl)
-                        .then(response => response.json())
-                        .then(data => {
-                          if (data.accessToken) {
-                            sessionStorage.setItem('accessToken', data.accessToken);
-                            window.history.replaceState({}, document.title, window.location.pathname);
-                            console.log("OAuth success, token stored in localStorage!");
-                          } else {
-                            console.error("No accessToken returned from backend", data);
-                          }
-                        })
-                        .catch(err => console.error("Error exchanging code for token:", err));
+            // OAuth 2.0
+            const oauthButton = document.getElementById('oauth-submit');
+            if (oauthButton) {
+                oauthButton.addEventListener('click', async () => {
+                    handleOAuth();
+                    try {
+                        const token = await waitForToken();
+                        state.client.accessToken = token;
+                        console.log('Access token loaded into state:', token);
+                    } catch (error) {
+                        console.error('Failed to load access token in time:', error);
                     }
                 });
+            }
+            
 
+
+
+            // async function onDOMContentLoaded() {
+            //     console.log("I'm in!");
+            //     const params = new URLSearchParams(window.location.search);
+            //     const code = params.get('code');
+            //     const oauthState = params.get('state'); // Keep state as a string for CSRF if needed
+                
+            //     if (code && oauthState) {
+            //         try {
+            //             // Exchange the code for an access token
+            //             const callbackUrl = `https://localhost:3000/api/v1/auth/oauth/callback?code=${code}&state=${oauthState}`;
+            //             const tokenResponse = await fetch(callbackUrl);
+            //             const tokenData = await tokenResponse.json();
+                        
+            //             if (tokenData.accessToken) {
+            //             state.client.accessToken = tokenData.accessToken;
+            //             // Remove query parameters from the URL
+            //             window.history.replaceState({}, document.title, window.location.pathname);
+                    
+            //             // Fetch user's info from the OAuth provider
+            //             const meResponse = await fetch("https://api.intra.42.fr/v2/me", {
+            //                 method: 'GET', // Check if GET is appropriate; some providers might require POST.
+            //                 headers: {
+            //                 'Authorization': `Bearer ${state.client.accessToken}`
+            //                 }
+            //             });
+            //             const fetchedData = await meResponse.json();
+            //             console.log(fetchedData);
+                    
+            //             const userEmail = fetchedData.email;
+            //             if (!userEmail) {
+            //                 throw new Error('Email not found in fetched data');
+            //             }
+                    
+            //             // Create the user
+            //             const userResponse = await fetch("https://localhost:3000/api/v1/users/register/oauth/", {
+            //                 method: 'POST',
+            //                 headers: {
+            //                     'Content-Type': 'application/json'
+            //                 },
+            //                 body: JSON.stringify({
+            //                     oauth: true,
+            //                     email: userEmail
+            //                 })
+            //             });
+            //             const userData = await userResponse.json();
+            //             console.log('User registered:', userData);
+            //             } else {
+            //             console.error("No accessToken returned from backend", tokenData);
+            //             }
+            //         } catch (error) {
+            //             console.error("Error during OAuth flow:", error);
+            //         }
+            //     }
+            // }
+
+            // // Check if DOM is already loaded
+            // if (document.readyState === 'loading') {
+            //     document.addEventListener('DOMContentLoaded', onDOMContentLoaded);
+            // } else {
+            //     // DOM is already ready, so run your code directly.
+            //     onDOMContentLoaded();
+            // }
+  
             
             // Gestion des clics sur les liens
             const authLinks = document.querySelectorAll('#auth-form a[data-action]');
