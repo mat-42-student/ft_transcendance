@@ -2,10 +2,11 @@ from json import dumps, loads
 from channels.generic.websocket import AsyncJsonWebsocketConsumer # type: ignore
 from redis.asyncio import from_url
 from asyncio import create_task, sleep as asleep
-from .consts import REDIS_GROUPS, JWT_PUBLIC_KEY
+from .consts import REDIS_GROUPS
 from datetime import datetime, timezone
 from urllib.parse import parse_qs
 import jwt
+import requests
 
 class GatewayConsumer(AsyncJsonWebsocketConsumer):
     """Main websocket"""
@@ -16,7 +17,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         self.get_user_infos()
         if self.consumer_id is None:
             print("User is not authenticated. Aborting")
-            await self.close(code=4401)
+            await self.close(code=1002)
             return
         try:
             await self.accept()
@@ -42,11 +43,9 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             raise Exception
 
     async def disconnect(self, close_code):
-        # If user was in a game, gameSocket will instantly set status to 'ingame' wether they're offline
-        # So we just wait a bit to let mainSocket have the last word
         if not self.connected:
             return
-        await asleep(0.5)
+        # await asleep(0.5)
         await self.send_online_status('offline')
         await self.send_mmaking_disconnection()
         await self.pubsub.unsubscribe() # unsubscribe all channels
@@ -63,11 +62,13 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             return None
 
     def checkAuth(self):
-        self.public_key = JWT_PUBLIC_KEY
+        try:
+            self.get_public_key()
+        except Exception as e:
+            print(e)
+            return
         params = parse_qs(self.scope['query_string'].decode())
-        # print (f"params {params}")
         self.token = params.get('t', [None])[0]
-        # print (f"token {self.token}")
         try:
             payload = jwt.decode(self.token, self.public_key, algorithms=['RS256'])
             return payload
@@ -76,6 +77,16 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         except jwt.InvalidTokenError as e:
             print(e)
         return None
+
+    def get_public_key(self):
+        try:
+            response = requests.get(f"http://auth-service:8000/api/v1/auth/public-key/")
+            if response.status_code == 200:
+                self.public_key = response.json().get("public_key") # Ou response.json() si c'est un JSON
+            else:
+                raise RuntimeError("Impossible de récupérer la clé publique JWT")
+        except RuntimeError as e:
+            raise(e)
 
     async def receive_json(self, data):
         """Data incoming from client ws => publish to concerned redis group.\n

@@ -17,6 +17,8 @@ state.client.setState(state);
 document.addEventListener('DOMContentLoaded', () => {
     const homeButton = document.getElementById('btn-home');
     const profileButton = document.getElementById('btn-profile');
+    const refreshButton = document.getElementById('btn-refresh');
+    const playButton = document.getElementById('btn-play');
     const requestsButton = document.querySelector('.btn-friend-requests');
     const friendButtons = document.querySelectorAll('.friend-item');
 
@@ -37,6 +39,19 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 navigateTo('#profile');
             }
+        });
+    }
+    if (refreshButton) {
+        refreshButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+            state.client.globalRender();
+        });
+    }
+    if (playButton) {
+        playButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (state.gameApp)
+                state.gameApp.launchGameSocket();
         });
     }
     const closeButton = document.getElementById('close-dynamic-card');

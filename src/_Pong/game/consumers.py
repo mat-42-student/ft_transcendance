@@ -1,11 +1,12 @@
 import json
 import jwt
+import requests
 from asyncio import create_task, sleep as asleep
 from redis.asyncio import from_url
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from urllib.parse import parse_qs
 from .Game import Game
-from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT, JWT_PUBLIC_KEY
+from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT
 
 class PongConsumer(AsyncJsonWebsocketConsumer):
 
@@ -20,13 +21,20 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         self.side = None
         self.game_mode = None
         self.room_group_name = None
+        self.public_key = None
+        self.redis_client = None
+        self.pubsub = None
 
     async def connect(self):
         self.init()
-        await self.get_user_infos()
-        await self.join_redis_channels()
-        await self.check_game_info()
+        self.get_user_infos()
+        if self.player_id is None:
+            print("User is not authenticated. Aborting")
+            await self.close(code=1002)
+            return
         try:
+            await self.join_redis_channels()
+            await self.check_game_info()
             await self.accept()
             await self.send_online_status('ingame')
             self.room_group_name = f"game_{self.game_id}"
@@ -34,18 +42,22 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         except Exception as e:
             print(e)
 
-    async def get_user_infos(self):
-        data = self.checkAuth()
-        if data:
-            self.player_id =  data.get('id')
-            self.player_name = data.get('username')
-        if self.player_id is None:
-            print("Invalid token. Aborting")
-            await self.close(code=4401)
-        print(f"User {self.player_id} is authenticated as {self.player_name}")
+    def get_user_infos(self):
+        try:
+            data = self.checkAuth()
+            if data:
+                self.player_id =  data.get('id')
+                self.player_name = data.get('username')
+                print(f"User {self.player_id} is authenticated as {self.player_name}")
+        except RuntimeError as e:
+            print(e)
+            return
 
     def checkAuth(self):
-        self.public_key = JWT_PUBLIC_KEY
+        try:
+            self.get_public_key()
+        except RuntimeError as e:
+            raise e
         params = parse_qs(self.scope['query_string'].decode())
         self.token = params.get('t', [None])[0]
         try:
@@ -56,15 +68,25 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         except jwt.InvalidTokenError as e:
             print(e)
         return None
+    
+    def get_public_key(self):
+        try:
+            response = requests.get(f"http://auth-service:8000/api/v1/auth/public-key/")
+            if response.status_code == 200:
+                self.public_key = response.json().get("public_key") # Ou response.json() si c'est un JSON
+            else:
+                raise RuntimeError("Impossible de récupérer la clé publique JWT")
+        except RuntimeError as e:
+            print(e)
+            raise(e)
 
     async def join_redis_channels(self):
         try:
             self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
-            await self.pubsub.subscribe('info_mmaking')
-            # await self.pubsub.subscribe('deep_mmaking')
+            await self.pubsub.subscribe()  # Subscribe all channels
         except Exception as e:
-            print(e)
+            raise Exception
 
     async def check_game_info(self):
         # ask mmaking for expected players in game_id
@@ -76,21 +98,20 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         while expected_players is None and attempts < 5:
             attempts += 1
             expected_players = await self.redis_client.get(f"game_{self.game_id}_players")
-            if expected_players is None:
-                await asleep(0.5)
+            await asleep(0.5)
         if expected_players is None:
             print("No answer from mmaking")
-            await self.close(code=4401)
+            # await self.close(code=1002) # activate when mmaking will answer 
             return
         try:
             expected_players = json.loads(expected_players)
         except json.JSONDecodeError as e:
             print("Invalid JSON:", e)
-            await self.close(code=4401)
+            await self.close(code=1002)
             return
         if self.player_id not in expected_players:
             print("Unexpected player")
-            await self.close(code=4401)        
+            await self.close(code=1002)        
 
     async def send_online_status(self, status):
         """Send all friends our status"""
@@ -122,21 +143,16 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         if data["action"] == "info":
             return await self.send(json.dumps(data))
         if data["action"] == "wannaplay!":
-            return await self.wannaplay(data["from"])
+            return await self.wannaplay()
 
-    async def wannaplay(self, player):
+    async def wannaplay(self):
         self.nb_players += 1
-        if self.player_id is None:
-            self.player_id = player
-        allgood = await self.get_and_check_info_from_mmaking(player)
-        if not allgood:
-            return
         print(f"{self.player_id} wannaplay on channel {self.room_group_name}. Currently {self.nb_players} players in lobby")
         if self.nb_players != 2 or self.in_game:
             return
         self.master = True
         print(f"{YELLOW}Found two players. Master is {self.player_id}{RESET}")
-        self.game = Game(self.game_id, self.player_id, player)
+        self.game = Game(self.game_id, self.player_id, self.player_name)
         json_data = json.dumps({
             "action" : "init",
             "dir" : self.game.ball_spd,

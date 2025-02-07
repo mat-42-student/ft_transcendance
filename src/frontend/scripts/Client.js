@@ -34,14 +34,18 @@ export class Client{
         this.renderProfileBtn();
     }
 
-    // globalRender() {
-	// 	this.renderProfileBtn();
-	// 	this.state.socialApp.displayFriendsList();
-	// 	this.state.chatApp.renderChat();
-	// }
+	globalRender() {
+		this.renderProfileBtn();
+		if (this.state.socialApp)
+			this.state.socialApp.fetchFriends();
+		if (this.state.chatApp)
+			this.state.chatApp.renderChat();
+	}
 
 	renderProfileBtn(){
-        const label = this.state.client.userName || "Sign in";
+		let label =  "Sign in";
+		if (this.state.client.userName)
+        	label = this.state.client.userName + '(' + this.state.client.userId + ')';
     	document.getElementById('btn-profile').innerText = label;
 	}
 

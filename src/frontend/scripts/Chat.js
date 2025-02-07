@@ -30,9 +30,8 @@ export class ChatApp{
 
     incomingMsg(data) {
         const friend = data.body.from;
-        if (!this.storedMessages.has(friend)) {
+        if (!this.storedMessages.has(friend))
             this.storedMessages.set(friend, []);
-        }
         this.storeIncomingMessage(data);
         if (this.activeChatUserId == friend)
             this.postFriendMessage(data.body.message);
@@ -119,7 +118,7 @@ export class ChatApp{
         const friend = state.socialApp.getFriend(this.activeChatUserId);
         if (!friend)
             return;
-        this.chatUser.innerText = friend.username + this.activeChatUserId;
+        this.chatUser.innerText = friend.username + '(' + this.activeChatUserId + ')';
         this.noUnreadMessage();
         this.loadHistory();
     }

@@ -1,43 +1,32 @@
 import { state } from './main.js';
-import { LEFT_PLAYER, RIGHT_PLAYER, PADWIDTH } from 'consts.js';
 export class Game {
 
-    constructor() {
-        this.opponent = null;
-        this.socket = null;
-        this.game_id = null;
-        this.ball = [];
-        this.playing = false;
-        this.KeyStillDown = false;
-        this.move[LEFT_PLAYER] = this.move[RIGHT_PLAYER] = 0;
-        this.size[LEFT_PLAYER] = this.size[RIGHT_PLAYER] = PADWIDTH;        
-    }
 
-    setGameId(id) { this.game_id = id; }
+    constructor() {
+        this.socket = null;
+    }
 
     launchGameSocket() {
         let socketURL = "wss://" + window.location.hostname + ":3000/game/4/?t=" + state.client.accessToken;
         this.socket = new WebSocket(socketURL);
-    
-        socket.onerror = async function(e) {
+        this.socket.onerror = async function(e) {
             console.error(e.message);
         };
     
-        socket.onopen = async function(e) {
+        this.socket.onopen = async function(e) {
             await this.send(JSON.stringify({
-                'from': player_name,
+                // 'from': state.client.userName,
                 'action' :"wannaplay!",
                 })
             );
         };
         
-        socket.onclose = async function(e) {
-            this.close();
+        this.socket.onclose = async function(e) {
         };
     
-        socket.onmessage = async function(e) {
-            data = JSON.parse(e.data);
-            // console.log('data = ' + data);
+        this.socket.onmessage = async function(e) {
+            let data = JSON.parse(e.data);
+            console.log('data = ' + data);
             if (data.action == "info") {
                 console.log('info');
             }

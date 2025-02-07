@@ -81,6 +81,7 @@ class Command(BaseCommand):
                 "status": "offline"
             }))
         self.user_status[user_id] = status # Update current user status
+        print(f"User {user_id} is now {status}")
 
     async def get_info_process(self, data):
         user_id = data.get('user_id')
