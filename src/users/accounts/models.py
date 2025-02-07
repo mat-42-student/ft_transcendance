@@ -4,62 +4,23 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
 
-# class UserManager(BaseUserManager):
-#     def create_user(self, username, password=None, **extra_fields):
-#         if not username:
-#             raise ValueError('Le champ username ne peut pas être vide')
-#         user = self.model(username=username, **extra_fields)
-#         user.set_password(password)
-#         user.save(using=self._db)
-#         return user
-
-#     def create_superuser(self, username, password=None, **extra_fields):
-#         extra_fields.setdefault('is_staff', True)
-#         extra_fields.setdefault('is_superuser', True)
-#         return self.create_user(username, password, **extra_fields)
-    
-#     class Meta:
-#         db_table = 'user_manager'
-
+# User model manager
 class UserManager(BaseUserManager):
-    def create_user(self, email, username=None, password=None, **extra_fields):
-        """
-        Creates and saves a User with the given email.
-        If username is not provided, it is generated (e.g., from the email).
-        If no password is provided (as in an OAuth registration), an unusable password is set.
-        """
-        if not email:
-            raise ValueError('Users must have an email address')
-        
-        email = self.normalize_email(email)
-        
-        # Generate a username if one is not provided
+    def create_user(self, username, password=None, **extra_fields):
         if not username:
-            username = email.split('@')[0]
-            # Optionally, add logic here to ensure the username is unique.
-        
-        user = self.model(email=email, username=username, **extra_fields)
-        
-        if password:
-            user.set_password(password)  # This properly hashes the password.
-        else:
-            user.set_unusable_password()  # This disables password-based login.
-        
+            raise ValueError('Le champ username ne peut pas être vide')
+        user = self.model(username=username, **extra_fields)
+        user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, username, password, **extra_fields):
-        """
-        Creates and saves a superuser.
-        """
+    def create_superuser(self, username, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        
-        if not password:
-            raise ValueError('Superusers must have a password.')
-        
-        return self.create_user(email, username, password, **extra_fields)
-
+        return self.create_user(username, password, **extra_fields)
+    
+    class Meta:
+        db_table = 'user_manager'
     
 # User model (inherits Django user model)
 class User(AbstractBaseUser):
@@ -70,13 +31,18 @@ class User(AbstractBaseUser):
     ]
     
     username = models.CharField(
-        max_length=50, 
+        max_length=50,
         unique=True,
-        validators=[MinLengthValidator(3)],
-        blank=True
+        validators=[MinLengthValidator(3)]
+    )
+    password = models.CharField( # Utilisation d'un mot de passe hashé -> SUPPRIMER pour laisser django gérer hashage ou utiliser set_password()
+        max_length=128, 
+        validators=[MinLengthValidator(5)]
     )
     email = models.EmailField(
         max_length=254,
+        blank=True,
+        null=True,
         unique=True,
     )
     avatar = models.ImageField(
@@ -103,25 +69,64 @@ class User(AbstractBaseUser):
         null=True,
         blank=True
     )
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
     
-    # Standard Django auth fields
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
-    is_superuser = models.BooleanField(default=False)
+    # Champs d'authentification standard de Django
+    is_active = models.BooleanField(
+        default=True
+    )
+    is_staff = models.BooleanField(
+        default=False
+    )
+    is_superuser = models.BooleanField(
+        default=False
+    )
 
     objects = UserManager()
 
-    # Use email as the unique identifier for authentication.
-    USERNAME_FIELD = "email"
-    # When creating a superuser using Django’s CLI, it will prompt for a username.
-    REQUIRED_FIELDS = ["username"]
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['password']
 
     def __str__(self):
-        return self.username or self.email
+        return self.username
 
     class Meta:
         db_table = 'users'
-    
+
+# ft42Profile model
+class Ft42Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='ft42_profile')
+
+    ft_id = models.IntegerField(
+        unique=True
+    )
+    access_token = models.CharField(
+        max_length=255, blank=True, null=True
+    )
+    refresh_token = models.CharField(
+        max_length=255, blank=True, null=True
+    )
+    login = models.CharField(
+        max_length=100, blank=True
+    )
+    email = models.EmailField(
+        blank=True, null=True
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"{self.user.username} - 42 ID: {self.ft_id}"
+
 # BlockedUser model -> personnalisé pour gérer indexation dans db (améliore perf)
 class BlockedUser(models.Model):
     from_user = models.ForeignKey(

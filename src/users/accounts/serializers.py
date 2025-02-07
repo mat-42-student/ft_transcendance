@@ -205,20 +205,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user.save()
         return user
     
-class UserRegistrationOauthSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['oauth', 'email']
-
-    def validate(self, data):
-        if data['oauth'] != True:
-            raise serializers.ValidationError("No OAuth 2.0 registration.")
-        return data
-
-    def create(self, validated_data):
-        user = User.objects.create_user(email=validated_data['email'])
-        user.save()
-        return user
 
 
 # Relationship 'detail' serializer

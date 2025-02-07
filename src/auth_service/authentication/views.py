@@ -17,18 +17,14 @@ import qrcode
 from qrcode.constants import ERROR_CORRECT_L
 from io import BytesIO
 import base64
-import secrets
 from .utils import generate_state
 from .utils import revoke_token
 from .utils import is_token_revoked
 from django.shortcuts import redirect
+from .models import Ft42Profile
 from django.http import HttpResponse
 
 class PublicKeyView(APIView):
-    """
-    Return a public key to the client, and let him choose if he want it as oneline or not.
-    i.e. GET /public-key/?form=oneline
-    """
     def get(self, request):
         public_key = """
         -----BEGIN PUBLIC KEY-----
@@ -266,24 +262,8 @@ class Disable2FAView(APIView):
         user.is_2fa_enabled = False 
         user.save()
         return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK)  
-
-# class OAuthRedirectView(APIView):
-#     renderer_classes = [JSONRenderer]
-
-#     def get(self, request):
-#         state = generate_state()
-#         request.session['oauth_state'] = state
-#         params = {
-#             'client_id': settings.OAUTH_CLIENT_ID,
-#             'redirect_uri': settings.OAUTH_REDIRECT_URI,
-#             'response_type': 'code',
-#             'scope': 'public',
-#             'state': state,
-#         }
-#         url = f'https://api.intra.42.fr/oauth/authorize?{urlencode(params)}'
-#         return Response({"url": url}, status=status.HTTP_302_FOUND)
     
-class OAuthRedirectView(APIView):    
+class OAuthLoginView(APIView):    
     def get(self, request):
         state = generate_state()
         request.session['oauth_state'] = state
@@ -297,61 +277,13 @@ class OAuthRedirectView(APIView):
         url = f'https://api.intra.42.fr/oauth/authorize?{urlencode(params)}'
         return redirect(url)
     
-# class OAuthCallbackView(APIView):
-#     renderer_classes = [JSONRenderer]
-
-#     def get(self, request):
-#         code = request.GET.get('code')
-#         received_state = request.GET.get('state')
-#         stored_state = request.session.get('oauth_state')
-
-#         # if received_state != stored_state:
-#         #     return Response({"error": "Invalid state, possible CSRF attack"},
-#         #                     status=status.HTTP_400_BAD_REQUEST)
-
-#         token_data = {
-#             'grant_type': 'authorization_code',
-#             'client_id': settings.OAUTH_CLIENT_ID,
-#             'client_secret': settings.OAUTH_CLIENT_SECRET,
-#             'code': code,
-#             'redirect_uri': settings.OAUTH_REDIRECT_URI,
-#         }
-
-#         url = 'https://api.intra.42.fr/oauth/token'
-#         response = requests.post(url, data=token_data)
-
-#         if response.status_code == 200:
-#             token_info = response.json()
-#             access_token = token_info['access_token']
-#             refresh_token = token_info['refresh_token']
-
-#             response = Response()
-#             response.set_cookie(
-#                 key='refreshToken',
-#                 value=refresh_token, 
-#                 httponly=True, 
-#                 secure=False,
-#                 path='/'
-#             )
-#             response.data = {
-#                 'success': 'true',
-#                 'accessToken': access_token
-#             }
-#             return response
-#         else:
-#             return Response({"error": "Failed to obtain access token"}, status=status.HTTP_400_BAD_REQUEST)
-
-
 class OAuthCallbackView(APIView):
+    renderer_classes = [JSONRenderer]
+
     def get(self, request):
         code = request.GET.get('code')
-        received_state = request.GET.get('state')
-        stored_state = request.session.get('oauth_state')
-
-        # Validate the state if needed
-        # if received_state != stored_state:
-        #     return Response({"error": "Invalid state, possible CSRF attack"},
-        #                     status=status.HTTP_400_BAD_REQUEST)
+        if not code:
+            return Response({"error": "Missing code"}, status=status.HTTP_400_BAD_REQUEST)
 
         token_data = {
             'grant_type': 'authorization_code',
@@ -360,44 +292,90 @@ class OAuthCallbackView(APIView):
             'code': code,
             'redirect_uri': settings.OAUTH_REDIRECT_URI,
         }
-
         token_url = 'https://api.intra.42.fr/oauth/token'
         token_response = requests.post(token_url, data=token_data)
 
-        if token_response.status_code == 200:
-            token_info = token_response.json()
-            access_token = token_info['access_token']
-            refresh_token = token_info['refresh_token']
+        if token_response.status_code != 200:
+            return Response({"error": "Failed token exchange"}, status=status.HTTP_400_BAD_REQUEST)
 
-            html_content = f"""
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <title>Redirecting...</title>
-            </head>
-            <body>
-                <script>
-                    localStorage.setItem('accessToken', "{access_token}");
-                    window.location.href = "/";
-                </script>
-                <p>Redirecting...</p>
-            </body>
-            </html>
-            """
+        token_info = token_response.json()
+        access_token = token_info['access_token']
+        refresh_token = token_info['refresh_token']
 
-            response = HttpResponse(html_content, content_type="text/html")
-            response.set_cookie(
-                key='refreshToken',
-                value=refresh_token, 
-                httponly=True, 
-                secure=True,  # Use True in production with HTTPS
-                path='/'
+        me_url = 'https://api.intra.42.fr/v2/me'
+        headers = {"Authorization": f"Bearer {access_token}"}
+        profile_resp = requests.get(me_url, headers=headers)
+        if profile_resp.status_code != 200:
+            return Response({"error": "Could not fetch 42 user info"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        profile_data = profile_resp.json()
+        ft_id = profile_data["id"]
+        ft_email = profile_data.get("email", "")
+        ft_login = profile_data.get("login", "")
+
+        try:
+            ft_profile = Ft42Profile.objects.get(ft_id=ft_id)
+            user = ft_profile.user
+        except Ft42Profile.DoesNotExist:
+            user = User.objects.create_user(
+                username=ft_login,
+                email=ft_email,
+                password=None
             )
-            return response
-
-        else:
-            return HttpResponse(
-                "Failed to obtain access token", 
-                status=status.HTTP_400_BAD_REQUEST
+            ft_profile = Ft42Profile.objects.create(
+                user=user,
+                ft_id=ft_id
             )
+
+        ft_profile.access_token = access_token
+        ft_profile.refresh_token = refresh_token
+        ft_profile.login = ft_login
+        ft_profile.email = ft_email
+        ft_profile.save()
+
+        access_payload = {
+            'id': user.id,
+            'username': user.username,
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
+            'iat': datetime.datetime.now(datetime.timezone.utc),
+        }
+
+        refresh_payload = {
+            'id': user.id,
+            'username': user.username,
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
+            'iat': datetime.datetime.now(datetime.timezone.utc),
+        }
+
+        access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+        refresh_token = jwt.encode(refresh_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+
+        html_content = f"""
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Redirecting...</title>
+                </head>
+                <body>
+                    <script>
+                        localStorage.setItem('accessToken', "{access_token}");
+                        window.location.href = "/profile";
+                    </script>
+                    <p>Redirecting to profile...</p>
+                </body>
+                </html>
+        """
+
+        response = HttpResponse(html_content, content_type="text/html")
+
+        response.set_cookie(
+            key='refreshToken',
+            value=refresh_token, 
+            httponly=True,
+            samesite='None',
+            secure=True,
+            path='/'
+        )
+
+        return response

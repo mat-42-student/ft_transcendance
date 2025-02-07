@@ -206,8 +206,3 @@ export function verify2fa() {
     })
     .catch(error => console.error('Error:', error));
 }
-
-// OAuth 2.0
-export async function handleOAuth() {
-    window.location.href = 'https://localhost:3000/api/v1/auth/oauth/redirect/';
-}

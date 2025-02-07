@@ -31,8 +31,8 @@ class User(AbstractBaseUser):
     ]
     
     username = models.CharField(
-        max_length=50, 
-        unique=True, 
+        max_length=50,
+        unique=True,
         validators=[MinLengthValidator(3)]
     )
     password = models.CharField( # Utilisation d'un mot de passe hashé -> SUPPRIMER pour laisser django gérer hashage ou utiliser set_password()
@@ -69,11 +69,23 @@ class User(AbstractBaseUser):
         null=True,
         blank=True
     )
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
     
     # Champs d'authentification standard de Django
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
-    is_superuser = models.BooleanField(default=False)
+    is_active = models.BooleanField(
+        default=True
+    )
+    is_staff = models.BooleanField(
+        default=False
+    )
+    is_superuser = models.BooleanField(
+        default=False
+    )
 
     objects = UserManager()
 
@@ -85,7 +97,36 @@ class User(AbstractBaseUser):
 
     class Meta:
         db_table = 'users'
-    
+
+# ft42Profile model
+class Ft42Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='ft42_profile')
+
+    ft_id = models.IntegerField(
+        unique=True
+    )
+    access_token = models.CharField(
+        max_length=255, blank=True, null=True
+    )
+    refresh_token = models.CharField(
+        max_length=255, blank=True, null=True
+    )
+    login = models.CharField(
+        max_length=100, blank=True
+    )
+    email = models.EmailField(
+        blank=True, null=True
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"{self.user.username} - 42 ID: {self.ft_id}"
+
 # BlockedUser model -> personnalisé pour gérer indexation dans db (améliore perf)
 class BlockedUser(models.Model):
     from_user = models.ForeignKey(

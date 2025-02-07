@@ -10,6 +10,6 @@ urlpatterns = [
     path('2fa/enroll/', Enroll2FAView.as_view(), name='2fa-enroll'),
     path('2fa/verify/', Verify2FAView.as_view(), name='2fa-verify'),
     path('2fa/disable/', Disable2FAView.as_view(), name='2fa-disable'),
-    path('oauth/redirect/', OAuthRedirectView.as_view(), name='oauth-redirect'),
+    path('oauth/login/', OAuthLoginView.as_view(), name='oauth-login'),
     path('oauth/callback/', OAuthCallbackView.as_view(), name='oauth-callback'),
 ]
