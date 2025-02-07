@@ -25,7 +25,7 @@ logs/
 
 # Jlecorne
 .DS_Store
-src/Makefile
+# src/Makefile
 src/my_compose.yml
 src/my_frontend
 src/media

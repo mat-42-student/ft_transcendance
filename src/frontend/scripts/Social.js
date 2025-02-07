@@ -35,7 +35,7 @@ export class SocialApp{
                     return rel.from_user.id === state.client.userId ? rel.to_user : rel.from_user;
                 });
                 this.friendlist = new Map(friends.map(user => [user.id, user]));
-                state.socialApp.displayFriendsList();
+                this.displayFriendsList();
             } else {
                 console.error("Error while loading friendlist :", response.status);
             }

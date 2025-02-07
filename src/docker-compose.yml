@@ -1,4 +1,11 @@
 services:
+
+  # django-base:
+  #     build:
+  #       context: .
+  #       dockerfile: Dockerfile.django
+  #     image: django-base
+
   auth-service:
     container_name: auth-service
     build:
@@ -161,7 +168,7 @@ services:
 
   postgres:
     container_name: postgres
-    image: postgres
+    image: postgres:alpine
     expose:
       - "5432"
     volumes:
