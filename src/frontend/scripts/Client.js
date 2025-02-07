@@ -59,4 +59,55 @@ export class Client{
 		this.state.client.userId = parsedPayload.id;
 		this.state.client.userName = parsedPayload.username;
 	}
+
+	updateProfilePage() {
+		const avatarElement = document.querySelector('.profile-avatar');
+		const usernameElement = document.querySelector('.profile-username');
+		const statusElement = document.querySelector('.profile-status');
+	
+		if (avatarElement) {
+			avatarElement.src = this.avatar ? `/media/avatars/${this.avatar}` : '/media/avatars/default.png';
+		}
+	
+		if (usernameElement) {
+			usernameElement.textContent = this.userName || 'Unknown User';
+		}
+	
+		if (statusElement) {
+			statusElement.classList.remove('online', 'offline', 'ingame', 'pending');
+			statusElement.classList.add(this.status || 'online');
+	
+			const messageElement = statusElement.querySelector('.message');
+			if (messageElement) {
+				messageElement.textContent = this.status.charAt(0).toUpperCase() + this.status.slice(1);
+			}
+		}
+	}
+
+	async fetchUserProfile() {
+		if (!this.accessToken) {
+			console.error("No access token found.");
+			return;
+		}
+	
+		try {
+			const response = await fetch(`/api/v1/users/${this.userId}/`, {
+				headers: {
+					'Authorization': `Bearer ${this.accessToken}`,
+				},
+			});
+	
+			if (response.ok) {
+				const data = await response.json();
+				this.userName = data.username;
+				this.avatar = data.avatar;
+				this.status = data.status;
+				this.updateProfilePage();
+			} else {
+				console.error("Failed to fetch user profile:", response.status);
+			}
+		} catch (error) {
+			console.error("Error fetching user profile:", error);
+		}
+	}
 }
