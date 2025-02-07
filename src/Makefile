@@ -21,6 +21,13 @@ build:
 run:
 	docker compose up
 
+start:
+	docker compose start
+	docker compose logs -f
+
+stop:
+	docker compose stop
+
 clean:
 	docker compose down -v
 	docker system prune -a -f
