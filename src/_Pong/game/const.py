@@ -1,3 +1,5 @@
+import requests
+
 RESET = "\033[0m"
 BLUE = "\033[1;34m"
 GREEN = "\033[1;32m"
@@ -16,4 +18,8 @@ RADIUS = 20
 FPS = 60
 MAX_SCORE = 1
 
-JWT_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnvGKZgRN72lJMBIMq8MtxHTjKzJV/3WpHj52TiVYhD43Z+Z720BH257gqBni5Vpsph96EhBHmiDqDuJKr1x5KWz1tDG2A8RQszEPfpryTRXZKnv33wMfLo+h9qo6yXvh8BT9It/zk5mNoqugTmH+oBo7qr8emuBFXXoHIPF+AhcCpFoSETuTBe3ufAlT8v2LjKdw/NDzxm3KBd7s/3nA/+euQ97gWB1ZlwHFC9gb0e5zCW6Clh7YCPEQ1OJ/YmzUsowVObQYqrPh0SLuv1qmUqLdFdEYr1wO0jYPiZeDP6Hf8oH2s6dVoczMWvQvqr10xc9TPCefefPNE2lqpH2IrQIDAQAB-----END PUBLIC KEY-----"
+response = requests.get(f"http://users:8000/api/v1/auth/public-key/?form=oneline")
+if response.status_code == 200:
+    JWT_PUBLIC_KEY = response.text  # Or response.json()
+else:
+    raise RuntimeError("Could not get JWT public key")
