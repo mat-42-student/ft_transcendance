@@ -48,7 +48,7 @@ export async function initDynamicCard(routeKey) {
         cardContainer.classList.remove('hidden');
 
         // 2FA
-        const twoFactorEnrollButton = document.getElementById('btn-enroll-2fa'); 
+        const twoFactorEnrollButton = document.getElementById('btn-enroll-2fa');
         const twoFactorVerifyButton = document.getElementById('btn-verify-2fa');
 
         if (twoFactorEnrollButton) {

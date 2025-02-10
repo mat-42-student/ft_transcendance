@@ -41,7 +41,7 @@ class PublicKeyView(APIView):
             public_key = public_key.replace("\n", "").replace(" ", "")
 
         return JsonResponse({'public_key': public_key.strip()}, status=status.HTTP_200_OK)
-
+    
 class VerifyTokenView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -262,7 +262,6 @@ class Disable2FAView(APIView):
         user.is_2fa_enabled = False 
         user.save()
         return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK)  
-    
 class OAuthLoginView(APIView):    
     def get(self, request):
         state = generate_state()
@@ -276,7 +275,6 @@ class OAuthLoginView(APIView):
         }
         url = f'https://api.intra.42.fr/oauth/authorize?{urlencode(params)}'
         return redirect(url)
-    
 class OAuthCallbackView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -333,12 +331,12 @@ class OAuthCallbackView(APIView):
         ft_profile.email = ft_email
         ft_profile.save()
 
-        access_payload = {
-            'id': user.id,
-            'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
-            'iat': datetime.datetime.now(datetime.timezone.utc),
-        }
+        # access_payload = {
+        #     'id': user.id,
+        #     'username': user.username,
+        #     'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
+        #     'iat': datetime.datetime.now(datetime.timezone.utc),
+        # }
 
         refresh_payload = {
             'id': user.id,
@@ -347,7 +345,7 @@ class OAuthCallbackView(APIView):
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }
 
-        access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+        # access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
         refresh_token = jwt.encode(refresh_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
 
         html_content = f"""
@@ -355,12 +353,10 @@ class OAuthCallbackView(APIView):
                 <html lang="en">
                 <head>
                     <meta charset="UTF-8">
-                    <title>Redirecting...</title>
                 </head>
                 <body>
                     <script>
-                        localStorage.setItem('accessToken', "{access_token}");
-                        window.location.href = "/profile";
+                        window.location.href = "/";
                     </script>
                     <p>Redirecting to profile...</p>
                 </body>

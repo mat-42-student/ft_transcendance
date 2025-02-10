@@ -41,11 +41,6 @@ export function logout() {
         body: JSON.stringify({}),
     })
     .then(response => response.json())
-    // .then(data => {
-        // if (data.success) {
-        //     state.client.accessToken = null;
-        // }
-    // })
     .catch(error => console.error('Error:', error));
     window.location.hash = '#home';
 }
