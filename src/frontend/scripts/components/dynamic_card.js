@@ -1,7 +1,8 @@
 import { handleHashChange, initAuthFormListeners } from './auth_form.js';
 import { enroll2fa } from '../api/auth.js';
 import { verify2fa } from '../api/auth.js';
-import { handleOAuth } from '../api/auth.js';
+// import { state } from '../main.js';
+
 
 const dynamicCardRoutes = {
     'auth': './partials/cards/auth.html',
@@ -10,7 +11,6 @@ const dynamicCardRoutes = {
     'block': './partials/cards/block.html',
     'unblock': './partials/cards/unblock.html',
     '2fa': './partials/cards/2fa.html',
-    'oauth': './partials/cards/oauth.html'
 };
 
 export function closeDynamicCard() {
@@ -48,7 +48,7 @@ export async function initDynamicCard(routeKey) {
         cardContainer.classList.remove('hidden');
 
         // 2FA
-        const twoFactorEnrollButton = document.getElementById('btn-enroll-2fa'); 
+        const twoFactorEnrollButton = document.getElementById('btn-enroll-2fa');
         const twoFactorVerifyButton = document.getElementById('btn-verify-2fa');
 
         if (twoFactorEnrollButton) {
@@ -71,37 +71,12 @@ export async function initDynamicCard(routeKey) {
 
             // OAuth 2.0
             const oauthButton = document.getElementById('oauth-submit');
-            
+
             if (oauthButton) {
                 oauthButton.addEventListener('click', () => {
-                    handleOAuth();
+                    window.location.href = 'https://localhost:3000/api/v1/auth/oauth/login/';
                 });
             }
-
-            document.addEventListener('DOMContentLoaded', () => {
-                    console.log('HI :)'); // DEBUG
-                    const params = new URLSearchParams(window.location.search);
-                    const code = params.get('code');
-                    const state = params.get('state');
-                  
-                    if (code && state) {
-                      const callbackUrl = `https://localhost:3000/api/v1/auth/oauth/callback?code=${code}&state=${state}`;
-                  
-                      fetch(callbackUrl)
-                        .then(response => response.json())
-                        .then(data => {
-                          if (data.accessToken) {
-                            sessionStorage.setItem('accessToken', data.accessToken);
-                            window.history.replaceState({}, document.title, window.location.pathname);
-                            console.log("OAuth success, token stored in localStorage!");
-                          } else {
-                            console.error("No accessToken returned from backend", data);
-                          }
-                        })
-                        .catch(err => console.error("Error exchanging code for token:", err));
-                    }
-                });
-
             
             // Gestion des clics sur les liens
             const authLinks = document.querySelectorAll('#auth-form a[data-action]');
