@@ -69,9 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // page unload // necessary ??
 window.addEventListener('beforeunload', function(event) {
-    if (state.mainSocket.socket)
+    if (state.mainSocket && state.mainSocket.socket)
         state.mainSocket.close();
-    if (state.gameApp.socket)
+    if (state.gameApp && state.gameApp.socket)
         state.gameApp.close();
 });
 
