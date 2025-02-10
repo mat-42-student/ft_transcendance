@@ -41,7 +41,14 @@ class PublicKeyView(APIView):
             public_key = public_key.replace("\n", "").replace(" ", "")
 
         return JsonResponse({'public_key': public_key.strip()}, status=status.HTTP_200_OK)
-    
+
+class RefreshTokenExist(APIView):
+    def head(self, request):
+        if "refreshToken" in request.COOKIES:
+            return JsonResponse({'success': True}, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse({'success': False}, status=status.HTTP_404_NOT_FOUND)
+
 class VerifyTokenView(APIView):
     renderer_classes = [JSONRenderer]
 
