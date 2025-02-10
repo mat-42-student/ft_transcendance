@@ -127,7 +127,7 @@ class RefreshTokenView(APIView):
         if "refreshToken" in request.COOKIES:
             return JsonResponse({'success': True}, status=status.HTTP_200_OK)
         else:
-            raise AuthenticationFailed('Refresh token missing!')
+            return JsonResponse({'success': False}, status=status.HTTP_204_NO_CONTENT)
 
     def post(self, request):
         old_refresh_token = request.COOKIES.get('refreshToken')
@@ -197,7 +197,7 @@ class LogoutView(APIView):
                 return response
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        response = Response()
+        # response = Response()
 class Enroll2FAView(APIView):
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]

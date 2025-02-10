@@ -29,20 +29,38 @@ export async function isAuthenticated() {
     }
 }
 
-export function logout() {
+export async function logout() {
     state.client.logout();
-    fetch('/api/v1/auth/logout/', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
-    })
-    .then(response => response.json())
-    .catch(error => console.error('Error:', error));
-    window.location.hash = '#home';
+    try {
+        const response = await fetch('/api/v1/auth/logout/', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}),
+        });
+        window.location.hash = '#home';
+    } catch (error) {
+        console.error('Error:', error);
+    await response.json();
+    }
 }
+
+// export function logout() {
+//     state.client.logout();
+//     fetch('/api/v1/auth/logout/', {
+//         method: 'POST',
+//         credentials: 'include',
+//         headers: {
+//             'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify({}),
+//     })
+//     .then(response => response.json())
+//     .catch(error => console.error('Error:', error));
+//     window.location.hash = '#home';
+// }
 
 // Fonction d'envoi des requêtes API pour connexion ou enregistrement
 export async function handleAuthSubmit(event) {

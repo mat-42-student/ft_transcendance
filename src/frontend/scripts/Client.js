@@ -28,7 +28,8 @@ export class Client{
         this.userId = null;
         this.userName = null;
         this.accessToken = null;
-        this.state.mainSocket.close(); // handles sub-objects (social, chat, mmaking) closure
+        if (this.state.mainSocket)
+            this.state.mainSocket.close(); // handles sub-objects (social, chat, mmaking) closure
         this.state.mainSocket = null;  
         this.renderProfileBtn();
     }
@@ -69,14 +70,15 @@ export class Client{
                 method: 'HEAD',
                 credentials: 'include'
             });
-            return response.ok; // True si le cookie est présent
+            return (response.status == 200)
         } catch {
             return false;
         }
     }
 
     async refreshSession() {
-        if (this.accessToken || !this.hasCookie())
+        const cookie = await this.hasCookie();
+        if (this.accessToken || !cookie)
             return;
         try {
             const response = await fetch('api/v1/auth/refresh/', {
@@ -87,7 +89,7 @@ export class Client{
     
             const data = await response.json();
             try {
-                this.state.client.login(data.accessToken);
+                this.login(data.accessToken);
             }
             catch (error) {
                 console.warn(error);
