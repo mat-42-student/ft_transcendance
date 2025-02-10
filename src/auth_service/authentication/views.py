@@ -42,13 +42,6 @@ class PublicKeyView(APIView):
 
         return JsonResponse({'public_key': public_key.strip()}, status=status.HTTP_200_OK)
 
-class RefreshTokenExist(APIView):
-    def head(self, request):
-        if "refreshToken" in request.COOKIES:
-            return JsonResponse({'success': True}, status=status.HTTP_200_OK)
-        else:
-            return JsonResponse({'success': False}, status=status.HTTP_404_NOT_FOUND)
-
 class VerifyTokenView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -129,6 +122,12 @@ class LoginView(APIView):
         return response 
 class RefreshTokenView(APIView):
     renderer_classes = [JSONRenderer]
+
+    def head(self, request):
+        if "refreshToken" in request.COOKIES:
+            return JsonResponse({'success': True}, status=status.HTTP_200_OK)
+        else:
+            raise AuthenticationFailed('Refresh token missing!')
 
     def post(self, request):
         old_refresh_token = request.COOKIES.get('refreshToken')
