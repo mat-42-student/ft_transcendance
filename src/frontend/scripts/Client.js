@@ -1,5 +1,5 @@
 import { MainSocket } from './MainSocket.js';
-
+import { isAuthenticated } from './api/auth.js';
 export class Client{
 
 	constructor() {
@@ -34,14 +34,18 @@ export class Client{
         this.renderProfileBtn();
     }
 
-    // globalRender() {
-	// 	this.renderProfileBtn();
-	// 	this.state.socialApp.displayFriendsList();
-	// 	this.state.chatApp.renderChat();
-	// }
+	globalRender() {
+		this.renderProfileBtn();
+		if (this.state.socialApp)
+			this.state.socialApp.fetchFriends();
+		if (this.state.chatApp)
+			this.state.chatApp.renderChat();
+	}
 
 	renderProfileBtn(){
-        const label = this.state.client.userName || "Sign in";
+		let label =  "Sign in";
+		if (this.state.client.userName)
+        	label = this.state.client.userName + '(' + this.state.client.userId + ')';
     	document.getElementById('btn-profile').innerText = label;
 	}
 
@@ -58,5 +62,30 @@ export class Client{
 		const parsedPayload = JSON.parse(decodedPayload);
 		this.state.client.userId = parsedPayload.id;
 		this.state.client.userName = parsedPayload.username;
+	}
+
+	async refreshSession() {
+		if (this.accessToken && isAuthenticated()) {
+			return;
+		}
+		try {
+			const response = await fetch('api/v1/auth/refresh/', {
+				method: 'POST',
+				credentials: 'include'
+			});
+			if (!response.ok) throw new Error("Could not refresh token");
+	
+			const data = await response.json();
+			try {
+				this.state.client.login(data.accessToken);
+			}
+			catch (error) {
+				console.error(error);
+			}
+			window.location.hash = '#profile';
+			// console.log("Session successfully restored");
+		} catch (error) {
+			console.log(error);
+		}
 	}
 }

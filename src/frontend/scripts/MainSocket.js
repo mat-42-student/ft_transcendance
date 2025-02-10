@@ -1,5 +1,7 @@
 import { ChatApp } from './Chat.js';
 import { SocialApp } from './Social.js';
+import { Game } from './Game.js';
+import { Mmaking } from './mmaking.js';
 import { state } from './main.js';
 import { delay } from './main.js';
 
@@ -15,7 +17,10 @@ export class MainSocket {
         delay(1);
 		let socketURL = "wss://" + window.location.hostname + ":3000/ws/?t=" + state.client.accessToken;
 		this.socket = new WebSocket(socketURL);
-		// state.mmakingApp = new MmakingApp();
+		state.chatApp = new ChatApp();
+		state.socialApp = new SocialApp();
+		state.mmakingApp = new Mmaking();
+		state.gameApp = new Game();
 
 		this.socket.onerror = async (e)=> {
 			console.error(e.message);
@@ -40,7 +45,8 @@ export class MainSocket {
 					state.socialApp.incomingMsg(data.body);
 					break
 				case 'mmaking':
-					console.log(data);
+					if (await state.mmakingApp.waited_page)
+						state.mmakingApp.incomingMsg(data);
 					break;
 				default:
 				console.warn('mainSocket : could not handle incoming JSON' + JSON.stringify(data, null, 2));

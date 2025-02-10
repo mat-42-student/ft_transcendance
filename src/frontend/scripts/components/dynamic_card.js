@@ -94,6 +94,7 @@ export async function initDynamicCard(routeKey) {
             // Initialiser l'écouteur sur le formulaire d'authentification
             initAuthFormListeners();
         }
+        return true;
     } catch (error) {
         console.error(`Erreur lors du chargement de la carte dynamique : ${error.message}`);
     }

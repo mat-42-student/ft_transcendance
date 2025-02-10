@@ -7,7 +7,6 @@ export async function isAuthenticated() {
     if (!token) {
         return false;
     }
-
     try {
         const response = await fetch('/api/v1/auth/verify/', {
             method: 'POST',
@@ -32,7 +31,7 @@ export async function isAuthenticated() {
 
 export function logout() {
     state.client.logout();
-    fetch('https://localhost:3000/api/v1/auth/logout/', {
+    fetch('/api/v1/auth/logout/', {
         method: 'POST',
         credentials: 'include',
         headers: {

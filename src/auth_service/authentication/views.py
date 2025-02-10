@@ -92,7 +92,7 @@ class LoginView(APIView):
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=60),
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }
 
@@ -129,17 +129,14 @@ class RefreshTokenView(APIView):
         if is_token_revoked(old_refresh_token):
             raise AuthenticationFailed('Token has been revoked')
 
-        email = request.data.get('email')
-
-        user = User.objects.filter(email=email).first()
-
         if not old_refresh_token:
             raise AuthenticationFailed('Refresh token missing!')
-        if not user:
-            raise AuthenticationFailed('User not found!')
-
         try:
-            jwt.decode(old_refresh_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
+            old_data = jwt.decode(old_refresh_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
+            user = User.objects.filter(id=old_data.get("id")).first()
+            if not user:
+                raise AuthenticationFailed('User not found!')
+
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Refresh token expired!')
         except jwt.InvalidTokenError:
@@ -149,7 +146,8 @@ class RefreshTokenView(APIView):
 
         access_payload = {
             'id': user.id,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
+            'username': user.username,
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=60),
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }
 
