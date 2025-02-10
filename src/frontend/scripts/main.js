@@ -20,10 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshButton = document.getElementById('btn-refresh');
     const playButton = document.getElementById('btn-play');
     const requestsButton = document.querySelector('.btn-friend-requests');
-    const friendButtons = document.querySelectorAll('.friend-item');
+    // const friendButtons = document.querySelectorAll('.friend-item');
 
     setupNavigation();
     navigateTo('#home');
+
+    state.client.refreshSession();
 
     if (homeButton) {
         homeButton.addEventListener('click', () => {
