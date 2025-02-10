@@ -26,6 +26,13 @@ run:
 down:
 	docker compose down
 
+start:
+	docker compose start
+	docker compose logs -f
+
+stop:
+	docker compose stop
+
 fclean: clean
 
 clean:
