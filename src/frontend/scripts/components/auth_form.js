@@ -1,4 +1,5 @@
 import { handleAuthSubmit } from "../api/auth.js";
+import { cleanErrorMessage } from '../utils.js';
 
 export function handleHashChange() {
     const hash = window.location.hash.slice(1); // Retire le '#' du hash
@@ -49,6 +50,8 @@ function updateAuthForm(mode) {
     }
 
     if (mode === 'register') {
+        cleanErrorMessage();
+
         formTitle.textContent = 'Sign Up';
         confirmPasswordContainer.classList.remove('hidden'); // Affiche la confirmation du mot de passe
         confirmUsernameContainer.classList.remove('hidden'); // Affiche le username
@@ -61,6 +64,8 @@ function updateAuthForm(mode) {
 
         signInWith42Button.classList.add('hidden');
     } else { // Par défaut : mode "signin"
+        cleanErrorMessage();
+
         formTitle.textContent = 'Sign In';
         confirmPasswordContainer.classList.add('hidden'); // Cache la confirmation du mot de passe
         confirmUsernameContainer.classList.add('hidden'); // Cache le username

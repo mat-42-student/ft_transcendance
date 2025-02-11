@@ -1,5 +1,6 @@
 import { closeDynamicCard } from '../components/dynamic_card.js';
 import { state } from '../main.js';
+import { cleanErrorMessage } from '../utils.js';
 
 // Vérifie si l'utilisateur est authentifié par la presence de accessToken
 export async function isAuthenticated() {
@@ -65,6 +66,7 @@ export async function logout() {
 // Fonction d'envoi des requêtes API pour connexion ou enregistrement
 export async function handleAuthSubmit(event) {
     event.preventDefault();
+    cleanErrorMessage();
 
     const username = document.getElementById('auth-username').value.trim();
     const email = document.getElementById('auth-email').value.trim();
@@ -73,18 +75,15 @@ export async function handleAuthSubmit(event) {
     const confirm_password = document.getElementById('auth-confirm-password').value.trim();
     const hash = window.location.hash;
 
-    if (!email || !password) {
-        alert('Veuillez remplir tous les champs obligatoires.');
-        return;
-    }
-
     if (!hash || (hash !== '#register' && hash !== '#signin')) {
         hash = '#signin';
         window.location.hash = hash;
     }
 
     if (hash === '#register' && password !== confirm_password) {
-        alert('Les mots de passe ne correspondent pas.');
+        const loginErrorContainer = document.getElementById('auth-error');
+        loginErrorContainer.textContent = "Passwords don't match";
+        loginErrorContainer.classList.remove('hidden');
         return;
     }
 
@@ -148,6 +147,11 @@ export async function handleAuthSubmit(event) {
                     console.error('Erreur API:', errorData);
                     return;
                 }
+            } else if (errorData && (errorData.detail === 'User not found!' || errorData.detail === 'Incorrect password!')){
+                const loginErrorContainer = document.getElementById('auth-error');
+                loginErrorContainer.textContent = "Incorrect username or password";
+                loginErrorContainer.classList.remove('hidden');
+                return;
 
             } else {
                 console.error('Erreur API:', errorData);
