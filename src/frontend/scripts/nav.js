@@ -1,78 +1,7 @@
-// import { setupHomePage, setupProfilePage } from "./pages.js";
-// import { initDynamicCard } from './components/dynamic_card.js';
-// import { isAuthenticated } from './api/auth.js';
-// import { state } from "./main.js";
-
-// // let mmaking = null;
-
-// const routes = {
-//     '#home': './partials/home.html',
-//     '#profile': './partials/profile.html',
-// };
-
-// export function setupNavigation() {
-//     window.addEventListener('popstate', (e) => {
-//         e.preventDefault();
-//         // console.log("popstate enclanché");
-//         navigateTo(window.location.hash || '#home'); // Navigate to hash or #home if hash isn't valid
-//     });
-// }
-
-// export async function navigateTo(hash) {
-//     const mainContent = document.querySelector('.main-content');
-//     let route = routes[hash];
-
-//     if ((!mainContent) || (!route)) return;
-
-//     if (hash == '#profile') {
-//         // console.log("hash == profile");
-//         if (await isAuthenticated() == false) {
-//             // console.log("profile + pas authentifié");
-//             window.history.replaceState({}, '', `#signin`);
-//             // hash = '#signin';
-//             initDynamicCard('auth');
-//             return;
-//         } else {
-//             // console.log("profile + authentifié");
-//             try {
-//                 const response = await fetch(route);
-//                 const html = await response.text();
-//                 document.querySelector('.main-content').innerHTML = html;
-//             } catch (error) {
-//                 console.error('Error loading page:', error);
-//                 return;
-//             }
-//             window.history.replaceState({}, '', hash);
-//             setupProfilePage();
-//             return;
-//         }
-//     } else if ((hash === '#signin' || hash === '#register') && await isAuthenticated() == true) {
-//         hash = '#profile';
-//         window.history.replaceState({}, '', hash);
-//         setupProfilePage();
-//         return;
-//     } else {
-//         hash = '#home';
-//         route = routes[hash];
-//         try {
-//             const response = await fetch(route);
-//             const html = await response.text();
-//             document.querySelector('.main-content').innerHTML = html;
-// 			// if (client.getmainSocket())
-// 			// 	mmaking = new Mmaking(client.getmainSocket().mainSocket);
-//         } catch (error) {
-//             console.error('Error loading page:', error);
-//             return;
-//         }
-//         window.history.replaceState({}, '', hash);
-//         setupHomePage();
-//         return;
-//     }
-// }
-
 import { setupHomePage, setupProfilePage } from "./pages.js";
-import { initDynamicCard } from './components/dynamic_card.js';
+import { closeDynamicCard, initDynamicCard } from './components/dynamic_card.js';
 import { isAuthenticated } from './api/auth.js';
+import { updateAuthForm } from "./components/auth_form.js";
 import { state } from "./main.js";
 
 const routes = {
@@ -80,64 +9,75 @@ const routes = {
     '#profile': './partials/profile.html',
 };
 
+export async function handleHashChange() {
+    const cardContainer = document.getElementById('dynamic-card-container');
+    const hash = window.location.hash;
+    const isAuth = await isAuthenticated();
+    
+    if (hash == '#register' || hash == '#signin') { // si hash pour auth, check si carte activée, si oui update formulaire, sinon init 
+        if (isAuth) // redirection vers profile si authentifié
+            return navigateTo('#profile');
+        
+        if (cardContainer.classList == 'hidden')
+            return initDynamicCard('auth');
+
+        return updateAuthForm(hash);
+    } // Ajouter les cas possibles connus
+    
+    if ((hash == '#home' || hash == '#profile') && cardContainer.classList != 'hidden') // fermer carte si hash de page
+        closeDynamicCard();
+
+    navigateTo(hash);
+}
+
 export function setupNavigation() {
     window.addEventListener('popstate', (e) => {
         e.preventDefault();
-        navigateTo(window.location.hash || '#home');
+        console.log("popstate change -> " + window.location.hash);
+        handleHashChange(); // handleHashChange() remplace navigateTo() pour une meilleure navigation via l'historique
     });
-}
-
-async function updateUserInfo() {
-    try {
-        await state.client.fetchUserProfile(); // Récupération des infos de l'utilisateur
-    } catch (error) {
-        console.error('Erreur lors de la mise à jour des informations utilisateur :', error);
-    }
 }
 
 export async function navigateTo(hash) {
     const mainContent = document.querySelector('.main-content');
     let route = routes[hash];
 
-    if ((!mainContent) || (!route)) return;
+    if (!mainContent) return;
+
+    const isAuth = await isAuthenticated();
+
+    console.log("nativageTo -> " + hash + " && isAuth == " + isAuth); //debug
 
     if (hash == '#profile') {
-        if (await isAuthenticated() == false) {
+        if (isAuth == false) {
             window.history.replaceState({}, '', `#signin`);
-            initDynamicCard('auth');
-            return;
-        } else {
-            try {
-                const response = await fetch(route);
-                const html = await response.text();
-                document.querySelector('.main-content').innerHTML = html;
-                await updateUserInfo(); // Mise à jour des infos de l'utilisateur après chargement de la page
-            } catch (error) {
-                console.error('Error loading page:', error);
-                return;
-            }
-            window.history.replaceState({}, '', hash);
-            setupProfilePage();
-            return;
+            return initDynamicCard('auth');
         }
-    } else if ((hash === '#signin' || hash === '#register') && await isAuthenticated() == true) {
-        hash = '#profile';
-        window.history.replaceState({}, '', hash);
-        setupProfilePage();
-        return;
-    } else {
-        hash = '#home';
-        route = routes[hash];
+
         try {
             const response = await fetch(route);
             const html = await response.text();
             document.querySelector('.main-content').innerHTML = html;
+
+            await state.client.fetchUserProfile(); // Maj infos utilisateur après chargement de la page
         } catch (error) {
             console.error('Error loading page:', error);
             return;
         }
+
         window.history.replaceState({}, '', hash);
-        setupHomePage();
+        setupProfilePage();
         return;
     }
+
+    try {
+        const response = await fetch(route);
+        const html = await response.text();
+        mainContent.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading page:', error);
+        return;
+    }
+    window.history.replaceState({}, '', hash);
+    setupHomePage();
 }

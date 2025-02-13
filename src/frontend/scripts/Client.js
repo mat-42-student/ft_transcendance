@@ -73,7 +73,7 @@ export class Client{
 			usernameElement.textContent = this.userName || 'Unknown User';
 		}
 	
-		if (statusElement) {
+		if (statusElement) { // à changer
 			statusElement.classList.remove('online', 'offline', 'ingame', 'pending');
 			statusElement.classList.add(this.status || 'online');
 	
@@ -101,7 +101,8 @@ export class Client{
 				const data = await response.json();
 				this.userName = data.username;
 				this.avatar = data.avatar;
-				this.status = data.status;
+				this.status = data.status; // changer gestion status par full front + ws pour echange entre users
+				console.log("Status reçu :", data.status); //debug
 				this.updateProfilePage();
 			} else {
 				console.error("Failed to fetch user profile:", response.status);

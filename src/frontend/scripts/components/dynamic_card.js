@@ -1,7 +1,8 @@
-import { handleHashChange, initAuthFormListeners } from './auth_form.js';
+import { initAuthFormListeners } from './auth_form.js';
 import { enroll2fa } from '../api/auth.js';
 import { verify2fa } from '../api/auth.js';
 import { handleOAuth } from '../api/auth.js';
+import { handleHashChange } from '../nav.js';
 
 const dynamicCardRoutes = {
     'auth': './partials/cards/auth.html',
@@ -13,18 +14,9 @@ const dynamicCardRoutes = {
     'oauth': './partials/cards/oauth.html'
 };
 
-export function closeDynamicCard() {
-    const cardContainer = document.getElementById('dynamic-card-container');
-    cardContainer.classList.add('hidden');
-    window.history.replaceState({}, '', `#home`);
-}
-
 export async function initDynamicCard(routeKey) {
     const cardContainer = document.getElementById('dynamic-card-container');
     const cardContent = document.getElementById('dynamic-card-content');
-
-    // Changer historique de vue hash
-    // history.pushState({ routeKey }, '', `#${routeKey}`);
     
     // Vérifier si la route existe
     const route = dynamicCardRoutes[routeKey];
@@ -64,10 +56,7 @@ export async function initDynamicCard(routeKey) {
         }
 
         if (routeKey == 'auth') {
-            // Définir un hash par défaut pour signin
-            if (!window.location.hash || window.location.hash === '#auth') {
-                window.location.hash = '#signin';
-            }
+            window.location.hash = '#signin'; // Définir hash sur signin par défaut pour l'auth
 
             // OAuth 2.0
             const oauthButton = document.getElementById('oauth-submit');
@@ -100,8 +89,7 @@ export async function initDynamicCard(routeKey) {
                         })
                         .catch(err => console.error("Error exchanging code for token:", err));
                     }
-                });
-
+            });
             
             // Gestion des clics sur les liens
             const authLinks = document.querySelectorAll('#auth-form a[data-action]');
@@ -115,11 +103,17 @@ export async function initDynamicCard(routeKey) {
                     handleHashChange();
                 });
             });
-            window.location.hash = '#signin';
+
             // Initialiser l'écouteur sur le formulaire d'authentification
             initAuthFormListeners();
         }
     } catch (error) {
         console.error(`Erreur lors du chargement de la carte dynamique : ${error.message}`);
     }
+}
+
+export function closeDynamicCard() {
+    const cardContainer = document.getElementById('dynamic-card-container');
+    cardContainer.classList.add('hidden');
+    window.history.replaceState({}, '', `#home`);
 }
