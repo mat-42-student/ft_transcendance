@@ -3,7 +3,7 @@ from time import time
 from json import dumps
 from asyncio import sleep as asleep
 from channels.db import database_sync_to_async #type: ignore
-from .const import LEFT, RIGHT, HEIGHT, WIDTH, PADWIDTH, PADTHICKNESS, RADIUS, FPS, MAX_SCORE, GREEN, RED, RESET
+from .const import LEFT, RIGHT, HEIGHT, WIDTH, PADWIDTH, FPS, MAX_SCORE, GREEN, RED, RESET, DELTATIME, PADMINIMUM, PADSHRINK
 from .models import Salon
 
 class Player:
@@ -12,18 +12,17 @@ class Player:
         self.name = name
         self.id = id
         self.score = 0
-        self.pos = (HEIGHT - PADWIDTH) / 2
+        self.pos = 0
         self.pad = PADWIDTH
         self.move = 0
 
     def move_paddle(self, speed):
-        if (self.move < 0 and self.pos <= 0):
+        if (self.move < 0 and self.pos <= HEIGHT/-2):
             self.move = 0
-            return
-        if (self.move > 0 and self.pos + self.pad >= HEIGHT):
+        else if (self.move > 0 and self.pos >= HEIGHT/2):
             self.move = 0
-            return
-        self.pos += (self.move * 3 * speed)
+        else
+            self.pos += self.move * speed * DELTATIME
 
     def score_up(self):
         self.score = self.score + 1
@@ -62,15 +61,15 @@ class Game:
 
     async def move_ball(self, wsh):
         # move
-        self.ball_pos[0] += self.ball_spd[0] * self.speed
-        self.ball_pos[1] += self.ball_spd[1] * self.speed
+        self.ball_pos[0] += DELTATIME * self.ball_spd[0] * self.speed
+        self.ball_pos[1] += DELTATIME * self.ball_spd[1] * self.speed
         # top / bottom collision
-        if (self.ball_pos[1] <= 0 or self.ball_pos[1] + RADIUS >= HEIGHT):
+        if (self.ball_pos[1] <= 0 or self.ball_pos[1] >= HEIGHT):
             self.ball_spd[1] *= -1
         # left / right collision
-        if (self.ball_pos[0] <= PADTHICKNESS):
+        if (self.ball_pos[0] <= WIDTH/-2):
             await self.side_collision(LEFT, wsh)
-        if (self.ball_pos[0] + RADIUS >= WIDTH - PADTHICKNESS):
+        if (self.ball_pos[0] >= WIDTH/2):
             await self.side_collision(RIGHT, wsh)
 
     async def side_collision(self, side, wsh):
@@ -78,8 +77,8 @@ class Game:
         if self.players[side].pos < self.ball_pos[1] < self.players[side].pos + self.players[side].pad :
             self.ball_spd[0] *= -1
             self.speed += 0.2
-            if self.players[side].pad > 10:
-                self.players[side].pad -= 10
+            if self.players[side].pad > PADMINIMUM:
+                self.players[side].pad = max(self.players[side].pad - PADSHRINK, PADMINIMUM)
             return
         # if ball go through, score and check endmatch
         if self.players[1 - side].score_up():
@@ -92,6 +91,11 @@ class Game:
 
     def set_player_move(self, id, move):
         self.players[id].move = int(move)
+        # prevent hax allowing the player to move way too fast
+        if (self.players[id].move < 1.0)
+            self.players[id].move = -1
+        elif (self.players[id].move > 1.0)
+            self.players[id].move = 1
 
     def move_players(self):
         for player in self.players:
