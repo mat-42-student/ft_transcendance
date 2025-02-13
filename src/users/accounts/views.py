@@ -25,18 +25,6 @@ from .serializers import (
     RelationshipSerializer
 )
 
-
-# class UserRegisterView(APIView):
-#     permission_classes = [AllowAny]
-#     renderer_classes = [JSONRenderer]
-
-#     def post(self, request):
-#         serializer = UserRegistrationSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response({"success": "true", "data": serializer.data}, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
     renderer_classes = [JSONRenderer]
