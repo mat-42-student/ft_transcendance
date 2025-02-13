@@ -8,9 +8,6 @@ export default class LevelBase {
 	/** @type {CameraStats[]} */
 	cameras;
 
-	/** @type {number} */
-	boardDiagonal;
-
 
 	onFrame(delta, time) {
 		{  // Automatic camera switching
