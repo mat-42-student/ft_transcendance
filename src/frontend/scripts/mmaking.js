@@ -1,10 +1,13 @@
 import { state } from './main.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
+import { Game } from './Game.js';
+
 export class Mmaking
 {
 	constructor(mainSocket)
 	{
 		this.waited_page = null;
+		this.gameSocket = null;
 	}
 
 
@@ -52,6 +55,9 @@ export class Mmaking
 			console.log(data);
 			for (const [key, value] of Object.entries(data.body.opponents))
 				this.setOpponent(value.username, '../../ressources/match.png')
+
+			state.gameApp = new Game();
+			state.gameApp.launchGameSocket();
 		}
 	}
 
