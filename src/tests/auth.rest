@@ -42,7 +42,7 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxN
 
 ###
 
-GET https://localhost:3000/api/v1/auth/oauth/redirect/
+GET https://localhost:3000/api/v1/auth/oauth/login/
 Content-Type: application/json
 
 {}
@@ -66,6 +66,13 @@ Content-Type: application/json
 POST https://localhost:3000/api/v1/auth/verify
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0b20yIiwiZXhwIjoxNzM2NzA1NTcyLCJpYXQiOjE3MzY3MDUyNzJ9.juo8zgSTeDui0u1rxU9SiEy6ZJOcgBU7_yIiIyjiURB4jzgV6a5V95VnNBNS7sfUPAxR5o9DUiAh8DDU-B2TEK4Dzhp4s9Vjm2Ni1kutsdl29dqY8xrs9A9Vw5-huKWp2OGhy1iHXeIG-i6whDKsu9TlKu4y5Kk3JnvcXJw6bCS9XqNQDiSqaw_OmJgtu2h6RmyEvc1mx2lyKdIkJv8HKlGK-NysHvDYdRU9zlyyF2lP5jApMdhoOJ9vhdnIqskkhEbK7H-_gXm5QshIlmVtel87p8cuLQa5h_ruWM9Ym_IXbjR3udBpL3gkCJ7yp4T_MLSpdzzJiX5QmO3x1sR5jw
+
+{}
+
+###
+
+GET https://localhost:3000/api/v1/auth/public-key/?form=oneline
+Content-Type: application/json
 
 {}
 

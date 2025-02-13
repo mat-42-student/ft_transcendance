@@ -1,5 +1,6 @@
 import { ChatApp } from './Chat.js';
 import { SocialApp } from './Social.js';
+import { Game } from './Game.js';
 import { Mmaking } from './mmaking.js';
 import { state } from './main.js';
 import { delay } from './main.js';
@@ -19,6 +20,7 @@ export class MainSocket {
 		state.chatApp = new ChatApp();
 		state.socialApp = new SocialApp();
 		state.mmakingApp = new Mmaking();
+		state.gameApp = new Game();
 
 		this.socket.onerror = async (e)=> {
 			console.error(e.message);

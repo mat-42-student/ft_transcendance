@@ -1,5 +1,6 @@
 import { closeDynamicCard } from '../components/dynamic_card.js';
 import { state } from '../main.js';
+import { cleanErrorMessage } from '../utils.js';
 
 // Vérifie si l'utilisateur est authentifié par la presence de accessToken
 export async function isAuthenticated() {
@@ -7,7 +8,6 @@ export async function isAuthenticated() {
     if (!token) {
         return false;
     }
-
     try {
         const response = await fetch('/api/v1/auth/verify/', {
             method: 'POST',
@@ -30,29 +30,43 @@ export async function isAuthenticated() {
     }
 }
 
-export function logout() {
+export async function logout() {
     state.client.logout();
-    fetch('https://localhost:3000/api/v1/auth/logout/', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
-    })
-    .then(response => response.json())
-    // .then(data => {
-        // if (data.success) {
-        //     state.client.accessToken = null;
-        // }
-    // })
-    .catch(error => console.error('Error:', error));
-    window.location.hash = '#home';
+    try {
+        const response = await fetch('/api/v1/auth/logout/', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}),
+        });
+        window.location.hash = '#home';
+    } catch (error) {
+        console.error('Error:', error);
+    await response.json();
+    }
 }
+
+// export function logout() {
+//     state.client.logout();
+//     fetch('/api/v1/auth/logout/', {
+//         method: 'POST',
+//         credentials: 'include',
+//         headers: {
+//             'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify({}),
+//     })
+//     .then(response => response.json())
+//     .catch(error => console.error('Error:', error));
+//     window.location.hash = '#home';
+// }
 
 // Fonction d'envoi des requêtes API pour connexion ou enregistrement
 export async function handleAuthSubmit(event) {
     event.preventDefault();
+    cleanErrorMessage();
 
     const username = document.getElementById('auth-username').value.trim();
     const email = document.getElementById('auth-email').value.trim();
@@ -61,18 +75,15 @@ export async function handleAuthSubmit(event) {
     const confirm_password = document.getElementById('auth-confirm-password').value.trim();
     const hash = window.location.hash;
 
-    if (!email || !password) {
-        alert('Veuillez remplir tous les champs obligatoires.');
-        return;
-    }
-
     if (!hash || (hash !== '#register' && hash !== '#signin')) {
         hash = '#signin';
         window.location.hash = hash;
     }
 
     if (hash === '#register' && password !== confirm_password) {
-        alert('Les mots de passe ne correspondent pas.');
+        const loginErrorContainer = document.getElementById('auth-error');
+        loginErrorContainer.textContent = "Passwords don't match";
+        loginErrorContainer.classList.remove('hidden');
         return;
     }
 
@@ -136,6 +147,11 @@ export async function handleAuthSubmit(event) {
                     console.error('Erreur API:', errorData);
                     return;
                 }
+            } else if (errorData && (errorData.detail === 'User not found!' || errorData.detail === 'Incorrect password!')){
+                const loginErrorContainer = document.getElementById('auth-error');
+                loginErrorContainer.textContent = "Incorrect username or password";
+                loginErrorContainer.classList.remove('hidden');
+                return;
 
             } else {
                 console.error('Erreur API:', errorData);
@@ -206,39 +222,3 @@ export function verify2fa() {
     })
     .catch(error => console.error('Error:', error));
 }
-
-// OAuth 2.0
-export async function handleOAuth() {
-    try {
-      const response = await fetch('https://localhost:3000/api/v1/auth/oauth/redirect/');
-      const data = await response.json();
-  
-      window.location.href = data.url; // full page reload!!
-
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    const state = params.get('state');
-    
-    if (code && state) {
-      const callbackUrl = `https://localhost:3000/api/v1/auth/oauth/callback?code=${code}&state=${state}`;
-  
-      fetch(callbackUrl)
-        .then(response => response.json())
-        .then(data => {
-          if (data.accessToken) {
-            state.client.accessToken = data.accessToken;
-            window.history.replaceState({}, document.title, window.location.pathname);
-            console.log("OAuth success, token stored in session storage!");
-          } else {
-            console.error("No accessToken returned from backend", data);
-          }
-        })
-        .catch(err => console.error("Error exchanging code for token:", err));
-    }
-});

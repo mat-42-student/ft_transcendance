@@ -21,21 +21,9 @@ from .serializers import (
     UserPrivateDetailSerializer, 
     UserBlockedSerializer, 
     UserUpdateSerializer, 
-    UserRegistrationSerializer, 
+    UserRegistrationSerializer,
     RelationshipSerializer
 )
-
-
-# class UserRegisterView(APIView):
-#     permission_classes = [AllowAny]
-#     renderer_classes = [JSONRenderer]
-
-#     def post(self, request):
-#         serializer = UserRegistrationSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response({"success": "true", "data": serializer.data}, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
@@ -44,7 +32,6 @@ class UserRegisterView(APIView):
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
-            print('hello')
             user = serializer.save()
             user.refresh_from_db() # Rafraîchir l'objet utilisateur pour s'assurer que toutes les données sont chargées
 
@@ -81,8 +68,7 @@ class UserRegisterView(APIView):
             }
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
+    
 # User ViewSet
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -225,7 +211,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({'error': 'User not found'}, status=404)
         except Exception as e:
             return Response({'error': str(e)}, status=500)
-
 
 # Relationship ViewSet
 class RelationshipViewSet(viewsets.ViewSet):
