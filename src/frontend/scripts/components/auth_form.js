@@ -1,4 +1,5 @@
 import { handleAuthSubmit } from "../api/auth.js";
+import { cleanErrorMessage } from '../utils.js';
 
 // Attache l'écouteur au formulaire d'authentification
 export function initAuthFormListeners() {
@@ -23,7 +24,9 @@ export function updateAuthForm(mode) {
         mode = 'signin';
     }
 
-    if (mode === '#register') {
+    if (mode === 'register') {
+        cleanErrorMessage();
+
         formTitle.textContent = 'Sign Up';
         confirmPasswordContainer.classList.remove('hidden'); // Affiche la confirmation du mot de passe
         confirmUsernameContainer.classList.remove('hidden'); // Affiche le username
@@ -36,6 +39,8 @@ export function updateAuthForm(mode) {
 
         signInWith42Button.classList.add('hidden');
     } else { // Par défaut : mode "signin"
+        cleanErrorMessage();
+
         formTitle.textContent = 'Sign In';
         confirmPasswordContainer.classList.add('hidden'); // Cache la confirmation du mot de passe
         confirmUsernameContainer.classList.add('hidden'); // Cache le username

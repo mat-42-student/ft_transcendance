@@ -9,7 +9,7 @@ export const state = {
     chatApp: null,
     socialApp: null,
     mmakingApp: null,
-    // gameSocket = null
+    gameApp: null
 };
 
 state.client.setState(state);
@@ -17,6 +17,8 @@ state.client.setState(state);
 document.addEventListener('DOMContentLoaded', () => {
     const homeButton = document.getElementById('btn-home');
     const profileButton = document.getElementById('btn-profile');
+    const refreshButton = document.getElementById('btn-refresh');
+    const playButton = document.getElementById('btn-play');
     const closeButton = document.getElementById('close-dynamic-card');
     const requestsButton = document.querySelector('.btn-friend-requests');
     // const friendButtons = document.querySelectorAll('.friend-item');
@@ -26,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log("naviagteTo(#home)"); //debug
     navigateTo('#home');
+
+    state.client.refreshSession();
 
     if (homeButton) {
         homeButton.addEventListener('click', (e) => {
@@ -41,6 +45,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    if (refreshButton) {
+        refreshButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+            state.client.globalRender();
+        });
+    }
+
+    if (playButton) {
+        playButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (state.gameApp)
+                state.gameApp.launchGameSocket();
+        });
+    }
+    
     if (closeButton) {
         closeButton.addEventListener('click', closeDynamicCard);
     }
@@ -51,6 +70,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// page unload // necessary ??
+window.addEventListener('beforeunload', function(event) {
+    if (state.mainSocket && state.mainSocket.socket)
+        state.mainSocket.close();
+    if (state.gameApp && state.gameApp.socket)
+        state.gameApp.close();
+});
+
 
 // wait for n sec
 export function delay(n) {

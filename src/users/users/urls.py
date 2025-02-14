@@ -8,7 +8,7 @@ from rest_framework import routers
 from rest_framework_simplejwt import views as jwt_views
 
 from accounts.views import (
-    UserRegisterView, 
+    UserRegisterView,
     UserViewSet,
     RelationshipViewSet,
 )

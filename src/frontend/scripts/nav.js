@@ -69,11 +69,17 @@ export async function navigateTo(hash) {
         setupProfilePage();
         return;
     }
-
+        
     try {
         const response = await fetch(route);
         const html = await response.text();
         mainContent.innerHTML = html;
+
+        if(state.mmakingApp)
+            state.mmakingApp.refresh_eventlisteners();
+
+        if (state.gameApp) // for testing purpose, DELETE on branch dev
+            state.gameApp.addEventlistener(); // for testing purpose, DELETE on branch dev
     } catch (error) {
         console.error('Error loading page:', error);
         return;

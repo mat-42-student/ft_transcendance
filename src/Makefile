@@ -18,8 +18,13 @@ build:
 	# Idem ici
 	docker compose up --build
 
+up: run
+
 run:
 	docker compose up
+
+down:
+	docker compose down
 
 start:
 	docker compose start
@@ -27,6 +32,8 @@ start:
 
 stop:
 	docker compose stop
+
+fclean: clean
 
 clean:
 	docker compose down -v

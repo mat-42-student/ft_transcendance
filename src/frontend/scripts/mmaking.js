@@ -1,9 +1,15 @@
+import { state } from './main.js';
+import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
 export class Mmaking
 {
 	constructor(mainSocket)
 	{
-		this.mainS = mainSocket;
-		this.token = localStorage.getItem("accessToken");
+		this.waited_page = null;
+	}
+
+
+	refresh_eventlisteners()
+	{
 		this.listening_button_match_Random();
 	}
 
@@ -15,28 +21,71 @@ export class Mmaking
 		randomBtn.addEventListener('click', async ()=>
 		{
 			const data = {
-				'id' : 0
-			}
-			this.sendMsg('back', data)
+				'status': "online",
+				'type_game': "1vs1R"
+			};
+			await this.sendMsg(data)
+			this.waited_page = await initDynamicCard('versus')
+			document.getElementById("cancel-button").addEventListener("click", this.cancel_game.bind(this));
 		});
 
 	}
 
-    sendMsg(dest, message) {
-        let data = {
-            'header': {
-                'service': 'mmaking',
-            },
-            'body': {
-                'to':dest,
-                'message': message,
-            }
-        };
-        this.mainS.send(JSON.stringify(data));
-    }
+    async sendMsg(message) {
 
-	Build_Salon()
+		const data = {
+			'header': {  //Mandatory part
+			'service': 'mmaking',
+			'dest': 'back',
+			'id': state.client.userId
+			},
+			'body': message
+		};
+	await state.mainSocket.send(JSON.stringify(data));
+	}
+
+	incomingMsg(data)
+	{
+
+		if (data.body.status == 'ingame')
+		{
+			console.log(data);
+			for (const [key, value] of Object.entries(data.body.opponents))
+				this.setOpponent(value.username, '../../ressources/match.png')
+		}
+	}
+
+	launch_game()
 	{
 		 
+	}
+
+	async cancel_game()
+	{
+		document.getElementById("status").textContent = "Recherche annulée";
+		document.getElementById("loader").style.display = "none";
+		document.getElementById("waiting-text").textContent = "Vous avez annulé la recherche.";
+		document.getElementById("cancel-button").style.display = "none";
+
+		const data = {
+			'status': "pending",
+			'type_game': "1vs1R",
+			'cancel': true
+		};
+
+
+		this.sendMsg(data)
+		
+		closeDynamicCard();
+	}
+
+	setOpponent(name, photo) {
+		document.getElementById("opponent-info").style.display = "block";
+		document.getElementById("opponent-name").textContent = name;
+		document.getElementById("opponent-photo").src = photo;
+		document.getElementById("status").textContent = "Adversaire trouvé !";
+		document.getElementById("loader").style.display = "none";
+		document.getElementById("waiting-text").textContent = "Préparez-vous à jouer !";
+		document.getElementById("cancel-button").style.display = "none";
 	}
 }

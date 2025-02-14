@@ -10,7 +10,7 @@ SECRET_KEY = 'django-insecure-r)*s-=2l!4jiwy_qk5xk+s)s9@l*$c8fb@!1k#!@u_nh7(yq=2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['*']
 
 JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")
 JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")
@@ -132,4 +132,4 @@ CORS_ALLOW_CREDENTIALS = True
 # OAuth 2.0
 OAUTH_CLIENT_ID = 'u-s4t2ud-84a349ed4a97afde2d52b8aa3de74906b2e8504fec44391bd1e117b5708b4ee4'
 OAUTH_CLIENT_SECRET = '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'
-OAUTH_REDIRECT_URI = 'https://localhost:3000/'
+OAUTH_REDIRECT_URI = 'https://localhost:3000/api/v1/auth/oauth/callback/'
