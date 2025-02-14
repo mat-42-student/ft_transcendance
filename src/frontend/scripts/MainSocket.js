@@ -16,6 +16,7 @@ export class MainSocket {
 		state.chatApp = new ChatApp();
         delay(1);
 		let socketURL = "wss://" + window.location.hostname + ":3000/ws/?t=" + state.client.accessToken;
+		// wss://localhost:3000/ws/?t=
 		this.socket = new WebSocket(socketURL);
 		state.chatApp = new ChatApp();
 		state.socialApp = new SocialApp();

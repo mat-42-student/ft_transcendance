@@ -13,6 +13,7 @@ export const state = {
 };
 
 state.client.setState(state);
+window.state = state; // for eval purpose
 
 document.addEventListener('DOMContentLoaded', () => {
     const homeButton = document.getElementById('btn-home');
