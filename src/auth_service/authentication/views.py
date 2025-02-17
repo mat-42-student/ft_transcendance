@@ -14,6 +14,7 @@ import datetime
 import requests
 import pyotp
 import qrcode
+import uuid
 from qrcode.constants import ERROR_CORRECT_L
 from io import BytesIO
 import base64
@@ -41,7 +42,6 @@ class PublicKeyView(APIView):
             public_key = public_key.replace("\n", "").replace(" ", "")
 
         return JsonResponse({'public_key': public_key.strip()}, status=status.HTTP_200_OK)
-
 class VerifyTokenView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -84,7 +84,6 @@ class LoginView(APIView):
             if not code:
                 return Response({"success": False, "error": "2fa_required!"}, status=400)
 
-
             totp = pyotp.TOTP(user.totp_secret)
             if not totp.verify(code):
                 return Response({"success": False, "error": "invalid_totp"}, status=400)
@@ -92,7 +91,7 @@ class LoginView(APIView):
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=60),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=30),
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }
 
@@ -148,13 +147,18 @@ class RefreshTokenView(APIView):
         except jwt.InvalidTokenError:
             raise AuthenticationFailed('Invalid refresh token!')
         
-        revoke_token(old_refresh_token)  
+        revoked = revoke_token(old_refresh_token)
+        if revoked:
+            print('Token revoked successfuly.')
+        else:
+            print('Error while revoking the token.')  
 
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=60),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=30),
             'iat': datetime.datetime.now(datetime.timezone.utc),
+            'jti': str(uuid.uuid4()),
         }
 
         refresh_payload = {
@@ -162,6 +166,7 @@ class RefreshTokenView(APIView):
             'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
+            'jti': str(uuid.uuid4()),
         }
 
         new_access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
@@ -335,13 +340,6 @@ class OAuthCallbackView(APIView):
         ft_profile.email = ft_email
         ft_profile.save()
 
-        # access_payload = {
-        #     'id': user.id,
-        #     'username': user.username,
-        #     'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
-        #     'iat': datetime.datetime.now(datetime.timezone.utc),
-        # }
-
         refresh_payload = {
             'id': user.id,
             'username': user.username,
@@ -349,7 +347,6 @@ class OAuthCallbackView(APIView):
             'iat': datetime.datetime.now(datetime.timezone.utc),
         }
 
-        # access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
         refresh_token = jwt.encode(refresh_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
 
         html_content = f"""
@@ -379,3 +376,4 @@ class OAuthCallbackView(APIView):
         )
 
         return response
+    

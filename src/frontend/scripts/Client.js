@@ -24,14 +24,34 @@ export class Client{
         this.state.mainSocket = new MainSocket();
     }
 
-    logout() {
+    async logout() {
         this.userId = null;
         this.userName = null;
         this.accessToken = null;
         if (this.state.mainSocket)
             this.state.mainSocket.close(); // handles sub-objects (social, chat, mmaking) closure
-        this.state.mainSocket = null;  
+        this.state.mainSocket = null;
         this.renderProfileBtn();
+
+        try {
+            const response = await fetch('/api/v1/auth/logout/', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+            });
+    
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Logout failed');
+            }
+    
+            window.location.hash = '#home';
+        } catch (error) {
+            console.error('Error:', error);
+        }
     }
 
     globalRender() {
@@ -78,15 +98,19 @@ export class Client{
 
     async refreshSession() {
         const cookie = await this.hasCookie();
-        if (this.accessToken || !cookie)
+        if (this.accessToken || !cookie) {
             return;
+        }
         try {
             const response = await fetch('api/v1/auth/refresh/', {
                 method: 'POST',
                 credentials: 'include'
             });
-            if (!response.ok) throw new Error("Could not refresh token");
-    
+
+            if (!response.ok) {
+                console.log('request error!');
+                throw new Error("Could not refresh token");
+            }
             const data = await response.json();
             try {
                 this.login(data.accessToken);
