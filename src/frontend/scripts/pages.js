@@ -1,5 +1,6 @@
 import { initDynamicCard } from "./components/dynamic_card.js";
-import { isAuthenticated, logout } from "./api/auth.js";
+import { isAuthenticated } from "./api/auth.js";
+import { state } from './main.js';
 
 export function setupHomePage() {
     // document.querySelectorAll('.btn-versus').forEach(button => {
@@ -24,7 +25,7 @@ export function setupProfilePage() {
             }
 
             logoutButton.addEventListener('click', () => {
-                logout();
+                state.client.logout();
             });
 
             document.querySelectorAll('.btn-block').forEach(button => {
