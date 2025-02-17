@@ -110,11 +110,7 @@ export class SocialApp{
             friendsList.appendChild(friendItem);
 
             // add data-user-id="${friend.id} to entire card (create by adrien)
-            friendsList.querySelectorAll('.friend-item').forEach(friendItem => {
-                this.friendlist.forEach(friend =>{
-                    friendItem.dataset.userid = friend.id;
-                });
-            });
+            friendItem.dataset.userid = friend.id;
     
             const btnChat = friendItem.querySelector('.btn-chat');
             const btnMatch = friendItem.querySelector('.btn-match');
