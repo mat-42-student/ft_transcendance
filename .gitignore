@@ -29,7 +29,7 @@ logs/
 my_Dockerfile
 src/my_compose.yml
 src/my_frontend
-src/media
+# src/media
 src/.my_env
 src/nginx/local.conf
 
