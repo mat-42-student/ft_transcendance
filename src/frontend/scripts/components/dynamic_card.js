@@ -11,7 +11,8 @@ const dynamicCardRoutes = {
     'block': './partials/cards/block.html',
     'unblock': './partials/cards/unblock.html',
     '2fa': './partials/cards/2fa.html',
-    'vs_active': './partials/cards/vs_active.html'
+    'vs_active': './partials/cards/vs_active.html',
+	'salonInvite': './partials/cards/salonInvite.html'
 };
 
 export function closeDynamicCard() {

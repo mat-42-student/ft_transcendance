@@ -192,6 +192,7 @@ class Command(BaseCommand):
     # Process to invite
     async def invitation(self, player, obj_invite):
 
+        print("Invitation")
         # Check the frienship with endpoint
         # Check status player
         status = await player.checkStatus(self.redis_client, self.channel_social)
@@ -203,17 +204,27 @@ class Command(BaseCommand):
 
         # Receive the msg by Guest    
         if (obj_invite.get('host_id')):
-            host_id = obj_invite.get('host_id')
+            host_id = None
+            try:
+                host_id = int(obj_invite.get('host_id'))
+            except Exception as e:
+                print(e)
+                return 
 
             # If guest accept invitation
             if (obj_invite.get('accept') == True):
 
                 # Research salon of the host
                 for salon in self.salons['invite']:
-                    if (salon.players.get(host_id)):
+                    host = salon.players.get(host_id)
+                    if (host):
                         # add guest in salon
-                        salon.players.update({player.id: player})
-
+                        salon.players.update({player.user_id: player})
+                        print("Response by server to host")
+                        await self.invitationGame(player, host, True)
+                        await self.invitationGame(host, player, True)
+                        
+                
 
         # Receive the msg by Host
         elif (obj_invite.get('guest_id')):
@@ -235,8 +246,8 @@ class Command(BaseCommand):
             salon.players.update({player.user_id: player})
 
             # Send invitation to guest
-            await self.invitationGame(player.user_id, guest.user_id)
-            await self.confirmSendInvitationGame(player.user_id, guest.user_id)
+            await self.invitationGame(guest, player, None)
+            await self.confirmSendInvitationGame(player.user_id, guest.user_id, None)
         
 
     # Search or create a Salon, if players in Salon < 2 return it else create it
@@ -293,18 +304,19 @@ class Command(BaseCommand):
     #############       INVITATION JSON     #############
 
     # Send invitation game to Client
-    async def invitationGame(self, hostid, guestid):
+    async def invitationGame(self, host, guest, accept):
         data = {
             'header':{
                 'service': 'mmaking',
                 'dest': 'front',
-                'id': guestid,
+                'id': host.user_id,
             },
             'body':{
                 'type_game': {
                     'invite':{
-                        'host_id': hostid,
-                        'accept': None
+                        'host_id': guest.user_id,
+                        'username': guest.username,
+                        'accept': accept
                     }
                 }
             }
@@ -312,7 +324,7 @@ class Command(BaseCommand):
         await self.redis_client.publish(self.channel_front, json.dumps(data))
 
     # Confirm to host the invitation is send to Guest
-    async def confirmSendInvitationGame(self, hostid, guestid):
+    async def confirmSendInvitationGame(self, hostid, guestid, accept):
         data = {
             'header':{
                 'service': 'mmaking',
@@ -323,7 +335,7 @@ class Command(BaseCommand):
                 'type_game': {
                     'invite':{
                         'guest_id': guestid,
-                        'accept': None,
+                        'accept': accept,
                         'send': True
                     }
                 }
