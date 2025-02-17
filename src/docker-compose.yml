@@ -168,6 +168,13 @@ services:
       - redis-network
     restart: on-failure
 
+  cli:
+    container_name: cli
+    image: alpine
+    command: sh -c "apk add --no-cache websocat bash && trap 'exit 0' TERM; sleep infinity & wait"
+    networks:
+      - nginx-network
+
   postgres:
     container_name: postgres
     image: postgres:alpine

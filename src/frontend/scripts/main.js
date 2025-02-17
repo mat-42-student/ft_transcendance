@@ -13,6 +13,7 @@ export const state = {
 };
 
 state.client.setState(state);
+window.state = state; // for eval purpose
 
 document.addEventListener('DOMContentLoaded', () => {
     const homeButton = document.getElementById('btn-home');
@@ -32,23 +33,33 @@ document.addEventListener('DOMContentLoaded', () => {
             navigateTo('#home');
         });
     }
+
     if (profileButton) {
         profileButton.addEventListener('click', async (e) => {
             e.preventDefault();
             if (await isAuthenticated() == false) {
-                initDynamicCard('auth');
-                return;
+                // Try to refresh the session
+                await state.client.refreshSession();
+
+                // Check again if the user is now authenticated
+                if (!(await isAuthenticated())) {
+                    // If still not authenticated, show the auth card
+                    initDynamicCard('auth');
+                    return;
+                }
             } else {
                 navigateTo('#profile');
             }
         });
     }
+
     if (refreshButton) {
         refreshButton.addEventListener('click', async (e) => {
             e.preventDefault();
             state.client.globalRender();
         });
     }
+
     if (playButton) {
         playButton.addEventListener('click', async (e) => {
             e.preventDefault();
@@ -56,10 +67,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.gameApp.launchGameSocket();
         });
     }
+
     const closeButton = document.getElementById('close-dynamic-card');
+
     if (closeButton) {
         closeButton.addEventListener('click', closeDynamicCard);
     }
+
     if (requestsButton) {
         requestsButton.addEventListener('click', () => {
             initDynamicCard('requests');

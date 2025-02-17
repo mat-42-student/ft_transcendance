@@ -3,12 +3,12 @@ import jwt
 import requests
 from asyncio import create_task, sleep as asleep
 from redis.asyncio import from_url
-from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer
 from urllib.parse import parse_qs
 from .Game import Game
 from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT
 
-class PongConsumer(AsyncJsonWebsocketConsumer):
+class PongConsumer(AsyncWebsocketConsumer):
 
     def init(self):
         self.player_id = None
@@ -24,6 +24,7 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         self.public_key = None
         self.redis_client = None
         self.pubsub = None
+        self.connected = False
 
     async def connect(self):
         self.init()
@@ -37,6 +38,7 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
             await self.check_game_info()
             await self.accept()
             await self.send_online_status('ingame')
+            self.connected = True
             self.room_group_name = f"game_{self.game_id}"
             await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         except Exception as e:
@@ -129,13 +131,28 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
         await self.redis_client.publish("deep_social", json.dumps(data))
 
     # Receive message from WebSocket (from client): immediate publish into lobby
-    async def receive_json(self, data):
+    async def receive(self, text_data=None, bytes_data=None):
+        data = self.load_valid_json(text_data)
+        if not (data):
+            print("wrong data incoming")
+            return
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "handle.message", "message": data}
         )
 
+    def load_valid_json(self, data):
+        try:
+            data = json.loads(data)
+            if "action" not in data:
+                return None
+            return data
+        except:
+            return None
+
     async def handle_message(self, data):
-        data = data["message"]
+        data = data.get("message")
+        if not data or not data.get("action"):
+            return
         if data["action"] == "move":
             return await self.moveplayer(data)
         if data["action"] == "init":
@@ -187,8 +204,10 @@ class PongConsumer(AsyncJsonWebsocketConsumer):
             except:
                 pass
 
-    # client wws was closed, sending disconnection to other client
+    # client ws was closed, sending disconnection to other client
     async def disconnect(self, close_code):
+        if not self.connected:
+            return
         who = "master" if self.master else "guest"
         print(f"{RED}Player {self.player_id}({who}) has left{RESET}")
         if self.master and not self.game.over: # game is ending because master left

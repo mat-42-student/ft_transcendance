@@ -8,13 +8,15 @@ export class Game {
 
     launchGameSocket() {
         let socketURL = "wss://" + window.location.hostname + ":3000/game/4/?t=" + state.client.accessToken;
+        // websocat --insecure wss://nginx:3000/game/1234/?t=pouetpouet
+        // websocat ws://pong:8006/game/1234/?t
         this.socket = new WebSocket(socketURL);
         this.socket.onerror = async function(e) {
             console.error(e.message);
         };
     
         this.socket.onopen = async function(e) {
-            await this.send(JSON.stringify({
+            this.send(JSON.stringify({
                 // 'from': state.client.userName,
                 'action' :"wannaplay!",
                 })
