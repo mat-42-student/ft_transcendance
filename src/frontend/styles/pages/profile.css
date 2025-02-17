@@ -64,7 +64,22 @@
     color: blue;
 }
 
+/* Statuts possibles */
+.friend-status.online {
+    background: green;
+}
 
+.friend-status.ingame {
+    background: darkred;
+}
+
+.friend-status.pending {
+    background: orange;
+}
+
+.friend-status.offline {
+    background: grey;
+}
 
 /* Boutons d'action */
 .profile-actions {

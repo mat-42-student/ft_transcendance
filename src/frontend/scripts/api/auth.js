@@ -76,7 +76,7 @@ export async function handleAuthSubmit(event) {
         if (response.ok) {
             const data = await response.json();
             try {
-                state.client.login(data.accessToken);
+                await state.client.login(data.accessToken);
             }
             catch (error) {
                 console.error(error);
@@ -101,7 +101,7 @@ export async function handleAuthSubmit(event) {
                 if (response.ok) {
                     const data = await response.json();
                     try {
-                        state.client.login(data.accessToken);
+                        await state.client.login(data.accessToken);
                     }
                     catch (error) {
                         console.error(error);
