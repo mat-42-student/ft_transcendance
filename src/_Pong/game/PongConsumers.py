@@ -163,12 +163,16 @@ class PongConsumer(AsyncWebsocketConsumer):
             return await self.wannaplay()
 
     async def wannaplay(self):
+        if self.in_game:
+            await self.send(json.dumps({"error":"You already playin mofo"}))
+            return
+        self.in_game = True
         self.nb_players += 1
         print(f"{self.player_id} wannaplay on channel {self.room_group_name}. Currently {self.nb_players} players in lobby")
-        if self.nb_players != 2 or self.in_game:
+        if self.nb_players != 2:
             return
         self.master = True
-        print(f"{YELLOW}Found two players. Master is {self.player_id}{RESET}")
+        print(f"{YELLOW}Found two players. Master is {self.player_name}{RESET}")
         self.game = Game(self.game_id, self.player_id, self.player_name)
         json_data = json.dumps({
             "action" : "init",
@@ -184,7 +188,6 @@ class PongConsumer(AsyncWebsocketConsumer):
         )
 
     async def launch_game(self, data):
-        self.in_game = True
         self.side = LEFT if self.master else RIGHT # master player == player[0] == left player
         data.update({ "side": str(self.side) })
         try:
@@ -194,7 +197,20 @@ class PongConsumer(AsyncWebsocketConsumer):
         if self.master:
             create_task(self.game.play(self))
 
+    def valid_move_message(self, message):
+        try:
+            player = int(message.get("from", "x"))
+            key = int(message.get("key", "x"))
+        except ValueError:
+            return False
+        if player not in [0, 1] or key not in [-1, 0, 1]:
+            return False
+        return True
+       
     async def moveplayer(self, message):
+        if not self.valid_move_message(message):
+            print("invalid move")
+            return
         if self.master: # transmit move to game engine
             self.game.set_player_move(int(message["from"]), int(message["key"]))
         # players handle their own moves client-side, we only transmit the moves to the opposing player
