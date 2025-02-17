@@ -33,7 +33,6 @@ export async function handleHashChange() {
 export function setupNavigation() {
     window.addEventListener('popstate', (e) => {
         e.preventDefault();
-        console.log("popstate change -> " + window.location.hash);
         handleHashChange(); // handleHashChange() remplace navigateTo() pour une meilleure navigation via l'historique
     });
 }
@@ -45,8 +44,6 @@ export async function navigateTo(hash) {
     if (!mainContent) return;
 
     const isAuth = await isAuthenticated();
-
-    console.log("nativageTo -> " + hash + " && isAuth == " + isAuth); //debug
 
     if (hash == '#profile') {
         if (isAuth == false) {

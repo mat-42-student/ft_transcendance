@@ -24,7 +24,7 @@ export function updateAuthForm(mode) {
         mode = 'signin';
     }
 
-    if (mode === 'register') {
+    if (mode === '#register') {
         cleanErrorMessage();
 
         formTitle.textContent = 'Sign Up';
@@ -52,6 +52,5 @@ export function updateAuthForm(mode) {
         registerLink.classList.remove('hidden');
         signinLink.classList.add('hidden');
     }
-    console.log("replaceState -> " + `${mode}`);
     window.history.replaceState({}, '', `${mode}`);
 }

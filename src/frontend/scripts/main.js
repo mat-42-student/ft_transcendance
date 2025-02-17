@@ -23,10 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const requestsButton = document.querySelector('.btn-friend-requests');
     // const friendButtons = document.querySelectorAll('.friend-item');
 
-    console.log("setupNavigation()"); //debug
     setupNavigation();
-
-    console.log("naviagteTo(#home)"); //debug
     navigateTo('#home');
 
     state.client.refreshSession();
