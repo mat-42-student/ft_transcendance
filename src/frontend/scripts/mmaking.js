@@ -49,21 +49,75 @@ export class Mmaking
 
 	incomingMsg(data)
 	{
-
+		
 		if (data.body.status == 'ingame')
 		{
-			console.log(data);
 			for (const [key, value] of Object.entries(data.body.opponents))
 				this.setOpponent(value.username, '../../ressources/match.png')
 
 			state.gameApp = new Game();
 			state.gameApp.launchGameSocket();
 		}
+		else if (data.body.type_game.invite)
+		{
+			const friendlist = document.querySelectorAll('.friend-item');
+			
+			friendlist.forEach(friend => {
+				if (friend.dataset.userid == data.body.type_game.invite.host_id )
+				{
+					const btnmatch = friend.querySelector('.btn-match');
+					const imgmatch = btnmatch.getElementsByTagName('img');
+					imgmatch[0].src = "/ressources/vs_active.png";
+					btnmatch.dataset.invite = 1;
+
+				}
+			});
+		}
 	}
 
-	launch_game()
+	async invite(guestid, target)
 	{
-		 
+		if (target.dataset.invite == 1)
+		{
+			await initDynamicCard('vs_active');
+			
+			const acceptInvitation = document.querySelector('.invitation .btn-accepter');
+			acceptInvitation.addEventListener('click', async (event)=>{
+
+				const data = {
+					'header':{
+						'service': 'mmaking',
+						'dest': 'back',
+						'id': state.client.userId,
+					},
+					'body':{
+						'type_game': {
+							'invite':{
+								'host_id': guestid,
+								'accept': true
+							}
+						}
+					}
+				};
+				await this.sendMsg(data);
+				target.dataset.invite = false
+				target.getElementsByTagName('img')[0].src = '/ressources/vs.png';
+
+				closeDynamicCard()
+			});
+		}
+		else
+		{
+			const data = 
+			{
+				'type_game': {
+					'invite': {
+						'guest_id': guestid
+					}
+				}
+			};
+			await this.sendMsg(data);
+		}
 	}
 
 	async cancel_game()
@@ -93,5 +147,31 @@ export class Mmaking
 		document.getElementById("loader").style.display = "none";
 		document.getElementById("waiting-text").textContent = "Préparez-vous à jouer !";
 		document.getElementById("cancel-button").style.display = "none";
+	}
+
+	createCard() {
+		const card = document.createElement("div");
+		card.classList.add("invitation");
+		
+		const title = document.createElement("h2");
+		title.textContent = "Invitation";
+		
+		const message = document.createElement("p");
+		message.textContent = "Souhaitez-vous accepter cette demande ?";
+		
+		const acceptButton = document.createElement("button");
+		acceptButton.classList.add("btn-invitation", "btn-accepter");
+		acceptButton.textContent = "✅";
+		
+		const refuseButton = document.createElement("button");
+		refuseButton.classList.add("btn-invitation", "btn-refuser");
+		refuseButton.textContent = "❌";
+		
+		card.appendChild(title);
+		card.appendChild(message);
+		card.appendChild(acceptButton);
+		card.appendChild(refuseButton);
+		
+		return card;
 	}
 }

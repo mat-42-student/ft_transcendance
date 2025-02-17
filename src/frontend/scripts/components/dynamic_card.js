@@ -11,10 +11,12 @@ const dynamicCardRoutes = {
     'block': './partials/cards/block.html',
     'unblock': './partials/cards/unblock.html',
     '2fa': './partials/cards/2fa.html',
+    'vs_active': './partials/cards/vs_active.html'
 };
 
 export function closeDynamicCard() {
     const cardContainer = document.getElementById('dynamic-card-container');
+
     cardContainer.classList.add('hidden');
     window.history.replaceState({}, '', `#home`);
 }

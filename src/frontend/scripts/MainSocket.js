@@ -45,7 +45,7 @@ export class MainSocket {
 					state.socialApp.incomingMsg(data.body);
 					break
 				case 'mmaking':
-					if (await state.mmakingApp.waited_page)
+					//if (await state.mmakingApp.waited_page)
 						state.mmakingApp.incomingMsg(data);
 					break;
 				default:

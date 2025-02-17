@@ -3,11 +3,16 @@ from redis.asyncio import from_url
 import json
 import asyncio
 import time
-from .Player import Player
-from .Salon import Salon
-from .Random1vs1 import Random1vs1
 from asyncio import run as arun, sleep as asleep, create_task
 from signal import signal, SIGTERM, SIGINT
+
+# Custom Class
+from .Player import Player
+from .Salon import Salon
+from .Guest import Guest
+from .Random1vs1 import Random1vs1
+
+
 
 class Command(BaseCommand):
     help = "Commande pour écouter un canal Redis avec Pub/Sub"   
@@ -127,8 +132,6 @@ class Command(BaseCommand):
     
     def deletePlayer(self, salon ,player):
         try:
-            # for type_salon in self.salons:
-            #     for salon in type_salon:
             del salon.players[player.user_id]
             print(f'{player} is DELETE')
         except Exception as e:
@@ -153,10 +156,11 @@ class Command(BaseCommand):
             player.type_game = '1vs1R'
             await self.random(player)
             print(f'{player}')
-        elif (body.get('type_game') == 'invite'): # Invite
+        elif (body.get('type_game').get('invite')): # Invite
+            print(f'INVITATION {body}')
             player.type_game = 'invite'
-            invite = body.get['type_game']['invite']
-            print(f'{invite}')
+            invite = body['type_game']['invite']
+            await self.invitation(player, invite)
         elif (body.get('type_game') == 'tournament'):
             # Research Player with opponents < 4 and the type_game is tournament
             print(f'tournament')
@@ -175,7 +179,7 @@ class Command(BaseCommand):
         player.get_user()
         
         # Create and update Salon
-        salon = self.create_salon(player.type_game)
+        salon = self.createSalonRandom(player.type_game)
         salon.players.update({player.user_id: player})
         salon.type_game = player.type_game
         
@@ -190,9 +194,67 @@ class Command(BaseCommand):
             self.create_game(salon.type_game, salon)
             await self.send_1vs1R(salon)
         
+    
+    # Process to invite
+    async def invitation(self, player, obj_invite):
+
+        # Check the frienship with endpoint
+        print(f'obj invite {obj_invite}')
+        # Check status player
+        status = await player.checkStatus(self.redis_client, self.channel_social)
+        if (status == 'ingame' and status is None):
+            print(f"Player Status is Bad -> {status}")
+
+        # Setup host
+        player.get_user()
+
+        # Receive the msg by Guest    
+        if (obj_invite.get('host_id')):
+            host_id = obj_invite.get('host_id')
+            print('The message coming by Guest')
+
+            # If guest accept invitation
+            if (obj_invite.get('accept') == True):
+
+                # Research salon of the host
+                for salon in self.salons['invite']:
+                    if (salon.players.get(host_id)):
+                        # add guest in salon
+                        salon.players.update({player.id: player})
+                        print('Guest has add with Host')
+
+
+        # Receive the msg by Host
+        elif (obj_invite.get('guest_id')):
+            print('The message coming by host')
+            
+            # Build Guest
+            guest = Guest()
+            guest.user_id = obj_invite['guest_id']
+
+            # Check status guest
+            status = await guest.checkStatus(self.redis_client, self.channel_social)
+            if (status == 'ingame' or status is None):
+                print(f"Guest Status is Bad -> {status}")
+
+            # Add to dict of Host the guests
+            player.guests.update({guest.user_id: guest})
+
+            # Create salon or find it by the host
+            salon = self.createSalonInvite(player.type_game, player)
+            salon.players.update({player.user_id: player})
+
+            # Send invitation to guest
+            await self.invitationGame(player.user_id, guest.user_id)
+            await self.confirmSendInvitationGame(player.user_id, guest.user_id)
+            
+            
+
+        print('Invite')
+        
 
     # Search or create a Salon, if players in Salon < 2 return it else create it
-    def create_salon(self, type_game):
+    def createSalonRandom(self, type_game):
         """Search or create a Salon, if players in Salon < 2 return it else create it"""
         mainSalon = Salon()
         for salon in self.salons[type_game]:
@@ -204,6 +266,20 @@ class Command(BaseCommand):
                     print(e)
                 break
         return (mainSalon)
+
+    def createSalonInvite(self, type_game, host):
+        """Search Salon belongs to host or create it, if players has not it"""
+        mainSalon = Salon()
+        for salon in self.salons[type_game]:
+            if (salon.players.get(host.user_id)):
+                # mainSalon = salon
+                # try:
+                #     self.salons[salon.type_game].remove(salon)
+                # except Exception as e:
+                #     print(e)
+                return salon
+        self.salons[type_game].append(mainSalon)
+        return (self.salons[type_game][-1])
     
     def create_game(self, type_game, salon):
         # Create game in database with an id and send start game clients and set status
@@ -231,6 +307,50 @@ class Command(BaseCommand):
         data['body']['opponents'] = salon.getDictPlayers()
         del data['body']['opponents'][id]
         await self.redis_client.publish(self.channel_front, json.dumps(data))
+
+
+    #############       INVITATION JSON     #############
+
+    # Send invitation game to Client
+    async def invitationGame(self, hostid, guestid):
+        data = {
+            'header':{
+                'service': 'mmaking',
+                'dest': 'front',
+                'id': guestid,
+            },
+            'body':{
+                'type_game': {
+                    'invite':{
+                        'host_id': hostid,
+                        'accept': None
+                    }
+                }
+            }
+        }
+        await self.redis_client.publish(self.channel_front, json.dumps(data))
+
+    # Confirm to host the invitation is send to Guest
+    async def confirmSendInvitationGame(self, hostid, guestid):
+        data = {
+            'header':{
+                'service': 'mmaking',
+                'dest': 'front',
+                'id': hostid,
+            },
+            'body':{
+                'type_game': {
+                    'invite':{
+                        'guest_id': guestid,
+                        'accept': None,
+                        'send': True
+                    }
+                }
+            }
+        }
+        await self.redis_client.publish(self.channel_front, json.dumps(data))
+
+    #############       INVITATION JSON     #############
 
     # Send status ingame to Social to setup status in front
     async def start_1vs1RtoSocial(self, id):

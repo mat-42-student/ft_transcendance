@@ -1,7 +1,7 @@
 import json
 import requests
 import asyncio
-from .invite import Guest
+#from .Guest import Guest
 
 class Player ():
     def __init__(self):
@@ -9,7 +9,7 @@ class Player ():
         self.token = None
         self.username = None
         self.type_game = None
-        self.guests = None
+        self.guests = {}
         self.cancel = False
     
     def get_id(self):

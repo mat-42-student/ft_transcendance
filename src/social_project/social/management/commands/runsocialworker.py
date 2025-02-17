@@ -84,7 +84,11 @@ class Command(BaseCommand):
         print(f"User {user_id} is now {status}")
 
     async def get_info_process(self, data):
-        user_id = data.get('user_id')
+        try:
+            user_id = int(data.get('user_id', 'x'))
+        except Exception as e:
+            print(e)
+            return
         if user_id:
             status = self.user_status.get(user_id, "offline")
         key = f"user_{user_id}_status"
