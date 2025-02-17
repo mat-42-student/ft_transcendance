@@ -69,7 +69,7 @@ export class Mmaking
 					const imgmatch = btnmatch.getElementsByTagName('img');
 					imgmatch[0].src = "/ressources/vs_active.png";
 					btnmatch.dataset.invite = 1;
-
+					return ;
 				}
 			});
 		}

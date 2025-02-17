@@ -53,8 +53,6 @@ class Command(BaseCommand):
             self.invite = {} # dict with host_id key and host_player value
             self.message = None
             
-            print(f"Subscribing to channel: {self.channel_front}")
-            
             # Subscribe all channels
             await self.pubsub.subscribe(self.channel_front)
             await self.pubsub.subscribe(self.channel_social)
@@ -133,7 +131,6 @@ class Command(BaseCommand):
     def deletePlayer(self, salon ,player):
         try:
             del salon.players[player.user_id]
-            print(f'{player} is DELETE')
         except Exception as e:
             print(e)
             
@@ -150,14 +147,11 @@ class Command(BaseCommand):
         
         # Setup token to request endpoints api
         player.token = header['token']
-        print("stupe player object")
 
         if (body.get('type_game') == '1vs1R'): # 1vs1R
             player.type_game = '1vs1R'
             await self.random(player)
-            print(f'{player}')
         elif (body.get('type_game').get('invite')): # Invite
-            print(f'INVITATION {body}')
             player.type_game = 'invite'
             invite = body['type_game']['invite']
             await self.invitation(player, invite)
@@ -199,7 +193,6 @@ class Command(BaseCommand):
     async def invitation(self, player, obj_invite):
 
         # Check the frienship with endpoint
-        print(f'obj invite {obj_invite}')
         # Check status player
         status = await player.checkStatus(self.redis_client, self.channel_social)
         if (status == 'ingame' and status is None):
@@ -211,7 +204,6 @@ class Command(BaseCommand):
         # Receive the msg by Guest    
         if (obj_invite.get('host_id')):
             host_id = obj_invite.get('host_id')
-            print('The message coming by Guest')
 
             # If guest accept invitation
             if (obj_invite.get('accept') == True):
@@ -221,12 +213,10 @@ class Command(BaseCommand):
                     if (salon.players.get(host_id)):
                         # add guest in salon
                         salon.players.update({player.id: player})
-                        print('Guest has add with Host')
 
 
         # Receive the msg by Host
         elif (obj_invite.get('guest_id')):
-            print('The message coming by host')
             
             # Build Guest
             guest = Guest()
@@ -247,10 +237,6 @@ class Command(BaseCommand):
             # Send invitation to guest
             await self.invitationGame(player.user_id, guest.user_id)
             await self.confirmSendInvitationGame(player.user_id, guest.user_id)
-            
-            
-
-        print('Invite')
         
 
     # Search or create a Salon, if players in Salon < 2 return it else create it
@@ -272,11 +258,6 @@ class Command(BaseCommand):
         mainSalon = Salon()
         for salon in self.salons[type_game]:
             if (salon.players.get(host.user_id)):
-                # mainSalon = salon
-                # try:
-                #     self.salons[salon.type_game].remove(salon)
-                # except Exception as e:
-                #     print(e)
                 return salon
         self.salons[type_game].append(mainSalon)
         return (self.salons[type_game][-1])
