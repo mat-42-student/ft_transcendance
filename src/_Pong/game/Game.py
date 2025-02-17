@@ -129,4 +129,3 @@ class Game:
     
     def send_score(self):
         print("Sending score...")
-        pass

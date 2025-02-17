@@ -13,6 +13,7 @@ export const state = {
 };
 
 state.client.setState(state);
+window.state = state; // for eval purpose
 
 document.addEventListener('DOMContentLoaded', () => {
     const homeButton = document.getElementById('btn-home');
@@ -35,13 +36,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+
     if (profileButton) {
         profileButton.addEventListener('click', async (e) => {
             e.preventDefault();
             navigateTo('#profile');
         });
     }
-    
+
     if (refreshButton) {
         refreshButton.addEventListener('click', async (e) => {
             e.preventDefault();

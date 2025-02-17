@@ -5,10 +5,10 @@ import jwt
 from .models import User
 
 class JWTAuthentication(BaseAuthentication):
-    """
-    Custom authentication class for JWT-based authentication.
-    """
     def authenticate(self, request):
+        """
+        Custom authentication class for JWT-based authentication.
+        """
         auth_header = request.headers.get('Authorization')
 
         if not auth_header or not auth_header.startswith('Bearer '):

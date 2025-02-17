@@ -88,6 +88,8 @@ export class SocialApp{
             const btnMatch = friendItem.querySelector('.btn-match');
             btnChat.removeEventListener('click', this.handleChatClick);
             btnMatch.removeEventListener('click', this.handleMatchClick);
+
+
         });
 
         friendsList.innerHTML = ''; // Efface la liste existante
@@ -112,12 +114,16 @@ export class SocialApp{
                 </div>
             `;
             friendsList.appendChild(friendItem);
+
+            // add data-user-id="${friend.id} to entire card (create by adrien)
+            friendItem.dataset.userid = friend.id;
     
             const btnChat = friendItem.querySelector('.btn-chat');
             const btnMatch = friendItem.querySelector('.btn-match');
     
             btnChat.dataset.friendId = friend.id;
             btnMatch.dataset.friendId = friend.id;
+            btnMatch.dataset.invite = 0;
     
             btnChat.addEventListener('click', this.handleChatClick);
             btnMatch.addEventListener('click', this.handleMatchClick);
@@ -131,7 +137,7 @@ export class SocialApp{
     
     handleMatchClick(event) {
         const friendId = event.currentTarget.dataset.friendId;
-        // state.mmakingApp.invite(friendId);
+        state.mmakingApp.invite(friendId, event.currentTarget);
     }
 
     removeAllFriendListeners() {

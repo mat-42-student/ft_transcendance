@@ -36,7 +36,6 @@ class Random1vs1():
         completed = self.add_1vs1R(player.user_id, player)
         if (not completed):
             return
-        print("START GAME")
         for key in self.salon.players:
             await self.start_1vs1RtoFront(key)
             await self.start_1vs1RtoSocial(key)

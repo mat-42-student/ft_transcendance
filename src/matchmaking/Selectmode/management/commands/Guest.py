@@ -1,25 +1,12 @@
 import asyncio
 import json
-class Invite():
-    def __init__(self, redis, channel_front, channel_social):
-        self.hosts = None
-        self.guests = None
-        self.salon = None
-        self.redis = redis
-        self.channelFront = channel_front
-        self.channelSocial = channel_social
+from .Player import Player
 
-    
-    def monitor_host(self, host, guest):
-        # Research information host on endpoint
-        # Setup player_host and player_guest infos
-        already_host = self.hosts.get(host.user_id)
-        if (already_host):
-            already_host['guests'].update({guest.user_id: guest})
-        else:
-            hostGuest = {'host': host, 'guests': {guest.user_id: guest}}
-        self.hosts.update({host.user_id: hostGuest})
-        self.guests.update({guest.user_id: guest})
+class Guest(Player):
+    def __init__(self):
+        self.hosts = {}
+        self.accepted = False
+
 
     
     async def start_1vs1RtoFront(self, id):
