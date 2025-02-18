@@ -4,7 +4,6 @@ export class SocialApp{
 
     constructor(){
         this.friendlist = null;
-        this.fetchFriends();
     }
 
     async fetchFriends() {
@@ -88,17 +87,12 @@ export class SocialApp{
             const btnMatch = friendItem.querySelector('.btn-match');
             btnChat.removeEventListener('click', this.handleChatClick);
             btnMatch.removeEventListener('click', this.handleMatchClick);
-
-
         });
-
-        friendsList.innerHTML = ''; // Efface la liste existante
-
+        friendsList.innerHTML = '';
         if (this.friendlist == null) {
             friendsList.innerHTML = '<p>Seems you have no friends</p>';
             return;
         }
-    
         this.friendlist.forEach((friend) => {
             const friendItem = document.createElement('li');
             friendItem.classList.add('friend-item');
@@ -148,5 +142,19 @@ export class SocialApp{
             btnChat.removeEventListener('click', this.handleChatClick);
             btnMatch.removeEventListener('click', this.handleMatchClick);
         });
+    }
+
+    async getInfos() {
+        let data = {
+            "header": {
+                "service": "social",
+                "dest": "back",
+                "id": state.client.userId
+            },
+            "body":{
+                "status": "info"
+            }
+        };
+        await state.mainSocket.send(JSON.stringify(data));
     }
 }
