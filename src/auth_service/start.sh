@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 
+python ./manage.py collectstatic
 python ./manage.py makemigrations authentication --no-input
 python ./manage.py migrate --no-input
 

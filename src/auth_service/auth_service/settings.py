@@ -12,6 +12,17 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+OAUTH2_PROVIDER = {
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
+    'SCOPES': {
+        'read': 'Read scope',
+        'write': 'Write scope'
+    }
+}
+
 JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")
 JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")
 JWT_ALGORITHM = 'RS256'
@@ -26,6 +37,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'authentication',
+    'oauth2_provider',
 ]
 
 MIDDLEWARE = [
@@ -111,10 +123,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CSRF_TRUSTED_ORIGINS = [
-#     'http://127.0.0.1:9090',
-#     'http://localhost:9090',
-# ]
+CSRF_TRUSTED_ORIGINS = ['https://localhost:3000']
 
 AUTH_USER_MODEL = 'authentication.User'
 

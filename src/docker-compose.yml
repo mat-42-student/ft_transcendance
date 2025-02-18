@@ -13,6 +13,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./auth_service:/code
+      - static_volume:/code/staticfiles
     depends_on:
       postgres:
         condition: service_healthy
@@ -145,6 +146,7 @@ services:
     volumes:
       - ./media:/media
       - ./frontend:/usr/share/nginx/frontend
+      - static_volume:/code/staticfiles
     networks:
       - nginx-network
     restart: on-failure
@@ -205,6 +207,7 @@ services:
 volumes:
   postgres_data:
   media:
+  static_volume:
 
 networks:
   nginx-network:

@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
 
@@ -23,7 +23,7 @@ class UserManager(BaseUserManager):
         db_table = 'user_manager'
     
 # User model (inherits Django user model)
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     STATUS_CHOICES = [
         ('online', 'Online'),
         ('offline', 'Offline'),
