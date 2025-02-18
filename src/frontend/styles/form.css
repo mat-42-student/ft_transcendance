@@ -22,7 +22,7 @@
 #dynamic-card-content button {
     width: 100%;
     padding: 10px;
-    background-color: #007bff;
+    /* background-color: #007bff; */ /* by  Adrien */
     color: white;
     border: none;
     border-radius: 5px;
@@ -33,7 +33,7 @@
 }
 
 #dynamic-card-content button:hover {
-    background-color: #0056b3;
+    /* background-color: #0056b3; */ /* by adrien */
 }
 
 #dynamic-card-content button#oauth-submit {
