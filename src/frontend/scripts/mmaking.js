@@ -90,9 +90,30 @@ export class Mmaking
 				if (invite.accept == true)
 				{
 					if (host_id)
+					{
 						await initDynamicCard('salonGuest');
+
+					}
 					else if (guest_id)
+					{
 						await initDynamicCard('salonHost');
+						const startgame = document.getElementById("start-game");
+						console.log(startgame);
+						startgame.addEventListener('click', async (event) =>
+						{
+							const data = {
+								'type_game': {
+									'invite':{
+										'guest_id': guest_id,
+										'accept': true,
+										'startgame': true 
+									}
+								}
+							};
+							await this.sendMsg(data);
+						});
+
+					}
 					
 					this.desableOverlay();
 					this.setGuest(invite.username, '../../../media/avatars/default.png');

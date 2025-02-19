@@ -77,8 +77,10 @@ class Command(BaseCommand):
                     if (msg.get('channel') != self.channel_social): # Do nothing if msg is send on info_social
                         message = json.loads(msg.get('data'))
                         print(message)
-                        await self.SelectTypeGame(message)
-                        
+                        if (message.get('header').get('dest') == 'front'):
+                            pass
+                        else:
+                            await self.SelectTypeGame(message)
                         print("listen again...")
                 except Exception as e:
                     print(e)
@@ -115,9 +117,9 @@ class Command(BaseCommand):
                         already_player = salon.players.get(header.get('id'))
                         
                     # Check if player want give up the search or is disconnect
-                    if (already_player and body.get('cancel') or body.get('disconnect')):
+                    if (already_player and (body.get('cancel') or body.get('disconnect'))):
                         await already_player.updateStatus(self.redis_client, self.channel_deepSocial, "online")
-                        print(f'{type_salon} | {salon} | {already_player}')
+                        print(f'{salon} | {already_player}')
                         self.deletePlayer(salon, already_player)
                         return False
                     
@@ -202,27 +204,35 @@ class Command(BaseCommand):
         print("Invitation")
         # Check the frienship with endpoint
         # Check status player
+        
+        if (obj_invite.get('startgame')):
+            if (await self.launchInviteGame(player)):
+                return 
         status = await player.checkStatus(self.redis_client, self.channel_social)
+        
+
+        
         if (status != 'online' or status is None):
             try:
                 guestid = int(obj_invite.get('guest_id'))
-                await self.cancelInvitation(player.user_id, guestid )
-                return 
+                await self.cancelInvitation(player.user_id, guestid)
             except Exception as e:
                 print(e)
+            return 
 
         # Setup host
         player.get_user()
 
+
         # Receive the msg by Guest    
         if (obj_invite.get('host_id')):
+            print("process host_id")
             host_id = None
             try:
                 host_id = int(obj_invite.get('host_id'))
             except Exception as e:
                 print(e)
                 return 
-
             # If guest accept invitation
             if (obj_invite.get('accept') == True):
 
@@ -239,8 +249,13 @@ class Command(BaseCommand):
                                 del host.guests[guestid]
                             # Add guest to salon by Host
                             else:
+                                # Setup Guest
                                 guest = host.guests[guestid]
+                                guest.token = player.token
+                                guest.get_user()
+                                guest.type_game = 'invite'
                                 salon.players.update({guestid: guest })
+                                
                                 # update status Guest
                                 await guest.updateStatus(self.redis_client, self.channel_deepSocial, 'pending')
                                 await self.invitationGameToGuest(guest, host, True)
@@ -265,7 +280,7 @@ class Command(BaseCommand):
 
         # Receive the msg by Host
         elif (obj_invite.get('guest_id')):
-            
+            print("process guest_id")
             # Build Guest
             guest = Guest()
             try:
@@ -273,7 +288,10 @@ class Command(BaseCommand):
             except Exception as e:
                 print(e)
                 return
+            
 
+            print("process guest_id")
+            
             # Check status guest
             status = await guest.checkStatus(self.redis_client, self.channel_social)
             if (status != 'online' or status is None):
@@ -331,9 +349,27 @@ class Command(BaseCommand):
         self.salons[type_game].append(mainSalon)
         return (self.salons[type_game][-1])
     
-    # def launchInviteGame(self, player):
-    #     for salon in self.salons[player.type_game]:
-    #         if (salon)  
+    async def launchInviteGame(self, player):
+        checkplayers = 0
+        for salon in self.salons[player.type_game]:
+            if (len(salon.players) == 2):
+                if (salon.players.get(player.user_id)):
+                    for pid, pvalue in salon.players.items():
+                        if (await pvalue.checkStatus(self.redis_client, self.channel_social) == 'pending'):
+                            checkplayers = checkplayers + 1
+                        else:
+                            return False
+                    
+                    # start the game
+                    if (checkplayers == 2):
+                        for pid in salon.players:
+                            await self.start_toFront(pid, salon)
+                        return True
+                    else:
+                        return False
+                        
+                        
+                        
     
     def create_game(self, type_game, salon):
         # Create game in database with an id and send start game clients and set status
