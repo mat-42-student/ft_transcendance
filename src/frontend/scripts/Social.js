@@ -64,7 +64,6 @@ export class SocialApp{
         if (!friend)
             return ;
         friend['status'] = data.status;
-        console.log("social: " + data.user_id + " is " + data.status);
         this.renderFriendStatus(data.user_id);
     }
 
