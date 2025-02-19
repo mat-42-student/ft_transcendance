@@ -59,6 +59,23 @@ export class Mmaking
             state.gameApp = new Game();
             state.gameApp.launchGameSocket();
         }
+		else if (data.body.cancel == true)
+		{
+			console.log('Reset img and card');
+			const friendlist = document.querySelectorAll('.friend-item');
+	
+			friendlist.forEach(friend => {
+				if (friend.dataset.userid == data.body.type_game.invite.host_id )
+				{
+					const btnmatch = friend.querySelector('.btn-match');
+					const imgmatch = btnmatch.getElementsByTagName('img');
+					imgmatch[0].src = "/ressources/vs.png";
+					this.ResetCardFriend(btnmatch);
+					btnmatch.dataset.invite = false;
+					return ;
+				}
+			});
+		}
 		// Routing to communication mode Invite
         else if (data.body.type_game.invite)
         {
@@ -103,23 +120,7 @@ export class Mmaking
 						}
 					});
 				}
-				else if (invite.cancel == true)
-				{
-					
-					const friendlist = document.querySelectorAll('.friend-item');
-			
-					friendlist.forEach(friend => {
-						if (friend.dataset.userid == data.body.type_game.invite.host_id )
-						{
-							const btnmatch = friend.querySelector('.btn-match');
-							const imgmatch = btnmatch.getElementsByTagName('img');
-							imgmatch[0].src = "/ressources/vs.png";
-							this.ResetCardFriend(btnmatch);
-							btnmatch.dataset.invite = false;
-							return ;
-						}
-					});
-				}
+
 				// Invitation come here to notif the client
 				else if (invite.accept == null)
 				{

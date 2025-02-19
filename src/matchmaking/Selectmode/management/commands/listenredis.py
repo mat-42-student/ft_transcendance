@@ -203,8 +203,13 @@ class Command(BaseCommand):
         # Check the frienship with endpoint
         # Check status player
         status = await player.checkStatus(self.redis_client, self.channel_social)
-        if (status == 'ingame' and status is None):
-            print(f"Player Status is Bad -> {status}")
+        if (status != 'online' or status is None):
+            try:
+                guestid = int(obj_invite.get('guest_id'))
+                await self.cancelInvitation(player.user_id, guestid )
+                return 
+            except Exception as e:
+                print(e)
 
         # Setup host
         player.get_user()
@@ -222,22 +227,27 @@ class Command(BaseCommand):
             if (obj_invite.get('accept') == True):
 
                 # Research salon of the host
-                print(f'length of salons Invite {len(self.salons['invite'])}')
                 for salon in self.salons['invite']:
                     host = salon.players.get(host_id)
                     if (host):
-                        # add guest in salon
-                        salon.players.update({player.user_id: player})
                         
-                        # Cancel invitation of other guests
-                        for guestid, guest in host.guests.items():
+                        # Guest
+                        for guestid in list(host.guests):
+                            # Cancel invitation of other guests
                             if (guestid != player.user_id):
                                 await self.cancelInvitation(guestid, host.user_id)
-                        # update status
-                        await player.updateStatus(self.redis_client, self.channel_deepSocial, 'pending')
+                                del host.guests[guestid]
+                            # Add guest to salon by Host
+                            else:
+                                guest = host.guests[guestid]
+                                salon.players.update({guestid: guest })
+                                # update status Guest
+                                await guest.updateStatus(self.redis_client, self.channel_deepSocial, 'pending')
+                                await self.invitationGameToGuest(guest, host, True)
+                                
+                        # Host
                         await host.updateStatus(self.redis_client, self.channel_deepSocial, 'pending')
                         print("Response by server to host")
-                        await self.invitationGameToGuest(player, host, True)
                         await self.invitationGameToHost(host, player, True)
                         
             elif (obj_invite.get('accept') == False):
@@ -276,7 +286,10 @@ class Command(BaseCommand):
 
             # Create salon or find it by the host
             salon = self.createSalonInvite(player.type_game, player)
-            salon.players.update({player.user_id: player})
+            if (salon is not None):
+                salon.players.update({player.user_id: player})
+            else:
+                return
             
             # update player
             #await player.updateStatus(self.redis_client, self.channel_deepSocial, 'pending')
@@ -305,18 +318,27 @@ class Command(BaseCommand):
         """Search Salon belongs to host or create it, if players has not it"""
         mainSalon = Salon()
         for salon in self.salons[type_game]:
-            if (salon.players.get(host.user_id)):
-                print('This Host already exist !!!!!')
-                return salon
+            player = salon.players.get(host.user_id)
+            if (player):
+                print(f'issubclass {isinstance(type(player), Guest)}')
+                if (not isinstance(type(player), Guest)):
+                    print('This Host already exist !!!!!')
+                    return salon
+                else:
+                    print("Return not salon")
+                    return None
         mainSalon.type_game = type_game
         self.salons[type_game].append(mainSalon)
         return (self.salons[type_game][-1])
+    
+    # def launchInviteGame(self, player):
+    #     for salon in self.salons[player.type_game]:
+    #         if (salon)  
     
     def create_game(self, type_game, salon):
         # Create game in database with an id and send start game clients and set status
         self.game[type_game].append(salon)
        
-        
         
     async def send_1vs1R(self, salon):
          for key, player in salon.players.items():
@@ -333,6 +355,7 @@ class Command(BaseCommand):
             },
             'body':{
                 'status': 'ingame',
+                'cancel': False
             }
         }
         data['body']['opponents'] = salon.getDictPlayers()
@@ -356,8 +379,9 @@ class Command(BaseCommand):
                         'host_id': guest.user_id,
                         'username': guest.username,
                         'accept': accept
-                    }
-                }
+                    },
+                },
+                'cancel': False
             }
         }
         await self.redis_client.publish(self.channel_front, json.dumps(data))
@@ -375,8 +399,9 @@ class Command(BaseCommand):
                         'guest_id': guest.user_id,
                         'username': guest.username,
                         'accept': accept
-                    }
-                }
+                    },
+                },
+                'cancel': False
             }
         }
         await self.redis_client.publish(self.channel_front, json.dumps(data))
@@ -395,8 +420,9 @@ class Command(BaseCommand):
                         'guest_id': guestid,
                         'accept': accept,
                         'send': True
-                    }
-                }
+                    },
+                },
+                'cancel': False
             }
         }
         await self.redis_client.publish(self.channel_front, json.dumps(data))
@@ -412,9 +438,9 @@ class Command(BaseCommand):
                 'type_game': {
                     'invite':{
                         'host_id': guestid,
-                        'cancel': True
-                    }
-                }
+                    },
+                },
+                'cancel': True
             }
         }
         await self.redis_client.publish(self.channel_front, json.dumps(data))
