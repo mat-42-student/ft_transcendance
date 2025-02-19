@@ -4,6 +4,7 @@ export class SocialApp{
 
     constructor(){
         this.friendlist = null;
+        this.myStatus = null;
     }
 
     async fetchFriends() {
@@ -44,7 +45,8 @@ export class SocialApp{
     }
 
     getFriend(id) {
-        return this.friendlist.get(Number(id));
+        id = Number(id);
+        return Number.isInteger(id) ? this.friendlist.get(id) : null;
     }
 
     close() {
@@ -54,10 +56,15 @@ export class SocialApp{
     }
 
     incomingMsg(data) {
+        if (data.user_id == state.client.userId) {
+            this.myStatus = data.status;
+            return ;
+        }
         let friend = this.friendlist.get(data.user_id);
         if (!friend)
-            return;
+            return ;
         friend['status'] = data.status;
+        console.log("social: " + data.user_id + " is " + data.status);
         this.renderFriendStatus(data.user_id);
     }
 

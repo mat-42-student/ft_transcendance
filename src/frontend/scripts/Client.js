@@ -9,6 +9,7 @@ export class Client{
         this.state = null;
     }
 
+    // Avoiding circular imports (main.js/Client.js)
     setState(state) {
         this.state = state;
     }
@@ -171,7 +172,7 @@ export class Client{
 				this.userName = data.username;
 				this.avatar = data.avatar;
 				this.status = data.status; // changer gestion status par full front + ws pour echange entre users
-				console.log("Status reçu :", data.status); //debug
+				// console.log("Status reçu :", data.status); //debug
 				this.updateProfilePage();
 			} else {
 				console.error("Failed to fetch user profile:", response.status);
