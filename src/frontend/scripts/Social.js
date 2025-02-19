@@ -4,7 +4,7 @@ export class SocialApp{
 
     constructor(){
         this.friendlist = null;
-        this.fetchFriends();
+        this.myStatus = null;
     }
 
     async fetchFriends() {
@@ -45,7 +45,8 @@ export class SocialApp{
     }
 
     getFriend(id) {
-        return this.friendlist.get(Number(id));
+        id = Number(id);
+        return Number.isInteger(id) ? this.friendlist.get(id) : null;
     }
 
     close() {
@@ -55,9 +56,13 @@ export class SocialApp{
     }
 
     incomingMsg(data) {
+        if (data.user_id == state.client.userId) {
+            this.myStatus = data.status;
+            return ;
+        }
         let friend = this.friendlist.get(data.user_id);
         if (!friend)
-            return;
+            return ;
         friend['status'] = data.status;
         this.renderFriendStatus(data.user_id);
     }
@@ -88,17 +93,12 @@ export class SocialApp{
             const btnMatch = friendItem.querySelector('.btn-match');
             btnChat.removeEventListener('click', this.handleChatClick);
             btnMatch.removeEventListener('click', this.handleMatchClick);
-
-
         });
-
-        friendsList.innerHTML = ''; // Efface la liste existante
-
+        friendsList.innerHTML = '';
         if (this.friendlist == null) {
             friendsList.innerHTML = '<p>Seems you have no friends</p>';
             return;
         }
-    
         this.friendlist.forEach((friend) => {
             const friendItem = document.createElement('li');
             friendItem.classList.add('friend-item');
@@ -148,5 +148,19 @@ export class SocialApp{
             btnChat.removeEventListener('click', this.handleChatClick);
             btnMatch.removeEventListener('click', this.handleMatchClick);
         });
+    }
+
+    async getInfos() {
+        let data = {
+            "header": {
+                "service": "social",
+                "dest": "back",
+                "id": state.client.userId
+            },
+            "body":{
+                "status": "info"
+            }
+        };
+        await state.mainSocket.send(JSON.stringify(data));
     }
 }

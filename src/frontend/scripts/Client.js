@@ -1,4 +1,5 @@
 import { MainSocket } from './MainSocket.js';
+
 export class Client{
 
     constructor() {
@@ -8,11 +9,12 @@ export class Client{
         this.state = null;
     }
 
+    // Avoiding circular imports (main.js/Client.js)
     setState(state) {
         this.state = state;
     }
 
-    login(token) {
+    async login(token) {
         this.accessToken = token;
         try {
             this.fillUserDataFromJWT();
@@ -22,6 +24,7 @@ export class Client{
         }
         this.renderProfileBtn();
         this.state.mainSocket = new MainSocket();
+        await this.state.mainSocket.init();
     }
 
     async logout() {
@@ -54,10 +57,12 @@ export class Client{
         }
     }
 
-    globalRender() {
+    async globalRender() {
         this.renderProfileBtn();
-        if (this.state.socialApp)
-            this.state.socialApp.fetchFriends();
+        if (this.state.socialApp) {
+            await this.state.socialApp.fetchFriends();
+            await this.state.socialApp.getInfos();
+        }
         if (this.state.chatApp)
             this.state.chatApp.renderChat();
     }
@@ -113,13 +118,13 @@ export class Client{
             }
             const data = await response.json();
             try {
-                this.login(data.accessToken);
+                await this.login(data.accessToken);
             }
             catch (error) {
                 console.warn(error);
             }
             window.location.hash = '#profile';
-            console.log("Session successfully restored");
+            // console.log("Session successfully restored");
         } catch (error) {
             // console.warn(error);
         }
@@ -167,7 +172,7 @@ export class Client{
 				this.userName = data.username;
 				this.avatar = data.avatar;
 				this.status = data.status; // changer gestion status par full front + ws pour echange entre users
-				console.log("Status reçu :", data.status); //debug
+				// console.log("Status reçu :", data.status); //debug
 				this.updateProfilePage();
 			} else {
 				console.error("Failed to fetch user profile:", response.status);

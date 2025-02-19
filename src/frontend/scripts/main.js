@@ -1,7 +1,7 @@
 import { setupNavigation, navigateTo } from './nav.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
 import { Client } from './Client.js';
-// import { isAuthenticated } from './api/auth.js';
+import { isAuthenticated } from './api/auth.js';
 
 export const state = {
     client: new Client(),
@@ -36,11 +36,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
     if (profileButton) {
         profileButton.addEventListener('click', async (e) => {
             e.preventDefault();
-            navigateTo('#profile');
+            if (await isAuthenticated() == false) {
+                await state.client.refreshSession();
+                if (!(await isAuthenticated())) {
+                    initDynamicCard('auth');
+                    return;
+                }
+            } else {
+                navigateTo('#profile');
+            }
         });
     }
 

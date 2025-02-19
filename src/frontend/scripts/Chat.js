@@ -94,7 +94,6 @@ export class ChatApp{
         if (!messages)
             return;
         messages.forEach(element => {
-            console.log("loading " + element.message);
             if (element.from == "myself")
                 this.postMyMessage(element.message);
             else
