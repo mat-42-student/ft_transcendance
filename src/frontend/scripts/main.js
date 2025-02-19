@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupNavigation();
     navigateTo('#home');
 
-    state.client.refreshSession();
+    state.client.refreshSession('#profile');
 
     if (homeButton) {
         homeButton.addEventListener('click', (e) => {
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         profileButton.addEventListener('click', async (e) => {
             e.preventDefault();
             if (await isAuthenticated() == false) {
-                await state.client.refreshSession();
+                await state.client.refreshSession('#profile');
                 if (!(await isAuthenticated())) {
                     initDynamicCard('auth');
                     return;
