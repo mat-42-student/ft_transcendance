@@ -1,0 +1,49 @@
+POST https://localhost:3000/api/v1/users/register/
+Content-Type: application/json
+
+{"username": "tim", "email": "tim@mail.com", "password": "Test123*", "confirm_password": "Test123*"}
+
+###
+
+
+GET https://localhost:3000/api/v1/users/
+Content-Type: application/json
+
+{}
+
+
+###
+
+GET https://localhost:3000/api/v1/users/3/
+Content-Type: application/json
+
+{}
+
+###
+
+POST https://localhost:3000/api/v1/users/relationships/1/add-friend/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0b20xIiwiZXhwIjoxNzM2ODYyOTU3LCJpYXQiOjE3MzY4NjI2NTd9.C3ztUJSgFrKRruXWQAC5cayionjTXgq-VDk-Yr79QZ5ETpevcM_UQ1et3wajFmrOCe5yZhU8Em7XcmqT1M6S2hXGm941Or8VAd3AqWK_vKKfD_6w55JBQJ6Rj3NIwd1KYaW8Ex49CeNIrks-awhQlWWjYw_0lpezjcQQhPeme-8RgVQhnjtJnUPmbCxV7rJb6Ype7NHMZ4Ph6aWUjSzq3Sf-7Uaw50EV7zlMXlDF0krhwSR7ef28xekylie_GBAU9yV5lf0nKsH_FrRwtLgRCkUmfp6PATM60rU1ti84Hy8sItfF7XTZZ5Xz3huJcNJYqht_n70_aovYlgMFp061Uw
+
+{}
+
+###
+
+GET https://localhost:3000/api/v1/users/relationships/my-relationships/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0b20yIiwiZXhwIjoxNzM2Njk1OTQ1LCJpYXQiOjE3MzY2OTU2NDV9.WA6zTC1YxKffxUtEVtZQ5rPEGQbpUec6IVxIYcAOe-po6F1vkkRLM3PY4k_rHRYz8di8g5pYI8OgSAWRDlvBnlIvAS-KqHYbDARiKOTxpDwVis5b1xsD6deL9LaQgcTGwfFJHmtUaiiRZZHaSAZwsWGOLY3vU0USnLcuXdRolduGakqUhWgDRQv22zIaGbUkUlPqlDyY-phGYiTQWT4JYb6tWTv3_VYOgSxv8TMSv5pDzZT94Ew8CcIjfh6XaQR19LPAJTArkEpwN4kQnF9SQe3dO5RbBccEzRe8JTiWHxzyZTAv_p2_3eZBdBj1sU_op8-SUNgy68KYpkmVyorAOA
+
+{}
+
+###
+
+DELETE https://localhost:3000/api/v1/users/1/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJ0b20iLCJleHAiOjE3MzY3MDczNjUsImlhdCI6MTczNjcwNzA2NX0.BdQqG4I7Ar0ZbVbcnVQGFqxLWRByRC8jOgWLbwZ6poCg2Yt6ayBVoFzvV8anpT-cdc1TAnyspxh3sq05YVIec2bse19WfyT-ys26JJsKkI4DpdWbw1u-WHd4CPiw5r-eE6b9bO9-t0_q6wZa8xI0I2Ifnn9G5Bwm49tCsDQN_WZOzVZPemvpm-teo5JBwtCrlzsDzwlRM--SmdvOty2EJnjWf2zNfoQe2vTBni9Q51e58jUgvp6-3b8LaAye27RH5eXUQbSGhFdii_u9hs6peF4kD5xD-Dn2nbK-n8_oO3k2PtlmhyR-Eqfislk4Br8-xEBsxwCk5cGcrLa-DsSVzg
+
+{}
+
+###
+
+GET https://localhost:3000/api/v1/users/15/blocks/
+Content-Type: application/json

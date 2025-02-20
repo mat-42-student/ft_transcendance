@@ -1,0 +1,37 @@
+# Makefile for building Docker image and running Docker Compose
+
+DOCKER_IMAGE_NAME = django-base
+DOCKERFILE = ./_Base/Dockerfile.django
+# DOCKER_COMPOSE_FILE = docker-compose.yml
+
+# Targets
+.PHONY: all build run re clean
+
+all: re
+
+build_base:
+	docker build -t $(DOCKER_IMAGE_NAME) -f $(DOCKERFILE) .
+
+build:
+	docker compose build
+
+run:
+	docker compose up
+
+down:
+	docker compose down
+
+start:
+	docker compose start
+	docker compose logs -f
+
+stop:
+	docker compose stop
+
+fclean: clean
+	docker system prune -a -f
+
+clean: stop
+	docker compose down -v
+	
+re: clean build_base build run

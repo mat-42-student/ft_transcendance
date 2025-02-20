@@ -1,0 +1,26 @@
+.invitation {
+    /* width: 300px; */
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    /* margin: 20px auto; */
+}
+.btn-invitation {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 1.2em;
+    margin: 5px;
+}
+.btn-refuser:hover {
+    background-color: red;
+    color: white;
+}
+.btn-accepter:hover {
+    background-color: green;
+    color: white;
+}

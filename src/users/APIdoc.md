@@ -138,48 +138,10 @@ Le modèle `Relationship` représente les relations entre deux utilisateurs dans
 
 ## Endpoints de l'API
 
-### Authentification
-
-1. **Obtenir un token JWT**
-   - **URL** : `/users_api/login/`
-   - **Méthode** : `POST`
-   - **Corps de la requête** :
-     ```json
-     {
-       "username": "exemple",
-       "password": "motdepasse"
-     }
-     ```
-   - **Réponse** :
-     ```json
-     {
-       "access": "token_jwt",
-       "refresh": "token_refresh"
-     }
-     ```
-
-2. **Rafraîchir un token JWT**
-   - **URL** : `/api/token/refresh/`
-   - **Méthode** : `POST`
-   - **Corps de la requête** :
-     ```json
-     {
-       "refresh": "token_refresh"
-     }
-     ```
-   - **Réponse** :
-     ```json
-     {
-       "access": "nouveau_token_jwt"
-     }
-     ```
-
----
-
 ### Gestion des utilisateurs
 
 1. **Liste des utilisateurs**
-   - **URL** : `/users_api/users/`
+   - **URL** : `/api/v1/users/`
    - **Méthode** : `GET`
    - **Réponse** :
      ```json
@@ -195,7 +157,7 @@ Le modèle `Relationship` représente les relations entre deux utilisateurs dans
      ```
 
 2. **Détails d'un utilisateur**
-   - **URL** : `/users_api/users/<id>/`
+   - **URL** : `/api/v1/users/<id>/`
    - **Méthode** : `GET`
    - **Réponse** :
      ```json
@@ -209,7 +171,7 @@ Le modèle `Relationship` représente les relations entre deux utilisateurs dans
      ```
 
 3. **Créer un utilisateur**
-   - **URL** : `/users_api/users/`
+   - **URL** : `/api/v1/users/register`
    - **Méthode** : `POST`
    - **Corps de la requête** :
      ```json
@@ -234,7 +196,7 @@ Le modèle `Relationship` représente les relations entre deux utilisateurs dans
 ### Amis et relations sociales
 
 1. **Inviter un ami**
-   - **URL** : `/users_api/relationships/<id>/add_friend/`
+   - **URL** : `c`
    - **Méthode** : `POST`
    - **Réponse** :
      ```json
@@ -245,7 +207,7 @@ Le modèle `Relationship` représente les relations entre deux utilisateurs dans
      ```
 
 1. **Accepter une invitaion**
-   - **URL** : `/users_api/relationships/<id>/accept_friend/`
+   - **URL** : `/api/v1/users/relationships/<id>/accept_friend/`
    - **Méthode** : `POST`
    - **Réponse** :
      ```json
@@ -256,7 +218,7 @@ Le modèle `Relationship` représente les relations entre deux utilisateurs dans
      ```
 
 3. **Supprimer un ami**
-   - **URL** : `/users_api/relationships/<id>/remove_friend/`
+   - **URL** : `/api/v1/users/relationships/<id>/remove_friend/`
    - **Méthode** : `POST`
    - **Réponse** :
      ```json
@@ -273,6 +235,6 @@ Le modèle `Relationship` représente les relations entre deux utilisateurs dans
 ### Requête pour récupérer tous les utilisateurs
 
 ```bash
-curl -X GET http://localhost/users_api/users/ \
+curl -X GET http://localhost/api/v1/users/ \
 -H "Authorization: Bearer <token_jwt>"
 ```

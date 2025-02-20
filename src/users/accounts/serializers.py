@@ -28,8 +28,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'status', 'avatar']
-        read_only_fields = ['id', 'username', 'status', 'avatar']
+        fields = ['id', 'username', 'status', 'avatar', 'is_2fa_enabled']
+        read_only_fields = ['id', 'username', 'status', 'avatar', 'is_2fa_enabled']
 
     def get_avatar(self, obj):
         return obj.avatar.name.split('/')[-1] if obj.avatar else "default.png"
@@ -163,28 +163,33 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'password', 'confirm_password']
+        fields = ['username', 'email', 'password', 'confirm_password']
         extra_kwargs = {
             'username': {
-                'min_length': 3, 
+                'min_length': 2, 
                 'max_length': 50,
-                'label': 'Nom d’utilisateur'
+                'label': 'Username'
+            },
+            'email': {
+                'min_length': 5, 
+                'max_length': 100,
+                'label': 'Email'
             },
             'password': {
                 'write_only': True,
                 'min_length': 5,
                 'max_length': 128,
-                'label': 'Mot de passe'
+                'label': 'Password'
             },
             'confirm_password': {
                 'write_only': True,
-                'label': 'Confirmez mot de passe'
+                'label': 'Confirm password'
             },
         }
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:
-            raise serializers.ValidationError("Les mots de passe ne correspondent pas.")
+            raise serializers.ValidationError("Passwords don't match.")
             # Ne pas accepter `is_staff` ou `is_superuser` dans les données
         if 'is_staff' in data or 'is_superuser' in data:
             raise serializers.ValidationError("La création d'un super utilisateur est interdite via cette API.")
@@ -194,35 +199,23 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop('confirm_password')  # Supprime `confirm_password` des données validées
         user = User.objects.create_user(
             username=validated_data['username'],
-            password=validated_data['password']
+            password=validated_data['password'],
+            email=validated_data['email']
         )
         user.save()
         return user
-
-
-# User login serializer
-class UserLoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField()
-
-    def validate(self, data):
-        try:
-            user = User.objects.get(username=data['username'])
-            if not user.check_password(data['password']):
-                raise serializers.ValidationError("Mot de passe incorrect.")
-        except User.DoesNotExist:
-            raise serializers.ValidationError("Utilisateur non trouvé.")
-        return data
+    
 
 
 # Relationship 'detail' serializer
 class RelationshipSerializer(serializers.ModelSerializer):
-    from_user = serializers.StringRelatedField()
-    to_user = serializers.StringRelatedField()
+    from_user = UserDetailSerializer(read_only=True)
+    to_user = UserDetailSerializer(read_only=True)
 
     class Meta:
         model = Relationship
-        fields = ['from_user', 'to_user', 'status', 'created_at']
+        fields = ['id', 'from_user', 'to_user', 'status', 'created_at']
+        read_only_fields = ['id', 'from_user', 'to_user', 'status', 'created_at']
 
 
 # User Relationship 'list' serializer

@@ -1,14 +1,18 @@
 import django.db.models as models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-
+from django.conf import settings
+from .authentication import JWTAuthentication
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import AllowAny
+from rest_framework.renderers import JSONRenderer
+from .models import User
+import jwt
+import datetime
 
 from .models import User, Relationship
 from .serializers import (
@@ -17,57 +21,61 @@ from .serializers import (
     UserPrivateDetailSerializer, 
     UserBlockedSerializer, 
     UserUpdateSerializer, 
-    UserRegistrationSerializer, 
-    UserLoginSerializer, 
+    UserRegistrationSerializer,
     RelationshipSerializer
 )
 
-
-# User registration APIView
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
+    renderer_classes = [JSONRenderer]
 
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            print(user)
             user.refresh_from_db() # Rafraîchir l'objet utilisateur pour s'assurer que toutes les données sont chargées
-            print(user.__class__)
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }, status=status.HTTP_201_CREATED)
+
+            # Générer un token JWT pour l'utilisateur
+            access_payload = {
+                'id': user.id,
+                'username': user.username,
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
+                'iat': datetime.datetime.now(datetime.timezone.utc),
+            }
+
+            refresh_payload = {
+                'id': user.id,
+                'username': user.username,
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
+                'iat': datetime.datetime.now(datetime.timezone.utc),
+            }
+
+            access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+            refresh_token = jwt.encode(refresh_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+
+            response = Response()
+            response.set_cookie(
+                key='refreshToken',
+                value=refresh_token, 
+                httponly=True,
+                samesite='None',
+                secure=True,
+                path='/'
+            )
+            response.data = {
+                'success': 'true',
+                'accessToken': access_token
+            }
+            return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# User login APIView
-class UserLoginView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serializer = UserLoginSerializer(data=request.data)
-        if serializer.is_valid():
-            print("Utilisateur existe et identifiants correctes")
-            username = serializer.validated_data['username'] # Obtenir l'utilisateur à partir du serializer
-            user = User.objects.get(username=username)
-
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }, status=status.HTTP_200_OK)
-        return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-
+    
 # User ViewSet
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
 
     def get_permissions(self):
         """Définit les permissions pour chaque action."""
-        if self.action in ['list', 'retrieve']:
+        if self.action in ['list', 'retrieve', 'get_user_friends', 'get_user_blocks']:
             return [AllowAny()]
         return [IsAuthenticated()]  # Authentification requise pour toutes les autres actions
 
@@ -94,6 +102,7 @@ class UserViewSet(viewsets.ModelViewSet):
             else:    
                 serializer = UserDetailSerializer(user)
             return Response(serializer.data)
+        
         # Si le client n'est pas authentifié, utilise le serializer public
         serializer = UserDetailSerializer(user)
         return Response(serializer.data)
@@ -121,7 +130,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated], url_path='block')
+    @action(detail=True, methods=['post'], permission_classes=[JWTAuthentication], url_path='block')
     def block_user(self, request, pk=None):
         """Bloquer un utilisateur."""
         try:
@@ -140,7 +149,7 @@ class UserViewSet(viewsets.ModelViewSet):
         except User.DoesNotExist:
             return Response({"detail": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
 
-    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated], url_path='unblock')
+    @action(detail=True, methods=['delete'], permission_classes=[JWTAuthentication], url_path='unblock')
     def unblock_user(self, request, pk=None):
         """Débloquer un utilisateur."""
         try:
@@ -154,7 +163,54 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Utilisateur débloqué."}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"detail": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
+        
+    @action(detail=True, methods=['GET'], url_path='friends')
+    def get_user_friends(self, request, pk=None):
+        """
+        Endpoint pour récupérer les amis d'un utilisateur donné.
+        """
+        try:
+            user = User.objects.get(pk=pk)
+            friends = Relationship.objects.filter(
+                (Q(from_user=user) | Q(to_user=user)) & Q(status='friend')
+            )
+            friend_list = [
+                {
+                    'id': rel.to_user.id if rel.from_user == user else rel.from_user.id,
+                    'username': rel.to_user.username if rel.from_user == user else rel.from_user.username
+                }
+                for rel in friends
+            ]
+            return Response({'friends': friend_list}, status=200)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
 
+    @action(detail=True, methods=['GET'], url_path='blocks')
+    def get_user_blocks(self, request, pk=None):
+        """
+        Endpoint pour récupérer les utilisateurs bloqués ou bloquants.
+        """
+        try:
+            user = User.objects.get(pk=pk)
+            blocked_users = user.blocked_users.all()  # Utilisateurs bloqués par cet utilisateur
+            blocked_by_users = user.blocked_by.all()  # Utilisateurs ayant bloqué cet utilisateur
+
+            response_data = {
+                'blocked_users': [
+                    {'id': u.id, 'username': u.username, 'avatar': u.avatar.url}
+                    for u in blocked_users
+                ],
+                'blocked_by_users': [
+                    {'id': u.id, 'username': u.username, 'avatar': u.avatar.url}
+                    for u in blocked_by_users
+                ],
+            }
+            return Response(response_data, status=200)
+
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
 
 # Relationship ViewSet
 class RelationshipViewSet(viewsets.ViewSet):

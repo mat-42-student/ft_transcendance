@@ -1,12 +1,8 @@
 import os
-
 from pathlib import Path
 
-from datetime import timedelta
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
+BASE_DIR = Path(__file__).resolve().parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -17,11 +13,14 @@ SECRET_KEY = 'django-insecure-uf14@2_-p3x8u%k1qw9d_$0meb9gv$8j^=idwdbvxm1%+3as_1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# Autorise uniquement localhost pour le serveur de développement
+ALLOWED_HOSTS = ['*']
 
+JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")
+JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")
+JWT_ALGORITHM = 'RS256'
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -30,8 +29,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'accounts',
 ]
@@ -46,6 +43,15 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'accounts.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+}
 
 ROOT_URLCONF = 'users.urls'
 
@@ -71,6 +77,15 @@ WSGI_APPLICATION = 'users.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# Params de base Django -> ne pas supprimer (commenter)
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+# Params pour /dev
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -124,34 +139,9 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 10,
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-}
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=20),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-}
-
-AUTH_USER_MODEL = 'accounts.User'  # Remplace 'accounts' par le nom de ton app si nécessaire
+AUTH_USER_MODEL = 'accounts.User'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = '/media'
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost",  # Assurez-vous d'inclure le domaine du frontend
-]
 
 CORS_ALLOW_ALL_ORIGINS = True

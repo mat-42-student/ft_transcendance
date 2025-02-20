@@ -1,0 +1,138 @@
+/* Section profil */
+.profile {
+    overflow-y: auto; /* Rend défilable si nécessaire */
+}
+
+
+
+/* En-tête du profil */
+.profile-header {
+    display: flex;
+    align-self: flex-start;
+    align-items: center;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-right: 20px;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-username {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.profile-status{
+    display: flex;
+    flex-direction: row;
+}
+
+.profile-status .indicator{
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: grey;
+    align-self: center;
+}
+
+.profile-status .message{
+    margin-left: 0.5rem;
+    font-size: 14px;
+    color: grey;
+}
+
+.profile-status.online .indicator {
+    background: green;
+}
+
+.profile-status.online .message {
+    color: green;
+}
+
+.profile-status.ingame .indicator {
+    background: blue;
+}
+
+.profile-status.ingame .message {
+    color: blue;
+}
+
+/* Statuts possibles */
+.friend-status.online {
+    background: green;
+}
+
+.friend-status.ingame {
+    background: darkred;
+}
+
+.friend-status.pending {
+    background: orange;
+}
+
+.friend-status.offline {
+    background: grey;
+}
+
+/* Boutons d'action */
+.profile-actions {
+    display: flex;
+    align-self: flex-end;
+    gap: 0.5rem;
+}
+
+.profile-actions button {
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.profile-actions img {
+    width: 1.5rem;
+    height: 1.5rem;
+    transition: transform 0.2s;
+}
+
+.profile-actions img:hover {
+    transform: scale(1.1);
+}
+
+
+
+/* Historique des parties */
+.profile-history {
+    width: 100%;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-table th, .history-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+.history-table tr.win {
+    background-color: #71b3f5; /* Vert clair pour victoire */
+}
+
+.history-table tr.loss {
+    background-color: #ffa5a5; /* Rouge clair pour défaite */
+}
+
+.history-table th {
+    background-color: #534c32; /* Jaune pour l'en-tête */
+    color: #2B2D42; /* Texte foncé */
+}
