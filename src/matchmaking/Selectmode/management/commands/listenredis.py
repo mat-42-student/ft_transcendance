@@ -32,6 +32,7 @@ class Command(BaseCommand):
             self.channel_front = "deep_mmaking"
             self.channel_social = "info_social"
             self.channel_deepSocial = "deep_social"
+            self.channel_pong = "info_mmaking"
             
             # Data to save all salon by the type_game
             self.salons = {
@@ -56,6 +57,7 @@ class Command(BaseCommand):
             # Subscribe all channels
             await self.pubsub.subscribe(self.channel_front)
             await self.pubsub.subscribe(self.channel_social)
+            await self.pubsub.subscribe(self.channel_pong)
             
             # Create task to listen msg
             self.listen_task = create_task(self.listen())
@@ -72,15 +74,16 @@ class Command(BaseCommand):
         print("Listening for messages...")
         async for msg in self.pubsub.listen():
             if msg :
-
                 try:
-                    if (msg.get('channel') != self.channel_social): # Do nothing if msg is send on info_social
-                        message = json.loads(msg.get('data'))
+                    message = json.loads(msg.get('data'))
+                    if (msg.get('channel') == self.channel_front): # Do nothing if msg is send on info_social
                         print(message)
                         if (message.get('header').get('dest') == 'front'):
                             pass
                         else:
                             await self.SelectTypeGame(message)
+                    elif (msg.get('channel') == self.channel_pong):
+                        await self.infoGame(message)
                         print("listen again...")
                 except Exception as e:
                     print(e)
@@ -496,4 +499,25 @@ class Command(BaseCommand):
             }
         }
         await self.redis_client.publish(self.channel_social, json.dumps(data))
-            
+
+    def getplayers(self, idgame):
+        return [1,2]
+    
+        # for type_game in self.game:
+        #     for salon in type_game:
+        #         if (salon)
+                
+                
+    async def infoGame(self, data):
+        """ answers backend requests on channel 'info_mmaking' """
+        try:
+            print(f'infoGame data = {data}')
+            game_id = int(data.get('game_id', 'x'))
+        except Exception as e:
+            print(f'infoGame Exception = {e}')
+            return
+        if game_id:
+            players = self.getplayers(game_id)
+        key = f"game_{game_id}_players"
+        print(f"publish info : {key, json.dumps(players)}")
+        await self.redis_client.set(key, json.dumps(players), ex = 2)

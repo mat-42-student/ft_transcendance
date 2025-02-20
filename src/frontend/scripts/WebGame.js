@@ -7,8 +7,9 @@ export class WebGame {
         this.socket = null;
     }
 
-    launchGameSocket() {
-        let socketURL = "wss://" + window.location.hostname + ":3000/game/4/?t=" + state.client.accessToken;
+    launchGameSocket(gameId) {
+		state.client.refreshSession();
+        let socketURL = "wss://" + window.location.hostname + ":3000/game/" + gameId + "/?t=" + state.client.accessToken;
         // websocat --insecure wss://nginx:3000/game/1234/?t=pouetpouet
         // websocat ws://pong:8006/game/1234/?t
         this.socket = new WebSocket(socketURL);

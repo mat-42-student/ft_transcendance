@@ -23,8 +23,11 @@ export class Client{
             throw error;
         }
         this.renderProfileBtn();
-        this.state.mainSocket = new MainSocket();
-        await this.state.mainSocket.init();
+		if (this.state.mainSocket == null)
+		{
+        	this.state.mainSocket = new MainSocket();
+        	await this.state.mainSocket.init();
+		}
     }
 
     async logout() {

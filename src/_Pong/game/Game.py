@@ -100,7 +100,7 @@ class Game:
             player.move_paddle(self.speed)
 
     def get_game_state(self):
-        return dumps({
+        return {
             "action":"info",
             "ball": self.ball_pos,
             "ball_dir": self.ball_spd,
@@ -109,7 +109,7 @@ class Game:
             "size": [self.players[0].pad, self.players[1].pad],
             "lscore": self.players[0].score,
             "rscore": self.players[1].score,
-        })
+        }
 
     async def play(self, wsh):
         target_fps = FPS
@@ -131,5 +131,5 @@ class Game:
             wsh.room_group_name, {"type": "disconnect.now", "from": "server"}
         )
 
-    def send_score(self):
+    async def send_score(self):
         print("Sending score...")
