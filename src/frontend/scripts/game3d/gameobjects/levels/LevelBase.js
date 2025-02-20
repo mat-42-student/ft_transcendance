@@ -8,6 +8,15 @@ export default class LevelBase {
 	/** @type {CameraStats[]} */
 	cameras;
 
+	size = new THREE.Vector2(1, 1);
+
+
+	load() {
+		// override with any slow loading logic
+		// return... whatever allows to check when loading finished, check later
+		return null;
+	}
+
 
 	onFrame(delta, time) {
 		{  // Automatic camera switching

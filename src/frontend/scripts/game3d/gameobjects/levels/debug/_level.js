@@ -12,6 +12,8 @@ export default class LevelDebug extends LevelBase {
 	constructor() {
 		super();
 
+		this.size = new THREE.Vector2(1.5, 1);
+
 		engine.clearLevel();
 		engine.environmentScene.fog = null;
 		engine.environmentScene.background = new THREE.Color('#112211');

@@ -16,7 +16,7 @@ export default class LevelTest extends LevelBase {
 		engine.environmentScene.fog = null;
 		engine.environmentScene.background = this.skybox;
 
-		this.boardDiagonal = 30;
+		this.size = new THREE.Vector2(1.5, 1);
 
 		this.cameras = __makeCameraAngles();
 
@@ -38,7 +38,7 @@ export default class LevelTest extends LevelBase {
 	}
 
 
-	loadAssets() {
+	load() {
 		this.loadingCounter = 0;
 
 		{
@@ -53,6 +53,8 @@ export default class LevelTest extends LevelBase {
 				'pz.jpg', 'nz.jpg'
 			]);
 		}
+
+		return null;  //FIXME the intent was for the caller to have a way to know when level is ready
 	}
 
 	addGameobjects() {
