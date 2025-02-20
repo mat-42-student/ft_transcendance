@@ -2,6 +2,7 @@ import { setupNavigation, navigateTo } from './nav.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
 import { Client } from './Client.js';
 import { isAuthenticated } from './api/auth.js';
+import './Input.js';  // just run it
 
 export const state = {
     client: new Client(),

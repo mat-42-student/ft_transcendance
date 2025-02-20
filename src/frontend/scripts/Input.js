@@ -1,32 +1,39 @@
-import global from "global";
-import input from "input";
+import { state } from "./main.js";
 
 
 export default {
 
-	get currentlyPressed() { return __currentlyPressed; },
+	get pressed() { return __pressed; },
 
 	get mouseX() { return __mouseX; },
 	get mouseY() { return __mouseY; },
 	get isMouseInWindow() { return __isMouseInWindow; },
 
+	getPaddleInput(side) {
+		const isLocal1v1 = state.gameApp.side == 2;
 
-	get currentPaddleInputs() {
-		const playerKeys = __getPlayerKeys();
+		const keybinds = [
+			{
+				positive: isLocal1v1 ? 'KeyW' : 'KeyA',
+				negative: isLocal1v1 ? 'KeyS' : 'KeyD'
+			},
+			{
+				positive: isLocal1v1 ? 'ArrowUp' : 'KeyD',
+				negative: isLocal1v1 ? 'ArrowDown' : 'KeyA'
+			}
+		][side];
 
-		let result = [];
-		for (let i = 0; i < 2; i++) {
-			result[i] = (
-				(__currentlyPressed.has(playerKeys[i].negative) ? -1 : 0)
-			  + (__currentlyPressed.has(playerKeys[i].positive) ? +1 : 0)
-			);
-		}
-		return result;
+		// Sum both sides, so that pressing both keys zeroes out. (Casting bool to int)
+		return (
+			- Number(__pressed.has(keybinds.negative))
+			+ Number(__pressed.has(keybinds.positive))
+		);
 	},
+
 }
 
 
-let __currentlyPressed = new Set([]);
+let __pressed = new Set([]);
 let __mouseX = 0;
 let __mouseY = 0;
 let __isMouseInWindow = false;
@@ -34,11 +41,11 @@ let __isMouseInWindow = false;
 
 window.addEventListener('keydown', (event) => {
 	// KeyboardEvent.code ignores keyboard layout, only cares about physical position.
-	__currentlyPressed.add(event.code);
+	__pressed.add(event.code);
 });
 
 window.addEventListener('keyup', (event) => {
-	__currentlyPressed.delete(event.code);
+	__pressed.delete(event.code);
 });
 
 window.addEventListener('mousemove', (e) => {
@@ -49,24 +56,9 @@ window.addEventListener('mousemove', (e) => {
 
 document.body.addEventListener('mouseleave', (e) => {
 	__isMouseInWindow = false;
-	__currentlyPressed.clear();
+	__pressed.clear();
 });
 
 document.body.addEventListener('mouseenter', (e) => {
 	__isMouseInWindow = true;
 });
-
-
-function __getPlayerKeys() {
-	const isFocusNeutral = global.game.focusedPlayerIndex < 0;
-	return [
-		{
-			positive: isFocusNeutral ? 'KeyW' : 'KeyA',
-			negative: isFocusNeutral ? 'KeyS' : 'KeyD',
-		},
-		{
-			positive: isFocusNeutral ? 'ArrowUp' : 'ArrowRight',
-			negative: isFocusNeutral ? 'ArrowDown' : 'ArrowLeft',
-		},
-	];
-}
