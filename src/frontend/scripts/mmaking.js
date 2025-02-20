@@ -81,25 +81,6 @@ export class Mmaking
 			const guest_id = Number(data.body.type_game.invite.guest_id);
 			const host_id = Number(data.body.type_game.invite.host_id);
             console.log(invite);
-            if (invite.accept == true)
-            {
-                await initDynamicCard('salonInvite');
-                this.setGuest(invite.username, '../../../media/avatars/default.png');
-            }
-            else{
-                const friendlist = document.querySelectorAll('.friend-item');
-
-                friendlist.forEach(friend => {
-                    if (friend.dataset.userid == data.body.type_game.invite.host_id )
-                    {
-                        const btnmatch = friend.querySelector('.btn-match');
-                        const imgmatch = btnmatch.getElementsByTagName('img');
-                        imgmatch[0].src = "/ressources/vs_active.png";
-                        btnmatch.dataset.invite = 1;
-                        return ;
-                    }
-                });
-            }
 
 			// Invitation is accepted: all next msg by server come here
 			try
