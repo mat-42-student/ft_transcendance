@@ -131,5 +131,12 @@ class Game:
             wsh.room_group_name, {"type": "disconnect.now", "from": "server"}
         )
 
-    async def send_score(self):
-        print("Sending score...")
+    def get_score(self):
+        data = {
+            'score':{
+                self.players[0].id: self.players[0].score,
+                self.players[1].id: self.players[1].score,
+                'game_id': self.id
+            }
+        }
+        return data

@@ -243,7 +243,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         print(f"{YELLOW}Disconnect_now from {user}{RESET}")
         if self.master and self.game.over: # game ended normally
             print(f"{RED}Game #{self.game.id} over (maxscore reached){RESET}")        
-            await self.game.send_score()
+            await self.send_score()
         elif self.master and not self.game.over: # game is ending because one player left
             print(f"{RED}Game #{self.game.id} over (player {user} left){RESET}")        
             await self.disconnect_endgame(user)
@@ -256,5 +256,9 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.game.players[1].score = 10 - self.game.players[0].score
         self.game.over = True
         print(f"{RED}Player {user} left")
-        await self.game.send_score()
+        await self.send_score()
         self.game = None
+        
+    async def send_score(self):
+        score = self.game.get_score()
+        await self.redis_client.publish("info_mmaking", json.dumps(score))
