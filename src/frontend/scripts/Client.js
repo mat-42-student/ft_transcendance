@@ -101,17 +101,16 @@ export class Client{
         }
     }
 
-    async refreshSession() {
-        const cookie = await this.hasCookie();
-        if (this.accessToken || !cookie) {
-            return;
-        }
+    async refreshSession(location = null) {
+        // const cookie = await this.hasCookie();
+        // if (this.accessToken || !cookie) {
+        //     return;
+        // }
         try {
             const response = await fetch('api/v1/auth/refresh/', {
                 method: 'POST',
                 credentials: 'include'
             });
-
             if (!response.ok) {
                 console.log('request error!');
                 throw new Error("Could not refresh token");
@@ -123,7 +122,8 @@ export class Client{
             catch (error) {
                 console.warn(error);
             }
-            window.location.hash = '#profile';
+            if (location)
+                window.location.hash = location;
             // console.log("Session successfully restored");
         } catch (error) {
             // console.warn(error);

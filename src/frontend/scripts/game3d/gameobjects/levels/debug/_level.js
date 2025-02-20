@@ -16,7 +16,6 @@ export default class LevelDebug extends LevelBase {
 		engine.environmentScene.fog = null;
 		engine.environmentScene.background = new THREE.Color('#112211');
 
-		this.boardDiagonal = 30;
 		const ball = new DebugBall();
 		engine.level.add(ball);
 

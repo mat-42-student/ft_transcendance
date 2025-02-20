@@ -1,6 +1,6 @@
 import { state } from './main.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
-import { Game } from './Game.js';
+import { WebGame } from './WebGame.js';
 
 export class Mmaking
 {
@@ -49,14 +49,18 @@ export class Mmaking
 
     async incomingMsg(data)
     {
+<<<<<<< HEAD
         
 		// Routing to lauch game and open websocket Game
+=======
+
+>>>>>>> origin/dev
         if (data.body.status == 'ingame')
         {
             for (const [key, value] of Object.entries(data.body.opponents))
                 this.setOpponent(value.username, '../../../media/avatars/default.png')
 
-            state.gameApp = new Game();
+            state.gameApp = new WebGame();
             state.gameApp.launchGameSocket();
         }
 		else if (data.body.cancel == true)
@@ -83,6 +87,28 @@ export class Mmaking
 			const guest_id = Number(data.body.type_game.invite.guest_id);
 			const host_id = Number(data.body.type_game.invite.host_id);
             console.log(invite);
+<<<<<<< HEAD
+=======
+            if (invite.accept == true)
+            {
+                await initDynamicCard('salonInvite');
+                this.setGuest(invite.username, '../../../media/avatars/default.png');
+            }
+            else{
+                const friendlist = document.querySelectorAll('.friend-item');
+
+                friendlist.forEach(friend => {
+                    if (friend.dataset.userid == data.body.type_game.invite.host_id )
+                    {
+                        const btnmatch = friend.querySelector('.btn-match');
+                        const imgmatch = btnmatch.getElementsByTagName('img');
+                        imgmatch[0].src = "/ressources/vs_active.png";
+                        btnmatch.dataset.invite = 1;
+                        return ;
+                    }
+                });
+            }
+>>>>>>> origin/dev
 
 			// Invitation is accepted: all next msg by server come here
 			try
@@ -195,9 +221,13 @@ export class Mmaking
         if (target.dataset.invite == 1)
         {
             await initDynamicCard('vs_active');
+<<<<<<< HEAD
 			this.desableOverlay();
 
             
+=======
+
+>>>>>>> origin/dev
             const acceptInvitation = document.querySelector('.invitation .btn-accepter');
 			const refuseInvitation = document.querySelector('.invitation .btn-refuser');
 
@@ -236,8 +266,12 @@ export class Mmaking
         }
         else
         {
+<<<<<<< HEAD
 
             const data = 
+=======
+            const data =
+>>>>>>> origin/dev
             {
                 'type_game': {
                     'invite': {
@@ -281,7 +315,7 @@ export class Mmaking
 
 
         this.sendMsg(data)
-        
+
         closeDynamicCard();
     }
 
@@ -306,26 +340,26 @@ export class Mmaking
     createCard() {
         const card = document.createElement("div");
         card.classList.add("invitation");
-        
+
         const title = document.createElement("h2");
         title.textContent = "Invitation";
-        
+
         const message = document.createElement("p");
         message.textContent = "Souhaitez-vous accepter cette demande ?";
-        
+
         const acceptButton = document.createElement("button");
         acceptButton.classList.add("btn-invitation", "btn-accepter");
         acceptButton.textContent = "✅";
-        
+
         const refuseButton = document.createElement("button");
         refuseButton.classList.add("btn-invitation", "btn-refuser");
         refuseButton.textContent = "❌";
-        
+
         card.appendChild(title);
         card.appendChild(message);
         card.appendChild(acceptButton);
         card.appendChild(refuseButton);
-        
+
         return card;
     }
 }
