@@ -39,6 +39,19 @@ export class ChatApp{
             this.hasUnreadMessage(friend);
     }
 
+    TODO : user log out doesnt disable chat input !
+    checkStatusOfActiveChatUser(user_id) {
+        if (user_id != this.activeChatUserId)
+            return;
+        let friend = state.socialApp.getFriend(user_id);
+        if (!friend)
+            return;
+        if (friend.status == 'offline')
+            this.chatInput.disabled = true;
+        else
+            this.chatInput.disabled = false;
+    }
+
     storeMyMessage(msg){
         const now = new Date();
         let data = {
@@ -120,6 +133,7 @@ export class ChatApp{
         this.chatUser.innerText = friend.username + '(' + this.activeChatUserId + ')';
         this.noUnreadMessage();
         this.loadHistory();
+        this.chatInput.disabled = false;
     }
 
     hasUnreadMessage(friend) {

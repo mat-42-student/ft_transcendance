@@ -63,7 +63,8 @@ export class SocialApp{
         let friend = this.friendlist.get(data.user_id);
         if (!friend)
             return ;
-        friend['status'] = data.status;
+        state.chatApp.checkStatusOfActiveChatUser(data.user_id);
+        friend.status = data.status;
         this.renderFriendStatus(data.user_id);
     }
 
