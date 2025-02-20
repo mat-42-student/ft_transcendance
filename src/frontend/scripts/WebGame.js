@@ -40,7 +40,7 @@ export class WebGame {
             if (data.action == "disconnect") {
                 this.playing = false;
                 this.close();
-                cancelAnimationFrame(raf);
+                // cancelAnimationFrame(raf);
             }
         };
     }
