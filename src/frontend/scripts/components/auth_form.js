@@ -1,13 +1,5 @@
 import { handleAuthSubmit } from "../api/auth.js";
-
-export function handleHashChange() {
-    const hash = window.location.hash.slice(1); // Retire le '#' du hash
-    if (hash === 'register') {
-        updateAuthForm('register');
-    } else {
-        updateAuthForm('signin'); // Mode par défaut
-    }
-}
+import { cleanErrorMessage } from '../utils.js';
 
 // Attache l'écouteur au formulaire d'authentification
 export function initAuthFormListeners() {
@@ -17,23 +9,7 @@ export function initAuthFormListeners() {
     }
 }
 
-// function updateAuthForm(mode) {
-//     const formTitle = document.getElementById('form-title');
-//     const confirmPasswordContainer = document.getElementById('confirm-password-container');
-//     const authSubmit = document.getElementById('auth-submit');
-
-//     if (mode === 'register') {
-//         formTitle.textContent = 'Register';
-//         confirmPasswordContainer.classList.remove('hidden'); // Affiche la confirmation du mot de passe
-//         authSubmit.textContent = 'Register';
-//     } else { // Par défaut : mode "signin"
-//         formTitle.textContent = 'Sign In';
-//         confirmPasswordContainer.classList.add('hidden'); // Cache la confirmation du mot de passe
-//         authSubmit.textContent = 'Sign In';
-//     }
-// }
-
-function updateAuthForm(mode) {
+export function updateAuthForm(mode) {
     const formTitle = document.getElementById('form-title');
     const confirmPasswordContainer = document.getElementById('confirm-password-container');
     const confirmUsernameContainer = document.getElementById('username-container');
@@ -44,11 +20,13 @@ function updateAuthForm(mode) {
     const signInWith42Button = document.getElementById('oauth-submit');
 
     // Définir mode par défaut si absent ou incorrect
-    if (!mode || (mode !== 'register' && mode !== 'signin')) {
+    if (!mode || (mode !== '#register' && mode !== '#signin')) {
         mode = 'signin';
     }
 
-    if (mode === 'register') {
+    if (mode === '#register') {
+        cleanErrorMessage();
+
         formTitle.textContent = 'Sign Up';
         confirmPasswordContainer.classList.remove('hidden'); // Affiche la confirmation du mot de passe
         confirmUsernameContainer.classList.remove('hidden'); // Affiche le username
@@ -61,6 +39,8 @@ function updateAuthForm(mode) {
 
         signInWith42Button.classList.add('hidden');
     } else { // Par défaut : mode "signin"
+        cleanErrorMessage();
+
         formTitle.textContent = 'Sign In';
         confirmPasswordContainer.classList.add('hidden'); // Cache la confirmation du mot de passe
         confirmUsernameContainer.classList.add('hidden'); // Cache le username
@@ -72,4 +52,5 @@ function updateAuthForm(mode) {
         registerLink.classList.remove('hidden');
         signinLink.classList.add('hidden');
     }
+    window.history.replaceState({}, '', `${mode}`);
 }

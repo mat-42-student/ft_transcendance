@@ -81,10 +81,16 @@ class Command(BaseCommand):
                 "status": "offline"
             }))
         self.user_status[user_id] = status # Update current user status
-
+        print(f"User {user_id} is now {status}")
+        await self.send_me_my_own_status(user_id)
 
     async def get_info_process(self, data):
-        user_id = data.get('user_id')
+        """ answers backend requests on channel 'info_social' """
+        try:
+            user_id = int(data.get('user_id', 'x'))
+        except Exception as e:
+            print(e)
+            return
         if user_id:
             status = self.user_status.get(user_id, "offline")
         key = f"user_{user_id}_status"
@@ -107,35 +113,36 @@ class Command(BaseCommand):
     async def send_me_my_friends_status(self, user_id, friends):
         """ publish status of all friends and adress them to 'user_id' """
         for friend in friends:
-            data = {
-                "header": {
-                    "service": "social",
-                    "dest": "front",
-                    "id": user_id
-                },
-                "body":{
-                    "user_id": friend,
-                    "status": self.user_status.get(friend, "offline")
-                }
-            }
+            data = self.build_social_data(user_id, friend)
             # print(f"getting my friends status : {data}")
             await self.redis_client.publish(self.gateway_group, json.dumps(data))
 
+    async def send_me_my_own_status(self, user_id):
+        """ publish my status and adress them to me """
+        data = self.build_social_data(user_id, user_id)
+        print(f"getting my own status : {data}")
+        await self.redis_client.publish(self.gateway_group, json.dumps(data))
+
     async def send_my_status(self, user_id, friend):
-        """ publish status of 'user_id' and adress it to 'friend' """
+        """ publish status of 'user_id' and adress it to 'friend', and also to 'user_id' """
+        data = self.build_social_data(friend, user_id)
+        # print(f"Publishing my status to my online friends: {data}")
+        await self.redis_client.publish(self.gateway_group, json.dumps(data))
+
+    def build_social_data(self, user_id, friend):
+        """user_id will receive friend info"""
         data = {
             "header": {
                 "service": "social",
                 "dest": "front",
-                "id": friend
+                "id": user_id
             },
             "body":{
-                "user_id": user_id,
-                "status": self.user_status.get(user_id, "offline")
+                "user_id": friend,
+                "status": self.user_status.get(friend, "offline")
             }
         }
-        # print(f"Publishing my status to my online friends: {data}")
-        await self.redis_client.publish(self.gateway_group, json.dumps(data))
+        return data
 
     def signal_handler(self, sig, frame):
         try:

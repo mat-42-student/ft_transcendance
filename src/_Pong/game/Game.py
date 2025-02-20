@@ -2,9 +2,7 @@ from random import randint, choice
 from time import time
 from json import dumps
 from asyncio import sleep as asleep
-from channels.db import database_sync_to_async #type: ignore
 from .const import LEFT, RIGHT, HEIGHT, WIDTH, PADWIDTH, FPS, MAX_SCORE, GREEN, RED, RESET, DELTATIME, PADMINIMUM, PADSHRINK
-from .models import Salon
 
 class Player:
 
@@ -132,16 +130,6 @@ class Game:
         await wsh.channel_layer.group_send(
             wsh.room_group_name, {"type": "disconnect.now", "from": "server"}
         )
-    
-    @database_sync_to_async
-    def save_score(self):
-        print("Saving score...")
-        try:
-            salon = Salon.objects.get(id=self.id)
-            salon.score1 = self.players[0].score
-            salon.score2 = self.players[1].score
-            winner = self.players[0].name if salon.score1 > salon.score2 else self.players[1].name
-            salon.save()
-            print(f"{GREEN}Score saved. Winner is player {winner}. Score is {salon.score1} - {salon.score2}{RESET}")
-        except Salon.DoesNotExist:
-            print(f"{RED}Lobby #{self.id} not found.{RESET}")
+
+    def send_score(self):
+        print("Sending score...")

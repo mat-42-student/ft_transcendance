@@ -19,7 +19,7 @@ def revoke_token(token):
         exp_timestamp = payload.get('exp')
         if exp_timestamp:
             now = datetime.now().timestamp()
-            ttl = int(exp_timestamp - now)  # Time remaining in seconds
+            ttl = int(exp_timestamp - now)
             if ttl > 0:
                 redis_cache.set(token, "revoked", timeout=ttl)
                 return True

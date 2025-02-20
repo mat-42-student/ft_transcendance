@@ -5,7 +5,6 @@ export class ChatApp{
     constructor(){
         this.doDOMThings();
         this.storedMessages = new Map(); // map to store messages with keys = userid and value = array of messages
-        // this.unreadMessages = new Map(); // map to count/display unread messages. OBSOLETE
         this.activeChatUserId = null; // Change value by calling loadHistory 
     }
 
@@ -20,7 +19,7 @@ export class ChatApp{
     chatFormListener(event) {
     // Triggered when I send a message to my friend
         event.preventDefault(); // don't send the form
-        let message = this.chatInput.value.trim() || '';
+        let message = this.chatInput.value.trim() || '';
         if (this.activeChatUserId && message !== '') {
             this.storeMyMessage(message);
             this.postMyMessage(message);
@@ -30,9 +29,10 @@ export class ChatApp{
     }
 
     incomingMsg(data) {
-    // Triggered when I receive a message from my friend
         const friend = data.body.from;
-        this.storeMessage(data);
+        if (!this.storedMessages.has(friend))
+            this.storedMessages.set(friend, []);
+        this.storeIncomingMessage(data);
         if (this.activeChatUserId == friend)
             this.postFriendMessage(data.body.message);
         else
@@ -53,12 +53,16 @@ export class ChatApp{
         this.storedMessages.get(this.activeChatUserId).push(data.body);
     }
 
-    storeMessage(data){
-        let user = data.body.from;
-        data.body.from = 'friend';
+    storeIncomingMessage(data){
+        let user = Number(data.body.from);
+        let newMessage = {
+            message: data.body.message,
+            timestamp: data.body.timestamp,
+            from: 'friend'
+        };
         if (!this.storedMessages.has(user))
-            this.storedMessages.set(user, []);        
-        this.storedMessages.get(user).push(data.body);
+            this.storedMessages.set(user, []);
+        this.storedMessages.get(user).push(newMessage);
     }
 
     postFriendMessage(data){
@@ -76,14 +80,17 @@ export class ChatApp{
     }
 
     changeChatUser(friendId){
+        friendId = Number(friendId);
         if(friendId === this.activeChatUserId)
             return;
-        this.activeChatUserId = friendId;
+        if (!this.storedMessages.has(friendId))
+            this.storedMessages.set(friendId, []);
+        this.activeChatUserId = Number(friendId);
         this.renderChat();
     }
 
     loadHistory() {
-        let messages = this.storedMessages.get(Number(this.activeChatUserId));
+        let messages = this.storedMessages.get(this.activeChatUserId);
         if (!messages)
             return;
         messages.forEach(element => {
@@ -110,35 +117,22 @@ export class ChatApp{
         const friend = state.socialApp.getFriend(this.activeChatUserId);
         if (!friend)
             return;
-        this.chatUser.innerText = friend.username;
+        this.chatUser.innerText = friend.username + '(' + this.activeChatUserId + ')';
         this.noUnreadMessage();
         this.loadHistory();
     }
 
-    // addUnreadMessage(id) {
-    // increment number of unread messages
-    //     if (this.unreadMessages.has(id))
-    //         this.unreadMessages.set(id, this.unreadMessages.get(id) + 1);
-    //     else
-    //         this.unreadMessages.set(id, 1);
-    // }
-
     hasUnreadMessage(friend) {
-    // Make chat btn with friend to blink or be red or something
+    // Make chat btn with friend to be green or something
         const chatImg = document.querySelector('.friend-detail[data-user-id="' + friend + '"] .btn-chat img');
         chatImg.src = "/ressources/chat_new_msg.png";
     }
 
     noUnreadMessage() {
-    // Make chat btn with friend to blink or be red or something
+    // Make chat btn with friend to be normal
         const chatImg = document.querySelector('.friend-detail[data-user-id="' + this.activeChatUserId + '"] .btn-chat img');
         chatImg.src = "/ressources/chat.png";
     }
-
-    // getUnreadMessage(id) {
-    //     if (this.unreadMessages.has(id))
-    //         return this.unreadMessages.get(id);
-    // }
 
     async sendMsg(dest, message) {
         let data = {
@@ -150,7 +144,6 @@ export class ChatApp{
                 'message': message,
             }
         };
-        // console.log("Chat sending : " + data);
         await state.mainSocket.send(JSON.stringify(data));
     }
 }

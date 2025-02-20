@@ -28,10 +28,10 @@
     position: fixed;
     z-index: 2;
     /* max-width: ; */
-    width: 50%;
+    /* width: 50%; */
     /* max-height: ; */
-    height: 45%;
-    background-color: #fff;
+    height: auto; /* Define by Adrien to resize automatically the card with the content */
+    background-color: #ffffff;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     padding: 20px;

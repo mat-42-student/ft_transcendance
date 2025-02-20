@@ -14,7 +14,7 @@ db.sqlite3
 # Fichiers statiques et médias
 **/staticfiles/
 # static/
-media/
+# media/
 
 # Logs
 *.log
@@ -24,13 +24,13 @@ logs/
 .vscode/
 
 # Jlecorne
+# src/Makefile
 .DS_Store
-src/Makefile
+my_Dockerfile
 src/my_compose.yml
 src/my_frontend
-src/media
+# src/media
 src/.my_env
-src/nginx/MyDockerfile
 src/nginx/local.conf
 
 # mdjemaa
