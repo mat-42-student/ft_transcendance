@@ -1,11 +1,30 @@
 import { state } from './main.js';
+import { GameBase } from './GameBase.js';
+import input from './Input.js';
 
-export class WebGame {
 
+export class WebGame extends GameBase {
 
     constructor() {
+        super();
         this.socket = null;
+
+        this.side = 0; //TODO server needs to say this
+        // this.level = ;//TODO server needs to say this. (also, load it?)
+        this.playerNames[0] = state.client.userName;
+        // this.playerNames[1] = //TODO server needs to say this
     }
+
+    frame(delta, time) {
+        super.frame(delta, time);
+        this.#sendInput();
+    }
+
+    close() {
+        this.socket.close();
+        super.close();
+    }
+
 
     launchGameSocket() {
         let socketURL = "wss://" + window.location.hostname + ":3000/game/4/?t=" + state.client.accessToken;
@@ -25,6 +44,7 @@ export class WebGame {
         };
 
         this.socket.onclose = async function(e) {
+            this.socket = null;
         };
 
         this.socket.onmessage = async function(e) {
@@ -32,14 +52,18 @@ export class WebGame {
             console.log('data = ' + data);
             if (data.action == "info") {
                 console.log('info');
-            }
-            if (data.action =="move") {
-                console.log('info');
+                this.ballPosition.x = data.ball[0];
+                this.ballPosition.y = data.ball[1];
+                this.paddlePositions[0] = data.lpos;
+                this.paddlePositions[1] = data.rpos;
+                this.paddleHeights[0] = data.size[LEFT_PLAYER];
+                this.paddleHeights[1] = data.size[RIGHT_PLAYER];
+                this.scores[0] = data.lscore;
+                this.scores[1] = data.rscore;
             }
             if (data.action == "disconnect") {
-                this.playing = false;
+                console.log('Server asked for disconnect');
                 this.close();
-                cancelAnimationFrame(raf);
             }
         };
     }
@@ -48,66 +72,16 @@ export class WebGame {
         document.getElementById("btn-test-game").addEventListener('click', this.launchGameSocket);
     }
 
-	send(data) {
-		this.socket.send(data);
-	}
 
-    close() {
-        this.socket.close();
-        this.socket = null;
+    #sendInput() {
+        let currentInput = input.getPaddleInput(this.side);
+        if (this.previousInput != currentInput) {
+            this.socket.send(JSON.stringify({
+                "action": "move",
+                "key": currentInput
+            }));
+            this.previousInput = currentInput;
+        }
     }
+
 }
-
-/////////////////////////// Events part ///////////////////////////
-
-// function keydown(event) {
-//     if (KeyStillDown)
-//         return;
-//     key = event.key; // Get the key pressed
-//     if (key === 'q') {
-//         KeyStillDown = 'q';
-//         socket.send(JSON.stringify({ "from": side, "action": "move", "key": "-1" }));
-//         move[side] = -1;
-//     }
-//     else if (key === 'z') {
-//         KeyStillDown = 'z';
-//         socket.send(JSON.stringify({ "from": side, "action": "move", "key": "1" }));
-//         move[side] = 1;
-//     }
-// }
-
-// function keyup(event) {
-//     if (event.key !== KeyStillDown)
-//         return
-//     KeyStillDown = false
-//     socket.send(JSON.stringify({ "from": side, "action": "move", "key": "0" }));
-//     move[side] = 0;
-// }
-
-// // Click to refocus on field if needed
-// field.addEventListener('click', () => {
-//   field.focus();
-// });
-
-/////////////////////////// Game display part ///////////////////////////
-
-// function movePaddles() {
-//     lpad.style.top = pad[LEFT_PLAYER] + 'px';
-//     rpad.style.top = pad[RIGHT_PLAYER] + 'px';
-// }
-
-// function moveBall() {
-//     ball_div.style.left = ball[0] + 'px'
-//     ball_div.style.top = ball[1] + 'px'
-// }
-
-// function play() {
-//     if (playing) {
-//         console.log("rAFing...")
-//         movePaddles();
-//         moveBall();
-//         requestAnimationFrame(play);
-//     }
-//     else
-//         console.log("Not playing");
-// }

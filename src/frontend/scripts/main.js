@@ -2,6 +2,7 @@ import { setupNavigation, navigateTo } from './nav.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
 import { Client } from './Client.js';
 import { isAuthenticated } from './api/auth.js';
+import { GameBase } from './GameBase.js';
 import './Input.js';  // just run it
 
 export const state = {
@@ -10,7 +11,7 @@ export const state = {
     chatApp: null,
     socialApp: null,
     mmakingApp: null,
-    gameApp: null
+    /** @type {GameBase} */ gameApp: null,
 };
 
 state.client.setState(state);
@@ -66,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.gameApp.launchGameSocket();
         });
     }
-    
+
     if (closeButton) {
         closeButton.addEventListener('click', closeDynamicCard);
     }
