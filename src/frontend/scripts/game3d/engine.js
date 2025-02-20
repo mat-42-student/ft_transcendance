@@ -157,7 +157,7 @@ export default {
 
 		__cameraTarget = new CameraTarget();
 
-		let htmlAutoBorder = document.body.getElementsByTagName('auto-engine-border');
+		let htmlAutoBorder = document.body.getElementsByTagName('auto-engine-border');  //FIXME auto-engine-border moved
 		if (htmlAutoBorder) {
 			htmlAutoBorder = htmlAutoBorder.item(0);
 			if (htmlAutoBorder.update) {

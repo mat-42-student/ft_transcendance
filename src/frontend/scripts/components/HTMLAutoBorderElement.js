@@ -47,6 +47,3 @@ class HTMLAutoBorderElement extends HTMLElement {
 	}
 
 }
-
-
-customElements.define('auto-engine-border', HTMLAutoBorderElement);
