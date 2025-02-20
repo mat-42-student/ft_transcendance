@@ -1,25 +1,10 @@
+import { state } from "./main.js";
 import * as THREE from 'three';
 
 
 export default {
 	// MARK: Values
 
-
-	isPlaying: false,
-	gameFrameFunction: null,
-	gameCancelFunction: null,
-
-	/** Used for visuals and local games simulation. */
-	game: {
-		ballPosition: {x: 0, y: 0},
-		boardSize: {x: 1.0, y: 1.0},
-		scores: [0, 0],
-		maxScore: 5,
-		paddlePositions: [0, 0],
-		paddleHeights: [0, 0],
-		focusedPlayerIndex: -1,
-		playerNames: ['Guest', 'Uninitialized'],
-	},
 
 	_90: THREE.MathUtils.degToRad(90),
 	_180: THREE.MathUtils.degToRad(180),
@@ -35,23 +20,6 @@ export default {
 		return Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
 	},
 
-
-	async inject_code_into_markup(htmlfile, markup, script) {
-		try {
-			if (script != null && script.__proto__.constructor.name !== 'Array') {
-				throw Error('Bad argument: script must be null or array');
-			}
-			const response = await fetch(htmlfile);
-			const content = await response.text();
-			document.querySelector(markup).innerHTML = content;
-		} catch (error) {
-			console.error("Erreur lors du chargement du fichier :", error);
-			return (0);
-		}
-		if (script)
-			__addScript(script);
-		return (1);
-	},
 
 	clamp(value, min, max) {
 		if (value < min)
@@ -86,13 +54,8 @@ export default {
 		}
 	},
 
-	get powersave() { return !this.isPlaying && !document.hasFocus(); },
-
-	unitRect(diagonalDeg) {
-		const diagonalRad = THREE.MathUtils.degToRad(diagonalDeg);
-		const height = Math.sin(diagonalRad);
-		const width = Math.sqrt(1 - height * height);
-		return { x: width, y: height };
+	get powersave() {
+		return state.gameApp == null && !document.hasFocus();
 	},
 
 	/**
@@ -123,18 +86,4 @@ export default {
 
 		return q_yaw.multiply(q_pitch);
 	},
-}
-
-
-function __addScript(file) {
-	let i = 0;
-	while (i < file.length){
-		if (document.getElementById(file[i]))
-			return ;
-		const newScript = document.createElement('script');
-		newScript.type = 'module';
-		newScript.src = file[i];
-		newScript.id = file[i];
-		document.body.appendChild(newScript);
-	}
 }

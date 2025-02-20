@@ -247,9 +247,9 @@ export default class CameraTarget {
 			y: engine.borders.bottom - engine.borders.top,
 		};
 
-		const unitRect = global.unitRect(this.diagonal);
-
+		const unitRect = __unitRect(this.diagonal);
 		const canvasAspectRatio = canvasSize.x / canvasSize.y;
+
 		result.vAspectRatio = unitRect.x / unitRect.y;
 
 		const mult = Math.max(
@@ -288,4 +288,11 @@ export default class CameraTarget {
 function __triangle_thing(angle_deg, side_a) {
 	const hypothenuse = side_a / Math.cos(THREE.MathUtils.degToRad(angle_deg));
 	return Math.sqrt(hypothenuse*hypothenuse - side_a*side_a);
+}
+
+function __unitRect(diagonalDeg) {
+	const diagonalRad = THREE.MathUtils.degToRad(diagonalDeg);
+	const height = Math.sin(diagonalRad);
+	const width = Math.sqrt(1 - height * height);
+	return new THREE.Vector2(width, height);
 }
