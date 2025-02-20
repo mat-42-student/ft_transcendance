@@ -47,11 +47,16 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'accounts.authentication.JWTAuthentication',
+        'accounts.authentication.OAuth2IntrospectionAuthentication', 
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
+OAUTH2_CCF_INTROSPECT_URL = ''
+OAUTH2_CCF_CLIENT_ID = ''
+OAUTH2_CCF_CLIENT_SECRET = ''
 
 ROOT_URLCONF = 'users.urls'
 

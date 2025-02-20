@@ -71,9 +71,22 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwidXNlcm5hb
 
 ###
 
-GET https://localhost:3000/api/v1/auth/public-key/?form=oneline
+GET https://localhost:3000/api/v1/auth/public-key/
 Content-Type: application/json
 
 {}
 
+###
 
+POST https://localhost:3000/api/v1/auth/o/token/
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=TvD5jaFKdqLuNwvVqaQRXW04Zd3nArHrPAQU9FxE&client_secret=8QQWmGQ86NQMISJRrtw81ljWf6FoKvGb0LKhCMTX5HmU6VU7KJZljNaTPCGOE3krQz1QRjXD6N4VoPV2OksEj4jazfk2PTe19bSnNxRUcvSXa8nijEOa4zSGHaQiNSDW
+
+
+###
+
+POST https://localhost:3000/api/v1/auth/o/introspect/
+Content-Type: application/x-www-form-urlencoded
+
+token=Zx7IMBrw250lS3Spmiq0QiklvTG1Kn&client_id=TvD5jaFKdqLuNwvVqaQRXW04Zd3nArHrPAQU9FxE&client_secret=8QQWmGQ86NQMISJRrtw81ljWf6FoKvGb0LKhCMTX5HmU6VU7KJZljNaTPCGOE3krQz1QRjXD6N4VoPV2OksEj4jazfk2PTe19bSnNxRUcvSXa8nijEOa4zSGHaQiNSDW

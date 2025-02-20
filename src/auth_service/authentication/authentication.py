@@ -1,8 +1,10 @@
 from django.conf import settings
-from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.authentication import BaseAuthentication
+from django.contrib.auth import get_user_model
 import jwt
-from .models import User
+
+User = get_user_model()
 
 class JWTAuthentication(BaseAuthentication):
     def authenticate(self, request):
@@ -38,4 +40,6 @@ class JWTAuthentication(BaseAuthentication):
         Returns the value for the `WWW-Authenticate` header in a 401 response.
         """
         return 'Bearer'
+
+
 

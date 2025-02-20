@@ -24,8 +24,11 @@ from .utils import is_token_revoked
 from django.shortcuts import redirect
 from .models import Ft42Profile
 from django.http import HttpResponse
+from oauth2_provider.models import AccessToken
 
 class PublicKeyView(APIView):
+    permission_classes = [AllowAny]
+
     def get(self, request):
         public_key = """
         -----BEGIN PUBLIC KEY-----
@@ -38,8 +41,7 @@ class PublicKeyView(APIView):
         -----END PUBLIC KEY-----
         """
 
-        if request.GET.get("form") == "oneline":
-            public_key = public_key.replace("\n", "").replace(" ", "")
+        public_key = public_key.replace("\n", "").replace(" ", "")
 
         return JsonResponse({'public_key': public_key.strip()}, status=status.HTTP_200_OK)
 class VerifyTokenView(APIView):
@@ -93,6 +95,8 @@ class LoginView(APIView):
             'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
+            'jti': str(uuid.uuid4()),
+            'typ': "user"
         }
 
         refresh_payload = {
@@ -100,6 +104,8 @@ class LoginView(APIView):
             'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
+            'jti': str(uuid.uuid4()),
+            'typ': "user"
         }
 
         access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
@@ -159,6 +165,7 @@ class RefreshTokenView(APIView):
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
+            'typ': "user"
         }
 
         refresh_payload = {
@@ -167,6 +174,7 @@ class RefreshTokenView(APIView):
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
+            'typ': "user"
         }
 
         new_access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
@@ -204,7 +212,6 @@ class LogoutView(APIView):
 
         # response = Response()
 class Enroll2FAView(APIView):
-    permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
@@ -244,7 +251,6 @@ class Enroll2FAView(APIView):
 
         return Response(response_data, status=status.HTTP_200_OK)
 class Verify2FAView(APIView):
-    permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
@@ -263,7 +269,6 @@ class Verify2FAView(APIView):
         else:
             return Response({"error": "Invalid or expired 2FA code"}, status=401)
 class Disable2FAView(APIView):
-    permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
@@ -294,10 +299,10 @@ class OAuthCallbackView(APIView):
 
         token_data = {
             'grant_type': 'authorization_code',
-            'client_id': settings.OAUTH_CLIENT_ID,
-            'client_secret': settings.OAUTH_CLIENT_SECRET,
+            'client_id': settings.OAUTH2_ACF_CLIENT_ID,
+            'client_secret': settings.OAUTH2_ACF_CLIENT_SECRET,
             'code': code,
-            'redirect_uri': settings.OAUTH_REDIRECT_URI,
+            'redirect_uri': settings.OAUTH2_ACF_REDIRECT_URI,
         }
         token_url = 'https://api.intra.42.fr/oauth/token'
         token_response = requests.post(token_url, data=token_data)
@@ -345,6 +350,8 @@ class OAuthCallbackView(APIView):
             'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
+            'jti': str(uuid.uuid4()),
+            'typ': "user"
         }
 
         refresh_token = jwt.encode(refresh_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
@@ -376,4 +383,21 @@ class OAuthCallbackView(APIView):
         )
 
         return response
-    
+class IntrospectTokenView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        token = request.POST.get('token')
+        try:
+            access_token = AccessToken.objects.select_related("application", "user").get(token=token)
+            is_active = not access_token.is_expired()
+
+            data = {
+                "active": is_active,
+                "scope": access_token.scope,
+                "client_id": access_token.application.client_id,
+            }
+        except AccessToken.DoesNotExist:
+            data = {"active": False}
+
+        return JsonResponse(data)

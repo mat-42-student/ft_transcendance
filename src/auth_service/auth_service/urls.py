@@ -14,5 +14,6 @@ urlpatterns = [
     path('api/v1/auth/2fa/disable/', Disable2FAView.as_view(), name='2fa-disable'),
     path('api/v1/auth/oauth/login/', OAuthLoginView.as_view(), name='oauth-login'),
     path('api/v1/auth/oauth/callback/', OAuthCallbackView.as_view(), name='oauth-callback'),
-    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    path('api/v1/auth/o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    path('api/v1/auth/o/introspect/', IntrospectTokenView.as_view(), name="introspect_token"),
 ]

@@ -35,6 +35,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         unique=True,
         validators=[MinLengthValidator(3)]
     )
+    first_name = models.CharField(
+        max_length=50,
+        validators=[MinLengthValidator(3)]
+    )
+    last_name = models.CharField(
+        max_length=50,
+        validators=[MinLengthValidator(3)]
+    )
     password = models.CharField( # Utilisation d'un mot de passe hashé -> SUPPRIMER pour laisser django gérer hashage ou utiliser set_password()
         max_length=128, 
         validators=[MinLengthValidator(5)]
