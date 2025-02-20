@@ -17,9 +17,9 @@ class Player:
     def move_paddle(self, speed):
         if (self.move < 0 and self.pos <= HEIGHT/-2):
             self.move = 0
-        else if (self.move > 0 and self.pos >= HEIGHT/2):
+        elif (self.move > 0 and self.pos >= HEIGHT/2):
             self.move = 0
-        else
+        else:
             self.pos += self.move * speed * DELTATIME
 
     def score_up(self):
@@ -90,9 +90,9 @@ class Game:
     def set_player_move(self, id, move):
         self.players[id].move = int(move)
         # prevent hax allowing the player to move way too fast
-        if (self.players[id].move < 1.0)
+        if (self.players[id].move < 1.0):
             self.players[id].move = -1
-        elif (self.players[id].move > 1.0)
+        elif (self.players[id].move > 1.0):
             self.players[id].move = 1
 
     def move_players(self):
