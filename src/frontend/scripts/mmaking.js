@@ -49,12 +49,6 @@ export class Mmaking
 
     async incomingMsg(data)
     {
-<<<<<<< HEAD
-        
-		// Routing to lauch game and open websocket Game
-=======
-
->>>>>>> origin/dev
         if (data.body.status == 'ingame')
         {
             for (const [key, value] of Object.entries(data.body.opponents))
@@ -87,8 +81,6 @@ export class Mmaking
 			const guest_id = Number(data.body.type_game.invite.guest_id);
 			const host_id = Number(data.body.type_game.invite.host_id);
             console.log(invite);
-<<<<<<< HEAD
-=======
             if (invite.accept == true)
             {
                 await initDynamicCard('salonInvite');
@@ -108,7 +100,6 @@ export class Mmaking
                     }
                 });
             }
->>>>>>> origin/dev
 
 			// Invitation is accepted: all next msg by server come here
 			try
@@ -221,13 +212,10 @@ export class Mmaking
         if (target.dataset.invite == 1)
         {
             await initDynamicCard('vs_active');
-<<<<<<< HEAD
 			this.desableOverlay();
 
             
-=======
 
->>>>>>> origin/dev
             const acceptInvitation = document.querySelector('.invitation .btn-accepter');
 			const refuseInvitation = document.querySelector('.invitation .btn-refuser');
 
@@ -266,12 +254,7 @@ export class Mmaking
         }
         else
         {
-<<<<<<< HEAD
-
-            const data = 
-=======
             const data =
->>>>>>> origin/dev
             {
                 'type_game': {
                     'invite': {
