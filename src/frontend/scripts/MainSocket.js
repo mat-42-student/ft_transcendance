@@ -1,6 +1,6 @@
 import { ChatApp } from './Chat.js';
 import { SocialApp } from './Social.js';
-import { Game } from './Game.js';
+import { WebGame } from './WebGame.js';
 import { Mmaking } from './mmaking.js';
 import { state } from './main.js';
 
@@ -21,7 +21,7 @@ export class MainSocket {
 		state.socialApp = new SocialApp();
 		await state.socialApp.fetchFriends();
 		state.mmakingApp = new Mmaking();
-		state.gameApp = new Game();
+		state.gameApp = new WebGame();
 
 		this.socket.onerror = async (e)=> {
 			console.error(e.message);
@@ -31,7 +31,7 @@ export class MainSocket {
 			// console.log("mainSocket connected");
         };
 
-		this.socket.onclose = async (e)=> { 
+		this.socket.onclose = async (e)=> {
 			// console.log("mainSocket disconnected");
 		};
 
@@ -52,7 +52,7 @@ export class MainSocket {
 				default:
 				console.warn('mainSocket : could not handle incoming JSON' + JSON.stringify(data, null, 2));
 			}
-		};       
+		};
     };
 
 	send(data) {

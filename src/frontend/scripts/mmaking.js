@@ -1,6 +1,6 @@
 import { state } from './main.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
-import { Game } from './Game.js';
+import { WebGame } from './WebGame.js';
 
 export class Mmaking
 {
@@ -49,13 +49,13 @@ export class Mmaking
 
     async incomingMsg(data)
     {
-        
+
         if (data.body.status == 'ingame')
         {
             for (const [key, value] of Object.entries(data.body.opponents))
                 this.setOpponent(value.username, '../../../media/avatars/default.png')
 
-            state.gameApp = new Game();
+            state.gameApp = new WebGame();
             state.gameApp.launchGameSocket();
         }
         else if (data.body.type_game.invite)
@@ -69,7 +69,7 @@ export class Mmaking
             }
             else{
                 const friendlist = document.querySelectorAll('.friend-item');
-            
+
                 friendlist.forEach(friend => {
                     if (friend.dataset.userid == data.body.type_game.invite.host_id )
                     {
@@ -90,7 +90,7 @@ export class Mmaking
         if (target.dataset.invite == 1)
         {
             await initDynamicCard('vs_active');
-            
+
             const acceptInvitation = document.querySelector('.invitation .btn-accepter');
             acceptInvitation.addEventListener('click', async (event)=>{
 
@@ -111,7 +111,7 @@ export class Mmaking
         }
         else
         {
-            const data = 
+            const data =
             {
                 'type_game': {
                     'invite': {
@@ -138,7 +138,7 @@ export class Mmaking
 
 
         this.sendMsg(data)
-        
+
         closeDynamicCard();
     }
 
@@ -164,26 +164,26 @@ export class Mmaking
     createCard() {
         const card = document.createElement("div");
         card.classList.add("invitation");
-        
+
         const title = document.createElement("h2");
         title.textContent = "Invitation";
-        
+
         const message = document.createElement("p");
         message.textContent = "Souhaitez-vous accepter cette demande ?";
-        
+
         const acceptButton = document.createElement("button");
         acceptButton.classList.add("btn-invitation", "btn-accepter");
         acceptButton.textContent = "✅";
-        
+
         const refuseButton = document.createElement("button");
         refuseButton.classList.add("btn-invitation", "btn-refuser");
         refuseButton.textContent = "❌";
-        
+
         card.appendChild(title);
         card.appendChild(message);
         card.appendChild(acceptButton);
         card.appendChild(refuseButton);
-        
+
         return card;
     }
 }

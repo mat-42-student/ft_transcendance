@@ -1,6 +1,6 @@
 import { state } from './main.js';
 
-export class Game {
+export class WebGame {
 
 
     constructor() {
@@ -15,7 +15,7 @@ export class Game {
         this.socket.onerror = async function(e) {
             console.error(e.message);
         };
-    
+
         this.socket.onopen = async function(e) {
             this.send(JSON.stringify({
                 // 'from': state.client.userName,
@@ -23,10 +23,10 @@ export class Game {
                 })
             );
         };
-        
+
         this.socket.onclose = async function(e) {
         };
-    
+
         this.socket.onmessage = async function(e) {
             let data = JSON.parse(e.data);
             console.log('data = ' + data);
