@@ -156,8 +156,8 @@ REST_FRAMEWORK = {
     ],
 }
 
-OAUTH2_CCF_INTROSPECT_URL = 'https://localhost:3000/api/v1/auth/o/introspect/'
-OAUTH2_CCF_TOKEN_URL = 'https://localhost:3000/api/v1/auth/o/token/'
+OAUTH2_CCF_INTROSPECT_URL = 'http://auth-service:8000/api/v1/auth/o/introspect/'
+OAUTH2_CCF_TOKEN_URL = 'http://auth-service:8000/api/v1/auth/o/token/'
 OAUTH2_CCF_CLIENT_ID = 'Q4oWzkhULhhRe0QkjX939QgL48sYFujfewOcnhq4'
 OAUTH2_CCF_CLIENT_SECRET = 'tMyCHhdoEWgho9rHIm0M3BAB581d3jhDz0HAtLQRcSsVyrQDlhuFm8SRuM0ShTTbxpUddXVbKpC7Ml5H9X3AXLmpRafXgTvAHXBce2qoFQIZTIUUcOjboEjelfJN7ECy'
 

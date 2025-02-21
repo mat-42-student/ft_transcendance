@@ -9,7 +9,9 @@ import requests
 User = get_user_model()
 
 class JWTAuthentication(BaseAuthentication):
+
     def authenticate(self, request):
+        print('JWT AUTH')
         """
         Custom authentication class for JWT-based authentication.
         """
@@ -46,6 +48,9 @@ class JWTAuthentication(BaseAuthentication):
 class OAuth2IntrospectionAuthentication(BaseAuthentication):
     def authenticate(self, request):
         auth_header = request.headers.get('Authorization')
+        print(f"Headers: {dict(request.headers)}")  # Affiche les headers
+        print(f"GET Params: {request.GET}")  # Affiche les paramètres GET
+        print(f"Body: {request.body}")  # Affiche le corps brut (utile pour POST/PUT)
         if not auth_header or not auth_header.startswith('Bearer '):
             return None
 

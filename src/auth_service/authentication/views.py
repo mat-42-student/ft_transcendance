@@ -41,8 +41,6 @@ class PublicKeyView(APIView):
         -----END PUBLIC KEY-----
         """
 
-        # public_key = public_key.replace("\n", "").replace(" ", "")
-
         return JsonResponse({'public_key': public_key.strip()}, status=status.HTTP_200_OK)
 class VerifyTokenView(APIView):
     renderer_classes = [JSONRenderer]

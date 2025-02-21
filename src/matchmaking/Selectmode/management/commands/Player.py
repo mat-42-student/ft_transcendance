@@ -34,7 +34,6 @@ class Player ():
 
         headers = {
             "Authorization": f"Bearer {self.token}",  # Ajoute le token d'authentification
-            "Content-Type": "application/json",  # Optionnel, selon ton API
         }
 
         response = requests.get(url, headers=headers)
@@ -45,7 +44,7 @@ class Player ():
             self.username = data.get('username')
             self.picture = data.get('avatar')
         else:
-            print("error: User not found")
+            print("error: UUser not found")
     
     async def checkStatus(self, redis, channel):
         test = 5
