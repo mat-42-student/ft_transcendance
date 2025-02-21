@@ -1,7 +1,7 @@
 import { setupNavigation, goHome, goProfile } from './nav.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
 import { Client } from './Client.js';
-// import { isAuthenticated } from './api/auth.js';
+import { isAuthenticated } from './api/auth.js';
 
 export const state = {
     client: new Client(),
@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
             goHome();
         });
     }
-
 
     if (profileButton) {
         profileButton.addEventListener('click', async (e) => {

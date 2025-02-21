@@ -17,6 +17,7 @@ import datetime
 from .models import User, Relationship
 from .serializers import (
     UserListSerializer, 
+    UserMinimalSerializer, 
     UserDetailSerializer, 
     UserPrivateDetailSerializer, 
     UserBlockedSerializer, 
@@ -75,7 +76,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """Définit les permissions pour chaque action."""
-        if self.action in ['list', 'retrieve', 'get_user_friends', 'get_user_blocks']:
+        if self.action in ['list', 'retrieve']:
             return [AllowAny()]
         return [IsAuthenticated()]  # Authentification requise pour toutes les autres actions
 
@@ -163,54 +164,139 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Utilisateur débloqué."}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"detail": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
-        
+
+    @action(detail=True, methods=['GET'], url_path='contacts')
+    def get_user_contacts(self, request, pk=None):
+        """
+        Endpoint pour récupérer les amis et contacts bloqués d'un utilisateur.
+        - Un utilisateur normal ne peut récupérer QUE ses propres contacts.
+        - Un superutilisateur peut récupérer les contacts de n'importe quel utilisateur.
+        """
+        requested_user = self.get_object()  # Récupère l'utilisateur cible
+
+        # Vérification des permissions
+        if request.user != requested_user and not request.user.is_superuser:
+            raise PermissionDenied("Vous n'avez pas la permission d'accéder aux contacts de cet utilisateur.")
+
+        # Récupération des amis (relations où l'utilisateur est soit from_user soit to_user)
+        friends = User.objects.filter(
+            Q(relationships_initiated__to_user=requested_user, relationships_initiated__status='friend') |
+            Q(relationships_received__from_user=requested_user, relationships_received__status='friend')
+        ).exclude(id=requested_user.id).distinct()
+
+        # Récupération des utilisateurs bloqués
+        blocked_users = requested_user.blocked_users.all()
+        blocked_by_users = requested_user.blocked_by.all()
+
+        return Response({
+            'friends': UserMinimalSerializer(friends, many=True).data,
+            'blocked_users': UserMinimalSerializer(blocked_users, many=True).data,
+            'blocked_by_users': UserMinimalSerializer(blocked_by_users, many=True).data
+        }, status=200)
+
     @action(detail=True, methods=['GET'], url_path='friends')
     def get_user_friends(self, request, pk=None):
         """
-        Endpoint pour récupérer les amis d'un utilisateur donné.
+        Endpoint pour récupérer la liste des amis d'un utilisateur donné.
         """
+        requested_user = self.get_object()  # Récupère l'utilisateur cible
+
+        # Vérification des permissions
+        if request.user != requested_user and not request.user.is_superuser:
+            raise PermissionDenied("Vous n'avez pas la permission d'accéder aux contacts de cet utilisateur.")
+        
         try:
             user = User.objects.get(pk=pk)
-            friends = Relationship.objects.filter(
-                (Q(from_user=user) | Q(to_user=user)) & Q(status='friend')
-            )
-            friend_list = [
-                {
-                    'id': rel.to_user.id if rel.from_user == user else rel.from_user.id,
-                    'username': rel.to_user.username if rel.from_user == user else rel.from_user.username
-                }
-                for rel in friends
-            ]
-            return Response({'friends': friend_list}, status=200)
+            friends = User.objects.filter(
+                Q(relationships_initiated__to_user=user, relationships_initiated__status='friend') |
+                Q(relationships_received__from_user=user, relationships_received__status='friend')
+            ).distinct()
+
+            serializer = UserMinimalSerializer(friends, many=True)
+            return Response({'friends': serializer.data}, status=200)
+
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=404)
-
+        
     @action(detail=True, methods=['GET'], url_path='blocks')
     def get_user_blocks(self, request, pk=None):
         """
-        Endpoint pour récupérer les utilisateurs bloqués ou bloquants.
+        Endpoint pour récupérer les utilisateurs bloqués et ceux ayant bloqué l'utilisateur.
         """
+        requested_user = self.get_object()  # Récupère l'utilisateur cible
+
+        # Vérification des permissions
+        if request.user != requested_user and not request.user.is_superuser:
+            raise PermissionDenied("Vous n'avez pas la permission d'accéder aux contacts de cet utilisateur.")
+        
         try:
             user = User.objects.get(pk=pk)
-            blocked_users = user.blocked_users.all()  # Utilisateurs bloqués par cet utilisateur
-            blocked_by_users = user.blocked_by.all()  # Utilisateurs ayant bloqué cet utilisateur
+            blocked_users = user.blocked_users.all().distinct()
+            blocked_by_users = user.blocked_by.all().distinct()
 
-            response_data = {
-                'blocked_users': [
-                    {'id': u.id, 'username': u.username, 'avatar': u.avatar.url}
-                    for u in blocked_users
-                ],
-                'blocked_by_users': [
-                    {'id': u.id, 'username': u.username, 'avatar': u.avatar.url}
-                    for u in blocked_by_users
-                ],
-            }
-            return Response(response_data, status=200)
+            serializer_blocked = UserMinimalSerializer(blocked_users, many=True)
+            serializer_blocked_by = UserMinimalSerializer(blocked_by_users, many=True)
+
+            return Response({
+                'blocked_users': serializer_blocked.data,
+                'blocked_by_users': serializer_blocked_by.data
+            }, status=200)
 
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=404)
-        except Exception as e:
-            return Response({'error': str(e)}, status=500)
+        
+    @action(detail=True, methods=['GET'], url_path='profile')
+    def get_user_profile(self, request, pk=None):
+        """
+        Récupère les informations dynamiques d'un utilisateur en tenant compte des relations.
+        """
+        user = request.user  # Utilisateur authentifié
+        target_user = get_object_or_404(User, pk=pk)  # Utilisateur dont on veut voir le profil
+
+        # Initialisation des données de base du profil
+        response_data = {
+            "id": target_user.id,
+            "username": target_user.username,
+            "avatar": target_user.avatar.url,
+            "is_self": False,
+            "is_friend": False,
+            "is_blocked_by_user": False,
+            "has_blocked_user": False,
+            "message": None,
+            "2fa": False,
+        }
+
+        # Vérifier si l'utilisateur est celui consulté et si 2fa activée
+        if (user == target_user):
+            response_data.update({
+                "is_self": True,
+            })
+            if (user.is_2fa_enabled == True):
+                response_data.update({
+                    "2fa": True,
+                })
+
+        # Vérifier les statuts de blocage
+        if target_user in user.blocked_users.all():
+            response_data.update({
+                "is_blocked_by_user": True,
+                "message": "Vous avez bloqué cet utilisateur.",
+            })
+        elif target_user in user.blocked_by.all():
+            response_data.update({
+                "has_blocked_user": True,
+                "message": "Vous avez été bloqué par cet utilisateur.",
+            })
+
+        # Vérifier si l'utilisateur est ami avec la personne consultée
+        elif Relationship.objects.filter(
+            Q(from_user=user, to_user=target_user, status='friend') |
+            Q(from_user=target_user, to_user=user, status='friend')
+        ).exists():
+            response_data["is_friend"] = True
+
+        return Response(response_data, status=200)
+        
 
 # Relationship ViewSet
 class RelationshipViewSet(viewsets.ViewSet):
