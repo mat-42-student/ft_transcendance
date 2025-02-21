@@ -15,7 +15,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -26,7 +25,6 @@ SECRET_KEY = 'django-insecure-07auai45r7xxwpi94@z253^)955urq@q_n_p%5xcgwox0m*w#)
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
 
 # Application definition
 
@@ -146,15 +144,21 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-}
 
-OAUTH2_CCF_INTROSPECT_URL = 'https://localhost:3000/api/v1/auth/o/introspect/'
-OAUTH2_CCF_CLIENT_ID = ''
-OAUTH2_CCF_CLIENT_SECRET = ''
+
+
+
+
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': [
+#         'router.authentication.OAuth2IntrospectionAuthentication',
+#     ],
+#     'DEFAULT_PERMISSION_CLASSES': [
+#         'rest_framework.permissions.IsAuthenticated',
+#     ],
+# }
+
+# OAUTH2_CCF_INTROSPECT_URL = 'https://localhost:3000/api/v1/auth/o/introspect/'
+# OAUTH2_CCF_TOKEN_URL = 'https://localhost:3000/api/v1/auth/o/token/'
+# OAUTH2_CCF_CLIENT_ID = 'Q4oWzkhULhhRe0QkjX939QgL48sYFujfewOcnhq4'
+# OAUTH2_CCF_CLIENT_SECRET = 'tMyCHhdoEWgho9rHIm0M3BAB581d3jhDz0HAtLQRcSsVyrQDlhuFm8SRuM0ShTTbxpUddXVbKpC7Ml5H9X3AXLmpRafXgTvAHXBce2qoFQIZTIUUcOjboEjelfJN7ECy'

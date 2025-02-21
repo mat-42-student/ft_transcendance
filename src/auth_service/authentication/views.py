@@ -41,7 +41,7 @@ class PublicKeyView(APIView):
         -----END PUBLIC KEY-----
         """
 
-        public_key = public_key.replace("\n", "").replace(" ", "")
+        # public_key = public_key.replace("\n", "").replace(" ", "")
 
         return JsonResponse({'public_key': public_key.strip()}, status=status.HTTP_200_OK)
 class VerifyTokenView(APIView):
@@ -197,6 +197,7 @@ class RefreshTokenView(APIView):
 class LogoutView(APIView):
     renderer_classes = [JSONRenderer]
 
+
     def post(self, request):
         refresh_token = request.COOKIES.get('refreshToken')
         if refresh_token:
@@ -213,6 +214,7 @@ class LogoutView(APIView):
         # response = Response()
 class Enroll2FAView(APIView):
     renderer_classes = [JSONRenderer]
+
 
     def post(self, request):
         user = request.user
@@ -277,13 +279,15 @@ class Disable2FAView(APIView):
         user.is_2fa_enabled = False 
         user.save()
         return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK)  
-class OAuthLoginView(APIView):    
+class OAuthLoginView(APIView):
+    permission_classes = [AllowAny]
+
     def get(self, request):
         state = generate_state()
         request.session['oauth_state'] = state
         params = {
-            'client_id': settings.OAUTH_CLIENT_ID,
-            'redirect_uri': settings.OAUTH_REDIRECT_URI,
+            'client_id': settings.OAUTH2_ACF_CLIENT_ID,
+            'redirect_uri': settings.OAUTH2_ACF_REDIRECT_URI,
             'response_type': 'code',
             'scope': 'public',
             'state': state,
