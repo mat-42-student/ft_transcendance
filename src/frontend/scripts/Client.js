@@ -135,7 +135,7 @@ export class Client{
         try {
             if (!userId)
                 userId = this.userId;
-    
+
             const response = await fetch(`api/v1/users/${userId}/profile/`, {
                 headers: {
                     "Authorization": `Bearer ${this.accessToken}`
