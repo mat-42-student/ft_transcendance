@@ -13,7 +13,8 @@ const dynamicCardRoutes = {
     'unblock': './partials/cards/unblock.html',
     '2fa': './partials/cards/2fa.html',
     'vs_active': './partials/cards/vs_active.html',
-	'salonInvite': './partials/cards/salonInvite.html'
+	'salonHost': './partials/cards/salonHost.html',
+	'salonGuest': './partials/cards/salonGuest.html',
 };
 
 export async function initDynamicCard(routeKey) {

@@ -82,8 +82,7 @@ export async function handleAuthSubmit(event) {
                 console.error(error);
             }
             window.location.hash = '#profile';
-            // fetchUsers();
-            closeDynamicCard();
+            closeDynamicCard(); // on reste sur #home ou on renvoie sur #profile direct une fois connecté ?
         } else {
             const errorData = await response.json();
 

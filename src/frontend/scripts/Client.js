@@ -23,8 +23,11 @@ export class Client{
             throw error;
         }
         this.renderProfileBtn();
-        this.state.mainSocket = new MainSocket();
-        await this.state.mainSocket.init();
+		if (this.state.mainSocket == null)
+		{
+        	this.state.mainSocket = new MainSocket();
+        	await this.state.mainSocket.init();
+		}
     }
 
     async logout() {
@@ -130,55 +133,140 @@ export class Client{
         }
     }
 
-	updateProfilePage() {
-		const avatarElement = document.querySelector('.profile-avatar');
-		const usernameElement = document.querySelector('.profile-username');
-		const statusElement = document.querySelector('.profile-status');
-	
-		if (avatarElement) {
-			avatarElement.src = this.avatar ? `/media/avatars/${this.avatar}` : '/media/avatars/default.png';
-		}
-	
-		if (usernameElement) {
-			usernameElement.textContent = this.userName || 'Unknown User';
-		}
-	
-		if (statusElement) { // à changer
-			statusElement.classList.remove('online', 'offline', 'ingame', 'pending');
-			statusElement.classList.add(this.status || 'online');
-	
-			const messageElement = statusElement.querySelector('.message');
-			if (messageElement) {
-				messageElement.textContent = this.status.charAt(0).toUpperCase() + this.status.slice(1);
-			}
-		}
-	}
+    // Nouvelle fonction d'affichage #profile -> gère profil utilisateur authentifié et utilisateurs tiers, affichage dynamic des infos et options
+    // Si aucun userId ou id == User authentifié setup page profile auth, sinon affichage profil utilisateur tiers (gestion Relationship fonctionelle)
+    async loadUserProfile(userId) {
+        try {
+            if (!userId)
+                userId = this.userId;
 
-	async fetchUserProfile() {
-		if (!this.accessToken) {
-			console.error("No access token found.");
-			return;
-		}
-	
-		try {
-			const response = await fetch(`/api/v1/users/${this.userId}/`, {
-				headers: {
-					'Authorization': `Bearer ${this.accessToken}`,
-				},
-			});
-	
-			if (response.ok) {
-				const data = await response.json();
-				this.userName = data.username;
-				this.avatar = data.avatar;
-				this.status = data.status; // changer gestion status par full front + ws pour echange entre users
-				// console.log("Status reçu :", data.status); //debug
-				this.updateProfilePage();
-			} else {
-				console.error("Failed to fetch user profile:", response.status);
-			}
-		} catch (error) {
-			console.error("Error fetching user profile:", error);
-		}
-	}
+            const response = await fetch(`api/v1/users/${userId}/profile/`, {
+                headers: {
+                    "Authorization": `Bearer ${this.accessToken}`
+                }
+            });
+    
+            if (!response.ok) {
+                throw new Error("Erreur lors de la récupération du profil");
+            }
+    
+            const data = await response.json();
+    
+            // Vérifie que les éléments existent avant de les modifier -> ?? Appliquer même fonctionnement que pour container des actions à celui des infos
+            const usernameEl = document.getElementById("profile-username");
+            if (usernameEl)
+                usernameEl.textContent = data.username;
+
+            const avatarEl = document.getElementById("profile-avatar");
+            if (avatarEl)
+                avatarEl.src = data.avatar;
+            
+            const actionsEl = document.getElementById("profile-actions");
+            if (actionsEl) {
+                // actionsEl.innerHTML = ""; // Nettoyage des boutons
+
+                if (data.is_self) {
+                    actionsEl.innerHTML = `
+                        <button data-action="2fa" data-user-id="${data.id}" title="Enable Two-Factor Authentication">
+                            <img src="/ressources/2fa.svg" alt="Enable 2fa">
+                        </button>
+                        <button data-action="update" data-user-id="${data.id}" title="Update Profile">
+                            <img src="/ressources/update.png" alt="Update Profile">
+                        </button>
+                        <button data-action="logout" data-user-id="${data.id}" title="Logout">
+                            <img src="/ressources/logout.png" alt="Logout">
+                        </button>
+                    `;
+                } else if (data.has_blocked_user) {
+                    actionsEl.innerHTML = `<p>Vous avez été bloqué par cet utilisateur.</p>`;
+                } else if (data.is_blocked_by_user) {
+                    actionsEl.innerHTML = `
+                        <p>Vous avez bloqué cet utilisateur.</p>
+                        <br>
+                        <button data-action="unblock" data-user-id="${data.id}" title="Unblock">
+                            <img src="/ressources/unblock.png" alt="Unblock">
+                        </button>
+                    `;
+                } else if (data.is_friend) {
+                    actionsEl.innerHTML = `
+                        <button data-action="match" data-user-id="${data.id}" title="Match">
+                            <img src="/ressources/vs.png" alt="Match">
+                        </button>
+                        <button data-action="chat" data-user-id="${data.id}" title="Chat">
+                            <img src="/ressources/chat.png" alt="Chat">
+                        </button>
+                        <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
+                            <img src="/ressources/remove-friend.png" alt="Remove Friend">
+                        </button>
+                        <button data-action="block" data-user-id="${data.id}" title="Block">
+                            <img src="/ressources/block.png" alt="Block">
+                        </button>
+                    `;
+                } else {
+                    actionsEl.innerHTML = `
+                        <button data-action="add-friend" data-user-id="${data.id}" title="Add Friend">
+                            <img src="/ressources/add-friend.png" alt="Add a Friend">
+                        </button>
+                    `;
+                }
+            }
+
+        } catch (error) {
+            console.error("Erreur :", error);
+            const actionsEl = document.getElementById("profile-actions");
+            if (actionsEl) actionsEl.innerHTML = `<p>Impossible de charger le profil.</p>`;
+        }
+    }
 }
+
+// updateProfilePage() {
+// 	const avatarElement = document.querySelector('.profile-avatar');
+// 	const usernameElement = document.querySelector('.profile-username');
+// 	// const statusElement = document.querySelector('.profile-status');
+
+// 	if (avatarElement) {
+// 		avatarElement.src = this.avatar ? `/media/avatars/${this.avatar}` : '/media/avatars/default.png';
+// 	}
+
+// 	if (usernameElement) {
+// 		usernameElement.textContent = this.userName || 'Unknown User';
+// 	}
+
+// 	// if (statusElement) { // à changer
+// 	// 	statusElement.classList.remove('online', 'offline', 'ingame', 'pending');
+// 	// 	statusElement.classList.add(this.status || 'online');
+
+// 	// 	const messageElement = statusElement.querySelector('.message');
+// 	// 	if (messageElement) {
+// 	// 		messageElement.textContent = this.status.charAt(0).toUpperCase() + this.status.slice(1);
+// 	// 	}
+// 	// }
+// }
+
+// async fetchUserProfile() {
+// 	if (!this.accessToken) {
+// 		console.error("No access token found.");
+// 		return;
+// 	}
+
+// 	try {
+// 		const response = await fetch(`/api/v1/users/${this.userId}/`, {
+// 			headers: {
+// 				'Authorization': `Bearer ${this.accessToken}`,
+// 			},
+// 		});
+
+// 		if (response.ok) {
+// 			const data = await response.json();
+// 			this.userName = data.username;
+// 			this.avatar = data.avatar;
+// 			// this.status = data.status; // changer gestion status par full front + ws pour echange entre users
+// 			// console.log("Status reçu :", data.status); //debug
+// 			this.updateProfilePage();
+// 		} else {
+// 			console.error("Failed to fetch user profile:", response.status);
+// 		}
+// 	} catch (error) {
+// 		console.error("Error fetching user profile:", error);
+// 	}
+// }
