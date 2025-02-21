@@ -7,6 +7,7 @@ export class WebGame extends GameBase {
 
     constructor() {
         super();
+
         this.socket = null;
 
         this.side = 0; //TODO server needs to say this
@@ -16,12 +17,14 @@ export class WebGame extends GameBase {
     }
 
     frame(delta, time) {
-        super.frame(delta, time);
         this.#sendInput();
+
+        super.frame(delta, time);
     }
 
     close() {
         this.socket.close();
+
         super.close();
     }
 

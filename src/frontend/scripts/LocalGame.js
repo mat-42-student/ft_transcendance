@@ -20,12 +20,12 @@ export class LocalGame extends GameBase {
 
     constructor (
         isCPU = false,
-        angleMax = MathUtils.degToRad(70)
+        angleMax = 70
     ) {
         super();
 
         this.isCPU = isCPU;
-        this.angleMax = angleMax;
+        this.angleMax = MathUtils.degToRad(angleMax);
 
         // game simulation stats - might want to keep these numbers synced with web game
         this.ballSpeed = 0.18;
@@ -40,24 +40,25 @@ export class LocalGame extends GameBase {
         this.level.load();  //TODO do something with return, async thing, maybe do this last?
 
         this.playerNames[0] = 'Player 1';
-        this.playerNames[1] = isCPU ? generateRandomNick() : 'Player 2';
+        this.playerNames[1] = isCPU ? this.generateRandomNick() : 'Player 2';
 
         this.scores = [0, 0];
         this.side = isCPU ? 0 : 2;  // Neutral (2) if keyboard PVP
 
         //TODO wait for level to finish loading before continuing
-        newRound();
+        this.newRound();
     }
 
-
 	frame(delta, time) {
-        movePaddles(delta);
-        moveBall(delta);
+        this.movePaddles(delta);
+        this.moveBall(delta);
+
         super.frame(delta, time);
 	}
 
     close() {
         this.endgame(true);
+
         super.close();
     }
 
@@ -84,10 +85,6 @@ export class LocalGame extends GameBase {
 
 
     // MARK: Game engine
-
-    async startLocalGame(isCPU) {
-        //TODO i moved everything in here to constructor
-    }
 
     newRound() {
         this.ballPosition = { x: 0, y: 0 };
@@ -126,7 +123,7 @@ export class LocalGame extends GameBase {
 
     movePaddles(delta) {
         let inputs = input.currentPaddleInputs;
-        if (__isCPU) inputs[1] = cpuMove();
+        if (__isCPU) inputs[1] = this.cpuMove();
 
         const limit = this.level.size.y / 2;
         for (let i = 0; i < 2; i++) {
@@ -175,7 +172,7 @@ export class LocalGame extends GameBase {
                 const ballTooLow = this.ballPosition.y < this.paddlePositions[collisionSide] - pHeight;
                 const ballTooHigh = this.ballPosition.y > this.paddlePositions[collisionSide] + pHeight;
                 if (ballTooLow || ballTooHigh) {
-                    scoreup(collisionSide === 1 ? 0 : 1);
+                    this.scoreup(collisionSide === 1 ? 0 : 1);
                     break;
                 } else {
                     const signedSide = collisionSide == 0 ? 1 : -1;
@@ -225,7 +222,7 @@ export class LocalGame extends GameBase {
             // All of the [collision] stuff has properties named .x or .y .
             // They're not even the same properties, but hey, JS is anarchy,
             // and right here it happens to be convenient.
-            this.ballPosition[collisionAxis] = bounce1D(this.ballPosition[collisionAxis],
+            this.ballPosition[collisionAxis] = this.bounce1D(this.ballPosition[collisionAxis],
                 this.level.size[collisionAxis] * (__ballDirection[collisionAxis] > 0 ? 0.5 : -0.5)
             );
             __ballDirection[collisionAxis] *= -1;
@@ -246,10 +243,10 @@ export class LocalGame extends GameBase {
         roundStartSide = side == 0 ? 1 : 0;
 
         if (this.scores[side] >= this.maxScore) {
-            endgame(false);
+            this.endgame(false);
             return;
         }
-        newRound();
+        this.newRound();
     }
 
     /** @param {boolean} isEndingBecauseCancelled */
