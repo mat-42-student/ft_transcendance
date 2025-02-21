@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import engine from 'engine';
-import * as GAMEOBJECTS from 'gameobjects';
+import * as GAMEOBJECTS from '../../../gameobjects/_exports.js';
 
 
 export default class DebugBall extends GAMEOBJECTS.GAMEPLAY.Ball {

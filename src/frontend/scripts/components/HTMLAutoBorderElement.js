@@ -1,4 +1,4 @@
-import engine from 'engine';
+import engine from '../../engine.js';
 
 
 class HTMLAutoBorderElement extends HTMLElement {

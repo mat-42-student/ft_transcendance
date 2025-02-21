@@ -1,6 +1,6 @@
-import engine from 'engine';
+import engine from './engine.js';
 import * as THREE from 'three';
-import * as GAMEOBJECTS from 'gameobjects';
+import * as GAMEOBJECTS from './gameobjects/_exports.js';
 import * as UTILS from "../utils.js";
 import { state } from '../main.js';
 

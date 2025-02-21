@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { state } from "../../../main.js";
-import engine from 'engine';
+import engine from '../../engine.js';
 
 
 export default class PersistentDebug extends THREE.Object3D {

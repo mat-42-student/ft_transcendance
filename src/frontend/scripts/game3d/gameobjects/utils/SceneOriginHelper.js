@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import engine from 'engine';
+import engine from '../../engine.js';
 
 
 export default class SceneOriginHelper extends THREE.Group {

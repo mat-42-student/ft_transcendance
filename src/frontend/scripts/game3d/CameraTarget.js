@@ -1,7 +1,6 @@
 import * as THREE from 'three';
-import engine from 'engine';
-import * as GAMEOBJECTS from 'gameobjects';
-import input from 'input';
+import engine from './engine.js';
+import input from '../Input.js';
 import * as UTILS from '../utils.js';
 
 

@@ -1,6 +1,6 @@
+import engine from './engine.js';
 import * as THREE from 'three';
 import * as UTILS from '../utils.js';
-import engine from 'engine';
 import CameraTarget from './CameraTarget.js';
 import PersistentDebug from './gameobjects/utils/PersistentDebug.js';
 
