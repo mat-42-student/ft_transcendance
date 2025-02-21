@@ -15,6 +15,9 @@ build_base:
 build:
 	docker compose build
 
+jbuild:
+	docker compose -f my_compose.yml up --build
+
 run:
 	docker compose up
 
