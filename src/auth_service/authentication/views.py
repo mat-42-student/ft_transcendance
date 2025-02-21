@@ -268,6 +268,7 @@ class Verify2FAView(APIView):
             return Response({"success": "true", "message": "2FA has been enabled."}, status=200)
         else:
             return Response({"error": "Invalid or expired 2FA code"}, status=401)
+            
 class Disable2FAView(APIView):
     renderer_classes = [JSONRenderer]
 
