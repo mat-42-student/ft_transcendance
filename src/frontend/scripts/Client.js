@@ -112,7 +112,7 @@ export class Client{
                 credentials: 'include'
             });
             if (!response.ok) {
-                console.log('request error!');
+                // console.log('request error!');
                 throw new Error("Could not refresh token");
             }
             const data = await response.json();

@@ -63,9 +63,10 @@ export class SocialApp{
         let friend = this.friendlist.get(data.user_id);
         if (!friend)
             return ;
-        state.chatApp.checkStatusOfActiveChatUser(data.user_id);
         friend.status = data.status;
         this.renderFriendStatus(data.user_id);
+        if (data.user_id == state.chatApp.activeChatUserId)
+            state.chatApp.toggleChatInput(data.status);
     }
 
     renderFriendStatus(id) {
