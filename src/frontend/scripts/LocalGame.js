@@ -88,7 +88,7 @@ export class LocalGame extends GameBase {
 
     newRound() {
         this.ballPosition = { x: 0, y: 0 };
-        __ballDirection.set(1, 0).rotateAround(
+        this.ballDirection.set(1, 0).rotateAround(
             new Vector2(0, 0),
             UTILS.RAD180 * roundStartSide
         );
@@ -99,9 +99,9 @@ export class LocalGame extends GameBase {
         this.paddleHeights[1] = this.paddleHeights[0];
 
         // Accelerate
-        __ballSpeed *= 1.2;
-        __paddleSpeeds[0] *= 1.2;
-        __paddleSpeeds[1] = __paddleSpeeds[0];
+        this.ballSpeed *= 1.2;
+        this.paddleSpeeds[0] *= 1.2;
+        this.paddleSpeeds[1] = this.paddleSpeeds[0];
     }
 
     cpuMove() {
@@ -122,20 +122,22 @@ export class LocalGame extends GameBase {
     }
 
     movePaddles(delta) {
-        let inputs = input.currentPaddleInputs;
-        if (__isCPU) inputs[1] = this.cpuMove();
+        let inputs = [
+            input.getPaddleInput(0),
+            this.isCPU ? this.cpuMove() : input.getPaddleInput(1)
+        ];
 
         const limit = this.level.size.y / 2;
         for (let i = 0; i < 2; i++) {
-            this.paddlePositions[i] += delta * __paddleSpeeds[i] * inputs[i];
+            this.paddlePositions[i] += delta * this.paddleSpeeds[i] * inputs[i];
             this.paddlePositions[i] = MathUtils.clamp(this.paddlePositions[i],
                 -limit, limit);
         }
     }
 
     moveBall(delta) {
-        this.ballPosition.x += delta * __ballDirection.x * __ballSpeed;
-        this.ballPosition.y += delta * __ballDirection.y * __ballSpeed;
+        this.ballPosition.x += delta * this.ballDirection.x * this.ballSpeed;
+        this.ballPosition.y += delta * this.ballDirection.y * this.ballSpeed;
 
         // At this point the ball's position has been linearly extrapolated forward
         // for this point in time.
@@ -167,7 +169,7 @@ export class LocalGame extends GameBase {
             if (collisionAxis === null) {
                 break;
             } else if (collisionAxis === 'x') {
-                const collisionSide = __ballDirection.x > 0.0 ? 0 : 1;
+                const collisionSide = this.ballDirection.x > 0.0 ? 0 : 1;
                 const pHeight = this.paddleHeights[collisionSide] / 2;
                 const ballTooLow = this.ballPosition.y < this.paddlePositions[collisionSide] - pHeight;
                 const ballTooHigh = this.ballPosition.y > this.paddlePositions[collisionSide] + pHeight;
@@ -184,7 +186,7 @@ export class LocalGame extends GameBase {
                         1
                     );
 
-                    let angle = __ballDirection.angle();
+                    let angle = this.ballDirection.angle();
                     if (angle > UTILS.RAD180) {
                         angle = -signedSide * ((collisionSide == 0 ? UTILS.RAD360 : UTILS.RAD180) - angle);
                     }
@@ -193,26 +195,26 @@ export class LocalGame extends GameBase {
                         angle = UTILS.RAD90 - (angle - UTILS.RAD90);
                     }
 
-                    angle = MathUtils.clamp(angle, -__angleMax, __angleMax);
+                    angle = MathUtils.clamp(angle, -this.angleMax, this.angleMax);
 
                     const redirection = hitPosition * 1.5;  // Arbitrary number, controls how strong redirection is
 
                     const newAngle = MathUtils.clamp(
                         angle + redirection,
-                        -__angleMax,
-                        __angleMax
+                        -this.angleMax,
+                        this.angleMax
                     );
 
                     const newDirection = new Vector2(signedSide,0).rotateAround(new Vector2(), newAngle * signedSide);
 
     //                 console.log(
-    // `Ball Direction: (Before)`, __ballDirection, `(After)`, newDirection,`
+    // `Ball Direction: (Before)`, this.ballDirection, `(After)`, newDirection,`
     // Angle: ${MathUtils.RAD2DEG*angle}
     // Redirect: ${MathUtils.RAD2DEG*redirection}
     // New Angle: ${MathUtils.RAD2DEG*newAngle}`
     //                 );
 
-                    __ballDirection.copy(newDirection);
+                    this.ballDirection.copy(newDirection);
                 }
             } else { // (collisionAxis === 'y')
             }
@@ -223,9 +225,9 @@ export class LocalGame extends GameBase {
             // They're not even the same properties, but hey, JS is anarchy,
             // and right here it happens to be convenient.
             this.ballPosition[collisionAxis] = this.bounce1D(this.ballPosition[collisionAxis],
-                this.level.size[collisionAxis] * (__ballDirection[collisionAxis] > 0 ? 0.5 : -0.5)
+                this.level.size[collisionAxis] * (this.ballDirection[collisionAxis] > 0 ? 0.5 : -0.5)
             );
-            __ballDirection[collisionAxis] *= -1;
+            this.ballDirection[collisionAxis] *= -1;
         }
 
         if (bounces > 1) {
