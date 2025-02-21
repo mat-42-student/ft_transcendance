@@ -9,7 +9,7 @@ export default class LevelTest extends LevelBase {
 
 		// throw "TODO: wip"
 
-		this.loadAssets();
+		this.load();
 
 		engine.clearLevel();
 		engine.environmentScene.fog = null;
@@ -52,8 +52,6 @@ export default class LevelTest extends LevelBase {
 				'pz.jpg', 'nz.jpg'
 			]);
 		}
-
-		return null;  //FIXME the intent was for the caller to have a way to know when level is ready
 	}
 
 	addGameobjects() {

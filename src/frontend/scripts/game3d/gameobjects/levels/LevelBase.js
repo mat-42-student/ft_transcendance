@@ -11,13 +11,6 @@ export default class LevelBase {
 	size = new THREE.Vector2(1, 1);
 
 
-	load() {
-		// override with any slow loading logic
-		// return... whatever allows to check when loading finished, check later
-		return null;
-	}
-
-
 	onFrame(delta, time) {
 		{  // Automatic camera switching
 			const selectedCamera = this.cameras[state.gameApp.side];

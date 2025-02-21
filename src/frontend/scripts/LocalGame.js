@@ -42,7 +42,6 @@ export class LocalGame extends GameBase {
         this.playerNames[0] = 'Player 1';
         this.playerNames[1] = isCPU ? this.generateRandomNick() : 'Player 2';
 
-        this.scores = [0, 0];
         this.side = isCPU ? 0 : 2;  // Neutral (2) if keyboard PVP
 
         //TODO wait for level to finish loading before continuing
