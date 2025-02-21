@@ -1,5 +1,5 @@
-import global from 'global';
 import * as THREE from 'three';
+import { state } from '../../../main.js';
 
 
 export default class Paddle extends THREE.Group {
@@ -22,11 +22,9 @@ export default class Paddle extends THREE.Group {
 
 
 	onFrame(delta, time) {
-		this.position.x = global.game.boardSize.x / 2;
+		this.position.x = state.gameApp.level.size.x / 2;
 		this.position.x *= this.playerIndex == 0 ? 1 : -1;
 
-		this.position.z = global.game.paddlePositions[this.playerIndex];
-
-		//NOTE: Handle paddle height on your own override of this function.
+		this.position.z = state.gameApp.paddlePositions[this.playerIndex];
 	}
 }

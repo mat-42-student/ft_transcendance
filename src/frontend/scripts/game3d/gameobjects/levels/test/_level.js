@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import engine from 'engine';
-import global from 'global';
 import LevelBase from '../LevelBase.js';
 
 

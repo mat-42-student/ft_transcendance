@@ -1,4 +1,5 @@
 import { state } from "./main.js";
+import * as UTILS from "./utils.js";
 import {MathUtils, Vector2} from 'three';
 import input from "input";
 import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
@@ -50,16 +51,8 @@ export class LocalGame extends GameBase {
 
 
 	frame(delta, time) {
-        if (!global.isPlaying) {
-            console.warn('Game frame called while not playing');
-            return;
-        }
         movePaddles(delta);
         moveBall(delta);
-        if (__level == null) {
-            console.warn('Game frame called while level is missing');
-            return;
-        }
         super.frame(delta, time);
 	}
 
@@ -100,7 +93,7 @@ export class LocalGame extends GameBase {
         this.ballPosition = { x: 0, y: 0 };
         __ballDirection.set(1, 0).rotateAround(
             new Vector2(0, 0),
-            global._180 * roundStartSide
+            UTILS.RAD180 * roundStartSide
         );
         this.paddlePositions[0] = this.paddlePositions[1] = 0;
 
@@ -138,14 +131,12 @@ export class LocalGame extends GameBase {
         const limit = this.level.size.y / 2;
         for (let i = 0; i < 2; i++) {
             this.paddlePositions[i] += delta * __paddleSpeeds[i] * inputs[i];
-            this.paddlePositions[i] = global.clamp(this.paddlePositions[i],
+            this.paddlePositions[i] = MathUtils.clamp(this.paddlePositions[i],
                 -limit, limit);
         }
     }
 
     moveBall(delta) {
-        const gg = global.game;  // abbreviate because used a lot
-
         this.ballPosition.x += delta * __ballDirection.x * __ballSpeed;
         this.ballPosition.y += delta * __ballDirection.y * __ballSpeed;
 
@@ -189,7 +180,7 @@ export class LocalGame extends GameBase {
                 } else {
                     const signedSide = collisionSide == 0 ? 1 : -1;
 
-                    const hitPosition = global.map(this.ballPosition.y,
+                    const hitPosition = UTILS.map(this.ballPosition.y,
                         this.paddlePositions[collisionSide] - pHeight,
                         this.paddlePositions[collisionSide] + pHeight,
                         -1,
@@ -197,15 +188,15 @@ export class LocalGame extends GameBase {
                     );
 
                     let angle = __ballDirection.angle();
-                    if (angle > global._180) {
-                        angle = -signedSide * ((collisionSide == 0 ? global._360 : global._180) - angle);
+                    if (angle > UTILS.RAD180) {
+                        angle = -signedSide * ((collisionSide == 0 ? UTILS.RAD360 : UTILS.RAD180) - angle);
                     }
 
-                    if (angle > global._90) {
-                        angle = global._90 - (angle - global._90);
+                    if (angle > UTILS.RAD90) {
+                        angle = UTILS.RAD90 - (angle - UTILS.RAD90);
                     }
 
-                    angle = global.clamp(angle, -__angleMax, __angleMax);
+                    angle = MathUtils.clamp(angle, -__angleMax, __angleMax);
 
                     const redirection = hitPosition * 1.5;  // Arbitrary number, controls how strong redirection is
 
@@ -267,9 +258,5 @@ export class LocalGame extends GameBase {
             let winner = this.scores[0] >= this.maxScore ? 0 : 1;
             alert(`GAME OVER\nLe gagnant est ${this.playerNames[winner]}!`);
         }
-
-        global.isPlaying = false;
-        global.gameFrameFunction = null;
-        global.gameCancelFunction = null;
     }
 }

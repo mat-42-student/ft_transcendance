@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import engine from 'engine';
 import * as GAMEOBJECTS from 'gameobjects';
-import global from 'global';
 import input from 'input';
+import * as UTILS from '../utils.js';
 
 
 //REVIEW When nothing is continuously updating the border, resizing the window is broken. Either check that this never happens, or add some failsafe.
@@ -82,13 +82,13 @@ export default class CameraTarget {
 			this.#smooth.fov = this.fov;
 			this.#smooth.diagonal = this.diagonal;
 		} else {
-			this.#smooth.position = global.damp(this.#smooth.position, targetPos,
+			this.#smooth.position = UTILS.damp(this.#smooth.position, targetPos,
 				this.smoothSpeed, delta);
-			this.#smooth.quaternion = global.damp(this.#smooth.quaternion, targetRot,
+			this.#smooth.quaternion = UTILS.damp(this.#smooth.quaternion, targetRot,
 				this.smoothSpeed, delta);
-			this.#smooth.fov = global.damp(this.#smooth.fov, this.fov,
+			this.#smooth.fov = UTILS.damp(this.#smooth.fov, this.fov,
 				this.smoothSpeed, delta);
-			this.#smooth.diagonal = global.damp(this.#smooth.diagonal, this.diagonal,
+			this.#smooth.diagonal = UTILS.damp(this.#smooth.diagonal, this.diagonal,
 				this.smoothSpeed, delta);
 		}
 

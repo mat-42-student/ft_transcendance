@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import global from 'global';
+import { state } from "../../../main.js";
 import engine from 'engine';
 
 
@@ -50,8 +50,8 @@ export default class PersistentDebug extends THREE.Object3D {
 				+ 'Frame time: ' + delta.toFixed(4);
 		}
 
-		this.dPlaying.style.display = global.isPlaying ? null : 'none';
-		this.dNotPlaying.style.display = !global.isPlaying ? null : 'none';
+		this.dPlaying.style.display = state.gameApp ? null : 'none';
+		this.dNotPlaying.style.display = !state.gameApp ? null : 'none';
 	}
 
 

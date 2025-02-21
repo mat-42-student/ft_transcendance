@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import global from 'global';
+import { state } from "../../../main.js";
 import engine from 'engine';
 
 
@@ -20,8 +20,7 @@ export default class LevelBase {
 
 	onFrame(delta, time) {
 		{  // Automatic camera switching
-			const idx = global.game.focusedPlayerIndex >= 0 ? global.game.focusedPlayerIndex : 2;
-			const selectedCamera = this.cameras[idx];
+			const selectedCamera = this.cameras[state.gameApp.side];
 
 			engine.cameraTarget.position.copy(selectedCamera.position);
 			engine.cameraTarget.quaternion.copy(selectedCamera.quaternion);

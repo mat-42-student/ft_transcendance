@@ -4,7 +4,7 @@ import LevelBase from '../LevelBase.js';
 import DebugBall from './DebugBall.js';
 import DebugPaddle from './DebugPaddle.js';
 import DebugBoard from './DebugBoard.js';
-import global from 'global';
+import * as UTILS from '../../../../utils.js';
 import DebugScoreIndicator from './DebugScoreIndicator.js';
 
 
@@ -35,8 +35,6 @@ export default class LevelDebug extends LevelBase {
 		engine.cameraTarget.mouseRotationMultiplier.set(0.1, 0.1);
 		engine.cameraTarget.smoothSpeed = 15;
 
-		// global.game.focusedPlayerIndex = 'neutral';  // Forced camera choice
-
 		engine.level.add(new DebugBoard());
 	}
 
@@ -52,17 +50,17 @@ export default class LevelDebug extends LevelBase {
 function __makeCameraAngles() {
 	const neutralCamera = new LevelBase.CameraStats();
 	neutralCamera.position = new THREE.Vector3(0, 0.65, -0.4);
-	neutralCamera.quaternion = global.makeLookDownQuaternion(180, 60);
+	neutralCamera.quaternion = UTILS.makeLookDownQuaternion(180, 60);
 	neutralCamera.fov = 60;
 
 	const p0Camera = new LevelBase.CameraStats();
 	p0Camera.position = new THREE.Vector3(0.6, 0.45, 0);
-	p0Camera.quaternion = global.makeLookDownQuaternion(90, 45);
+	p0Camera.quaternion = UTILS.makeLookDownQuaternion(90, 45);
 	p0Camera.fov = 55;
 
 	const p1Camera = new LevelBase.CameraStats();
 	p1Camera.position.copy(p0Camera.position).x *= -1;
-	p1Camera.quaternion = global.makeLookDownQuaternion(-90, 45);
+	p1Camera.quaternion = UTILS.makeLookDownQuaternion(-90, 45);
 	p1Camera.fov = p0Camera.fov;
 
 	return [p0Camera, p1Camera, neutralCamera];

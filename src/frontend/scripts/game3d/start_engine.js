@@ -1,7 +1,8 @@
 import engine from 'engine';
-import global from 'global';
 import * as THREE from 'three';
 import * as GAMEOBJECTS from 'gameobjects';
+import * as UTILS from "../utils.js";
+import { state } from '../main.js';
 
 
 const clock = new THREE.Clock(true);
@@ -13,8 +14,8 @@ engine.initialize();
 	engine.cameraTarget.position.y = 1.42535353443;
 	engine.cameraTarget.smoothSpeed = 1;
 
-	const q1 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -global._90);
-	const q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), 2*global._90);
+	const q1 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -UTILS.RAD90);
+	const q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), 2*UTILS.RAD90);
 	engine.cameraTarget.quaternion = q1.multiply(q2);
 }
 
@@ -32,10 +33,10 @@ engine.initialize();
 requestAnimationFrame(frame);
 async function frame(time) {
 	const delta = clock.getDelta();
-	if (global.gameFrameFunction != null) global.gameFrameFunction(delta, time);
+	if (state.gameApp) state.gameApp.frame(delta, time);
 	engine.render(delta, time);
 
-	if (global.powersave === true) {
+	if (UTILS.shouldPowersave === true) {
 		setTimeout(() => {
 			requestAnimationFrame(frame);
 		}, 1.0 / 10.0);  //FIXME this does nothing (still goes full framerate)

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import global from 'global';
+import { state } from "../../../../main.js";
 import ScoreIndicator from '../../gameplay/ScoreIndicator.js';
 import Cross2DHelper from '../..//utils/Cross2DHelper.js';
 
@@ -41,7 +41,7 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 		const boxMax = new THREE.Vector3(
 			-boxMin.x,
 			-boxMin.y,
-			SIZE * global.game.maxScore - half,
+			SIZE * 5 - half,
 		);
 
 		this.#material = new THREE.LineBasicMaterial({
@@ -69,9 +69,9 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 		);
 
 		this.position.set(
-			this.#playerMult * (global.game.boardSize.x / 2 - CORNER_DISTANCE),
+			this.#playerMult * (state.gameApp.level.size.x / 2 - CORNER_DISTANCE),
 			-SIZE / 2,
-			-global.game.boardSize.y / 2 + CORNER_DISTANCE
+			-state.gameApp.level.size.y / 2 + CORNER_DISTANCE
 		);
 	}
 

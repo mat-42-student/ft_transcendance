@@ -1,7 +1,7 @@
 import * as THREE from 'three';
+import * as UTILS from '../utils.js';
 import engine from 'engine';
 import CameraTarget from './CameraTarget.js';
-import global from 'global';
 import PersistentDebug from './gameobjects/utils/PersistentDebug.js';
 
 
@@ -341,7 +341,7 @@ function __updateAutoResolution(delta) {
 	const fullres = window.devicePixelRatio;
 	const lowres = fullres / 2;
 
-	if (global.powersave) {
+	if (UTILS.shouldPowersave) {
 		__currentRatio = lowres;
 		__persistentDebug.dAutoResolution.innerText = 'Auto resolution: Powersave mode';
 	} else {

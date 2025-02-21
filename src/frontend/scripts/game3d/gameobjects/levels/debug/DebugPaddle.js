@@ -1,7 +1,6 @@
 import * as THREE from 'three';
-import engine from 'engine';
+import { state } from '../../../../main.js';
 import * as GAMEOBJECTS from 'gameobjects';
-import global from 'global';
 
 
 export default class DebugPaddle extends GAMEOBJECTS.GAMEPLAY.Paddle {
@@ -26,7 +25,7 @@ export default class DebugPaddle extends GAMEOBJECTS.GAMEPLAY.Paddle {
 	onFrame(delta, time) {
 		super.onFrame(delta, time);
 
-		const halfHeight = global.game.paddleHeights[this.playerIndex] / 2;
+		const halfHeight = state.gameApp.paddleHeights[this.playerIndex] / 2;
 
 		this.#box3helper.box.set(
 			new THREE.Vector3(0, 0, -halfHeight),
