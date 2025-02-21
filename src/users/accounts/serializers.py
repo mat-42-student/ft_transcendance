@@ -11,12 +11,21 @@ from .models import User, Relationship
 
 # User 'list' serializer
 class UserListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['id', 'username']
+        read_only_fields = ['id', 'username']
+
+
+# FrontEnd listing User 'retrieve' serializer
+class UserMinimalSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'status', 'avatar']
-        read_only_fields = ['id', 'username', 'status', 'avatar']
+        fields = ['id', 'username', 'avatar']
+        read_only_fields = ['id', 'username', 'avatar']
 
     def get_avatar(self, obj):
         return obj.avatar.name.split('/')[-1] if obj.avatar else "default.png"
@@ -28,8 +37,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'status', 'avatar', 'is_2fa_enabled']
-        read_only_fields = ['id', 'username', 'status', 'avatar', 'is_2fa_enabled']
+        fields = ['id', 'username', 'avatar', 'is_2fa_enabled']
+        read_only_fields = ['id', 'username', 'avatar', 'is_2fa_enabled']
 
     def get_avatar(self, obj):
         return obj.avatar.name.split('/')[-1] if obj.avatar else "default.png"
@@ -41,8 +50,8 @@ class UserPrivateDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'status', 'avatar', 'blocked_users']
-        read_only_fields = ['id', 'username', 'status', 'avatar', 'blocked_users']
+        fields = ['id', 'username', 'avatar', 'is_2fa_enabled', 'blocked_users']
+        read_only_fields = ['id', 'username', 'avatar', 'is_2fa_enabled', 'blocked_users']
 
     def get_avatar(self, obj):
         return obj.avatar.name.split('/')[-1] if obj.avatar else "default.png"
