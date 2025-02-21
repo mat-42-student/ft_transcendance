@@ -145,3 +145,16 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+OAUTH2_CCF_INTROSPECT_URL = 'https://localhost:3000/api/v1/auth/o/introspect/'
+OAUTH2_CCF_CLIENT_ID = ''
+OAUTH2_CCF_CLIENT_SECRET = ''

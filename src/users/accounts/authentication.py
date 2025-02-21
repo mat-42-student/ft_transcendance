@@ -89,7 +89,7 @@ class OAuth2IntrospectionAuthentication(BaseAuthentication):
 
     def authenticate_header(self, request):
         """
-        Return a 'WWW-Authenticate' value for 401 responses.
+        Returns the value for the `WWW-Authenticate` header in a 401 response.
         """
         return 'Bearer'
 
