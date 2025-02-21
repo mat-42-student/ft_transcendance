@@ -25,12 +25,14 @@ export default class DebugPaddle extends GAMEOBJECTS.GAMEPLAY.Paddle {
 	onFrame(delta, time) {
 		super.onFrame(delta, time);
 
-		const halfHeight = state.gameApp.paddleHeights[this.playerIndex] / 2;
+		if (this.visible) {
+			const halfHeight = state.gameApp.paddleHeights[this.playerIndex] / 2;
 
-		this.#box3helper.box.set(
-			new THREE.Vector3(0, 0, -halfHeight),
-			new THREE.Vector3(0, 0.05, halfHeight)
-		);
+			this.#box3helper.box.set(
+				new THREE.Vector3(0, 0, -halfHeight),
+				new THREE.Vector3(0, 0.05, halfHeight)
+			);
+		}
 	}
 
 

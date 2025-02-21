@@ -12,7 +12,10 @@ export default class Ball extends THREE.Group {
 
 
 	onFrame(delta, time) {
-		this.position.x = state.gameApp.ballPosition.x;
-		this.position.z = state.gameApp.ballPosition.y;
+		this.visible = state.gameApp != null;
+		if (this.visible) {
+			this.position.x = state.gameApp.ballPosition.x;
+			this.position.z = state.gameApp.ballPosition.y;
+		}
 	}
 }

@@ -11,10 +11,13 @@ export default class DebugBoard extends THREE.Box3Helper {
 
 
 	onFrame(delta, time) {
-		this.box.setFromCenterAndSize(
-			new THREE.Vector3(),
-			new THREE.Vector3(state.gameApp.level.size.x, 0, state.gameApp.level.size.y),
-		);
+		this.visible = state.gameApp != null;
+		if (this.visible) {
+			this.box.setFromCenterAndSize(
+				new THREE.Vector3(),
+				new THREE.Vector3(state.gameApp.level.size.x, 0, state.gameApp.level.size.y),
+			);
+		}
 	}
 
 

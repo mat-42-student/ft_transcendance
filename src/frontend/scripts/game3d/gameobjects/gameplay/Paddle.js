@@ -4,7 +4,7 @@ import { state } from '../../../main.js';
 
 export default class Paddle extends THREE.Group {
 
-	playerIndex = -1;
+	playerIndex = NaN;
 
 
 	constructor(playerIndex) {
@@ -22,9 +22,10 @@ export default class Paddle extends THREE.Group {
 
 
 	onFrame(delta, time) {
-		this.position.x = state.gameApp.level.size.x / 2;
-		this.position.x *= this.playerIndex == 0 ? 1 : -1;
-
-		this.position.z = state.gameApp.paddlePositions[this.playerIndex];
+		this.visible = state.gameApp != null;
+		if (this.visible) {
+			this.position.x = (state.gameApp.level.size.x / 2) * (this.playerIndex == 0 ? 1 : -1);
+			this.position.z = state.gameApp.paddlePositions[this.playerIndex];
+		}
 	}
 }
