@@ -1,4 +1,4 @@
-import { setupNavigation, navigateTo } from './nav.js';
+import { setupNavigation, goHome, goProfile } from './nav.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
 import { Client } from './Client.js';
 import { isAuthenticated } from './api/auth.js';
@@ -22,17 +22,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const playButton = document.getElementById('btn-play');
     const closeButton = document.getElementById('close-dynamic-card');
     const requestsButton = document.querySelector('.btn-friend-requests');
-    // const friendButtons = document.querySelectorAll('.friend-item');
+    // const friendButtons = document.querySelectorAll('.friend-item'); // -> nécessite auth pour récup items + comment récup id depuis `friend-item` ??
 
     setupNavigation();
-    navigateTo('#home');
+    goHome();
 
     state.client.refreshSession('#profile');
 
     if (homeButton) {
         homeButton.addEventListener('click', (e) => {
             e.preventDefault();
-            navigateTo('#home');
+            goHome();
         });
     }
 
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
             } else {
-                navigateTo('#profile');
+                goProfile();
             }
         });
     }

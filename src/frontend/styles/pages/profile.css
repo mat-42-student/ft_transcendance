@@ -82,25 +82,25 @@
 }
 
 /* Boutons d'action */
-.profile-actions {
+#profile-actions {
     display: flex;
     align-self: flex-end;
     gap: 0.5rem;
 }
 
-.profile-actions button {
+#profile-actions button {
     border: none;
     background-color: transparent;
     cursor: pointer;
 }
 
-.profile-actions img {
+#profile-actions img {
     width: 1.5rem;
     height: 1.5rem;
     transition: transform 0.2s;
 }
 
-.profile-actions img:hover {
+#profile-actions img:hover {
     transform: scale(1.1);
 }
 
