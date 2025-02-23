@@ -18,7 +18,7 @@ export class Engine {
 			this.#html_canvas = document.getElementById("engine-canvas");
 			this.#html_debugBox = document.getElementById("engine-debug-box");
 			this.#html_borderCopy = document.getElementById('engine-border-copy');
-			this.#html_loading_text = document.createElement("engine-loading-text");
+			this.#html_loadingText = document.getElementById("engine-loading-text");
 		}
 
 		{  // Setup ThreeJS
@@ -26,7 +26,7 @@ export class Engine {
 			this.#scene.name = "Engine Scene";
 
 			const fakeEvent = { child: this.#scene };
-			this.#onObjectAddedToScene(fakeEvent);
+			__onObjectAddedToScene(fakeEvent);
 
 			this.#camera = new THREE.PerspectiveCamera();
 
@@ -37,11 +37,6 @@ export class Engine {
 			});
 			this.#renderer.toneMapping = THREE.ACESFilmicToneMapping;
 			this.#renderer.toneMappingExposure = 1;
-
-			THREE.DefaultLoadingManager.onLoad = this.#decreaseLoadingCounter;
-			THREE.DefaultLoadingManager.onError = this.#decreaseLoadingCounter;
-			THREE.DefaultLoadingManager.onStart = this.#increaseLoadingCounter;
-			// THREE.DefaultLoadingManager.onProgress = () => {console.log('Default load progress')}  //REVIEW timeout? do the loaders automatically do it by failing?
 
 			this.clearLevel();
 
@@ -84,74 +79,12 @@ export class Engine {
 		right: 500, bottom: 500,
 	};
 
-
-	/** is there active gameplay? or is it paused for any reason */
-	get isRunning() {
-		return (!this.#isWaitingForGameStart
-			&& this.#loadingCounter === 0
-			&& !this.#isConnecting
-			&& !this.#isPaused
-		);
-	}
-
-	onStartRunning = null;
-	onStopRunning = null;
-
-	set isWaitingForGameStart(value) {
-		if (value == this.#isWaitingForGameStart)
-			return;
-
-		let previouslyRunning = this.isRunning;
-		this.#isWaitingForGameStart = value;
-		const cl = 'waiting-game-start';
-		if (value == true)
-			this.#html_loading_text.classList.add(cl);
-		else
-			this.#html_loading_text.classList.remove(cl);
-
-		if (previouslyRunning != this.isRunning) {
-			if (value == true && this.onStartRunning != null) {
-				this.onStartRunning();
-			} else if (value == false && this.onStopRunning != null) {
-				this.onStopRunning();
-			}
-		}
-	}
-	set isConnecting(value) {
-		if (value == this.#isConnecting)
-			return;
-
-		let previouslyRunning = this.isRunning;
-		this.#isConnecting = value;
-		const cl = 'connecting';
-		if (value == true)
-			this.#html_loading_text.classList.add(cl);
-		else
-			this.#html_loading_text.classList.remove(cl);
-
-		if (previouslyRunning != this.isRunning) {
-			if (value == true && this.onStartRunning != null) {
-				this.onStartRunning();
-			} else if (value == false && this.onStopRunning != null) {
-				this.onStopRunning();
-			}
-		}
-	}
-	set isPaused(value) {
-		if (value == this.#isPaused)
-			return;
-
-		let previouslyRunning = this.isRunning;
-		this.#isPaused = value;
-
-		if (previouslyRunning != this.isRunning) {
-			if (value == true && this.onStartRunning != null) {
-				this.onStartRunning();
-			} else if (value == false && this.onStopRunning != null) {
-				this.onStopRunning();
-			}
-		}
-	}
+	/**
+	 * tracks if we are during a {@link render} call (null if not),
+	 * and if so, stores the parameters to be passed to Object3D's onRender() methods.
+	 * @type {null | {delta: number, time: DOMHighResTimeStamp}}
+	 */
+	paramsForAddDuringRender = null;
 
 
 	/**
@@ -160,13 +93,13 @@ export class Engine {
 	 */
 	render(delta, time) {
 		this.#updateAutoResolution(delta);
-		if (this.#loadingCounter !== 0) return;
 
 		this.isProcessingFrame = true;
 
 		{  // Game logic update
-			this.#paramsForAddDuringRender = {delta: delta, time: time};
+			this.paramsForAddDuringRender = {delta: delta, time: time};
 
+			//REVIEW this could be cached, add and remove on events. do i care about this wasted computation?
 			const updateQueue = [];
 
 			this.#scene.traverse((obj) => {
@@ -179,7 +112,7 @@ export class Engine {
 				objectRenderFunction(delta, time);
 			}
 
-			this.#paramsForAddDuringRender = null;
+			this.paramsForAddDuringRender = null;
 		}
 
 		{  // Camera system
@@ -204,6 +137,7 @@ export class Engine {
 
 	refreshBorder() {
 		const rect = this.#html_container.getBoundingClientRect();
+		debugger
 		this.#html_debugBox.style.bottom = (rect.height - this.borders.bottom) + 'px';
 		this.#html_debugBox.style.left = this.borders.left + 'px';
 	}
@@ -243,138 +177,82 @@ export class Engine {
 	#html_borderCopy;
 
 	/** @type {HTMLDivElement} */
-	#html_loading_text;
+	#html_loadingText;  //TODO i nuked the code that made this useful, add it back
 
 
 	/** Pixel density used for auto resolution */
-	#currentRatio = window.devicePixelRatio;
+	#currentRatio = NaN;
 
 
 	/** @type {PersistentDebug} */
 	#persistentDebug;
 
-	/** Number of things that are in the process of loading. */
-	#loadingCounter = 0;
-	#isWaitingForGameStart = false;
-	#isConnecting = false;
-	#isPaused = false;
-
-
-	/**
-	 * tracks if we are during a {@link render} call (null if not),
-	 * and if so, stores the parameters to be passed to Object3D's onRender() methods.
-	 * @type {null | {delta: number, time: DOMHighResTimeStamp}}
-	 */
-	#paramsForAddDuringRender = null;
-
-
-	#onObjectAddedToScene(e) {
-		/** @type {THREE.Object3D} */
-		const obj = e.child;
-
-		obj.addEventListener('childadded', this.#onObjectAddedToScene);
-		obj.addEventListener('removed', this.#onObjectRemoved);
-
-		const statics = obj.__proto__.constructor;
-		if (statics.isLoaded === false) {
-			throw Error("Adding an object that requires to be loaded, but isn't.");
-		}
-
-		if ('onAdded' in obj) {
-			obj.onAdded();
-		}
-
-		// this.frame() will never call onFrame during the frame that something has been added in.
-		// So we call it manually here, to avoid the first frame not having an update.
-		// (That could be visible)
-		// Yes, this means the first frame has inconsistent execution order,
-		// compared to the next ones where the order is dictated by THREE.Object3D.traverse().
-		// (which i assume depends on the tree structure of Object3D's in the scene)
-		if (this.#paramsForAddDuringRender !== null) {
-			if ('onFrame' in obj) {
-				obj.onFrame(this.#paramsForAddDuringRender.delta, this.#paramsForAddDuringRender.time);
-			}
-		}
-	}
-
-
-	#onObjectRemoved(e) {
-		/** @type {THREE.Object3D} */
-		const obj = e.target;
-
-		obj.clear();
-
-		// you can opt out of auto dispose, if you need to 'reuse' your object3D.
-		if ('dispose' in obj && obj.noAutoDispose !== true) {
-			obj.dispose();
-		}
-	}
-
 
 	#onResize() {
 		const rect = this.#html_container.getBoundingClientRect();
-		this.#renderer.setPixelRatio(this.#currentRatio);
+		this.#updateAutoResolution();
 		this.#renderer.setSize(rect.width, rect.height);
 		this.#camera.aspect = rect.width / rect.height;
 		this.refreshBorder();
 	}
 
 
-	#updateAutoResolution(delta) {
+	#updateAutoResolution() {
 		const fullres = window.devicePixelRatio;
 		const lowres = fullres / 2;
 
-		if (UTILS.shouldPowersave) {
-			this.#currentRatio = lowres;
+		if (UTILS.shouldPowersave && this.#currentRatio !== lowres) {
+			this.#renderer.setPixelRatio(this.#currentRatio = lowres);
 			this.#persistentDebug.dAutoResolution.innerText = 'Auto resolution: Powersave mode';
-		} else {
-			this.#currentRatio = fullres;
+		} else if (!UTILS.shouldPowersave && this.#currentRatio !== fullres) {
+			this.#renderer.setPixelRatio(this.#currentRatio = fullres);
 			this.#persistentDebug.dAutoResolution.innerText = 'Auto resolution: Full';
-
-			/*NOTE: commented out because i realize this would likely flicker on and off every alternating frame, which would be very distracting.
-			const targetFramerate = 60 - 10;  // Add a margin because otherwise we will rarely hit the exact framerate cap
-			const targetDelta = 1 / targetFramerate;
-			if (delta > targetDelta) {
-				this.#currentRatio = lowres;
-				this.#persistentDebug.dAutoResolution.innerText = 'Auto resolution: Low';
-			} else {
-				this.#currentRatio = fullres;
-				this.#persistentDebug.dAutoResolution.innerText = 'Auto resolution: Full';
-			}
-			*/
-		}
-		this.#renderer.setPixelRatio(this.#currentRatio);
-	}
-
-
-	#decreaseLoadingCounter() {
-		let previouslyRunning = this.isRunning;
-		this.#loadingCounter--;
-
-		if (this.#loadingCounter < 0) { this.#loadingCounter = 0; }  // idk, just in case
-
-		if (this.#loadingCounter == 0) {
-			this.#html_loading_text.classList.remove('loading');
-		}
-
-		if (previouslyRunning != this.isRunning && this.onStartRunning != null) {
-			this.onStartRunning();
-		}
-	}
-
-
-	#increaseLoadingCounter() {
-		let previouslyRunning = this.isRunning;
-
-		if (this.#loadingCounter == 0) {
-			this.#html_loading_text.classList.add('loading');
-		}
-
-		this.#loadingCounter++;
-
-		if (previouslyRunning != this.isRunning && this.onStopRunning != null) {
-			this.onStopRunning();
 		}
 	}
 
 };
+
+
+
+
+
+function __onObjectAddedToScene(e) {
+	/** @type {THREE.Object3D} */
+	const obj = e.child;
+
+	obj.addEventListener('childadded', __onObjectAddedToScene);
+	obj.addEventListener('removed', __onObjectRemoved);
+
+	const statics = obj.__proto__.constructor;
+	if (statics.isLoaded === false) {
+		throw Error("Adding an object that requires to be loaded, but isn't.");
+	}
+
+	if ('onAdded' in obj) {
+		obj.onAdded();
+	}
+
+	// this.frame() will never call onFrame during the frame that something has been added in.
+	// So we call it manually here, to avoid the first frame not having an update.
+	// (That could be visible)
+	// Yes, this means the first frame has inconsistent execution order,
+	// compared to the next ones where the order is dictated by THREE.Object3D.traverse().
+	// (which i assume depends on the tree structure of Object3D's in the scene)
+	const params = state.engine.paramsForAddDuringRender;
+	if (params != null && 'onFrame' in obj) {
+		obj.onFrame(params.delta, params.time);
+	}
+}
+
+
+function __onObjectRemoved(e) {
+	/** @type {THREE.Object3D} */
+	const obj = e.target;
+
+	obj.clear();
+
+	// you can opt out of auto dispose, if you need to 'reuse' your object3D.
+	if ('dispose' in obj && obj.noAutoDispose !== true) {
+		obj.dispose();
+	}
+}
