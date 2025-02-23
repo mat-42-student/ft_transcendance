@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import engine from './engine.js';
 import * as UTILS from '../utils.js';
 import { state } from '../main.js';
 
@@ -44,7 +43,7 @@ export default class CameraTarget {
 		});
 		this.#visualizer = new THREE.LineSegments(this.#geo, mat);
 		this.#visualizer.name = 'Camera Target Visualization'
-		engine.environmentScene.add(this.#visualizer);
+		state.engine.environmentScene.add(this.#visualizer);
 
 		this.#visualizer2 = new THREE.LineSegments(this.#geo, mat);
 		const secondVisualizerDistance = 100;
@@ -140,13 +139,13 @@ export default class CameraTarget {
 	 * @param {THREE.Vector2} canvasSize
 	 */
 	#updateBorderVisualizer(borderVisualizer, canvasSize) {
-		borderVisualizer.style.display = engine.DEBUG_MODE ? null : 'none';
+		borderVisualizer.style.display = state.engine.DEBUG_MODE ? null : 'none';
 
-		borderVisualizer.style.left = engine.borders.left + 'px';
-		borderVisualizer.style.top = engine.borders.top + 'px';
+		borderVisualizer.style.left = state.engine.borders.left + 'px';
+		borderVisualizer.style.top = state.engine.borders.top + 'px';
 
-		borderVisualizer.style.right = canvasSize.x - engine.borders.right + 'px';
-		borderVisualizer.style.bottom = canvasSize.y - engine.borders.bottom + 'px';
+		borderVisualizer.style.right = canvasSize.x - state.engine.borders.right + 'px';
+		borderVisualizer.style.bottom = canvasSize.y - state.engine.borders.bottom + 'px';
 	}
 
 
@@ -212,7 +211,7 @@ export default class CameraTarget {
 			return;
 		}
 
-		this.#visualizer.visible = engine.DEBUG_MODE;
+		this.#visualizer.visible = state.engine.DEBUG_MODE;
 		this.#update3dVisualizer(camera, result.vAspectRatio);
 
 		camera.setViewOffset(
@@ -225,9 +224,9 @@ export default class CameraTarget {
 
 
 	#recreateBordersIfReset(canvasSize) {
-		if (engine.borders == null) {
+		if (state.engine.borders == null) {
 			const margin = 0;
-			engine.borders = {
+			state.engine.borders = {
 				top: margin,
 				right: canvasSize.x - margin,
 				left: margin,
@@ -242,8 +241,8 @@ export default class CameraTarget {
 		let result = {};
 
 		const span = {
-			x: engine.borders.right - engine.borders.left,
-			y: engine.borders.bottom - engine.borders.top,
+			x: state.engine.borders.right - state.engine.borders.left,
+			y: state.engine.borders.bottom - state.engine.borders.top,
 		};
 
 		const unitRect = __unitRect(this.diagonal);
@@ -266,8 +265,8 @@ export default class CameraTarget {
 			y: canvasSize.y/2,
 		};
 		const subscreenCenter = {
-			x: THREE.MathUtils.lerp(engine.borders.left, engine.borders.right, 0.5),
-			y: THREE.MathUtils.lerp(engine.borders.top, engine.borders.bottom, 0.5),
+			x: THREE.MathUtils.lerp(state.engine.borders.left, state.engine.borders.right, 0.5),
+			y: THREE.MathUtils.lerp(state.engine.borders.top, state.engine.borders.bottom, 0.5),
 		};
 		const offset = {  // Lateral offset for when margins arent symmetrical
 			x: screenCenter.x - subscreenCenter.x,

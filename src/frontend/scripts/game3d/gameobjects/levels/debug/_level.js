@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import engine from '../../../engine.js';
+import { state } from '../../../../main.js';
 import LevelBase from '../LevelBase.js';
 import DebugBall from './DebugBall.js';
 import DebugPaddle from './DebugPaddle.js';
@@ -14,28 +14,28 @@ export default class LevelDebug extends LevelBase {
 
 		this.size = new THREE.Vector2(1.5, 1);
 
-		engine.clearLevel();
-		engine.environmentScene.fog = null;
-		engine.environmentScene.background = new THREE.Color('#112211');
+		state.engine.clearLevel();
+		state.engine.environmentScene.fog = null;
+		state.engine.environmentScene.background = new THREE.Color('#112211');
 
 		const ball = new DebugBall();
-		engine.level.add(ball);
+		state.engine.level.add(ball);
 
-		engine.level.add(new DebugPaddle(0));
-		engine.level.add(new DebugPaddle(1));
+		state.engine.level.add(new DebugPaddle(0));
+		state.engine.level.add(new DebugPaddle(1));
 
-		engine.level.add(new DebugScoreIndicator(0));
-		engine.level.add(new DebugScoreIndicator(1));
+		state.engine.level.add(new DebugScoreIndicator(0));
+		state.engine.level.add(new DebugScoreIndicator(1));
 
-		engine.cameraTarget.diagonal = 40;
+		state.engine.cameraTarget.diagonal = 40;
 		this.cameras = __makeCameraAngles();
 
-		engine.cameraTarget.teleportNow = true;
-		engine.cameraTarget.mousePositionMultiplier.set(0.1, 0.1);
-		engine.cameraTarget.mouseRotationMultiplier.set(0.1, 0.1);
-		engine.cameraTarget.smoothSpeed = 15;
+		state.engine.cameraTarget.teleportNow = true;
+		state.engine.cameraTarget.mousePositionMultiplier.set(0.1, 0.1);
+		state.engine.cameraTarget.mouseRotationMultiplier.set(0.1, 0.1);
+		state.engine.cameraTarget.smoothSpeed = 15;
 
-		engine.level.add(new DebugBoard());
+		state.engine.level.add(new DebugBoard());
 	}
 
 

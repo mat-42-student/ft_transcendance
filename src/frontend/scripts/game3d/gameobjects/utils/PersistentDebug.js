@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { state } from "../../../main.js";
-import engine from '../../engine.js';
 
 
 export default class PersistentDebug extends THREE.Object3D {
@@ -18,7 +17,7 @@ export default class PersistentDebug extends THREE.Object3D {
 
 		const make = () => {
 			const html = document.createElement('div');
-			engine.html_debugBox.appendChild(html);
+			state.engine.html_debugBox.appendChild(html);
 			return html;
 		};
 
@@ -56,10 +55,10 @@ export default class PersistentDebug extends THREE.Object3D {
 
 
 	dispose() {
-		engine.html_debugBox.removeChild(this.dAutoResolution);
-		engine.html_debugBox.removeChild(this.dFramerate);
-		engine.html_debugBox.removeChild(this.dPlaying);
-		engine.html_debugBox.removeChild(this.dNotPlaying);
+		state.engine.html_debugBox.removeChild(this.dAutoResolution);
+		state.engine.html_debugBox.removeChild(this.dFramerate);
+		state.engine.html_debugBox.removeChild(this.dPlaying);
+		state.engine.html_debugBox.removeChild(this.dNotPlaying);
 	}
 }
 

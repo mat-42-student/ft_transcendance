@@ -1,4 +1,4 @@
-import engine from '../../engine.js';
+import { state } from '../main.js';
 
 
 class HTMLAutoBorderElement extends HTMLElement {
@@ -23,7 +23,7 @@ class HTMLAutoBorderElement extends HTMLElement {
 			this.#resizeObserver = null;
 
 			// Reset just in case
-			engine.borders = {
+			state.engine.borders = {
 				top: 0,
 				right: window.innerWidth,
 				bottom: window.innerHeight,
@@ -36,14 +36,14 @@ class HTMLAutoBorderElement extends HTMLElement {
 	update() {
 		const rect = this.getBoundingClientRect();
 
-		engine.borders = {
+		state.engine.borders = {
 			top: rect.y,
 			right: rect.x + rect.width,
 			bottom: rect.y + rect.height,
 			left: rect.x,
 		};
 
-		engine.refreshBorder();
+		state.engine.refreshBorder();
 	}
 
 }

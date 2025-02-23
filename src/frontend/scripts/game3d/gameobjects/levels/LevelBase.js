@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { state } from "../../../main.js";
-import engine from '../../engine.js';
 
 
 export default class LevelBase {
@@ -15,9 +14,9 @@ export default class LevelBase {
 		{  // Automatic camera switching
 			const selectedCamera = this.cameras[state.gameApp.side];
 
-			engine.cameraTarget.position.copy(selectedCamera.position);
-			engine.cameraTarget.quaternion.copy(selectedCamera.quaternion);
-			engine.cameraTarget.fov = selectedCamera.fov;
+			state.engine.cameraTarget.position.copy(selectedCamera.position);
+			state.engine.cameraTarget.quaternion.copy(selectedCamera.quaternion);
+			state.engine.cameraTarget.fov = selectedCamera.fov;
 		}
 	}
 

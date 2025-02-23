@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import engine from '../../../engine.js';
+import { state } from '../../../../main.js';
 import LevelBase from '../LevelBase.js';
 
 
@@ -11,19 +11,19 @@ export default class LevelTest extends LevelBase {
 
 		this.load();
 
-		engine.clearLevel();
-		engine.environmentScene.fog = null;
-		engine.environmentScene.background = this.skybox;
+		state.engine.clearLevel();
+		state.engine.environmentScene.fog = null;
+		state.engine.environmentScene.background = this.skybox;
 
 		this.size = new THREE.Vector2(1.5, 1);
 
 		this.cameras = __makeCameraAngles();
 
-		engine.cameraTarget.diagonal = 40;
-		engine.cameraTarget.teleportNow = true;
-		engine.cameraTarget.mousePositionMultiplier.set(0.1, 0.1);
-		engine.cameraTarget.mouseRotationMultiplier.set(3, 3);
-		engine.cameraTarget.smoothSpeed = 15;
+		state.engine.cameraTarget.diagonal = 40;
+		state.engine.cameraTarget.teleportNow = true;
+		state.engine.cameraTarget.mousePositionMultiplier.set(0.1, 0.1);
+		state.engine.cameraTarget.mouseRotationMultiplier.set(3, 3);
+		state.engine.cameraTarget.smoothSpeed = 15;
 
 		this.addGameobjects();
 	}

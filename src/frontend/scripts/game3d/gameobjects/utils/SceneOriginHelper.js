@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import engine from '../../engine.js';
+import { state } from '../../../main.js';
 
 
 export default class SceneOriginHelper extends THREE.Group {
@@ -11,7 +11,7 @@ export default class SceneOriginHelper extends THREE.Group {
 	#axes;
 
 	onAdded() {
-		if (engine.DEBUG_MODE !== true) {
+		if (state.engine.DEBUG_MODE !== true) {
 			return;
 		}
 

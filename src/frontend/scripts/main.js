@@ -4,6 +4,7 @@ import { Client } from './Client.js';
 import { isAuthenticated } from './api/auth.js';
 import { GameBase } from './GameBase.js';
 import { Input } from './Input.js';
+import { Engine } from './game3d/Engine.js';
 
 export const state = {
     client: new Client(),
@@ -13,6 +14,7 @@ export const state = {
     mmakingApp: null,
     /** @type {GameBase} */ gameApp: null,
     input: new Input(),
+    engine: new Engine(),
 };
 
 state.client.setState(state);
