@@ -2,7 +2,6 @@ import { state } from '../main.js';
 import * as THREE from 'three';
 import * as UTILS from '../utils.js';
 import CameraTarget from './CameraTarget.js';
-import PersistentDebug from './gameobjects/utils/PersistentDebug.js';
 
 
 export class Engine {
@@ -21,10 +20,9 @@ export class Engine {
 		}
 
 		{  // Setup ThreeJS
-			this.#scene = new THREE.Scene();
-			this.#scene.name = "Engine Scene";
+			this.idleWorld.name = 'Idle World Scene';
 
-			const fakeEvent = { child: this.#scene };
+			const fakeEvent = { child: this.#idleWorld };
 			__onObjectAddedToScene(fakeEvent);
 
 			this.#camera = new THREE.PerspectiveCamera();
@@ -52,19 +50,10 @@ export class Engine {
 				htmlAutoBorder.update();
 			}
 		}
-
-		this.#persistentDebug = new PersistentDebug();
-		this.#scene.add(this.#persistentDebug);
 	}
 
 
 	// Readonly getters, because yes, i am that paranoid of accidentally replacing variables.
-	/**
-	 * This is intended for changing environment, not the scene's child Object3D.
-	 * Use {@link level} instead for that purpose.
-	 */
-	get environmentScene() { return this.#scene; }
-	get level() { return this.#level; }
 	get cameraTarget() { return this.#cameraTarget; }
 	get renderer() { return this.#renderer; }
 	get html_debugBox() { return this.#html_debugBox; }
@@ -85,6 +74,32 @@ export class Engine {
 	 */
 	paramsForAddDuringRender = null;
 
+	/**
+	 * The Scene that contains gameplay elements.
+	 * It gets replaced for every match.
+	 * @type {THREE.Scene}
+	 * @see {@link idleWorld} The other Scene, that never gets replaced.
+	 */
+	get gameWorld() { return this.#gameWorld; };
+	set gameWorld(value) {
+		if (this.#gameWorld && this.#gameWorld.dispose) {
+			this.#gameWorld.dispose();
+		}
+
+		this.#gameWorld = value;
+
+		if (this.#gameWorld) {
+			const fakeEvent = { child: this.#gameWorld };
+			__onObjectAddedToScene(fakeEvent);
+		}
+	}
+
+	/**
+	 * The Scene that never gets replaced. This never needs to load.
+	 * It is used while {@link gameWorld} is not.
+	 */
+	get idleWorld() { return this.#idleWorld; }
+
 
 	/**
 	 * @param {number} delta
@@ -101,7 +116,7 @@ export class Engine {
 			//REVIEW this could be cached, add and remove on events. do i care about this wasted computation?
 			const updateQueue = [];
 
-			this.#scene.traverse((obj) => {
+			this.#activeWorld.traverse((obj) => {
 				if ('onFrame' in obj) {
 					updateQueue.push(obj.onFrame.bind(obj));
 				}
@@ -120,32 +135,15 @@ export class Engine {
 			this.#cameraTarget.onFrame(delta, this.#camera, canvasSize, this.#html_borderCopy);
 		}
 
-		this.#renderer.render(this.#scene, this.#camera);
+		this.#renderer.render(this.#activeWorld, this.#camera);
 
 		this.isProcessingFrame = false;
-	}
-
-	/** Replaces {@link level} with a fresh new empty Group. */
-	clearLevel() {
-		if (this.isProcessingFrame) throw Error("Nuh uh");
-		this.#scene.remove(this.#level);
-		this.#level = new THREE.Group();
-		this.#level.name = "Engine Level";
-		this.#scene.add(this.#level);
-	}
-
-	refreshBorder() {
-		const rect = this.#html_container.getBoundingClientRect();
-		debugger
-		this.#html_debugBox.style.bottom = (rect.height - this.borders.bottom) + 'px';
-		this.#html_debugBox.style.left = this.borders.left + 'px';
 	}
 
 
 	// MARK: Private
 
 	#DEBUG_MODE = true;
-
 
 	/** @type {THREE.PerspectiveCamera} */
 	#camera;
@@ -156,11 +154,13 @@ export class Engine {
 	/** @type {THREE.WebGLRenderer} */
 	#renderer;
 
-	/** @type {THREE.Scene} */
-	#scene;
+	/** Pixel density used for auto resolution */
+	#currentRatio = NaN;
 
-	/** @type {THREE.Group} */
-	#level;
+	/** @type {THREE.Scene} */
+	#gameWorld;
+
+	#idleWorld = new THREE.Scene();
 
 
 	/** @type {HTMLDivElement} */
@@ -176,39 +176,28 @@ export class Engine {
 	#html_borderCopy;
 
 
-	/** Pixel density used for auto resolution */
-	#currentRatio = NaN;
-
-
-	/** @type {PersistentDebug} */
-	#persistentDebug;
-
-
 	#onResize() {
 		const rect = this.#html_container.getBoundingClientRect();
 		this.#updateAutoResolution();
 		this.#renderer.setSize(rect.width, rect.height);
 		this.#camera.aspect = rect.width / rect.height;
-		this.refreshBorder();
+		this.#html_debugBox.style.bottom = (rect.height - this.borders.bottom) + 'px';
+		this.#html_debugBox.style.left = this.borders.left + 'px';
 	}
 
 
 	#updateAutoResolution() {
 		const fullres = window.devicePixelRatio;
 		const lowres = fullres / 2;
+		this.#renderer.setPixelRatio(UTILS.shouldPowersave ? lowres : fullres);
+	}
 
-		if (UTILS.shouldPowersave && this.#currentRatio !== lowres) {
-			this.#renderer.setPixelRatio(this.#currentRatio = lowres);
-			this.#persistentDebug.dAutoResolution.innerText = 'Auto resolution: Powersave mode';
-		} else if (!UTILS.shouldPowersave && this.#currentRatio !== fullres) {
-			this.#renderer.setPixelRatio(this.#currentRatio = fullres);
-			this.#persistentDebug.dAutoResolution.innerText = 'Auto resolution: Full';
-		}
+
+	get #activeWorld() {
+		return this.gameWorld != null ? this.gameWorld : this.idleWorld;
 	}
 
 };
-
-
 
 
 
@@ -234,7 +223,7 @@ function __onObjectAddedToScene(e) {
 	// Yes, this means the first frame has inconsistent execution order,
 	// compared to the next ones where the order is dictated by THREE.Object3D.traverse().
 	// (which i assume depends on the tree structure of Object3D's in the scene)
-	const params = state.engine.paramsForAddDuringRender;
+	let params = state.engine.paramsForAddDuringRender;
 	if (params != null && 'onFrame' in obj) {
 		obj.onFrame(params.delta, params.time);
 	}
