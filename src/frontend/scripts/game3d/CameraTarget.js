@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import engine from './engine.js';
-import input from '../Input.js';
 import * as UTILS from '../utils.js';
+import { state } from '../main.js';
 
 
 //REVIEW When nothing is continuously updating the border, resizing the window is broken. Either check that this never happens, or add some failsafe.
@@ -103,10 +103,10 @@ export default class CameraTarget {
 	/** @param {THREE.Vector2} canvasSize */
 	#updateMouse(canvasSize) {
 		const pos = new THREE.Vector2();
-		if (document.hasFocus() && input.isMouseInWindow) {
+		if (document.hasFocus() && state.input.isMouseInWindow) {
 			pos.set(
-				(input.mouseX / canvasSize.x) * 2 - 1,
-				(input.mouseY / canvasSize.y) * 2 - 1
+				(state.input.mouseX / canvasSize.x) * 2 - 1,
+				(state.input.mouseY / canvasSize.y) * 2 - 1
 			);
 		}
 

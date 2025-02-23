@@ -1,9 +1,7 @@
 import { state } from "./main.js";
 import * as UTILS from "./utils.js";
 import {MathUtils, Vector2} from 'three';
-import input from "./Input.js";
 import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
-import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
 import { GameBase } from "./GameBase.js";
 
 
@@ -122,8 +120,8 @@ export class LocalGame extends GameBase {
 
     movePaddles(delta) {
         let inputs = [
-            input.getPaddleInput(0),
-            this.isCPU ? this.cpuMove() : input.getPaddleInput(1)
+            state.input.getPaddleInput(0),
+            this.isCPU ? this.cpuMove() : state.input.getPaddleInput(1)
         ];
 
         const limit = this.level.size.y / 2;

@@ -1,6 +1,5 @@
 import { state } from './main.js';
 import { GameBase } from './GameBase.js';
-import input from './Input.js';
 
 
 export class WebGame extends GameBase {
@@ -77,7 +76,7 @@ export class WebGame extends GameBase {
 
 
     #sendInput() {
-        let currentInput = input.getPaddleInput(this.side);
+        let currentInput = state.input.getPaddleInput(this.side);
         if (this.previousInput != currentInput) {
             this.socket.send(JSON.stringify({
                 "action": "move",

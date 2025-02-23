@@ -3,7 +3,7 @@ import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js'
 import { Client } from './Client.js';
 import { isAuthenticated } from './api/auth.js';
 import { GameBase } from './GameBase.js';
-import './Input.js';  // just run it
+import { Input } from './Input.js';
 
 export const state = {
     client: new Client(),
@@ -12,6 +12,7 @@ export const state = {
     socialApp: null,
     mmakingApp: null,
     /** @type {GameBase} */ gameApp: null,
+    input: new Input(),
 };
 
 state.client.setState(state);
