@@ -223,7 +223,7 @@ function __onObjectAddedToScene(e) {
 	// Yes, this means the first frame has inconsistent execution order,
 	// compared to the next ones where the order is dictated by THREE.Object3D.traverse().
 	// (which i assume depends on the tree structure of Object3D's in the scene)
-	let params = state.engine.paramsForAddDuringRender;
+	const params = state.engine.paramsForAddDuringRender;  //FIXME state.engine doesnt exist yet at the time that this runs when creating the idle scene.
 	if (params != null && 'onFrame' in obj) {
 		obj.onFrame(params.delta, params.time);
 	}

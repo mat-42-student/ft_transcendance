@@ -13,9 +13,15 @@ export const state = {
     socialApp: null,
     mmakingApp: null,
     /** @type {GameBase} */ gameApp: null,
-    input: new Input(),
-    engine: new Engine(),
+    /** @type {Input} */ input: null,
+    /** @type {Engine} */ engine: null,
 };
+
+// Initialized outside the declaration of the State variable, because
+// otherwise the State variable hasn't finished being declared and can't be
+// accessed from within these classes.
+state.input = new Input();
+state.engine = new Engine();
 
 state.client.setState(state);
 window.state = state; // for eval purpose
@@ -91,6 +97,7 @@ window.addEventListener('beforeunload', function(event) {
 });
 
 
+// REVIEW 23/2/2025, commit 074a0d9e0981: This function appears unused. Delete? Move to utils.js?
 // wait for n sec
 export function delay(n) {
     return new Promise(function(resolve) {
