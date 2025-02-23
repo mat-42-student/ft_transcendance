@@ -18,7 +18,6 @@ export class Engine {
 			this.#html_canvas = document.getElementById("engine-canvas");
 			this.#html_debugBox = document.getElementById("engine-debug-box");
 			this.#html_borderCopy = document.getElementById('engine-border-copy');
-			this.#html_loadingText = document.getElementById("engine-loading-text");
 		}
 
 		{  // Setup ThreeJS
@@ -175,9 +174,6 @@ export class Engine {
 
 	/** @type {HTMLDivElement} */
 	#html_borderCopy;
-
-	/** @type {HTMLDivElement} */
-	#html_loadingText;  //TODO i nuked the code that made this useful, add it back
 
 
 	/** Pixel density used for auto resolution */
