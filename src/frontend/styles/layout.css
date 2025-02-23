@@ -124,7 +124,7 @@ footer .container {
     width: 12.5%;
     display: flex;
     flex-direction: column;
-    background: #dbe4f3;
+    background: #dbe4f3c0;
     border: 1px solid #ddd;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 }
