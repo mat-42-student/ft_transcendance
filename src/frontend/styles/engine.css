@@ -9,13 +9,7 @@
 
 	margin: 0;
 	padding: 0;
-	background: #d5ae4c;
-	background: repeating-linear-gradient(135deg,
-	  #e5be5a 0px,
-	  #d5ae4c 50px,
-	  #997e3a 50px,
-	  #b39342 100px
-	);
+	background: white;
 
 	user-select: none;
 }

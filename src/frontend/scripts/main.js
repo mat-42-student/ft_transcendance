@@ -21,7 +21,7 @@ export const state = {
 };
 
 state.engine.init();
-// state.clock = new Clock();  //TODO uncomment to start running
+state.clock = new Clock();
 
 state.client.setState(state);
 window.state = state; // for eval purpose

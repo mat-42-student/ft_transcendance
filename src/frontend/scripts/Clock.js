@@ -17,15 +17,19 @@ export class Clock {
 	 * @param {DOMHighResTimeStamp} time
 	 */
 	#frame(time) {
-		const delta = this.#clock.getDelta();
+		try {
+			const delta = this.#clock.getDelta();
 
-		if (state) {
-			if (state.gameApp) {
-				state.gameApp.frame(delta, time)
+			if (state) {
+				if (state.gameApp) {
+					state.gameApp.frame(delta, time)
+				}
+				if (state.engine) {
+					state.engine.render(delta, time);
+				}
 			}
-			if (state.engine) {
-				state.engine.render(delta, time);
-			}
+		} catch (error) {
+			console.error('Clock.frame(): Failed to do work.');
 		}
 
 		requestAnimationFrame(this.#frameCallback);

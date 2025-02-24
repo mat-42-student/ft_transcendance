@@ -20,6 +20,7 @@ export class Engine {
 				this.#html_container.classList.add('debug-mode');
 			}
 			this.#html_canvas = document.getElementById("engine-canvas");
+			this.#html_canvas.style.display = 'none';  // Hide by default, shows up again when a scene exists.
 		}
 
 		{  // Setup ThreeJS
@@ -62,11 +63,23 @@ export class Engine {
 			console.warn('Replaced engine.scene: make sure to dispose() the old scene manually.');
 		}
 
+		// Hide or show canvas depending on if the engine will be able to render or not.
+		if (this.#scene && !newScene) {
+			this.#html_canvas.style.display = 'none';
+		} else if (!this.scene && newScene) {
+			this.#html_canvas.style.display = null;
+		}
+
 		this.#scene = newScene;
 
 		if (this.#scene) {
-			const fakeEvent = { child: this.#scene };
-			__onObjectAddedToScene(fakeEvent);
+			try {
+				const fakeEvent = { child: this.#scene };
+				__onObjectAddedToScene(fakeEvent);
+			} catch (error) {
+				console.error('Engine.scene could not be set. Is the new one valid?');
+				this.#scene = null;
+			}
 		}
 	}
 
@@ -76,8 +89,11 @@ export class Engine {
 	 * @param {DOMHighResTimeStamp} time requestAnimationFrame() can give this value.
 	 */
 	render(delta, time) {
-		if (this.scene == null || this.scene.camera == null) {
-			console.error('Called engine.render() without scene or camera', this);
+		if (this.scene == null) {
+			return;
+		}
+		if (this.scene.camera == null) {
+			console.error('Engine: Scene is missing a camera.');
 			return;
 		}
 
@@ -140,7 +156,9 @@ export class Engine {
 		const rect = this.#html_container.getBoundingClientRect();
 		this.#updateAutoResolution();
 		this.renderer.setSize(rect.width, rect.height);
-		this.scene.camera.aspect = rect.width / rect.height;
+		if (this.scene && this.scene.camera) {
+			this.scene.camera.aspect = rect.width / rect.height;
+		}
 
 		this.borders.top    = rect.y;
 		this.borders.right  = rect.x + rect.width;
