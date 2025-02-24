@@ -5,6 +5,7 @@ import { isAuthenticated } from './api/auth.js';
 import { GameBase } from './GameBase.js';
 import { Input } from './Input.js';
 import { Engine } from './game3d/Engine.js';
+import { Clock } from './Clock.js';
 
 export const state = {
     client: new Client(),
@@ -16,9 +17,11 @@ export const state = {
     input: new Input(),
     engine: new Engine(),
     get isPlaying() { return this.gameApp && this.gameApp.isPlaying; },
+    /** @type {Clock} */ clock: null,
 };
 
 state.engine.init();
+state.clock = new Clock();
 
 state.client.setState(state);
 window.state = state; // for eval purpose
