@@ -40,20 +40,14 @@ export class Engine {
 			});
 			this.#renderer.toneMapping = THREE.ACESFilmicToneMapping;
 			this.#renderer.toneMappingExposure = 1;
-
-			window.addEventListener('resize', this.#onResize);
-			this.#onResize();
 		}
 
 		this.#cameraTarget = new CameraTarget();
 
-		let htmlAutoBorder = document.body.getElementsByTagName('auto-engine-border');  //FIXME auto-engine-border moved
-		if (htmlAutoBorder) {
-			htmlAutoBorder = htmlAutoBorder.item(0);
-			if (htmlAutoBorder.update) {
-				htmlAutoBorder.update();
-			}
-		}
+		const resizeCallback = this.#onResize.bind(this);
+		this.#resizeObserver = new ResizeObserver(resizeCallback);
+		this.#resizeObserver.observe(document.getElementsByClassName('main-content')[0]);
+		window.addEventListener('resize', resizeCallback);
 	}
 
 
@@ -117,7 +111,6 @@ export class Engine {
 		{  // Game logic update
 			this.paramsForAddDuringRender = {delta: delta, time: time};
 
-			//REVIEW this could be cached, add and remove on events. do i care about this wasted computation?
 			const updateQueue = [];
 
 			this.#activeWorld.traverse((obj) => {
@@ -158,14 +151,14 @@ export class Engine {
 	/** @type {THREE.WebGLRenderer} */
 	#renderer;
 
-	/** Pixel density used for auto resolution */
-	#currentRatio = NaN;
-
 	/** @type {THREE.Scene} */
 	#gameWorld;
 
 	/** @type {THREE.Scene} */
 	#idleWorld;
+
+	/** @type {ResizeObserver} */
+	#resizeObserver;
 
 
 	/** @type {HTMLDivElement} */
@@ -188,6 +181,13 @@ export class Engine {
 		this.#camera.aspect = rect.width / rect.height;
 		this.#html_debugBox.style.bottom = (rect.height - this.borders.bottom) + 'px';
 		this.#html_debugBox.style.left = this.borders.left + 'px';
+
+		this.borders = {
+			top: rect.y,
+			right: rect.x + rect.width,
+			bottom: rect.y + rect.height,
+			left: rect.x,
+		};
 	}
 
 
