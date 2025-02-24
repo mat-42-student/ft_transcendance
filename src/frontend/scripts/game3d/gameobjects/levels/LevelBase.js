@@ -1,8 +1,11 @@
 import * as THREE from 'three';
 import { state } from "../../../main.js";
+import SmoothCamera from '../camera/SmoothCamera.js';
 
 
 export default class LevelBase extends THREE.Scene {
+
+	camera = new SmoothCamera();
 
 	/** @type {CameraStats[]} */
 	cameras;
@@ -19,10 +22,6 @@ export default class LevelBase extends THREE.Scene {
 		state.engine.cameraTarget.quaternion.copy(selectedCamera.quaternion);
 		state.engine.cameraTarget.fov = selectedCamera.fov;
 	}
-
-
-	/** Override this */
-	dispose() {}
 
 
 	static CameraStats = class {

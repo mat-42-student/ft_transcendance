@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { state } from '../main.js';
-import SmoothCamera from '../SmoothCamera.js';
+import { state } from '../../../main.js';
+import SmoothCamera from './SmoothCamera.js';
 
 
 export class SmoothCameraVisualizer extends THREE.LineSegments {

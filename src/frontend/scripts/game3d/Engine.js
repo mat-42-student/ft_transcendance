@@ -1,7 +1,6 @@
 import { state } from '../main.js';
 import * as THREE from 'three';
 import * as UTILS from '../utils.js';
-import LevelIdle from './gameobjects/levels/LevelIdle.js';
 
 
 export class Engine {
@@ -24,10 +23,6 @@ export class Engine {
 		}
 
 		{  // Setup ThreeJS
-			this.#idleWorld = new LevelIdle();
-			const fakeEvent = { child: this.#idleWorld };
-			__onObjectAddedToScene(fakeEvent);
-
 			this.#renderer = new THREE.WebGLRenderer({
 				canvas: this.#html_canvas,
 				antialias: true,
