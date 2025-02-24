@@ -5,6 +5,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.renderers import JSONRenderer
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
+from oauth2_provider.models import AccessToken
 from rest_framework import status
 from django.conf import settings
 from django.http import JsonResponse
@@ -24,7 +25,30 @@ from .utils import is_token_revoked
 from django.shortcuts import redirect
 from .models import Ft42Profile
 from django.http import HttpResponse
-from oauth2_provider.models import AccessToken
+
+from rest_framework.exceptions import APIException
+
+class TesterView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        url = 'http://users:8000/api/v1/users/2/'
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer eedL7MgfgaI24deYnB8yRKym6731Gp',
+        }
+
+        try:
+            response = requests.get(url, headers=headers, timeout=30)
+            response.raise_for_status() 
+            data = response.json()
+
+        except requests.exceptions.RequestException as e:
+            raise APIException(f"Error occurred while fetching data: {str(e)}")
+
+        return JsonResponse({'message': data})
+
+
 
 class PublicKeyView(APIView):
     permission_classes = [AllowAny]
@@ -91,7 +115,7 @@ class LoginView(APIView):
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user"
@@ -160,7 +184,7 @@ class RefreshTokenView(APIView):
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user"
@@ -267,8 +291,7 @@ class Verify2FAView(APIView):
             user.save()
             return Response({"success": "true", "message": "2FA has been enabled."}, status=200)
         else:
-            return Response({"error": "Invalid or expired 2FA code"}, status=401)
-            
+            return Response({"error": "Invalid or expired 2FA code"}, status=401)          
 class Disable2FAView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -385,7 +408,7 @@ class OAuthCallbackView(APIView):
             path='/'
         )
 
-        return response
+        return response  
 class IntrospectTokenView(APIView):
     permission_classes = [AllowAny]
 
@@ -404,3 +427,4 @@ class IntrospectTokenView(APIView):
             data = {"active": False}
 
         return JsonResponse(data)
+    

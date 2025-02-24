@@ -38,7 +38,7 @@ class UserRegisterView(APIView):
             access_payload = {
                 'id': user.id,
                 'username': user.username,
-                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
                 'iat': datetime.datetime.now(datetime.timezone.utc),
             }
 
@@ -92,14 +92,22 @@ class UserViewSet(viewsets.ModelViewSet):
 
         # Vérifie si le client est authentifié
         if request.user.is_authenticated:
-            # Vérifie les relations de blocage
+            # Handle machine clients (oauth_client)
+            if request.user.username == 'oauth_client':
+                serializer = UserDetailSerializer(user)
+                return Response(serializer.data)
+
+            # Handle human clients (JWT):
             if request.user in user.blocked_users.all() or user in request.user.blocked_users.all():  # L'utilisateur ciblé a bloqué le client
                 serializer = UserBlockedSerializer(user, context={'request': request})
+                return Response(serializer.data)
+            
             # Utilise le serializer privé pour l'utilisateur authentifié
-            elif request.user == user:
+            if request.user == user:
                 serializer = UserPrivateDetailSerializer(user, context={'request': request})
             else:    
                 serializer = UserDetailSerializer(user)
+
             return Response(serializer.data)
         
         # Si le client n'est pas authentifié, utilise le serializer public

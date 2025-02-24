@@ -16,4 +16,5 @@ urlpatterns = [
     path('api/v1/auth/oauth/callback/', OAuthCallbackView.as_view(), name='oauth-callback'),
     path('api/v1/auth/o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     path('api/v1/auth/o/introspect/', IntrospectTokenView.as_view(), name="introspect_token"),
+    path('api/v1/auth/tester/', TesterView.as_view(), name='test'),
 ]
