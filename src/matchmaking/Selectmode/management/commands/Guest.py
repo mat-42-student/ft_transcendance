@@ -7,7 +7,8 @@ class Guest(Player):
         self.hosts = {}
         self.accepted = False
 
-
+    def __str__(self):
+        return (f'Guest {self.user_id} type_game: {self.type_game}')
     
     async def start_1vs1RtoFront(self, id):
         data = {
