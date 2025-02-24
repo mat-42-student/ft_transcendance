@@ -9,6 +9,12 @@ export class Engine {
 	// MARK: Public
 
 	constructor() {
+		// Does nothing. Call .init() instead.
+		// Initialization code needs to read state.engine, which, at the time of running the
+		// constructor, was not set yet.
+	}
+
+	init() {
 		{  // Setup DOM elements
 			this.#html_container = document.getElementById("engine");
 			if (this.DEBUG_MODE) {
@@ -20,8 +26,8 @@ export class Engine {
 		}
 
 		{  // Setup ThreeJS
+			this.#idleWorld = new THREE.Scene();
 			this.idleWorld.name = 'Idle World Scene';
-
 			const fakeEvent = { child: this.#idleWorld };
 			__onObjectAddedToScene(fakeEvent);
 
@@ -34,8 +40,6 @@ export class Engine {
 			});
 			this.#renderer.toneMapping = THREE.ACESFilmicToneMapping;
 			this.#renderer.toneMappingExposure = 1;
-
-			this.clearLevel();
 
 			window.addEventListener('resize', this.#onResize);
 			this.#onResize();
@@ -160,7 +164,8 @@ export class Engine {
 	/** @type {THREE.Scene} */
 	#gameWorld;
 
-	#idleWorld = new THREE.Scene();
+	/** @type {THREE.Scene} */
+	#idleWorld;
 
 
 	/** @type {HTMLDivElement} */
@@ -194,6 +199,7 @@ export class Engine {
 
 
 	get #activeWorld() {
+		//FIXME idleWorld needs to continue showing while gameWorld is loading, this condition is insufficient
 		return this.gameWorld != null ? this.gameWorld : this.idleWorld;
 	}
 
@@ -223,7 +229,7 @@ function __onObjectAddedToScene(e) {
 	// Yes, this means the first frame has inconsistent execution order,
 	// compared to the next ones where the order is dictated by THREE.Object3D.traverse().
 	// (which i assume depends on the tree structure of Object3D's in the scene)
-	const params = state.engine.paramsForAddDuringRender;  //FIXME state.engine doesnt exist yet at the time that this runs when creating the idle scene.
+	const params = state.engine.paramsForAddDuringRender;
 	if (params != null && 'onFrame' in obj) {
 		obj.onFrame(params.delta, params.time);
 	}

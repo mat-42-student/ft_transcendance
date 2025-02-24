@@ -13,15 +13,11 @@ export const state = {
     socialApp: null,
     mmakingApp: null,
     /** @type {GameBase} */ gameApp: null,
-    /** @type {Input} */ input: null,
-    /** @type {Engine} */ engine: null,
+    input: new Input(),
+    engine: new Engine(),
 };
 
-// Initialized outside the declaration of the State variable, because
-// otherwise the State variable hasn't finished being declared and can't be
-// accessed from within these classes.
-state.input = new Input();
-state.engine = new Engine();
+state.engine.init();
 
 state.client.setState(state);
 window.state = state; // for eval purpose
