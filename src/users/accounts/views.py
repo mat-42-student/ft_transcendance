@@ -76,7 +76,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """Définit les permissions pour chaque action."""
-        if self.action in ['list', 'retrieve']:
+        if self.action in ['list', 'retrieve', 'contacts', 'friends', 'blocks']:
             return [AllowAny()]
         return [IsAuthenticated()]  # Authentification requise pour toutes les autres actions
 
