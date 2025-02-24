@@ -7,12 +7,26 @@ export class Engine {
 
 	// MARK: Public
 
-	constructor() {
-		// Does nothing. Call .init() instead.
-		// Initialization code needs to read state.engine, which, at the time of running the
-		// constructor, was not set yet.
-	}
+	get renderer() { return this.#renderer; }
 
+	/** General purpose flag that can be read by anyone.
+	 * Ideally any debug related visualization or feature remains in the code,
+	 * but is switched on/off based on this. */
+	get DEBUG_MODE() { return this.#DEBUG_MODE; }
+
+	get scene() { return this.#scene; }
+
+	borders = { top: 0, left: 0, right: 500, bottom: 500 };
+
+	/** Plis ignore ok thx.
+	 * Tracks if we are during a {@link render} call (null if not),
+	 * and if so, stores the parameters to be passed to Object3D's onRender() methods.
+	 * @type {null | {delta: number, time: DOMHighResTimeStamp}}
+	 */
+	paramsForAddDuringRender = null;
+
+
+	/** Initialization code needs to read state.engine, which, at the time of running the constructor, was not set yet. */
 	init() {
 		{  // Setup DOM elements
 			this.#html_container = document.getElementById("engine");
@@ -37,50 +51,6 @@ export class Engine {
 		this.#resizeObserver = new ResizeObserver(resizeCallback);
 		this.#resizeObserver.observe(document.getElementsByClassName('main-content')[0]);
 		window.addEventListener('resize', resizeCallback);
-	}
-
-
-	// Readonly getters, because yes, i am that paranoid of accidentally replacing variables.
-	get renderer() { return this.#renderer; }
-	/** General purpose flag that can be read by anyone.
-	 * Ideally any debug related visualization or feature remains in the code,
-	 * but is switched on/off based on this. */
-	get DEBUG_MODE() { return this.#DEBUG_MODE; }
-
-	borders = { top: 0, left: 0, right: 500, bottom: 500 };
-
-	/**
-	 * tracks if we are during a {@link render} call (null if not),
-	 * and if so, stores the parameters to be passed to Object3D's onRender() methods.
-	 * @type {null | {delta: number, time: DOMHighResTimeStamp}}
-	 */
-	paramsForAddDuringRender = null;
-
-	get scene() { return this.#scene; }
-	set scene(newScene) {
-		if (this.#scene && this.#scene.dispose) {
-			// this.#scene.dispose();
-			console.warn('Replaced engine.scene: make sure to dispose() the old scene manually.');
-		}
-
-		// Hide or show canvas depending on if the engine will be able to render or not.
-		if (this.#scene && !newScene) {
-			this.#html_canvas.style.display = 'none';
-		} else if (!this.scene && newScene) {
-			this.#html_canvas.style.display = null;
-		}
-
-		this.#scene = newScene;
-
-		if (this.#scene) {
-			try {
-				const fakeEvent = { child: this.#scene };
-				__onObjectAddedToScene(fakeEvent);
-			} catch (error) {
-				console.error('Engine.scene could not be set. Is the new one valid?');
-				this.#scene = null;
-			}
-		}
 	}
 
 
@@ -125,6 +95,33 @@ export class Engine {
 	}
 
 
+	set scene(newScene) {
+		if (this.#scene && this.#scene.dispose) {
+			// this.#scene.dispose();
+			console.warn('Replaced engine.scene: make sure to dispose() the old scene manually.');
+		}
+
+		// Hide or show canvas depending on if the engine will be able to render or not.
+		if (this.#scene && !newScene) {
+			this.#html_canvas.style.display = 'none';
+		} else if (!this.scene && newScene) {
+			this.#html_canvas.style.display = null;
+		}
+
+		this.#scene = newScene;
+
+		if (this.#scene) {
+			try {
+				const fakeEvent = { child: this.#scene };
+				__onObjectAddedToScene(fakeEvent);
+			} catch (error) {
+				console.error('Engine.scene could not be set. Is the new one valid?');
+				this.#scene = null;
+			}
+		}
+	}
+
+
 	// MARK: Private
 
 	#DEBUG_MODE = true;
@@ -132,18 +129,11 @@ export class Engine {
 	/** @type {THREE.WebGLRenderer} */
 	#renderer;
 
-	/** @type {THREE.Scene} */
-	#gameWorld;
-
-	/** @type {THREE.Scene} */
-	#idleWorld;
-
 	/** @type {ResizeObserver} */
 	#resizeObserver;
 
 	/** @type {THREE.Scene} */
 	#scene;
-
 
 	/** @type {HTMLDivElement} */
 	#html_container;
