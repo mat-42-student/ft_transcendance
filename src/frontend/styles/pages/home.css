@@ -43,20 +43,6 @@
 
 
 
-/* Cadre pour l'interface de jeu */
-.game-frame {
-    width: 80%;
-    height: 80%;
-    border: 2px solid #333;
-    background: #fafafa;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-
-
 /* Informations des joueurs */
 .player-info {
     display: flex;
