@@ -42,8 +42,8 @@ export default class CameraTarget {
 			color: 0xffff00,
 		});
 		this.#visualizer = new THREE.LineSegments(this.#geo, mat);
-		this.#visualizer.name = 'Camera Target Visualization'
-		state.engine.idleWorld.add(this.#visualizer);
+		this.#visualizer.name = 'Camera Target Visualization';
+		this.#visualizer.noAutoDispose = true;
 
 		this.#visualizer2 = new THREE.LineSegments(this.#geo, mat);
 		const secondVisualizerDistance = 100;
@@ -53,9 +53,9 @@ export default class CameraTarget {
 	}
 
 
-	copyVisualizerToGameWorld() {
-		if (state.engine.gameWorld)
-			state.engine.gameWorld.add(this.#visualizer.clone(true));
+	/** @param {THREE.Scene} scene */
+	addVisualizerToScene(scene) {
+		scene.add(this.#visualizer);
 	}
 
 
