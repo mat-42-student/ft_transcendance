@@ -36,6 +36,9 @@ export class WebGame {
             if (data.action == "info") {
                 console.log('info');
             }
+            if (data.action == "wait") {
+                console.log('waiting');
+            }
             if (data.action =="move") {
                 console.log('info');
             }
