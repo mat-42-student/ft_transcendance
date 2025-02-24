@@ -60,10 +60,7 @@ export class Engine {
 	 * but is switched on/off based on this. */
 	get DEBUG_MODE() { return this.#DEBUG_MODE; }
 
-	borders = {
-		top: 0, left: 0,
-		right: 500, bottom: 500,
-	};
+	borders = { top: 0, left: 0, right: 500, bottom: 500 };
 
 	/**
 	 * tracks if we are during a {@link render} call (null if not),
@@ -126,12 +123,6 @@ export class Engine {
 			this.paramsForAddDuringRender = null;
 		}
 
-		{  // Camera system
-			const canvasSize = new THREE.Vector2(this.#renderer.domElement.clientWidth,
-				this.#renderer.domElement.clientHeight);
-			this.#cameraTarget.onFrame(delta, this.#camera, canvasSize, this.#html_borderCopy);
-		}
-
 		this.#renderer.render(this.#activeWorld, this.#camera);
 
 		this.isProcessingFrame = false;
@@ -182,12 +173,10 @@ export class Engine {
 		this.#html_debugBox.style.bottom = (rect.height - this.borders.bottom) + 'px';
 		this.#html_debugBox.style.left = this.borders.left + 'px';
 
-		this.borders = {
-			top: rect.y,
-			right: rect.x + rect.width,
-			bottom: rect.y + rect.height,
-			left: rect.x,
-		};
+		this.borders.top    = rect.y;
+		this.borders.right  = rect.x + rect.width;
+		this.borders.bottom = rect.y + rect.height;
+		this.borders.left   = rect.x;
 	}
 
 
