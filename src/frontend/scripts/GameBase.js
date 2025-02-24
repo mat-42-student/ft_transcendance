@@ -12,6 +12,8 @@ export class GameBase {
 		this.paddlePositions = [0, 0];
 		this.paddleHeights = [0, 0];
 		this.playerNames = ['Uninitialized', 'Uninitialized'];
+		/** Set to true when done loading. Should correspond to when the game scene is shown on screen. */
+		this.isPlaying = false;
 	}
 
 	frame(delta, time) {
@@ -20,6 +22,7 @@ export class GameBase {
 
 	close() {
 		if (this.level) this.level.dispose();
+		this.isPlaying = false;  // just in case this object lingers somehow?
 	}
 
 }

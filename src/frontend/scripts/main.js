@@ -15,6 +15,7 @@ export const state = {
     /** @type {GameBase} */ gameApp: null,
     input: new Input(),
     engine: new Engine(),
+    get isPlaying() { return this.gameApp && this.gameApp.isPlaying; },
 };
 
 state.engine.init();

@@ -11,13 +11,13 @@ export default class LevelBase {
 
 
 	onFrame(delta, time) {
-		{  // Automatic camera switching
-			const selectedCamera = this.cameras[state.gameApp.side];
+		// Automatic camera switching
 
-			state.engine.cameraTarget.position.copy(selectedCamera.position);
-			state.engine.cameraTarget.quaternion.copy(selectedCamera.quaternion);
-			state.engine.cameraTarget.fov = selectedCamera.fov;
-		}
+		const selectedCamera = this.cameras[state.isPlaying ? state.gameApp.side : 0];
+
+		state.engine.cameraTarget.position.copy(selectedCamera.position);
+		state.engine.cameraTarget.quaternion.copy(selectedCamera.quaternion);
+		state.engine.cameraTarget.fov = selectedCamera.fov;
 	}
 
 

@@ -20,7 +20,7 @@ export default class ScoreIndicator extends THREE.Group {
 
 
 	onFrame(delta, time) {
-		this.visible = state.gameApp != null;
+		this.visible = state.isPlaying;
 		if (this.visible) {
 			const score = state.gameApp.scores[this.playerIndex];
 			if (this.#previousScore != score) {

@@ -11,7 +11,7 @@ export default class DebugBoard extends THREE.Box3Helper {
 
 
 	onFrame(delta, time) {
-		this.visible = state.gameApp != null;
+		this.visible = state.isPlaying;
 		if (this.visible) {
 			this.box.setFromCenterAndSize(
 				new THREE.Vector3(),

@@ -71,5 +71,5 @@ export function makeLookDownQuaternion(yawDegrees, pitchDegrees) {
 
 
 export function shouldPowersave() {
-    return state.gameApp == null && !document.hasFocus();
+    return state.isPlaying == false && document.hasFocus() == false;
 }

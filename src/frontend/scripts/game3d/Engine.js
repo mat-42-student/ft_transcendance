@@ -199,8 +199,7 @@ export class Engine {
 
 
 	get #activeWorld() {
-		//FIXME idleWorld needs to continue showing while gameWorld is loading, this condition is insufficient
-		return this.gameWorld != null ? this.gameWorld : this.idleWorld;
+		return state.isPlaying ? this.gameWorld : this.idleWorld;
 	}
 
 };
