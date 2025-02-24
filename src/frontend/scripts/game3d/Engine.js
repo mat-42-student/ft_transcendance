@@ -2,6 +2,7 @@ import { state } from '../main.js';
 import * as THREE from 'three';
 import * as UTILS from '../utils.js';
 import CameraTarget from './CameraTarget.js';
+import LevelIdle from './gameobjects/levels/LevelIdle.js';
 
 
 export class Engine {
@@ -25,9 +26,10 @@ export class Engine {
 			this.#html_borderCopy = document.getElementById('engine-border-copy');
 		}
 
+		this.#cameraTarget = new CameraTarget();
+
 		{  // Setup ThreeJS
-			this.#idleWorld = new THREE.Scene();
-			this.idleWorld.name = 'Idle World Scene';
+			this.#idleWorld = new LevelIdle();
 			const fakeEvent = { child: this.#idleWorld };
 			__onObjectAddedToScene(fakeEvent);
 
@@ -41,8 +43,6 @@ export class Engine {
 			this.#renderer.toneMapping = THREE.ACESFilmicToneMapping;
 			this.#renderer.toneMappingExposure = 1;
 		}
-
-		this.#cameraTarget = new CameraTarget();
 
 		const resizeCallback = this.#onResize.bind(this);
 		this.#resizeObserver = new ResizeObserver(resizeCallback);

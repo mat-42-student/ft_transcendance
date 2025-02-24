@@ -6,11 +6,11 @@ import { state } from '../main.js';
 //REVIEW When nothing is continuously updating the border, resizing the window is broken. Either check that this never happens, or add some failsafe.
 
 
-export default class CameraTarget {
+export default class CameraTarget extends THREE.Object3D {
 
 	/* Target values */
-    position = new THREE.Vector3();
-    quaternion = new THREE.Quaternion();
+    // position;
+    // quaternion;
 	fov = 70;
 	diagonal = 30;
 
@@ -43,19 +43,12 @@ export default class CameraTarget {
 		});
 		this.#visualizer = new THREE.LineSegments(this.#geo, mat);
 		this.#visualizer.name = 'Camera Target Visualization';
-		this.#visualizer.noAutoDispose = true;
 
 		this.#visualizer2 = new THREE.LineSegments(this.#geo, mat);
 		const secondVisualizerDistance = 100;
 		this.#visualizer2.scale.set(secondVisualizerDistance, secondVisualizerDistance, secondVisualizerDistance);
 		this.#visualizer2.position.set(0, 0, -(secondVisualizerDistance - 1));
 		this.#visualizer.add(this.#visualizer2);
-	}
-
-
-	/** @param {THREE.Scene} scene */
-	addVisualizerToScene(scene) {
-		scene.add(this.#visualizer);
 	}
 
 
@@ -102,6 +95,11 @@ export default class CameraTarget {
 
 		this.#cameraRefresh(camera, canvasSize);
 		this.#updateBorderVisualizer(borderVisualizer, canvasSize);
+	}
+
+
+	dispose() {
+		this.#geo.dispose();
 	}
 
 

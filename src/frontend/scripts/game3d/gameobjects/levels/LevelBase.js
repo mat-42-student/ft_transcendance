@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { state } from "../../../main.js";
 
 
-export default class LevelBase {
+export default class LevelBase extends THREE.Scene {
 
 	/** @type {CameraStats[]} */
 	cameras;
