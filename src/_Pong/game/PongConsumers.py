@@ -103,7 +103,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             await asleep(0.5)
         if expected_players is None:
             print("No answer from mmaking")
-            await self.close(code=1002) # activate when mmaking will answer 
+            # await self.close(code=1002) # activate when mmaking will answer 
             return
         try:
             expected_players = json.loads(expected_players)

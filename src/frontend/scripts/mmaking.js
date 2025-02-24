@@ -54,7 +54,7 @@ export class Mmaking
             for (const [key, value] of Object.entries(data.body.opponents))
                 this.setOpponent(value.username, '../../../media/avatars/default.png')
 
-            state.gameApp.launchGameSocket(7);
+            state.gameApp.launchGameSocket(data.body.id_game);
         }
 		else if (data.body.cancel == true)
 		{
