@@ -22,8 +22,6 @@ export class Engine {
 				this.#html_container.classList.add('debug-mode');
 			}
 			this.#html_canvas = document.getElementById("engine-canvas");
-			this.#html_debugBox = document.getElementById("engine-debug-box");
-			this.#html_borderCopy = document.getElementById('engine-border-copy');
 		}
 
 		this.#cameraTarget = new CameraTarget();
@@ -54,7 +52,6 @@ export class Engine {
 	// Readonly getters, because yes, i am that paranoid of accidentally replacing variables.
 	get cameraTarget() { return this.#cameraTarget; }
 	get renderer() { return this.#renderer; }
-	get html_debugBox() { return this.#html_debugBox; }
 	/** General purpose flag that can be read by anyone.
 	 * Ideally any debug related visualization or feature remains in the code,
 	 * but is switched on/off based on this. */
@@ -158,20 +155,12 @@ export class Engine {
 	/** @type {HTMLCanvasElement} */
 	#html_canvas;
 
-	/** @type {HTMLDivElement} */
-	#html_debugBox;
-
-	/** @type {HTMLDivElement} */
-	#html_borderCopy;
-
 
 	#onResize() {
 		const rect = this.#html_container.getBoundingClientRect();
 		this.#updateAutoResolution();
 		this.renderer.setSize(rect.width, rect.height);
 		this.#camera.aspect = rect.width / rect.height;
-		this.#html_debugBox.style.bottom = (rect.height - this.borders.bottom) + 'px';
-		this.#html_debugBox.style.left = this.borders.left + 'px';
 
 		this.borders.top    = rect.y;
 		this.borders.right  = rect.x + rect.width;
