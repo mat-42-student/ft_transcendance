@@ -133,6 +133,7 @@ export class Client{
         }
     }
 
+    // status perso -> state.socialapp.mystatus
     // Nouvelle fonction d'affichage #profile -> gère profil utilisateur authentifié et utilisateurs tiers, affichage dynamic des infos et options
     // Si aucun userId ou id == User authentifié setup page profile auth, sinon affichage profil utilisateur tiers (gestion Relationship fonctionelle)
     async loadUserProfile(userId) {
