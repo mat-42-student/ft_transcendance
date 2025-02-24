@@ -43,13 +43,19 @@ export default class CameraTarget {
 		});
 		this.#visualizer = new THREE.LineSegments(this.#geo, mat);
 		this.#visualizer.name = 'Camera Target Visualization'
-		state.engine.environmentScene.add(this.#visualizer);
+		state.engine.idleWorld.add(this.#visualizer);
 
 		this.#visualizer2 = new THREE.LineSegments(this.#geo, mat);
 		const secondVisualizerDistance = 100;
 		this.#visualizer2.scale.set(secondVisualizerDistance, secondVisualizerDistance, secondVisualizerDistance);
 		this.#visualizer2.position.set(0, 0, -(secondVisualizerDistance - 1));
 		this.#visualizer.add(this.#visualizer2);
+	}
+
+
+	copyVisualizerToGameWorld() {
+		if (state.engine.gameWorld)
+			state.engine.gameWorld.add(this.#visualizer.clone(true));
 	}
 
 
