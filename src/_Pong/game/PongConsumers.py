@@ -75,7 +75,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         try:
             response = requests.get(f"http://auth-service:8000/api/v1/auth/public-key/")
             if response.status_code == 200:
-                self.public_key = response.json().get("public_key") # Ou response.json() si c'est un JSON
+                self.public_key = response.json().get("public_key")
             else:
                 raise RuntimeError("Impossible de récupérer la clé publique JWT")
         except RuntimeError as e:
@@ -132,6 +132,7 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     # Receive message from WebSocket (from client): immediate publish into lobby
     async def receive(self, text_data=None, bytes_data=None):
+        # print(f"text_data: {text_data}")
         data = self.load_valid_json(text_data)
         if not (data):
             print("wrong data incoming")
@@ -145,13 +146,14 @@ class PongConsumer(AsyncWebsocketConsumer):
             data = json.loads(data)
             if "action" not in data:
                 return None
+            data["side"] = self.side
             return data
         except:
             return None
 
     async def handle_message(self, data):
         data = data.get("message")
-        print(f'handle data {type(data)}, {data}')
+        # print(f'handle data {type(data)}, {data}')
         if not data:
             return
         if data["action"] == "move":
