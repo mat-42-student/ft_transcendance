@@ -40,8 +40,8 @@ export class Engine {
 				antialias: true,
 				powerPreference: "high-performance",
 			});
-			this.#renderer.toneMapping = THREE.ACESFilmicToneMapping;
-			this.#renderer.toneMappingExposure = 1;
+			this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+			this.renderer.toneMappingExposure = 1;
 		}
 
 		const resizeCallback = this.#onResize.bind(this);
@@ -123,7 +123,7 @@ export class Engine {
 			this.paramsForAddDuringRender = null;
 		}
 
-		this.#renderer.render(this.#activeWorld, this.#camera);
+		this.renderer.render(this.#activeWorld, this.#camera);
 
 		this.isProcessingFrame = false;
 	}
@@ -168,7 +168,7 @@ export class Engine {
 	#onResize() {
 		const rect = this.#html_container.getBoundingClientRect();
 		this.#updateAutoResolution();
-		this.#renderer.setSize(rect.width, rect.height);
+		this.renderer.setSize(rect.width, rect.height);
 		this.#camera.aspect = rect.width / rect.height;
 		this.#html_debugBox.style.bottom = (rect.height - this.borders.bottom) + 'px';
 		this.#html_debugBox.style.left = this.borders.left + 'px';
@@ -183,7 +183,7 @@ export class Engine {
 	#updateAutoResolution() {
 		const fullres = window.devicePixelRatio;
 		const lowres = fullres / 2;
-		this.#renderer.setPixelRatio(UTILS.shouldPowersave ? lowres : fullres);
+		this.renderer.setPixelRatio(UTILS.shouldPowersave ? lowres : fullres);
 	}
 
 
