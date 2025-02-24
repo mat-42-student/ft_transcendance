@@ -1,4 +1,4 @@
-import { state } from "./main.js";
+import { state } from "../main.js";
 
 
 export class Input {

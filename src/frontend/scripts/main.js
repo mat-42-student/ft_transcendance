@@ -3,7 +3,7 @@ import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js'
 import { Client } from './Client.js';
 import { isAuthenticated } from './api/auth.js';
 import { GameBase } from './GameBase.js';
-import { Input } from './Input.js';
+import { Input } from './game3d/Input.js';
 import { Engine } from './game3d/Engine.js';
 import { Clock } from './Clock.js';
 
