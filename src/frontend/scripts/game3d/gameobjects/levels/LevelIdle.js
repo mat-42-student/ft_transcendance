@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { state } from '../../../main.js';
 import LevelBase from './LevelBase.js';
+import SceneOriginHelper from '../utils/SceneOriginHelper.js';
 
 
 export default class LevelIdle extends LevelBase {
@@ -23,7 +24,7 @@ export default class LevelIdle extends LevelBase {
 		this.cameras[0].fov = 60;
 		this.cameras[2] = this.cameras[1] = this.cameras[0];
 
-		const thing3d = new GAMEOBJECTS.UTILS.SceneOriginHelper();
+		const thing3d = new SceneOriginHelper();
 		thing3d.name = "Scene origin helper";
 		engine.environmentScene.add(thing3d);
 	}

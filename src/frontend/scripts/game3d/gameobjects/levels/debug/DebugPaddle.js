@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { state } from '../../../../main.js';
-import * as GAMEOBJECTS from '../../../gameobjects/_exports.js';
+import Paddle from '../../../gameobjects/gameplay/Paddle.js';
 
 
-export default class DebugPaddle extends GAMEOBJECTS.GAMEPLAY.Paddle {
+export default class DebugPaddle extends Paddle {
 
 	#box3helper;
 
