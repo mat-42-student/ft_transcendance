@@ -1,7 +1,6 @@
 import { state } from '../main.js';
 import * as THREE from 'three';
 import * as UTILS from '../utils.js';
-import CameraTarget from './CameraTarget.js';
 import LevelIdle from './gameobjects/levels/LevelIdle.js';
 
 
@@ -24,14 +23,10 @@ export class Engine {
 			this.#html_canvas = document.getElementById("engine-canvas");
 		}
 
-		this.#cameraTarget = new CameraTarget();
-
 		{  // Setup ThreeJS
 			this.#idleWorld = new LevelIdle();
 			const fakeEvent = { child: this.#idleWorld };
 			__onObjectAddedToScene(fakeEvent);
-
-			this.#camera = new THREE.PerspectiveCamera();
 
 			this.#renderer = new THREE.WebGLRenderer({
 				canvas: this.#html_canvas,
@@ -50,7 +45,6 @@ export class Engine {
 
 
 	// Readonly getters, because yes, i am that paranoid of accidentally replacing variables.
-	get cameraTarget() { return this.#cameraTarget; }
 	get renderer() { return this.#renderer; }
 	/** General purpose flag that can be read by anyone.
 	 * Ideally any debug related visualization or feature remains in the code,
@@ -66,31 +60,20 @@ export class Engine {
 	 */
 	paramsForAddDuringRender = null;
 
-	/**
-	 * The Scene that contains gameplay elements.
-	 * It gets replaced for every match.
-	 * @type {THREE.Scene}
-	 * @see {@link idleWorld} The other Scene, that never gets replaced.
-	 */
-	get gameWorld() { return this.#gameWorld; };
-	set gameWorld(value) {
-		if (this.#gameWorld && this.#gameWorld.dispose) {
-			this.#gameWorld.dispose();
+	get scene() { return this.#scene; }
+	set scene(newScene) {
+		if (this.#scene && this.#scene.dispose) {
+			// this.#scene.dispose();
+			console.warn('Replaced engine.scene: make sure to dispose() the old scene manually.');
 		}
 
-		this.#gameWorld = value;
+		this.#scene = newScene;
 
-		if (this.#gameWorld) {
-			const fakeEvent = { child: this.#gameWorld };
+		if (this.#scene) {
+			const fakeEvent = { child: this.#scene };
 			__onObjectAddedToScene(fakeEvent);
 		}
 	}
-
-	/**
-	 * The Scene that never gets replaced. This never needs to load.
-	 * It is used while {@link gameWorld} is not.
-	 */
-	get idleWorld() { return this.#idleWorld; }
 
 
 	/**
@@ -98,6 +81,11 @@ export class Engine {
 	 * @param {DOMHighResTimeStamp} time requestAnimationFrame() can give this value.
 	 */
 	render(delta, time) {
+		if (this.scene == null || this.scene.camera == null) {
+			console.error('Called engine.render() without scene or camera', this);
+			return;
+		}
+
 		this.#updateAutoResolution(delta);
 
 		this.isProcessingFrame = true;
@@ -107,7 +95,7 @@ export class Engine {
 
 			const updateQueue = [];
 
-			this.#activeWorld.traverse((obj) => {
+			this.scene.traverse((obj) => {
 				if ('onFrame' in obj) {
 					updateQueue.push(obj.onFrame.bind(obj));
 				}
@@ -120,7 +108,7 @@ export class Engine {
 			this.paramsForAddDuringRender = null;
 		}
 
-		this.renderer.render(this.#activeWorld, this.#camera);
+		this.renderer.render(this.scene, this.scene.camera);
 
 		this.isProcessingFrame = false;
 	}
@@ -129,12 +117,6 @@ export class Engine {
 	// MARK: Private
 
 	#DEBUG_MODE = true;
-
-	/** @type {THREE.PerspectiveCamera} */
-	#camera;
-
-	/** @type {CameraTarget} */
-	#cameraTarget;
 
 	/** @type {THREE.WebGLRenderer} */
 	#renderer;
@@ -148,6 +130,9 @@ export class Engine {
 	/** @type {ResizeObserver} */
 	#resizeObserver;
 
+	/** @type {THREE.Scene} */
+	#scene;
+
 
 	/** @type {HTMLDivElement} */
 	#html_container;
@@ -160,7 +145,7 @@ export class Engine {
 		const rect = this.#html_container.getBoundingClientRect();
 		this.#updateAutoResolution();
 		this.renderer.setSize(rect.width, rect.height);
-		this.#camera.aspect = rect.width / rect.height;
+		this.scene.camera.aspect = rect.width / rect.height;
 
 		this.borders.top    = rect.y;
 		this.borders.right  = rect.x + rect.width;
@@ -173,11 +158,6 @@ export class Engine {
 		const fullres = window.devicePixelRatio;
 		const lowres = fullres / 2;
 		this.renderer.setPixelRatio(UTILS.shouldPowersave ? lowres : fullres);
-	}
-
-
-	get #activeWorld() {
-		return state.isPlaying ? this.gameWorld : this.idleWorld;
 	}
 
 };
