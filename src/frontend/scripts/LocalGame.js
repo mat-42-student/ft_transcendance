@@ -32,13 +32,13 @@ export class LocalGame extends GameBase {
         this.ballDirection = new Vector2(1.0, 1.0).normalize();
         this.roundStartSide = Math.random() > 0.5 ? 1 : 0;
 
-        this.level = new (LEVELS.pickRandomLevel())();
-        this.level.load();  //TODO do something with return, async thing, maybe do this last?
-
         this.playerNames[0] = 'Player 1';
         this.playerNames[1] = isCPU ? this.generateRandomNick() : 'Player 2';
 
         this.side = isCPU ? 0 : 2;  // Neutral (2) if keyboard PVP  //TODO random side, not 0
+
+        this.level = new (LEVELS.pickRandomLevel())();  // randomly select class, then construct it
+        state.engine.scene = this.level;
 
         //TODO wait for level to finish loading before continuing
         this.newRound();
