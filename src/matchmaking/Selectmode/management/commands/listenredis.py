@@ -25,27 +25,6 @@ class Command(BaseCommand):
         arun(self.main())
 
     async def main(self):
-
-        """
-        TESTING CLIENT CREDENTIALS FLOW
-        """
-        client_id = settings.OAUTH2_CCF_CLIENT_ID
-        client_secret = settings.OAUTH2_CCF_CLIENT_SECRET
-        token_url = settings.OAUTH2_CCF_TOKEN_URL
-
-        try:
-            response = requests.post(settings.OAUTH2_CCF_TOKEN_URL, data={
-                'grant_type': 'client_credentials',
-                'client_id': client_id,
-                'client_secret': client_secret,
-            })
-
-            self.machine_token = response.json().get('access_token')
-            print("MACHINE TOKEN: " + self.machine_token)
-        except Exception as e:
-            print(e)
-
-
         self.running = True
         try:
             self.redis_client = await from_url("redis://redis:6379", decode_responses=True)

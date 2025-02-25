@@ -4,7 +4,6 @@ from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.renderers import JSONRenderer
 from rest_framework.permissions import AllowAny
-from rest_framework.permissions import IsAuthenticated
 from oauth2_provider.models import AccessToken
 from rest_framework import status
 from django.conf import settings
@@ -26,29 +25,26 @@ from django.shortcuts import redirect
 from .models import Ft42Profile
 from django.http import HttpResponse
 
-from rest_framework.exceptions import APIException
-
 class TesterView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
+
         url = 'http://users:8000/api/v1/users/2/'
+
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer eedL7MgfgaI24deYnB8yRKym6731Gp',
+            'Authorization': 'Bearer cIC3JqaPvmuyhpk7gpp5UZO3NFtdk1',
         }
 
-        try:
-            response = requests.get(url, headers=headers, timeout=30)
-            response.raise_for_status() 
-            data = response.json()
+        response = requests.get(
+            url, 
+            headers=headers, 
+        )
 
-        except requests.exceptions.RequestException as e:
-            raise APIException(f"Error occurred while fetching data: {str(e)}")
+        data = response.json()
 
-        return JsonResponse({'message': data})
-
-
+        return Response({'message': data})
 
 class PublicKeyView(APIView):
     permission_classes = [AllowAny]

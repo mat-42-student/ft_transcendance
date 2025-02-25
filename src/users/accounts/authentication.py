@@ -56,8 +56,8 @@ class OAuth2IntrospectionAuthentication(BaseAuthentication):
 
         token = auth_header.split(' ')[1]
 
-        url = 'http://auth-service:8000/api/v1/auth/o/introspect/'
-        client_id = settings.OAUTH2_CCF_TOKEN_URL
+        url = settings.OAUTH2_CCF_INTROSPECT_URL
+        client_id = settings.OAUTH2_CCF_CLIENT_ID
         client_secret = settings.OAUTH2_CCF_CLIENT_SECRET
 
         if not url or not client_id or not client_secret:

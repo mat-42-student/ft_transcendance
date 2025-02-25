@@ -56,8 +56,8 @@ REST_FRAMEWORK = {
 
 OAUTH2_CCF_TOKEN_URL = 'http://auth-service:8000/api/v1/auth/o/token/'
 OAUTH2_CCF_INTROSPECT_URL = 'http://auth-service:8000/api/v1/auth/o/introspect/'
-OAUTH2_CCF_CLIENT_ID = ''
-OAUTH2_CCF_CLIENT_SECRET = ''
+OAUTH2_CCF_CLIENT_ID = 'aEBXCbfEENPTHyxiJXqqqjkZbMEYbX1SBMfsHMIa'
+OAUTH2_CCF_CLIENT_SECRET = 'LZafzt5nIXWMRrrqEFkRL1YeAXfvXnQXynYrtsxJoEwPcavdnterdVxFz8Xm9kVu1CqeKKeVZiMkb7jcE5oKKLWWOTTHn080rLvuQjFJWgT7zbO5flI99zEQGL4u8Wws'
 
 ROOT_URLCONF = 'users.urls'
 

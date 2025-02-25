@@ -53,13 +53,21 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'authentication.authentication.JWTAuthentication',
+        'accounts.authentication.OAuth2IntrospectionAuthentication',
+        'accounts.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ],
 }
 
+# OAuth 2.0 Client Credentials flow
+OAUTH2_CCF_TOKEN_URL = 'http://auth-service:8000/api/v1/auth/o/token/'
+OAUTH2_CCF_INTROSPECT_URL = 'http://auth-service:8000/api/v1/auth/o/introspect/'
+OAUTH2_CCF_CLIENT_ID = 'aEBXCbfEENPTHyxiJXqqqjkZbMEYbX1SBMfsHMIa'
+OAUTH2_CCF_CLIENT_SECRET = 'LZafzt5nIXWMRrrqEFkRL1YeAXfvXnQXynYrtsxJoEwPcavdnterdVxFz8Xm9kVu1CqeKKeVZiMkb7jcE5oKKLWWOTTHn080rLvuQjFJWgT7zbO5flI99zEQGL4u8Wws'
+
+# OAuth 2.0 Authorization Code flow
 OAUTH2_ACF_REDIRECT_URI = 'https://localhost:3000/api/v1/auth/oauth/callback/'
 OAUTH2_ACF_CLIENT_ID = 'u-s4t2ud-42cc8fc914c6cc052826b177e11fa51f02e32acc8ffb2601fe88a36f65e4035b'
 OAUTH2_ACF_CLIENT_SECRET = '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'
