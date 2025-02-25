@@ -40,9 +40,7 @@ export default class LevelIdle extends LevelBase {
 
 	dispose() {
 		super.dispose();
-		console.error('LevelIdle.dispose() is never supposed to execute.\n',
-			'This scene is meant to never be deleted or replaced.'
-		);
 	}
+
 }
 
