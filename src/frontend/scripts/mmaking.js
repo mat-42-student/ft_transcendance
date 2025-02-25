@@ -40,12 +40,11 @@ export class Mmaking
         const button = document.getElementById('btn-local-bot');
         button.addEventListener('click', () => {
             if (state.gameApp != null) {
-                alert('Already playing');  //TODO do this more nicely maybe
+                console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
                 return;
             }
 
             state.gameApp = new LocalGame(true);
-            console.log('AI game button clicked');  //TODO remove log 'AI game button clicked'
         });
     }
 
@@ -53,12 +52,11 @@ export class Mmaking
         const button = document.getElementById('btn-local-versus');
         button.addEventListener('click', () => {
             if (state.gameApp != null) {
-                alert('Already playing');  //TODO do this more nicely maybe
+                console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
                 return;
             }
 
             state.gameApp = new LocalGame(false);
-            console.log('1v2 game button clicked');  //TODO remove log '1v2 game button clicked'
         });
     }
 

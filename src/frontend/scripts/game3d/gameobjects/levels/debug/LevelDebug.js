@@ -45,11 +45,11 @@ export default class LevelDebug extends LevelBase {
 
 
 	#setupViews() {
-		this.views.position[2].set(0, 0.65, -0.4);
+		this.views.position[2].set(0, 1.2, -0.8);
 		this.views.quaternion[2].copy(UTILS.makeLookDownQuaternion(180, 60));
 		this.views.fov[2] = 60;
 
-		this.views.position[0].set(0.6, 0.45, 0);
+		this.views.position[0].set(1.1, 0.8, 0);
 		this.views.quaternion[0].copy(UTILS.makeLookDownQuaternion(90, 45));
 		this.views.fov[1] = this.views.fov[0] = 55;
 

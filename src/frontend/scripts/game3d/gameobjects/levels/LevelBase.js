@@ -12,8 +12,8 @@ export default class LevelBase extends THREE.Scene {
 
 	/** Null this to skip auto view selection, and set data directly on {@link smoothCamera}. */
 	views = {
-		position: Array(3).fill(new THREE.Vector3()),
-		quaternion: Array(3).fill(new THREE.Quaternion()),
+		position: [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()],
+		quaternion: [new THREE.Quaternion(), new THREE.Quaternion(), new THREE.Quaternion()],
 		fov: [NaN, NaN, NaN],
 	};
 
@@ -32,6 +32,12 @@ export default class LevelBase extends THREE.Scene {
 			this.smoothCamera.quaternion.copy(this.views.quaternion[camIdx]);
 			this.smoothCamera.fov = this.views.fov[camIdx];
 		}
+	}
+
+
+	dispose() {
+		// do nothing, i just want the method to exist in case i need it later,
+		// because child classes call super.dispose()
 	}
 
 }
