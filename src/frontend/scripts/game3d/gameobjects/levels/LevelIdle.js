@@ -13,7 +13,7 @@ export default class LevelIdle extends LevelBase {
 		this.boardSize = null;
 		this.name = 'Idle Level';
 
-		this.background = new THREE.Color("#8080a0");
+		this.background = new THREE.Color("#ffffff");
 
 		this.views = null;
 	}

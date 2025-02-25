@@ -28,8 +28,12 @@ export class WebGame extends GameBase {
     }
 
 
-    launchGameSocket() {
-        let socketURL = "wss://" + window.location.hostname + ":3000/game/4/?t=" + state.client.accessToken;
+    launchGameSocket(gameId) {
+        if (!gameId) // debug
+            gameId = 1; // effacer asap
+		state.client.refreshSession();
+        let socketURL = "wss://" + window.location.hostname + ":3000/game/" + gameId + "/?t=" + state.client.accessToken;
+
         // websocat --insecure wss://nginx:3000/game/1234/?t=pouetpouet
         // websocat ws://pong:8006/game/1234/?t
         this.socket = new WebSocket(socketURL);
@@ -51,7 +55,7 @@ export class WebGame extends GameBase {
 
         this.socket.onmessage = async function(e) {
             let data = JSON.parse(e.data);
-            console.log('data = ' + data);
+            console.log('data = ' + JSON.stringify(data));
             if (data.action == "info") {
                 console.log('info');
                 this.ballPosition.x = data.ball[0];
@@ -62,6 +66,12 @@ export class WebGame extends GameBase {
                 this.paddleHeights[1] = data.size[RIGHT_PLAYER];
                 this.scores[0] = data.lscore;
                 this.scores[1] = data.rscore;
+            }
+            if (data.action == "wait") {
+                console.log('waiting');
+            }
+            if (data.action =="move") {
+                console.log('info');
             }
             if (data.action == "disconnect") {
                 console.log('Server asked for disconnect');

@@ -1,35 +1,17 @@
 <!-- Profile Header -->
 <div class="profile-header">
-    <img class="profile-avatar" src="/media/avatars/default.png" alt="Avatar">
+    <img id="profile-avatar" class="profile-avatar" src="/media/avatars/default.png" alt="Avatar">
     <div class="profile-info">
-        <h2 class="profile-username">Username</h2>
+        <h2 id="profile-username" class="profile-username">Username</h2>
         <div class="profile-status">
-            <span class="indicator"></span>
-            <span class="message">Online</span>
+            <span id="profile-indicator" class="indicator"></span>
+            <span id="profile-message" class="message">Online</span>
         </div>
     </div>
 </div>
 
 <!-- User Actions -->
-<div class="profile-actions">
-    <button class="btn-match" title="Match">
-        <img src="/ressources/vs.png" alt="Match">
-    </button>
-    <button class="btn-chat" title="Chat">
-        <img src="/ressources/chat.png" alt="Chat">
-    </button>
-    <button class="btn-add-friend" title="Add Friend">
-        <img src="/ressources/add-friend.png" alt="Add a Friend">
-    </button>
-    <button class="btn-block" title="Block">
-        <img src="/ressources/block.png" alt="Block">
-    </button>
-    <button class="btn-unblock" title="Unblock">
-        <img src="/ressources/unblock.png" alt="Unblock">
-    </button>
-    <button class="btn-2fa" title="Enable Two-Factor Authentication">
-        <img src="/ressources/2fa.svg" alt="Enable 2fa">
-    </button>
+<div id="profile-actions">
 </div>
 
 <!-- Logout Button -->
@@ -42,18 +24,8 @@
     <h3>Games History</h3>
     <table class="history-table">
         <thead></thead>
-        <tbody>
+        <tbody id="history-body">
             <!-- Dynamic Sample -->
-            <tr class="win">
-                <td>Victory</td>
-                <td>Opponent</td>
-                <td>10 - 5</td>
-            </tr>
-            <tr class="loss">
-                <td>Defeat</td>
-                <td>Opponent</td>
-                <td>8 - 10</td>
-            </tr>
         </tbody>
     </table>
 </div>

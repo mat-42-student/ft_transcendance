@@ -39,6 +39,13 @@ export class ChatApp{
             this.hasUnreadMessage(friend);
     }
 
+    toggleChatInput(status) {
+        if (status == 'offline')
+            this.chatInput.disabled = true;
+        else
+            this.chatInput.disabled = false;
+    }
+
     storeMyMessage(msg){
         const now = new Date();
         let data = {
@@ -120,6 +127,7 @@ export class ChatApp{
         this.chatUser.innerText = friend.username + '(' + this.activeChatUserId + ')';
         this.noUnreadMessage();
         this.loadHistory();
+        this.chatInput.disabled = false;
     }
 
     hasUnreadMessage(friend) {

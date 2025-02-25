@@ -22,7 +22,7 @@ class UserManager(BaseUserManager):
     class Meta:
         db_table = 'user_manager'
     
-# User model (inherits Django user model)
+# User model (inherits Django user model) -> Ajouter: bio, tableaux historique 1à dernières games ???
 class User(AbstractBaseUser):
     STATUS_CHOICES = [
         ('online', 'Online'),
@@ -49,6 +49,7 @@ class User(AbstractBaseUser):
         upload_to="avatars/", 
         default='default.png'
     )
+    # status à changer/supprimer -> gestion status via ws dans front
     status = models.CharField(
         max_length=20, 
         choices=STATUS_CHOICES, 
@@ -90,7 +91,7 @@ class User(AbstractBaseUser):
     objects = UserManager()
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['password']
+    REQUIRED_FIELDS = ['password', 'email']
 
     def __str__(self):
         return self.username

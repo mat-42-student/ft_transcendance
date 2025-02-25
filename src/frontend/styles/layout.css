@@ -67,6 +67,38 @@ header .container {
     background: #45a049;
 }
 
+
+
+/* Barre de sélection */
+.selection-bar {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    margin-bottom: 1rem;
+    background: #333;
+    color: #fff;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.selection-item {
+    all: unset; /* Réinitialise tous les styles par défaut des boutons */
+    flex: 1;
+    text-align: center;
+    padding: 0.2rem 0;
+    cursor: pointer;
+    transition: background 0.3s;
+    background: #333;
+    color: #fff;
+    border-radius: 0; /* Préserve le design actuel */
+}
+
+.selection-item:hover {
+    background: #555;
+}
+
+
+
 /* Searchbar */
 .header-center .search-form {
     display: flex;
@@ -96,6 +128,29 @@ header .container {
 
 .header-center .search-form button:hover {
     background: #45a049;
+}
+
+.search-results {
+    display: none; /* Caché tant qu'il n'y a pas de résultats */
+    position: absolute;
+    background: white;
+    width: 200px;
+    max-height: 200px;
+    overflow-y: auto;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    z-index: 10;
+}
+
+.search-results li {
+    color: black;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.search-results li:hover {
+    background: #f0f0f0;
 }
 
 
