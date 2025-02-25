@@ -85,7 +85,7 @@ export class LocalGame extends GameBase {
         this.ballPosition = { x: 0, y: 0 };
         this.ballDirection.set(1, 0).rotateAround(
             new Vector2(0, 0),
-            UTILS.RAD180 * roundStartSide
+            UTILS.RAD180 * this.roundStartSide
         );
         this.paddlePositions[0] = this.paddlePositions[1] = 0;
 
@@ -237,7 +237,7 @@ export class LocalGame extends GameBase {
     scoreup(side) {
         this.scores[side]++;
 
-        roundStartSide = side == 0 ? 1 : 0;
+        this.roundStartSide = side == 0 ? 1 : 0;
 
         if (this.scores[side] >= this.maxScore) {
             this.endgame(false);

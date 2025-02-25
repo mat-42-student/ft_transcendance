@@ -28,9 +28,9 @@ export default class LevelBase extends THREE.Scene {
 		if (this.views != null) {
 			const camIdx = state.isPlaying ? state.gameApp.side : 2;
 
-			this.smoothCamera.position.copy(views.position[camIdx]);
-			this.smoothCamera.quaternion.copy(views.quaternion[camIdx]);
-			this.smoothCamera.fov = views.fov[camIdx];
+			this.smoothCamera.position.copy(this.views.position[camIdx]);
+			this.smoothCamera.quaternion.copy(this.views.quaternion[camIdx]);
+			this.smoothCamera.fov = this.views.fov[camIdx];
 		}
 	}
 
