@@ -36,6 +36,8 @@ export class Engine {
 			}
 			this.#html_canvas = document.getElementById("engine-canvas");
 			this.#html_canvas.style.display = 'none';  // Hide by default, shows up again when a scene exists.
+
+			this.#html_mainContent = document.getElementsByClassName('main-content')[0];
 		}
 
 		{  // Setup ThreeJS
@@ -50,7 +52,7 @@ export class Engine {
 
 		const resizeCallback = this.#onResize.bind(this);
 		this.#resizeObserver = new ResizeObserver(resizeCallback);
-		this.#resizeObserver.observe(document.getElementsByClassName('main-content')[0]);
+		this.#resizeObserver.observe(this.#html_mainContent);
 		window.addEventListener('resize', resizeCallback);
 
 		// Debugging tool
@@ -152,6 +154,9 @@ export class Engine {
 	/** @type {HTMLCanvasElement} */
 	#html_canvas;
 
+	/** @type {HTMLElement} */
+	#html_mainContent;
+
 
 	#onResize() {
 		const rect = this.#html_container.getBoundingClientRect();
@@ -161,10 +166,11 @@ export class Engine {
 			this.scene.smoothCamera.aspect = rect.width / rect.height;
 		}
 
-		this.borders.top    = rect.y;
-		this.borders.right  = rect.x + rect.width;
-		this.borders.bottom = rect.y + rect.height;
-		this.borders.left   = rect.x;
+		const borderRect = this.#html_mainContent.getBoundingClientRect();
+		this.borders.top    = borderRect.y;
+		this.borders.right  = borderRect.x + borderRect.width;
+		this.borders.bottom = borderRect.y + borderRect.height;
+		this.borders.left   = borderRect.x;
 	}
 
 
