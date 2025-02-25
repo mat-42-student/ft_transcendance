@@ -114,6 +114,8 @@ export class Engine {
 			try {
 				const fakeEvent = { child: this.#scene };
 				__onObjectAddedToScene(fakeEvent);
+				if (this.#scene.onAdded)
+					this.#scene.onAdded();
 			} catch (error) {
 				console.error('Engine.scene could not be set. Is the new one valid?');
 				this.#scene = null;

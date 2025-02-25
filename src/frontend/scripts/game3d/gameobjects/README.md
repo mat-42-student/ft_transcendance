@@ -14,7 +14,8 @@ event fires.
 This provides an alternative method of initialization _after_ the JS constructor,
 where the Object3D can find itself already in its parent Object3D.
 
-> Note that this is NOT called for the root scene itself.
+For the root scene (child classes of `LevelBase`), this should be used for adding child objects,
+since the necessary methods wont be automatically injected in its constructor.
 
 
 ## `onFrame(delta: number, time: DOMHighResTimestamp): void`
