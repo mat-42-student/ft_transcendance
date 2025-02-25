@@ -18,9 +18,9 @@ export class Mmaking
 
     listening_button_match_Random()
     {
-        const randomBtn = document.getElementById('versus');
         if (!randomBtn)
             return ;
+        const randomBtn = document.getElementById('btn-versus');
         randomBtn.addEventListener('click', async ()=>
         {
             const data = {
