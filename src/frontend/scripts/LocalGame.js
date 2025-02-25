@@ -16,14 +16,12 @@ import { GameBase } from "./GameBase.js";
 
 export class LocalGame extends GameBase {
 
-    constructor (
-        isCPU = false,
-        angleMax = 70
-    ) {
+    constructor (isCPU = false) {
+        console.log('LocalGame instantiated');
         super();
 
         this.isCPU = isCPU;
-        this.angleMax = MathUtils.degToRad(angleMax);
+        this.angleMax = MathUtils.degToRad(70);
 
         // game simulation stats - might want to keep these numbers synced with web game
         this.ballSpeed = 0.18;
@@ -40,7 +38,7 @@ export class LocalGame extends GameBase {
         this.playerNames[0] = 'Player 1';
         this.playerNames[1] = isCPU ? this.generateRandomNick() : 'Player 2';
 
-        this.side = isCPU ? 0 : 2;  // Neutral (2) if keyboard PVP
+        this.side = isCPU ? 0 : 2;  // Neutral (2) if keyboard PVP  //TODO random side, not 0
 
         //TODO wait for level to finish loading before continuing
         this.newRound();

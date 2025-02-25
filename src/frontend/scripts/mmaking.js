@@ -1,6 +1,7 @@
 import { state } from './main.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
 import { WebGame } from './WebGame.js';
+import { LocalGame } from './LocalGame.js';
 
 export class Mmaking
 {
@@ -8,18 +9,19 @@ export class Mmaking
     {
         this.waited_page = null;
         this.gameSocket = null;
+        this.refresh_eventlisteners();
     }
 
 
     refresh_eventlisteners()
     {
         this.listening_button_match_Random();
+        this.bindLocalBotButton();
+        this.bindLocal1v1Button();
     }
 
     listening_button_match_Random()
     {
-        if (!randomBtn)
-            return ;
         const randomBtn = document.getElementById('btn-versus');
         randomBtn.addEventListener('click', async ()=>
         {
@@ -32,6 +34,32 @@ export class Mmaking
             document.getElementById("cancel-button").addEventListener("click", this.cancel_game.bind(this));
         });
 
+    }
+
+    bindLocalBotButton() {
+        const button = document.getElementById('btn-local-bot');
+        button.addEventListener('click', () => {
+            if (state.gameApp != null) {
+                alert('Already playing');  //TODO do this more nicely maybe
+                return;
+            }
+
+            state.gameApp = new LocalGame(true);
+            console.log('AI game button clicked');  //TODO remove log 'AI game button clicked'
+        });
+    }
+
+    bindLocal1v1Button() {
+        const button = document.getElementById('btn-local-versus');
+        button.addEventListener('click', () => {
+            if (state.gameApp != null) {
+                alert('Already playing');  //TODO do this more nicely maybe
+                return;
+            }
+
+            state.gameApp = new LocalGame(false);
+            console.log('1v2 game button clicked');  //TODO remove log '1v2 game button clicked'
+        });
     }
 
     async sendMsg(message) {
@@ -60,7 +88,7 @@ export class Mmaking
 		{
 			console.log('Reset img and card');
 			const friendlist = document.querySelectorAll('.friend-item');
-	
+
 			friendlist.forEach(friend => {
 				if (friend.dataset.userid == data.body.type_game.invite.host_id )
 				{
@@ -103,7 +131,7 @@ export class Mmaking
 									'invite':{
 										'guest_id': guest_id,
 										'accept': true,
-										'startgame': true 
+										'startgame': true
 									}
 								}
 							};
@@ -111,7 +139,7 @@ export class Mmaking
 						});
 
 					}
-					
+
 					this.desableOverlay();
 					this.setGuest(invite.username, '../../../media/avatars/default.png');
 
@@ -122,13 +150,13 @@ export class Mmaking
 							const btnmatch = friend.querySelector('.btn-match');
 							this.ResetCardFriend(btnmatch)
 							return ;
-						
+
 					});
 				}
 				else if (invite.accept == false)
 				{
 					const friendlist = document.querySelectorAll('.friend-item');
-				
+
 					friendlist.forEach(friend => {
 						if (friend.dataset.userid == data.body.type_game.invite.guest_id )
 						{
@@ -143,7 +171,7 @@ export class Mmaking
 				else if (invite.accept == null)
 				{
 					const friendlist = document.querySelectorAll('.friend-item');
-				
+
 					friendlist.forEach(friend => {
 						if (friend.dataset.userid == data.body.type_game.invite.host_id )
 						{
@@ -158,7 +186,7 @@ export class Mmaking
 			}
 			catch (error)
 			{
-				
+
 				console.log("RESET btn-match")
 				// Reset btn-match if server send cancel
 
@@ -185,7 +213,7 @@ export class Mmaking
 		overlay[0].classList.add('hidden');
 	}
 
-	
+
 
     async invite(guestid, target)
     {
@@ -194,7 +222,7 @@ export class Mmaking
             await initDynamicCard('vs_active');
 			this.desableOverlay();
 
-            
+
 
             const acceptInvitation = document.querySelector('.invitation .btn-accepter');
 			const refuseInvitation = document.querySelector('.invitation .btn-refuser');
