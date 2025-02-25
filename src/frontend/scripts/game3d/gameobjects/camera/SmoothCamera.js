@@ -17,6 +17,7 @@ export default class SmoothCamera extends THREE.Object3D {
 
 	/* Smooth interpolation */
 	teleportNow = true;
+	/** Must be positive, higher number = faster. */
 	smoothSpeed = 10;
 
 	/* Mouse perspective */

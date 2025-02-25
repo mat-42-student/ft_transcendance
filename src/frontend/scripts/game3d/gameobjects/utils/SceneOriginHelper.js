@@ -10,6 +10,10 @@ export default class SceneOriginHelper extends THREE.Group {
 	/** @type {THREE.AxesHelper} */
 	#axes;
 
+	constructor() {
+		this.name = 'SceneOriginHelper';
+	}
+
 	onAdded() {
 		if (state.engine.DEBUG_MODE !== true) {
 			return;
