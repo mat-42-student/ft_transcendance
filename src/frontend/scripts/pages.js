@@ -16,7 +16,7 @@ export function setupHomePage() {
 // à mettre dans un autre fichier (réagencement prévu)
 async function handleProfileAction(action, userId) {
     const UserUrl = `api/v1/users/${userId}/${action}/`;
-    const RelationUrl = `api/v1/users/relathionships/${userId}/${action}`;
+    const RelationUrl = `api/v1/users/relationships/${userId}/${action}/`;
     let method;
     let apiUrl;
 
@@ -65,7 +65,7 @@ async function handleProfileAction(action, userId) {
         const response = await fetch(apiUrl, {
             method: method,
             headers: {
-                "Authorization": `Bearer ${this.accessToken}`,
+                "Authorization": `Bearer ${state.client.accessToken}`,
                 "Content-Type": "application/json"
             },
         });
