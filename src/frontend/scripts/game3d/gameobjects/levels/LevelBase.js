@@ -7,26 +7,25 @@ export default class LevelBase extends THREE.Scene {
 
 	camera = new SmoothCamera();
 
-	/** @type {CameraStats[]} */
-	cameras;
 	boardSize = new THREE.Vector2(1, 1);
 
+	views = {
+		position: Array(3).fill(new THREE.Vector3()),
+		quaternion: Array(3).fill(new THREE.Quaternion()),
+		fov: [NaN, NaN, NaN],
+	};
 
 
 	onFrame(delta, time) {
-		// Automatic camera switching
-
-		const selectedCamera = this.cameras[state.isPlaying ? state.gameApp.side : 0];
-
-		state.engine.cameraTarget.position.copy(selectedCamera.position);
-		state.engine.cameraTarget.quaternion.copy(selectedCamera.quaternion);
-		state.engine.cameraTarget.fov = selectedCamera.fov;
+		this.#autoSelectCamera();
 	}
 
+	#autoSelectCamera() {
+		const camIdx = state.isPlaying ? state.gameApp.side : 2;
 
-	static CameraStats = class {
-		position = new THREE.Vector3();
-		quaternion = new THREE.Quaternion();
-		fov = NaN;
-	};
+		this.camera.position.copy(views.position[camIdx]);
+		this.camera.quaternion.copy(views.quaternion[camIdx]);
+		this.camera.fov = views.fov[camIdx];
+	}
+
 }

@@ -6,7 +6,11 @@ export class GameBase {
 
 	constructor() {
 		this.side = 2;
-		/** @type {LevelBase} */ this.level = null;
+		/**
+		 * Reference to the gameplay scene , if one has been instantiated.
+		 * This is a duplicate of engine.scene most of the time, except for while it's loading.
+		 * @type {LevelBase} */
+		this.level = null;
 		this.ballPosition = new THREE.Vector2(0, 0);
 		this.scores = [0, 0];
 		this.paddlePositions = [0, 0];
@@ -17,11 +21,13 @@ export class GameBase {
 	}
 
 	frame(delta, time) {
-        this.level.onFrame(delta, time);
+		if (this.level)
+			this.level.onFrame(delta, time);
 	}
 
 	close() {
-		if (this.level) this.level.dispose();
+		if (this.level)
+			this.level.dispose();
 		this.isPlaying = false;  // just in case this object lingers somehow?
 	}
 
