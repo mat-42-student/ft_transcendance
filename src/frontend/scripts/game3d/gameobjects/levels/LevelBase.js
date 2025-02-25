@@ -5,7 +5,8 @@ import SmoothCamera from '../camera/SmoothCamera.js';
 
 export default class LevelBase extends THREE.Scene {
 
-	smoothCamera = new SmoothCamera();
+	/** @type {SmoothCamera} */
+	smoothCamera;
 
 	boardSize = new THREE.Vector2(1, 1);
 
@@ -15,6 +16,12 @@ export default class LevelBase extends THREE.Scene {
 		quaternion: Array(3).fill(new THREE.Quaternion()),
 		fov: [NaN, NaN, NaN],
 	};
+
+
+	onAdded() {
+		this.smoothCamera = new SmoothCamera();
+		this.add(this.smoothCamera);
+	}
 
 
 	onFrame(delta, time) {

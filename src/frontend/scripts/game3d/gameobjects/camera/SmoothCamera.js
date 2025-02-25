@@ -40,10 +40,13 @@ export default class SmoothCamera extends THREE.Object3D {
 		super();
 		this.name = 'Smooth Camera';
 
+		this.mousePos = new THREE.Vector2();
+	}
+
+
+	onAdded() {
 		this.vis3d = new SmoothCameraVisualizer(this);
 		this.add(this.vis3d);
-
-		this.mousePos = new THREE.Vector2();
 	}
 
 
@@ -75,13 +78,11 @@ export default class SmoothCamera extends THREE.Object3D {
 				this.smoothSpeed, delta);
 		}
 
-		camera.position.copy(this.#smooth.position);
-		camera.rotation.setFromQuaternion(this.#smooth.quaternion);
-		camera.fov = this.#smooth.fov;
+		this.camera.position.copy(this.#smooth.position);
+		this.camera.rotation.setFromQuaternion(this.#smooth.quaternion);
+		this.camera.fov = this.#smooth.fov;
 
 		this.#onFrame_cameraRefresh();
-
-		this.vis3d.update();
 	}
 
 
@@ -120,13 +121,15 @@ export default class SmoothCamera extends THREE.Object3D {
 
 	#onFrame_cameraRefresh() {
 		try {
-			const result = this.#onFrame_tryCalculateBorderAvoidance(canvasSize);
+			const result = this.#onFrame_tryCalculateBorderAvoidance(this.canvasSize);
 			this.camera.setViewOffset(
-				canvasSize.x, canvasSize.y,
+				this.canvasSize.x, this.canvasSize.y,
 				result.corner.x, result.corner.y,
 				result.subscreenSize.x, result.subscreenSize.y,
 			);
 			this.camera.updateProjectionMatrix();
+
+			this.vis3d.update(result.vAspectRatio);
 		} catch (error) {
 			// Fallback: just render fullscreen.
 			console.warn('CameraTarget: Error during margin avoidance calculations:', error,

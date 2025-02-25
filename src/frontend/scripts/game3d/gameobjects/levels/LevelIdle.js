@@ -16,17 +16,20 @@ export default class LevelIdle extends LevelBase {
 		this.background = new THREE.Color("#8080a0");
 
 		this.views = null;
-		const q1 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -UTILS.RAD90);
-		const q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), 2*UTILS.RAD90);
-		this.smoothCamera.position.set(1, 3, 1);
-		this.smoothCamera.quaternion.copy(q1.multiply(q2));
-		this.smoothCamera.fov = 60;
-		this.smoothCamera.smoothSpeed = 1;
 	}
 
 
 	onAdded() {
+		super.onAdded();
+
 		this.add(new SceneOriginHelper());
+
+		const q1 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -UTILS.RAD90);
+		const q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), 2*UTILS.RAD90);
+		this.smoothCamera.position.set(0, 1, 0);
+		this.smoothCamera.quaternion.copy(q1.multiply(q2));
+		this.smoothCamera.fov = 120;
+		// this.smoothCamera.smoothSpeed = 1;
 	}
 
 

@@ -13,17 +13,20 @@ export class SmoothCameraVisualizer extends THREE.LineSegments {
 		super(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color: 0xffff00}));
 
 		this.vis2 = new THREE.LineSegments(this.geometry, this.material);
-
 		this.vis2.scale.set(secondVisualizerDistance, secondVisualizerDistance, secondVisualizerDistance);
 		this.vis2.position.set(0, 0, -(secondVisualizerDistance - 1));
-		this.add(this.vis2);
 
 		this.smoothCamera = smoothCamera;
 	}
 
 
+	onAdded() {
+		this.add(this.vis2);
+	}
+
+
 	/** Meant to be called every frame directly by the SmoothCamera after it has updated. */
-	update() {
+	update(vAspectRatio) {
 		this.visible = state.engine.DEBUG_MODE;
 		if (!this.visible) {
 			return;
@@ -34,12 +37,12 @@ export class SmoothCameraVisualizer extends THREE.LineSegments {
 			offset.applyQuaternion(this.smoothCamera.camera.quaternion);
 			const planeCenter = this.smoothCamera.position.clone().add(offset);
 
-			this.position.copy(planeCenter);
-			this.quaternion.copy(this.smoothCamera.quaternion);
+			this.position.copy(this.parent.worldToLocal(planeCenter));
+			// this.quaternion.copy(this.smoothCamera.quaternion);
 
-			const fov_mult = __triangle_thing(this.fov / 2, 1);
+			const fov_mult = __triangle_thing(this.smoothCamera.fov / 2, 1);
 			const h = fov_mult /* * 1 */;
-			const w = fov_mult * aspectRatio;
+			const w = fov_mult * vAspectRatio;
 			const corners = [
 				new THREE.Vector3( w,  h, 0),
 				new THREE.Vector3( w, -h, 0),
