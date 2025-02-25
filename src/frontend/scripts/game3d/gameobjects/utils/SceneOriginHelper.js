@@ -11,6 +11,7 @@ export default class SceneOriginHelper extends THREE.Group {
 	#axes;
 
 	constructor() {
+		super();
 		this.name = 'SceneOriginHelper';
 	}
 
