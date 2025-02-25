@@ -24,7 +24,7 @@ export default class Paddle extends THREE.Group {
 	onFrame(delta, time) {
 		this.visible = state.isPlaying;
 		if (this.visible) {
-			this.position.x = (state.gameApp.level.size.x / 2) * (this.playerIndex == 0 ? 1 : -1);
+			this.position.x = (state.gameApp.sce.size.x / 2) * (this.playerIndex == 0 ? 1 : -1);
 			this.position.z = state.gameApp.paddlePositions[this.playerIndex];
 		}
 	}

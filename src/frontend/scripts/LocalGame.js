@@ -124,7 +124,7 @@ export class LocalGame extends GameBase {
             this.isCPU ? this.cpuMove() : state.input.getPaddleInput(1)
         ];
 
-        const limit = this.level.size.y / 2;
+        const limit = this.level.boardSize.y / 2;
         for (let i = 0; i < 2; i++) {
             this.paddlePositions[i] += delta * this.paddleSpeeds[i] * inputs[i];
             this.paddlePositions[i] = MathUtils.clamp(this.paddlePositions[i],
@@ -152,8 +152,8 @@ export class LocalGame extends GameBase {
             {
                 // Negative numbers mean collisions.
                 let collisions = {
-                    x: this.level.size.x / 2 - Math.abs(this.ballPosition.x),
-                    y: this.level.size.y / 2 - Math.abs(this.ballPosition.y),
+                    x: this.level.boardSize.x / 2 - Math.abs(this.ballPosition.x),
+                    y: this.level.boardSize.y / 2 - Math.abs(this.ballPosition.y),
                 };
 
                 if (collisions.x < 0.0) {
@@ -222,7 +222,7 @@ export class LocalGame extends GameBase {
             // They're not even the same properties, but hey, JS is anarchy,
             // and right here it happens to be convenient.
             this.ballPosition[collisionAxis] = this.bounce1D(this.ballPosition[collisionAxis],
-                this.level.size[collisionAxis] * (this.ballDirection[collisionAxis] > 0 ? 0.5 : -0.5)
+                this.level.boardSize[collisionAxis] * (this.ballDirection[collisionAxis] > 0 ? 0.5 : -0.5)
             );
             this.ballDirection[collisionAxis] *= -1;
         }

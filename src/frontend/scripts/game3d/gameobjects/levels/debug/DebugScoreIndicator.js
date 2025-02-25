@@ -70,9 +70,9 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 			);
 
 			this.position.set(
-				this.#playerMult * (state.gameApp.level.size.x / 2 - CORNER_DISTANCE),
+				this.#playerMult * (state.gameApp.level.boardSize.x / 2 - CORNER_DISTANCE),
 				-SIZE / 2,
-				-state.gameApp.level.size.y / 2 + CORNER_DISTANCE
+				-state.gameApp.level.boardSize.y / 2 + CORNER_DISTANCE
 			);
 		}
 	}

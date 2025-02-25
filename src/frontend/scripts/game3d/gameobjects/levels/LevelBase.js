@@ -9,8 +9,8 @@ export default class LevelBase extends THREE.Scene {
 
 	/** @type {CameraStats[]} */
 	cameras;
+	boardSize = new THREE.Vector2(1, 1);
 
-	size = new THREE.Vector2(1, 1);
 
 
 	onFrame(delta, time) {
