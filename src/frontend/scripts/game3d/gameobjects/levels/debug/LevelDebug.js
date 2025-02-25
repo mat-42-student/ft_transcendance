@@ -12,56 +12,49 @@ export default class LevelDebug extends LevelBase {
 	constructor() {
 		super();
 
-		this.size = new THREE.Vector2(1.5, 1);
+		this.boardSize = new THREE.Vector2(1.5, 1);
+		this.name = 'Debug Level';
 
-		state.engine.clearLevel();
-		state.engine.environmentScene.fog = null;
-		state.engine.environmentScene.background = new THREE.Color('#112211');
+		this.background = new THREE.Color('#112211');
+		this.fog = null;
 
-		const ball = new DebugBall();
-		state.engine.level.add(ball);
+		this.#setupViews();
+	}
 
-		state.engine.level.add(new DebugPaddle(0));
-		state.engine.level.add(new DebugPaddle(1));
 
-		state.engine.level.add(new DebugScoreIndicator(0));
-		state.engine.level.add(new DebugScoreIndicator(1));
+	onAdded() {
+		super.onAdded();
 
-		state.engine.cameraTarget.diagonal = 40;
-		this.cameras = __makeCameraAngles();
+		this.add(new DebugBall());
+		this.add(new DebugPaddle(0));
+		this.add(new DebugPaddle(1));
+		this.add(new DebugScoreIndicator(0));
+		this.add(new DebugScoreIndicator(1));
+		this.add(new DebugBoard());
 
-		state.engine.cameraTarget.teleportNow = true;
-		state.engine.cameraTarget.mousePositionMultiplier.set(0.1, 0.1);
-		state.engine.cameraTarget.mouseRotationMultiplier.set(0.1, 0.1);
-		state.engine.cameraTarget.smoothSpeed = 15;
-
-		state.engine.level.add(new DebugBoard());
+		this.smoothCamera.diagonal = 40;
+		this.smoothCamera.mousePositionMultiplier.set(0.1, 0.1);
+		this.smoothCamera.mouseRotationMultiplier.set(0.1, 0.1);
+		this.smoothCamera.smoothSpeed = 15;
 	}
 
 
 	dispose() {
 		super.dispose();
-
-		//TODO
 	}
-}
 
 
-function __makeCameraAngles() {
-	const neutralCamera = new LevelBase.CameraStats();
-	neutralCamera.position = new THREE.Vector3(0, 0.65, -0.4);
-	neutralCamera.quaternion = UTILS.makeLookDownQuaternion(180, 60);
-	neutralCamera.fov = 60;
+	#setupViews() {
+		this.views.position[2].set(0, 0.65, -0.4);
+		this.views.quaternion[2].copy(UTILS.makeLookDownQuaternion(180, 60));
+		this.views.fov[2] = 60;
 
-	const p0Camera = new LevelBase.CameraStats();
-	p0Camera.position = new THREE.Vector3(0.6, 0.45, 0);
-	p0Camera.quaternion = UTILS.makeLookDownQuaternion(90, 45);
-	p0Camera.fov = 55;
+		this.views.position[0].set(0.6, 0.45, 0);
+		this.views.quaternion[0].copy(UTILS.makeLookDownQuaternion(90, 45));
+		this.views.fov[1] = this.views.fov[0] = 55;
 
-	const p1Camera = new LevelBase.CameraStats();
-	p1Camera.position.copy(p0Camera.position).x *= -1;
-	p1Camera.quaternion = UTILS.makeLookDownQuaternion(-90, 45);
-	p1Camera.fov = p0Camera.fov;
+		this.views.position[1].copy(this.views.position[0]).x *= -1;
+		this.views.quaternion[1].copy(UTILS.makeLookDownQuaternion(-90, 45));
+	}
 
-	return [p0Camera, p1Camera, neutralCamera];
 }
