@@ -39,10 +39,12 @@
             <!-- Searchbar -->
             <div class="header-center">
                 <form class="search-form" action="#" method="GET">
-                    <input type="text" name="search" placeholder="Search..." aria-label="Recherche">
-                    <button type="submit">🔍</button>
+                    <input type="text" id="searchInput" name="search" placeholder="Search..." aria-label="Recherche">
                 </form>
+                <!-- Conteneur pour les résultats -->
+                <ul id="searchResults" class="search-results"></ul>
             </div>
+            
             <div class="header-right">
                 <a id="btn-refresh">Refresh</a>
             </div>
