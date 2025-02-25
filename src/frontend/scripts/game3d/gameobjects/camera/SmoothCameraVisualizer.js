@@ -10,12 +10,9 @@ export class SmoothCameraVisualizer extends THREE.LineSegments {
 	 * @param {number} secondVisualizerDistance
 	 */
 	constructor(smoothCamera, secondVisualizerDistance = 100) {
-		this.geo = new THREE.BufferGeometry();
-		this.mat = new THREE.LineBasicMaterial({color: 0xffff00});
+		super(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color: 0xffff00}));
 
-		super(this.geo, this.mat);
-
-		this.vis2 = new THREE.LineSegments(this.geo, this.mat);
+		this.vis2 = new THREE.LineSegments(this.geometry, this.material);
 
 		this.vis2.scale.set(secondVisualizerDistance, secondVisualizerDistance, secondVisualizerDistance);
 		this.vis2.position.set(0, 0, -(secondVisualizerDistance - 1));
@@ -59,7 +56,7 @@ export class SmoothCameraVisualizer extends THREE.LineSegments {
 				// corners[1], corners[3],
 			];
 
-			this.geo.setFromPoints(vertices);
+			this.geometry.setFromPoints(vertices);
 
 		} catch (error) {
 			// catch because we can't afford this to interrupt the rest of the website
@@ -69,8 +66,8 @@ export class SmoothCameraVisualizer extends THREE.LineSegments {
 
 
 	dispose() {
-		this.geo.dispose();
-		this.mat.dispose();
+		this.geometry.dispose();
+		this.material.dispose();
 	}
 
 }
