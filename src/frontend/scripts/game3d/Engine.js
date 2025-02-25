@@ -52,6 +52,9 @@ export class Engine {
 		this.#resizeObserver = new ResizeObserver(resizeCallback);
 		this.#resizeObserver.observe(document.getElementsByClassName('main-content')[0]);
 		window.addEventListener('resize', resizeCallback);
+
+		// Debugging tool
+		window.pause = () => { window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS = true; };
 	}
 
 
@@ -60,6 +63,11 @@ export class Engine {
 	 * @param {DOMHighResTimeStamp} time requestAnimationFrame() can give this value.
 	 */
 	render(delta, time) {
+		if (window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS) {
+			window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS = undefined;
+			debugger;
+		}
+
 		if (this.scene == null) {
 			return;
 		}
