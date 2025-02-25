@@ -1,22 +1,28 @@
 import { state } from './main.js';
 import { GameBase } from './GameBase.js';
+import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
 
 
 export class WebGame extends GameBase {
 
-    constructor() {
+    constructor(levelName, opponentName) {
         super();
 
         this.socket = null;
 
-        this.side = 0; //TODO server needs to say this
-        // this.level = ;//TODO server needs to say this. (also, load it?)
+        this.side = 2;  // Set to neutral until server tells us
+        this.level = new (LEVELS.LIST[levelName])();
+        state.engine.scene = this.level;
         this.playerNames[0] = state.client.userName;
-        // this.playerNames[1] = //TODO server needs to say this
+        this.playerNames[1] = opponentName;
     }
 
     frame(delta, time) {
-        this.#sendInput();
+        try {
+            this.#sendInput();
+        } catch (error) {
+            console.error('Failed to send input', error);
+        }
 
         super.frame(delta, time);
     }
@@ -38,7 +44,7 @@ export class WebGame extends GameBase {
         // websocat ws://pong:8006/game/1234/?t
         this.socket = new WebSocket(socketURL);
         this.socket.onerror = async function(e) {
-            console.error(e.message);
+            console.error('Game socket: onerror:', e);
         };
 
         this.socket.onopen = async function(e) {

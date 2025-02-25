@@ -80,6 +80,10 @@ export class Mmaking
             for (const [key, value] of Object.entries(data.body.opponents))
                 this.setOpponent(value.username, '../../../media/avatars/default.png')
 
+            state.gameApp = new WebGame(
+                'debug',
+                Object.values(data.body.opponents)[0].username,  //REVIEW sus blind indexing, is there a better way
+            );
             state.gameApp.launchGameSocket(7);
         }
 		else if (data.body.cancel == true)

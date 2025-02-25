@@ -46,6 +46,10 @@ export class Input {
 	get isMouseInWindow() { return this.#isMouseInWindow; }
 
 	getPaddleInput(side) {
+		if (side !== 0 && side !== 1) {
+			return 0;  // If the game wants the input for nobody
+		}
+
 		const isLocal1v1 = state.gameApp.side == 2;
 
 		const keybinds = [
