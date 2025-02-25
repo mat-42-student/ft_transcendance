@@ -6,6 +6,7 @@ import { GameBase } from './GameBase.js';
 import { Input } from './game3d/Input.js';
 import { Engine } from './game3d/Engine.js';
 import { Clock } from './Clock.js';
+import LevelIdle from './game3d/gameobjects/levels/LevelIdle.js';
 
 export const state = {
     client: new Client(),
@@ -16,12 +17,13 @@ export const state = {
     /** @type {GameBase} */ gameApp: null,
     input: new Input(),
     engine: new Engine(),
-    get isPlaying() { return this.gameApp && this.gameApp.isPlaying; },
+    get isPlaying() { return this.gameApp != null && this.gameApp.isPlaying != null; },
     /** @type {Clock} */ clock: null,
 };
 
 state.engine.init();
 state.clock = new Clock();
+state.engine.scene = new LevelIdle();
 
 state.client.setState(state);
 window.state = state; // for eval purpose

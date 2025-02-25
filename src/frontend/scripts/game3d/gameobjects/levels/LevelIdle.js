@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import * as UTILS from '../../../utils.js';
 import { state } from '../../../main.js';
 import LevelBase from './LevelBase.js';
 import SceneOriginHelper from '../utils/SceneOriginHelper.js';
@@ -9,24 +10,23 @@ export default class LevelIdle extends LevelBase {
 	constructor() {
 		super();
 
-		this.size = null;
-		this.name = 'Idle World Scene';
+		this.boardSize = null;
+		this.name = 'Idle Level';
 
-		this.background = new THREE.Color("#000050");
-		state.engine.cameraTarget.position.y = 1.42535353443;
-		state.engine.cameraTarget.smoothSpeed = 1;
+		this.background = new THREE.Color("#8080a0");
 
+		this.views = null;
 		const q1 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -UTILS.RAD90);
 		const q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), 2*UTILS.RAD90);
-		this.cameras[0] = new LevelBase.CameraStats();
-		this.cameras[0].position = new THREE.Vector3(1, 3, 1);
-		this.cameras[0].quaternion = q1.multiply(q2);
-		this.cameras[0].fov = 60;
-		this.cameras[2] = this.cameras[1] = this.cameras[0];
+		this.smoothCamera.position.set(1, 3, 1);
+		this.smoothCamera.quaternion.copy(q1.multiply(q2));
+		this.smoothCamera.fov = 60;
+		this.smoothCamera.smoothSpeed = 1;
+	}
 
-		const thing3d = new SceneOriginHelper();
-		thing3d.name = "Scene origin helper";
-		engine.environmentScene.add(thing3d);
+
+	onAdded() {
+		this.add(new SceneOriginHelper());
 	}
 
 

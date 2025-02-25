@@ -1,6 +1,7 @@
 import { state } from '../main.js';
 import * as THREE from 'three';
 import * as UTILS from '../utils.js';
+import LevelBase from './gameobjects/levels/LevelBase.js';
 
 
 export class Engine {
@@ -62,7 +63,7 @@ export class Engine {
 		if (this.scene == null) {
 			return;
 		}
-		if (this.scene.camera == null) {
+		if (this.scene.smoothCamera == null) {
 			console.error('Engine: Scene is missing a camera.');
 			return;
 		}
@@ -89,7 +90,7 @@ export class Engine {
 			this.paramsForAddDuringRender = null;
 		}
 
-		this.renderer.render(this.scene, this.scene.camera);
+		this.renderer.render(this.scene, this.scene.smoothCamera.camera);
 
 		this.isProcessingFrame = false;
 	}
@@ -134,7 +135,7 @@ export class Engine {
 	/** @type {ResizeObserver} */
 	#resizeObserver;
 
-	/** @type {THREE.Scene} */
+	/** @type {LevelBase} */
 	#scene;
 
 	/** @type {HTMLDivElement} */
@@ -148,8 +149,8 @@ export class Engine {
 		const rect = this.#html_container.getBoundingClientRect();
 		this.#updateAutoResolution();
 		this.renderer.setSize(rect.width, rect.height);
-		if (this.scene && this.scene.camera) {
-			this.scene.camera.aspect = rect.width / rect.height;
+		if (this.scene && this.scene.smoothCamera) {
+			this.scene.smoothCamera.aspect = rect.width / rect.height;
 		}
 
 		this.borders.top    = rect.y;
@@ -162,7 +163,7 @@ export class Engine {
 	#updateAutoResolution() {
 		const fullres = window.devicePixelRatio;
 		const lowres = fullres / 2;
-		this.renderer.setPixelRatio(UTILS.shouldPowersave ? lowres : fullres);
+		this.renderer.setPixelRatio(UTILS.shouldPowersave() ? lowres : fullres);
 	}
 
 };
