@@ -99,6 +99,7 @@ class Command(BaseCommand):
 
     def get_friend_list(self, user_id):
         """ Request friendlist from container 'users' """
+        # CCF Bearer plz /!\
         response = requests.get(f"http://users:8000/api/v1/users/{user_id}/friends/")
         if response.status_code == 200:
             try:

@@ -8,6 +8,8 @@ export class WebGame {
     }
 
     launchGameSocket(gameId) {
+        if (!gameId) // debug
+            gameId = 1; // effacer asap
 		state.client.refreshSession();
         let socketURL = "wss://" + window.location.hostname + ":3000/game/" + gameId + "/?t=" + state.client.accessToken;
         // websocat --insecure wss://nginx:3000/game/1234/?t=pouetpouet
@@ -30,9 +32,12 @@ export class WebGame {
 
         this.socket.onmessage = async function(e) {
             let data = JSON.parse(e.data);
-            console.log('data = ' + data);
+            console.log('data = ' + JSON.stringify(data));
             if (data.action == "info") {
                 console.log('info');
+            }
+            if (data.action == "wait") {
+                console.log('waiting');
             }
             if (data.action =="move") {
                 console.log('info');

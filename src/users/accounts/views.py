@@ -3,7 +3,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.conf import settings
 from .authentication import JWTAuthentication
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -76,7 +76,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """Définit les permissions pour chaque action."""
-        if self.action in ['list', 'retrieve']:
+        if self.action in ['list', 'retrieve', 'contacts', 'friends', 'blocks']:
             return [AllowAny()]
         return [IsAuthenticated()]  # Authentification requise pour toutes les autres actions
 
@@ -87,6 +87,18 @@ class UserViewSet(viewsets.ModelViewSet):
         elif self.action in ['update', 'partial_update']:
             return UserUpdateSerializer
         return UserDetailSerializer  # Par défaut pour les autres
+    
+    def list(self, request, *args, **kwargs):
+        """Renvoie une liste d'utilisateurs pour la recherche de profils via searchbar."""
+        search_query = request.GET.get("search", "").strip()
+
+        if search_query:
+            users = User.objects.filter(username__istartswith=search_query)[:10]
+        else:
+            users = User.objects.none()  # Pas de recherche, pas de résultats
+
+        serializer = self.get_serializer(users, many=True)
+        return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
         """Personnalise la récupération des détails d'un utilisateur."""

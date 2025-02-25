@@ -27,19 +27,31 @@
                 <a id="btn-home">Home</a>
             </div>
 
+            <!-- Navbar -->
+            <!-- <nav class="selection-bar"> -->
+                <button class="selection-item btn-solo" type="button">Solo</button>
+                <button class="selection-item btn-local-versus" type="button">Local Versus</button>
+                <button id="versus" class="selection-item btn-versus" type="button">Versus</button>
+                <button class="selection-item btn-tournament" type="button">Tournament</button>
+                <button id="btn-test-game" class="selection-item btn-tournament" type="button" >Test Game</button>
+            <!-- </nav> -->
+
             <!-- Searchbar -->
             <div class="header-center">
                 <form class="search-form" action="#" method="GET">
-                    <input type="text" name="search" placeholder="Search..." aria-label="Recherche">
-                    <button type="submit">🔍</button>
+                    <input type="text" id="searchInput" name="search" placeholder="Search..." aria-label="Recherche">
                 </form>
+                <!-- Conteneur pour les résultats -->
+                <ul id="searchResults" class="search-results"></ul>
             </div>
+            
             <div class="header-right">
                 <a id="btn-refresh">Refresh</a>
             </div>
             <div class="header-right">
                 <a id="btn-play">Play</a>
             </div>
+
             <!-- User Profile Button -->
             <div class="header-right">
                 <a id="btn-profile">Sign in</a>
@@ -56,14 +68,9 @@
                 <div class="chat-header">
                     <span class="friend-name" id="chat-user" userId="0">Chat</span>
                 </div>
-
                 <!-- Messages -->
                 <div class="chat-body" id="chat-body">
-                    <!-- <div class="chat-message friend-message">Salut ! Comment ça va ?</div>
-                    <div class="chat-message user-message">Ça va bien, et toi ?</div> -->
-                    <!-- Add Dynamic Message Samples -->
                 </div>
-
                 <!-- Prompt -->
                 <div class="chat-footer" id="chat-footer">
                     <form class="chat-form" id="chat-form">
@@ -88,22 +95,7 @@
                 </div>
                 <!-- Friends List -->
                 <ul class="friends-list">
-                    <!-- Dynamic Sample -->
-                    <!-- <li class="friend-item">
-                        <img class="friend-avatar" src="/media/avatars/default.png">
-                        <div class="friend-info">
-                            <span class="friend-name">Contact</span>
-                            <div class="friend-detail">
-                                <span class="friend-status online"></span>
-                                <button class="btn-match">
-                                    <img src="/ressources/vs.png">
-                                </button>
-                                <button class="btn-chat" id="">
-                                    <img src="/ressources/chat.png">
-                                </button>
-                            </div>
-                        </div>
-                    </li> -->
+                    Sign in to see your friends
                 </ul>
             </div>
         </aside>

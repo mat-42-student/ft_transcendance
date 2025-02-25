@@ -75,7 +75,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         try:
             response = requests.get(f"http://auth-service:8000/api/v1/auth/public-key/")
             if response.status_code == 200:
-                self.public_key = response.json().get("public_key") # Ou response.json() si c'est un JSON
+                self.public_key = response.json().get("public_key")
             else:
                 raise RuntimeError("Impossible de récupérer la clé publique JWT")
         except RuntimeError as e:
@@ -130,8 +130,9 @@ class PongConsumer(AsyncWebsocketConsumer):
         # print(f"Sending data to deep_social: {data}")
         await self.redis_client.publish("deep_social", json.dumps(data))
 
-    # Receive message from WebSocket (from client): immediate publish into lobby
+    # Receive message from WebSocket: immediate publish into channels lobby
     async def receive(self, text_data=None, bytes_data=None):
+        # print(f"text_data: {text_data}")
         data = self.load_valid_json(text_data)
         if not (data):
             print("wrong data incoming")
@@ -145,13 +146,17 @@ class PongConsumer(AsyncWebsocketConsumer):
             data = json.loads(data)
             if "action" not in data:
                 return None
-            return data
+            data["side"] = self.side
+            if data["action"] == "wannaplay!":
+                data["username"] = self.player_name
+                data["id"] = self.player_id
+                return data
         except:
             return None
 
     async def handle_message(self, data):
         data = data.get("message")
-        print(f'handle data {type(data)}, {data}')
+        # print(f'handle data {type(data)}, {data}')
         if not data:
             return
         if data["action"] == "move":
@@ -161,9 +166,9 @@ class PongConsumer(AsyncWebsocketConsumer):
         if data["action"] == "info":
             return await self.send(json.dumps(data))
         if data["action"] == "wannaplay!":
-            return await self.wannaplay()
+            return await self.wannaplay(data.get("id"), data.get("username"))
 
-    async def wannaplay(self):
+    async def wannaplay(self, user_id, user_name):
         # if self.in_game:
         #     await self.send(json.dumps({"error":"You already playin mofo"}))
         #     return
@@ -174,7 +179,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             return
         self.master = True
         print(f"{YELLOW}Found two players. Master is {self.player_name}{RESET}")
-        self.game = Game(self.game_id, self.player_id, self.player_name)
+        self.game = Game(self.game_id, self.player_id, self.player_name, user_id, user_name, self)
         json_data = {
             "action" : "init",
             "dir" : self.game.ball_spd,
@@ -196,7 +201,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         except:
             pass
         if self.master:
-            create_task(self.game.play(self))
+            create_task(self.game.play())
 
     def valid_move_message(self, message):
         try:
@@ -207,7 +212,11 @@ class PongConsumer(AsyncWebsocketConsumer):
         if player not in [0, 1] or key not in [-1, 0, 1]:
             return False
         return True
-       
+
+    async def wait_a_bit(self, data):
+        time = data.get('time', 1)
+        await self.send(json.dumps({"action":"wait", "time":time}))
+
     async def moveplayer(self, message):
         if not self.valid_move_message(message):
             print("invalid move")

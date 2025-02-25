@@ -1,3 +1,4 @@
+import { state } from './main.js';
 import { MainSocket } from './MainSocket.js';
 
 export class Client{
@@ -133,6 +134,7 @@ export class Client{
         }
     }
 
+    // status perso -> state.socialapp.mystatus
     // Nouvelle fonction d'affichage #profile -> gère profil utilisateur authentifié et utilisateurs tiers, affichage dynamic des infos et options
     // Si aucun userId ou id == User authentifié setup page profile auth, sinon affichage profil utilisateur tiers (gestion Relationship fonctionelle)
     async loadUserProfile(userId) {
@@ -142,7 +144,7 @@ export class Client{
 
             const response = await fetch(`api/v1/users/${userId}/profile/`, {
                 headers: {
-                    "Authorization": `Bearer ${this.accessToken}`
+                    "Authorization": `Bearer ${state.client.accessToken}`
                 }
             });
     
@@ -156,6 +158,8 @@ export class Client{
             const usernameEl = document.getElementById("profile-username");
             if (usernameEl)
                 usernameEl.textContent = data.username;
+
+            console.log(data.avatar);
 
             const avatarEl = document.getElementById("profile-avatar");
             if (avatarEl)
