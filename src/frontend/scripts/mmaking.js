@@ -84,17 +84,29 @@ export class Mmaking
             try {
                 levelName = 'debug';  //TODO get server to pick this
             } catch(e) {
-                //TODO can't play a game without a level - this should cancel the game, for server and opponent too.
+                throw e;  //TODO can't play a game without a level - this should cancel the game, for server and opponent too.
             }
 
             let opponentName = 'Opponent name error';
             try {
                 //REVIEW sus blind indexing, is there a better way?
                 opponentName = Object.values(data.body.opponents)[0].username;
-            } catch (e) {}
+            } catch (e) {
+                // Game is still playable without opponent name: complain, but continue.
+                console.error('Opponent name could not be retrieved.');
+            }
+
+            let gameId;
+            try {
+                gameId = data.body.id_game;
+                if (typeof gameId !== 'number' || gameId < 0 || !Number.isInteger(gameId))
+                    throw Error('')
+            } catch(e) {
+                throw e;  //TODO this should cancel the game
+            }
 
             state.gameApp = new WebGame(levelName, opponentName);
-            state.gameApp.launchGameSocket(7);
+            state.gameApp.launchGameSocket(gameId);
         }
 		else if (data.body.cancel == true)
 		{
