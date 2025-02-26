@@ -14,6 +14,25 @@ import { GameBase } from "./GameBase.js";
 //REVIEW Exceptions should be caught, and should terminate the game
 
 
+// Controls how the game runs.
+// Should be (manually) kept in sync with game/const.py
+const STATS = JSON.parse(`
+{
+    "initialPadSize": 0.2,
+    "initialPadSpeed": 0.12,
+    "padShrinkFactor": 0.9,
+    "padAccelerateFactor": 1.2,
+
+    "initialBallSpeed": 0.18,
+    "ballAccelerateFactor": 1.2,
+    "redirectionFactor": 1.5,
+    "maxAngleDeg": 70.0,
+
+    "maxScore": 5
+}
+`);
+
+
 export class LocalGame extends GameBase {
 
     constructor (isCPU = false) {
@@ -21,27 +40,25 @@ export class LocalGame extends GameBase {
         super();
 
         this.isCPU = isCPU;
-        this.angleMax = MathUtils.degToRad(70);
 
         // game simulation stats - might want to keep these numbers synced with web game
-        this.ballSpeed = 0.18;
-        this.paddleSpeeds = [0.12, 0.12];
-        this.paddleHeights = [0.2, 0.2];
-        this.maxScore = 5;
+        this.ballSpeed = STATS.initialBallSpeed;
+        this.paddleSpeeds = [STATS.initialPadSpeed, STATS.initialPadSpeed];
+        this.paddleHeights = [STATS.initialPadSize, STATS.initialPadSize];
+        this.maxScore = STATS.maxScore;
 
-        this.ballDirection = new Vector2(1.0, 1.0).normalize();
         this.roundStartSide = Math.random() > 0.5 ? 1 : 0;
 
         this.playerNames[0] = 'Player 1';
         this.playerNames[1] = isCPU ? this.generateRandomNick() : 'Player 2';
 
-        this.side = isCPU ? 0 : 2;  // Neutral (2) if keyboard PVP  //TODO random side, not 0
+        this.side = isCPU ? 0 : 2;  // Neutral (2) if keyboard PVP
 
         this.level = new (LEVELS.pickRandomLevel())();  // randomly select class, then construct it
         state.engine.scene = this.level;
 
         //TODO wait for level to finish loading before continuing
-        this.newRound();
+        this.recenter();
     }
 
 	frame(delta, time) {
@@ -51,8 +68,8 @@ export class LocalGame extends GameBase {
         super.frame(delta, time);
 	}
 
-    close() {
-        this.endgame(true);
+    close(cancelled = true) {
+        this.endgame(cancelled);
 
         super.close();
     }
@@ -79,24 +96,23 @@ export class LocalGame extends GameBase {
     }
 
 
-    // MARK: Game engine
+    // MARK: Game simulation
 
-    newRound() {
+    recenter() {
         this.ballPosition = { x: 0, y: 0 };
-        this.ballDirection.set(1, 0).rotateAround(
-            new Vector2(0, 0),
-            UTILS.RAD180 * this.roundStartSide
-        );
+        this.ballDirection = new Vector2(this.roundStartSide ? -1 : 1, 1).normalize()
         this.paddlePositions[0] = this.paddlePositions[1] = 0;
 
-        // Shrink
-        this.paddleHeights[0] *= 0.9;
-        this.paddleHeights[1] = this.paddleHeights[0];
+    }
 
-        // Accelerate
-        this.ballSpeed *= 1.2;
-        this.paddleSpeeds[0] *= 1.2;
-        this.paddleSpeeds[1] = this.paddleSpeeds[0];
+
+    newRound() {
+        this.recenter();
+
+        this.paddleHeights[1] = this.paddleHeights[0] *= STATS.padShrinkFactor;
+
+        this.ballSpeed *= STATS.ballAccelerateFactor;
+        this.paddleSpeeds[1] = this.paddleSpeeds[0] *= STATS.padAccelerateFactor;
     }
 
     cpuMove() {
@@ -190,24 +206,25 @@ export class LocalGame extends GameBase {
                         angle = UTILS.RAD90 - (angle - UTILS.RAD90);
                     }
 
-                    angle = MathUtils.clamp(angle, -this.angleMax, this.angleMax);
+                    const maxAngleRad = MathUtils.degToRad(STATS.maxAngleDeg);
+                    angle = MathUtils.clamp(angle, -maxAngleRad, maxAngleRad);
 
-                    const redirection = hitPosition * 1.5;  // Arbitrary number, controls how strong redirection is
+                    const redirection = hitPosition * STATS.redirectionFactor;
 
                     const newAngle = MathUtils.clamp(
                         angle + redirection,
-                        -this.angleMax,
-                        this.angleMax
+                        -maxAngleRad,
+                        maxAngleRad
                     );
 
                     const newDirection = new Vector2(signedSide,0).rotateAround(new Vector2(), newAngle * signedSide);
 
-    //                 console.log(
-    // `Ball Direction: (Before)`, this.ballDirection, `(After)`, newDirection,`
-    // Angle: ${MathUtils.RAD2DEG*angle}
-    // Redirect: ${MathUtils.RAD2DEG*redirection}
-    // New Angle: ${MathUtils.RAD2DEG*newAngle}`
-    //                 );
+                    // console.log(
+                    //     `Ball Direction: (Before)`, this.ballDirection, `(After)`, newDirection,`
+                    //     Angle: ${MathUtils.RAD2DEG*angle}
+                    //     Redirect: ${MathUtils.RAD2DEG*redirection}
+                    //     New Angle: ${MathUtils.RAD2DEG*newAngle}`
+                    // );
 
                     this.ballDirection.copy(newDirection);
                 }
@@ -240,7 +257,7 @@ export class LocalGame extends GameBase {
         this.roundStartSide = side == 0 ? 1 : 0;
 
         if (this.scores[side] >= this.maxScore) {
-            this.endgame(false);
+            this.close(false);
             return;
         }
         this.newRound();

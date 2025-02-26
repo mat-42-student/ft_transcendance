@@ -2,7 +2,12 @@ from random import randint, choice
 from time import time
 from json import dumps
 from asyncio import sleep as asleep
-from .const import LEFT, RIGHT, HEIGHT, WIDTH, PADWIDTH, FPS, MAX_SCORE, GREEN, RED, RESET, DELTATIME, PADMINIMUM, PADSHRINK
+from .const import LEFT, RIGHT, HEIGHT, FPS, DELTATIME, GREEN, RED, RESET, STATS
+
+
+# TODO: this will be read from a dictionary of levels, matching on level name
+BOARD_SIZE = [1.5, 1.0]
+
 
 class Player:
 
@@ -11,21 +16,18 @@ class Player:
         self.id = id
         self.score = 0
         self.pos = 0
-        self.pad = PADWIDTH
+        self.pad_size = STATS['initialPadSize']
         self.move = 0
 
     def move_paddle(self, speed):
-        if (self.move < 0 and self.pos <= HEIGHT/-2):
-            self.move = 0
-        elif (self.move > 0 and self.pos >= HEIGHT/2):
-            self.move = 0
-        else:
+        HALF_HEIGHT = BOARD_SIZE[1] / 2
+        if (not (self.move < 0 and self.pos <= -HALF_HEIGHT)
+            and (self.move > 0 and self.pos >= HALF_HEIGHT)):
             self.pos += self.move * speed * DELTATIME
 
     def score_up(self):
-        self.score = self.score + 1
-        if self.score == MAX_SCORE:
-            return 1
+        self.score += 1
+        return self.score == STATS['maxScore']
 
 class Game:
 
@@ -34,65 +36,60 @@ class Game:
         self.players = []
         self.over = False
         self.id = game_id
-        self.speed = 1
+        self.ball_speed = STATS['initialBallSpeed']
+        self.pad_speed = STATS['initialPadSpeed']
         self.players.append(Player(username1, id1))
         self.players.append(Player(username2, id2))
+        self.recenter()
         print(f"{GREEN}New game {game_id} launched opposing **{self.players[LEFT].name}({self.players[LEFT].id})** vs {self.players[RIGHT].name}({self.players[RIGHT].id}{RESET}")
-        self.ball_pos = [WIDTH / 2, HEIGHT / 2]
-        self.ball_spd = [self.random_neg_or_not_number(2, 5),
-                         self.random_neg_or_not_number(2, 5)]
 
-    async def reset_values(self):
+    async def recenter(self):
+        self.ball_pos = [0, 0]
+        self.ball_direction = [0.7071067811865475 * choice([1, -1]), 0.7071067811865475]
+        self.players[0].pos = self.players[1].pos = 0
+
+    async def new_round(self):
         time = 2
         await self.wsh.channel_layer.group_send(
             self.wsh.room_group_name, {"type": "wait.a.bit", "time": time}
         )
-        self.ball_pos = [WIDTH / 2, HEIGHT / 2]
-        self.ball_spd = [self.random_neg_or_not_number(3, 4),
-                         self.random_neg_or_not_number(3, 4)]
-        for player in self.players:
-            player.pad = PADWIDTH
-            player.pos = (HEIGHT - PADWIDTH) / 2
-        self.speed = 1
+        self.recenter()
+        self.ball_speed *= STATS['ballAccelerateFactor']
+        self.pad_speed *= STATS['padAccelerateFactor']
+        self.players[0].pad_size *= STATS['padShrinkFactor']
+        self.players[1].pad_size = self.players[0].pad_size
         await asleep(time)
 
-    '''Must have a < b'''
-    def random_neg_or_not_number(self, a, b) -> int:
-        if choice([True, False]):
-            return randint(-b, -a)
-        else:
-            return randint(a, b)
 
     async def move_ball(self):
         # move
-        self.ball_pos[0] += DELTATIME * self.ball_spd[0] * self.speed
-        self.ball_pos[1] += DELTATIME * self.ball_spd[1] * self.speed
+        self.ball_pos[0] += DELTATIME * self.ball_direction[0] * self.speed
+        self.ball_pos[1] += DELTATIME * self.ball_direction[1] * self.speed
         # top / bottom collision
-        if (self.ball_pos[1] <= 0 or self.ball_pos[1] >= HEIGHT):
-            self.ball_spd[1] *= -1
+        if (self.ball_pos[1] <= BOARD_SIZE[1]/-2 or self.ball_pos[1] >= BOARD_SIZE[1]/2):
+            self.ball_direction[1] *= -1
         # left / right collision
-        if (self.ball_pos[0] <= WIDTH/-2):
-            await self.side_collision(LEFT)
-        if (self.ball_pos[0] >= WIDTH/2):
-            await self.side_collision(RIGHT)
+        if (self.ball_pos[0] <= BOARD_SIZE[0]/-2):
+            await self.side_collided(LEFT)
+        if (self.ball_pos[0] >= BOARD_SIZE[0]/2):
+            await self.side_collided(RIGHT)
 
-    async def side_collision(self, side):
-        # check paddle collision
-        if self.players[side].pos < self.ball_pos[1] < self.players[side].pos + self.players[side].pad :
-            self.ball_spd[0] *= -1
-            self.speed += 0.2
-            if self.players[side].pad > PADMINIMUM:
-                self.players[side].pad = max(self.players[side].pad - PADSHRINK, PADMINIMUM)
-            return
-        # if ball go through, score and check endmatch
-        if self.players[1 - side].score_up():
-            self.over = True
-            return
-        # if the match continues, reset the values and move on to the next point.
-        await self.reset_values()
-        # await wsh.channel_layer.group_send(
-        #     wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
-        # )
+    async def side_collided(self, side):
+        is_ball_below_paddle = self.ball_pos[1] < self.players[side].pos - self.players[side].pad_size/2
+        is_ball_above_paddle = self.ball_pos[1] > self.players[side].pos + self.players[side].pad_size/2
+
+        # did the ball miss the paddle? -> Score
+        if is_ball_below_paddle or is_ball_above_paddle:
+            if self.players[1 - side].score_up():
+                self.over = True
+            await self.new_round()
+            # await wsh.channel_layer.group_send(
+            #     wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
+            # )
+
+        # the ball hit the paddle -> Bounce
+        else:
+            self.ball_direction[0] *= -1
 
     def set_player_move(self, id, move):
         self.players[id].move = int(move)
@@ -104,30 +101,27 @@ class Game:
 
     def move_players(self):
         for player in self.players:
-            player.move_paddle(self.speed)
+            player.move_paddle(self.pad_speed)
 
     def get_game_state(self):
         return {
             "action":"info",
             "ball": self.ball_pos,
-            "ball_dir": self.ball_spd,
+            "ball_dir": self.ball_direction,
             "lpos": self.players[LEFT].pos,
             "rpos": self.players[RIGHT].pos,
-            "size": [self.players[LEFT].pad, self.players[RIGHT].pad],
+            "size": [self.players[LEFT].pad_size, self.players[RIGHT].pad_size],
             "lscore": self.players[LEFT].score,
             "rscore": self.players[RIGHT].score,
         }
 
     async def play(self):
-        target_fps = FPS
-        frame_duration = 1 / target_fps
-
         last_frame_time = time()
         while not self.over:
             current_time = time()
             elapsed_time = current_time - last_frame_time
-            if elapsed_time < frame_duration:
-                await asleep(frame_duration - elapsed_time)
+            if elapsed_time < DELTATIME:
+                await asleep(DELTATIME - elapsed_time)
             await self.wsh.channel_layer.group_send(
                 self.wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
             )
