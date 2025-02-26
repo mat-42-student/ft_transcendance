@@ -19,7 +19,8 @@ export class WebGame extends GameBase {
 
     frame(delta, time) {
         try {
-            this.#sendInput();
+            if (this.isPlaying)
+                this.#sendInput();
         } catch (error) {
             console.error('Failed to send input', error);
         }
@@ -57,21 +58,24 @@ export class WebGame extends GameBase {
 
         this.socket.onclose = async function(e) {
             this.socket = null;
+            this.isPlaying = false;
         };
 
         this.socket.onmessage = async function(e) {
+            const wg = state.gameApp;
+            wg.isPlaying = true;  //TODO this should be based on loading
             let data = JSON.parse(e.data);
             console.log('data = ' + JSON.stringify(data));
             if (data.action == "info") {
                 console.log('info');
-                this.ballPosition.x = data.ball[0];
-                this.ballPosition.y = data.ball[1];
-                this.paddlePositions[0] = data.lpos;
-                this.paddlePositions[1] = data.rpos;
-                this.paddleHeights[0] = data.size[LEFT_PLAYER];
-                this.paddleHeights[1] = data.size[RIGHT_PLAYER];
-                this.scores[0] = data.lscore;
-                this.scores[1] = data.rscore;
+                wg.ballPosition.x = data.ball[0];
+                wg.ballPosition.y = data.ball[1];
+                wg.paddlePositions[0] = data.lpos;
+                wg.paddlePositions[1] = data.rpos;
+                wg.paddleHeights[0] = data.size[0];
+                wg.paddleHeights[1] = data.size[1];
+                wg.scores[0] = data.lscore;
+                wg.scores[1] = data.rscore;
             }
             if (data.action == "wait") {
                 console.log('waiting');
@@ -81,7 +85,7 @@ export class WebGame extends GameBase {
             }
             if (data.action == "disconnect") {
                 console.log('Server asked for disconnect');
-                this.close();
+                wg.close();
             }
         };
     }
