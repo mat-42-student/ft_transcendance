@@ -86,8 +86,9 @@ class Command(BaseCommand):
                         else:
                             await self.SelectTypeGame(message)
                     elif (msg.get('channel') == self.channel_pong):
-                        await self.infoGame(message)
-                        print("listen again...")
+                        await self.parseInfoGame(message)
+                    
+                    print("listen again...")
                 except Exception as e:
                     print(e)
 
@@ -593,8 +594,50 @@ class Command(BaseCommand):
             return players
         else:
             return None
+
+
+    async def parseInfoGame(self, data):
+        print(f'parseInfoGame -> {data}')
+        if (data.get('game_id')):
+            await self.infoGame(data)
+        
+        elif(data.get('score')):
+            await self.updateScore(data.get('score'))
     
-                
+    async def updateScore(self, score):
+        print(f'score -> {score}')
+
+        if (len(score) < 3):
+            return False
+        
+        players = []
+        score_int = {}
+
+        for key, value in score.items():
+            try:
+                if (key != 'game_id'):
+                    players.append(int(key))
+                    score_int[int(key)] = int(value)
+                else:
+                    score_int[key] = int(value)
+
+
+            except Exception as e:
+                print(f'Try conversion -> {e}')
+                return False
+            
+        for player in players:
+            if (not await sync_to_async(self.checkPlayerInGame)(player, score_int['game_id'])):
+                return False
+            
+        print(f'score_int {score_int}')
+        update = await sync_to_async(self.SetScoreGame)(players, score_int)
+        if (update):
+            return True
+        else:
+            return False
+
+    
     async def infoGame(self, data):
         """ answers backend requests on channel 'info_mmaking' """
         try:
@@ -616,6 +659,56 @@ class Command(BaseCommand):
 
 
     #############       Database     #############
+
+    def SetScoreGame(self, players, score_int):
+        try:
+            game = self.getGame(score_int['game_id'])
+            print(game)
+            if (game is None):
+                return False
+            
+            for player in players:
+                if (game.player1.id == player):
+                    game.score_player1 = score_int[player]
+                elif (game.player2.id == player):
+                    game.score_player2 = score_int[player]
+
+            if (game.score_player1 > game.score_player2):
+                game.winner = game.player1
+            else:
+                game.winner = game.player2
+            game.save()
+        except Exception as e:
+            print(f'error set score {e}')
+            return False
+
+        return True
+
+
+    def getGame(self, idgame):
+        try:
+            game = Game.objects.get(id=idgame)
+            return game
+        except Game.DoesNotExist as e:
+            print(e)
+            return None
+
+    def checkPlayerInGame(self, player_id, gameId):
+        try:
+            player = User.objects.get(id=player_id)
+            game = self.getGame(gameId)
+
+            if (player.id == game.player1.id ):
+                return True
+            elif (player.id == game.player2.id ):
+                return True
+            else:
+                False
+        except Exception as e:
+            print(f'Someone not exist -> {e}')
+            return False
+        
+                  
 
     async def create_game_sync(self, tournament_id, player1_id, player2_id, game_type, round="Ranked"):
         # Simulating ORM object creation (replace this with actual ORM code)
