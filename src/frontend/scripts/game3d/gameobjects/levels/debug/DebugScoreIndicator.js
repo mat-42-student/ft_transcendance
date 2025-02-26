@@ -80,7 +80,15 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 
 	scoreChanged(score) {
 		super.scoreChanged(score);
-		this.#addScorePoint();
+		let missing = score - this.#addedCount;
+		if (missing < 0) {
+			this.clear();  // eeeeeeh whatever
+			this.#addedCount = 0;
+			missing = score;
+		}
+		for (let i = 0; i < missing; i++) {
+			this.#addScorePoint();
+		}
 		this.#colorFlashInterpolator = 1;
 	}
 
