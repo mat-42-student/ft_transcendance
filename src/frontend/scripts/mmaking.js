@@ -80,10 +80,20 @@ export class Mmaking
             for (const [key, value] of Object.entries(data.body.opponents))
                 this.setOpponent(value.username, '../../../media/avatars/default.png')
 
-            state.gameApp = new WebGame(
-                'debug',
-                Object.values(data.body.opponents)[0].username,  //REVIEW sus blind indexing, is there a better way
-            );
+            let levelName = null;
+            try {
+                levelName = 'debug';  //TODO get server to pick this
+            } catch(e) {
+                //TODO can't play a game without a level - this should cancel the game, for server and opponent too.
+            }
+
+            let opponentName = 'Opponent name error';
+            try {
+                //REVIEW sus blind indexing, is there a better way?
+                opponentName = Object.values(data.body.opponents)[0].username;
+            } catch (e) {}
+
+            state.gameApp = new WebGame(levelName, opponentName);
             state.gameApp.launchGameSocket(7);
         }
 		else if (data.body.cancel == true)
