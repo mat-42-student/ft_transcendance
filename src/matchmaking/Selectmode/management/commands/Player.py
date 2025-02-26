@@ -1,6 +1,7 @@
 import json
 import requests
 import asyncio
+from django.conf import settings
 #from .Guest import Guest
 
 class Player ():
@@ -29,12 +30,39 @@ class Player ():
         return (f'Player {self.user_id}')
     
     def get_user(self):
-        """Get information to API user and set this in instances"""
+        """Get information from API user and set this in instances"""
+
+        # Fetch token for machine-to-machine communications: start
+        try:
+            url = settings.OAUTH2_CCF_TOKEN_URL
+            headers = {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+            data = {
+                'grant_type': 'client_credentials',
+                'client_id': settings.OAUTH2_CCF_CLIENT_ID,
+                'client_secret': settings.OAUTH2_CCF_CLIENT_SECRET
+            }
+            response = requests.post(url, headers=headers, data=data)
+
+            if response.status_code == 200:
+                token_data = response.json()
+
+                token = token_data.get('access_token')
+            else:
+                print(f"Error: {response.status_code} - {response.text}")
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error in request : {e}")
+        #
+
         url = f"http://users:8000/api/v1/users/{self.user_id}/"  # Remplace par ton URL réelle
 
         headers = {
-            "Authorization": f"Bearer {self.token}",  # Ajoute le token d'authentification
+            "Authorization": f"Bearer {token}",  # Ajoute le token d'authentification
         }
+
+        print(f"TOKEN = {token}") # debug
 
         response = requests.get(url, headers=headers)
 

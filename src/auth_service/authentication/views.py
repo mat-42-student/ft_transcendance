@@ -24,28 +24,20 @@ from .utils import is_token_revoked
 from django.shortcuts import redirect
 from .models import Ft42Profile
 from django.http import HttpResponse
+from django.core.cache import cache
+from rest_framework.permissions import IsAuthenticated
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
+from oauth2_provider.contrib.rest_framework import TokenHasScope
 
-class TesterView(APIView):
-    permission_classes = [AllowAny]
+
+class SecureAPIView(APIView):
+    authentication_classes = [OAuth2Authentication]
+    permission_classes = [TokenHasScope]
+    required_scopes = ['read']
 
     def get(self, request):
-
-        url = 'http://users:8000/api/v1/users/2/'
-
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer cIC3JqaPvmuyhpk7gpp5UZO3NFtdk1',
-        }
-
-        response = requests.get(
-            url, 
-            headers=headers, 
-        )
-
-        data = response.json()
-
-        return Response({'message': data})
-
+        return Response({"message": "Authenticated via OAuth2 CCF"})
+    
 class PublicKeyView(APIView):
     permission_classes = [AllowAny]
 
@@ -405,22 +397,5 @@ class OAuthCallbackView(APIView):
         )
 
         return response  
-class IntrospectTokenView(APIView):
-    permission_classes = [AllowAny]
 
-    def post(self, request):
-        token = request.POST.get('token')
-        try:
-            access_token = AccessToken.objects.select_related("application", "user").get(token=token)
-            is_active = not access_token.is_expired()
-
-            data = {
-                "active": is_active,
-                "scope": access_token.scope,
-                "client_id": access_token.application.client_id,
-            }
-        except AccessToken.DoesNotExist:
-            data = {"active": False}
-
-        return JsonResponse(data)
     

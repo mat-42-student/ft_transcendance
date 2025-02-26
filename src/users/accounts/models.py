@@ -43,10 +43,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         max_length=50,
         validators=[MinLengthValidator(3)]
     )
-    password = models.CharField( # Utilisation d'un mot de passe hashé -> SUPPRIMER pour laisser django gérer hashage ou utiliser set_password()
-        max_length=128, 
-        validators=[MinLengthValidator(5)]
-    )
     email = models.EmailField(
         max_length=254,
         blank=True,
@@ -98,7 +94,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['password']
+    REQUIRED_FIELDS = []
 
     def __str__(self):
         return self.username

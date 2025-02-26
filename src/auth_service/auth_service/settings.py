@@ -15,13 +15,6 @@ ALLOWED_HOSTS = ['*']
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-OAUTH2_PROVIDER = {
-    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
-    'SCOPES': {
-        'read': 'Read scope',
-        'write': 'Write scope'
-    }
-}
 
 JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")
 JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")
@@ -53,19 +46,28 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'accounts.authentication.OAuth2IntrospectionAuthentication',
-        'accounts.authentication.JWTAuthentication',
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        'authentication.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ],
 }
 
+# OAuth2 Provider settings
+OAUTH2_PROVIDER = {
+    'SCOPES_BACKEND_CLASS': 'oauth2_provider.scopes.SettingsScopes',
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
+    'SCOPES': {
+        'read': 'Read access',
+        'write': 'Write access',
+    },
+}
+
 # OAuth 2.0 Client Credentials flow
-OAUTH2_CCF_TOKEN_URL = 'http://auth-service:8000/api/v1/auth/o/token/'
-OAUTH2_CCF_INTROSPECT_URL = 'http://auth-service:8000/api/v1/auth/o/introspect/'
-OAUTH2_CCF_CLIENT_ID = 'aEBXCbfEENPTHyxiJXqqqjkZbMEYbX1SBMfsHMIa'
-OAUTH2_CCF_CLIENT_SECRET = 'LZafzt5nIXWMRrrqEFkRL1YeAXfvXnQXynYrtsxJoEwPcavdnterdVxFz8Xm9kVu1CqeKKeVZiMkb7jcE5oKKLWWOTTHn080rLvuQjFJWgT7zbO5flI99zEQGL4u8Wws'
+OAUTH2_CCF_TOKEN_URL = os.getenv("OAUTH2_CCF_TOKEN_URL")
+OAUTH2_CCF_CLIENT_ID = os.getenv("OAUTH2_CCF_CLIENT_ID")
+OAUTH2_CCF_CLIENT_SECRET = os.getenv("OAUTH2_CCF_CLIENT_SECRET")
 
 # OAuth 2.0 Authorization Code flow
 OAUTH2_ACF_REDIRECT_URI = 'https://localhost:3000/api/v1/auth/oauth/callback/'

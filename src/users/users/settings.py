@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'accounts',
+    'oauth2_provider',
 ]
 
 MIDDLEWARE = [
@@ -46,7 +47,7 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'accounts.authentication.OAuth2IntrospectionAuthentication',
+        'accounts.authentication.RemoteOAuth2Authentication',
         'accounts.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -54,10 +55,16 @@ REST_FRAMEWORK = {
     ],
 }
 
-OAUTH2_CCF_TOKEN_URL = 'http://auth-service:8000/api/v1/auth/o/token/'
-OAUTH2_CCF_INTROSPECT_URL = 'http://auth-service:8000/api/v1/auth/o/introspect/'
-OAUTH2_CCF_CLIENT_ID = 'aEBXCbfEENPTHyxiJXqqqjkZbMEYbX1SBMfsHMIa'
-OAUTH2_CCF_CLIENT_SECRET = 'LZafzt5nIXWMRrrqEFkRL1YeAXfvXnQXynYrtsxJoEwPcavdnterdVxFz8Xm9kVu1CqeKKeVZiMkb7jcE5oKKLWWOTTHn080rLvuQjFJWgT7zbO5flI99zEQGL4u8Wws'
+# OAuth2 Provider settings
+OAUTH2_PROVIDER = {
+    'SCOPES_BACKEND_CLASS': 'oauth2_provider.scopes.SettingsScopes',
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
+}
+
+# OAuth 2.0 Client Credentials flow
+OAUTH2_CCF_TOKEN_URL = os.getenv("OAUTH2_CCF_TOKEN_URL")
+OAUTH2_CCF_CLIENT_ID = os.getenv("OAUTH2_CCF_CLIENT_ID")
+OAUTH2_CCF_CLIENT_SECRET = os.getenv("OAUTH2_CCF_CLIENT_SECRET")
 
 ROOT_URLCONF = 'users.urls'
 

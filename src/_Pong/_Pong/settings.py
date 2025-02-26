@@ -16,6 +16,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -148,14 +149,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'game.authentication.OAuth2IntrospectionAuthentication',
+        'game.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
 
-OAUTH2_CCF_INTROSPECT_URL = 'https://localhost:3000/api/v1/auth/o/introspect/'
-OAUTH2_CCF_TOKEN_URL = 'https://localhost:3000/api/v1/auth/o/token/'
-OAUTH2_CCF_CLIENT_ID = 'Q4oWzkhULhhRe0QkjX939QgL48sYFujfewOcnhq4'
-OAUTH2_CCF_CLIENT_SECRET = 'tMyCHhdoEWgho9rHIm0M3BAB581d3jhDz0HAtLQRcSsVyrQDlhuFm8SRuM0ShTTbxpUddXVbKpC7Ml5H9X3AXLmpRafXgTvAHXBce2qoFQIZTIUUcOjboEjelfJN7ECy'
+# OAuth 2.0 Client Credentials flow
+OAUTH2_CCF_TOKEN_URL = os.getenv("OAUTH2_CCF_TOKEN_URL")
+OAUTH2_CCF_CLIENT_ID = os.getenv("OAUTH2_CCF_CLIENT_ID")
+OAUTH2_CCF_CLIENT_SECRET = os.getenv("OAUTH2_CCF_CLIENT_SECRET")

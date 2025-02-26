@@ -1,4 +1,5 @@
-# SECURITY WARNING: don't run with debug turned on in production!
+import os
+
 DEBUG = True
 
 ALLOWED_HOSTS = []
@@ -18,16 +19,7 @@ CHANNEL_LAYERS = {
     },
 }
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'API_chat.authentication.OAuth2IntrospectionAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-}
-
-OAUTH2_CCF_TOKEN_URL = 'http://auth-service:8000/api/v1/auth/o/token/'
-OAUTH2_CCF_INTROSPECT_URL = 'http://auth-service:8000/api/v1/auth/o/introspect/'
-OAUTH2_CCF_CLIENT_ID = ''
-OAUTH2_CCF_CLIENT_SECRET = ''
+# OAuth 2.0 Client Credentials flow
+OAUTH2_CCF_TOKEN_URL = os.getenv("OAUTH2_CCF_TOKEN_URL")
+OAUTH2_CCF_CLIENT_ID = os.getenv("OAUTH2_CCF_CLIENT_ID")
+OAUTH2_CCF_CLIENT_SECRET = os.getenv("OAUTH2_CCF_CLIENT_SECRET")

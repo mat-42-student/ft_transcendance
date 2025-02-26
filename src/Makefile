@@ -2,12 +2,11 @@
 
 DOCKER_IMAGE_NAME = django-base
 DOCKERFILE = ./_Base/Dockerfile.django
-# DOCKER_COMPOSE_FILE = docker-compose.yml
 
 # Targets
 .PHONY: all build run re clean
 
-all: re
+all: build_base build run
 
 build_base:
 	docker build -t $(DOCKER_IMAGE_NAME) -f $(DOCKERFILE) .

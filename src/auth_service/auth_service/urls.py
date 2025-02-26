@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from authentication.views import *
+from oauth2_provider.urls import urlpatterns as oauth2_urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -14,7 +15,8 @@ urlpatterns = [
     path('api/v1/auth/2fa/disable/', Disable2FAView.as_view(), name='2fa-disable'),
     path('api/v1/auth/oauth/login/', OAuthLoginView.as_view(), name='oauth-login'),
     path('api/v1/auth/oauth/callback/', OAuthCallbackView.as_view(), name='oauth-callback'),
-    path('api/v1/auth/o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
-    path('api/v1/auth/o/introspect/', IntrospectTokenView.as_view(), name="introspect_token"),
-    path('api/v1/auth/tester/', TesterView.as_view(), name='test'),
+    path('api/v1/auth/secure/', SecureAPIView.as_view(), name='secure'),
+
+    # Include OAuth2 Toolkit URLs under a common prefix
+    path('api/v1/auth/o/', include((oauth2_urls, 'oauth2_provider'), namespace='oauth2_provider')),
 ]

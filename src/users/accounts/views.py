@@ -3,6 +3,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.conf import settings
 from .authentication import JWTAuthentication
+from .authentication import RemoteOAuth2Authentication
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.decorators import action

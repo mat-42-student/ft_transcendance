@@ -4,6 +4,7 @@ from signal import signal, SIGTERM, SIGINT
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep, create_task
+from django.conf import settings
 
 class Command(BaseCommand):
     help = "Async pub/sub redis worker. Listens 'deep_social' channel"
@@ -97,7 +98,39 @@ class Command(BaseCommand):
 
     def get_friend_list(self, user_id):
         """ Request friendlist from container 'users' """
-        response = requests.get(f"http://users:8000/api/v1/users/{user_id}/friends/")
+
+        # Fetch token for machine-to-machine communications: start
+        try:
+            url = settings.OAUTH2_CCF_TOKEN_URL
+            headers = {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+            data = {
+                'grant_type': 'client_credentials',
+                'client_id': settings.OAUTH2_CCF_CLIENT_ID,
+                'client_secret': settings.OAUTH2_CCF_CLIENT_SECRET
+            }
+            response = requests.post(url, headers=headers, data=data)
+
+            if response.status_code == 200:
+                token_data = response.json()
+
+                token = token_data.get('access_token')
+            else:
+                print(f"Error: {response.status_code} - {response.text}")
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error in request : {e}")
+        #
+
+        url = f"http://users:8000/api/v1/users/{user_id}/friends/"
+
+        headers = {
+            "Authorization": f"Bearer {token}", # Ajoute le token d'authentification
+        }
+        
+        response = requests.get(url, headers=headers)
+
         if response.status_code == 200:
             try:
                 data = response.json()
