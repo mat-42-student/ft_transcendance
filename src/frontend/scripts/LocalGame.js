@@ -5,12 +5,6 @@ import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
 import { GameBase } from "./GameBase.js";
 
 
-//TODO AI: predict impact and go there, since shallow angles move faster than the paddle
-//TODO AI: margin choice: pick a redirection that tries to bring the angle within a range (not too direct, not too slow)
-//TODO AI: new logic for randomization is needed
-//TODO victory screen and transition to idle?
-//TODO CPU game should have a timer (highscore?)
-//TODO whole game speed should be scaled by 1 variable (faster game doesnt change ratio of ball speed to paddle speed unless they are explicitly scaled separately)
 //REVIEW Exceptions should be caught, and should terminate the game
 
 
@@ -40,6 +34,7 @@ export class LocalGame extends GameBase {
         super();
 
         this.isCPU = isCPU;
+        this.cpuTarget = 0;
 
         // game simulation stats - might want to keep these numbers synced with web game
         this.ballSpeed = STATS.initialBallSpeed;
@@ -115,27 +110,37 @@ export class LocalGame extends GameBase {
         this.paddleSpeeds[1] = this.paddleSpeeds[0] *= STATS.padAccelerateFactor;
     }
 
-    cpuMove() {
-        // CPU tries to keep the ball in the center.
-        // This margin multiplies the size of the paddle.
-        const margin = 0.5;
+    cpuFindTarget() {
+        this.cpuTarget = ;  //TODO
+        /*
+        https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line
+        ( (x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4) )
+        /
+        ( (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4) )
+        
+        Ball trajectory: (ball.x, ball.y) (dir.x, dir.y)
+        Wall: (wx, inf) (wx, inf)
 
-        // Abbreviate
-        const ball = this.ballPosition.y;
-        const paddle = this.paddlePositions[1];
-        const halfSize = this.paddleHeights[1] / 2;
+        ( (ball.x*dir.y-ball.y*dir.x)*(inf-inf)-(ball.y-dir.y)*(wx*inf-inf*wx) )
+        /
+        ( (ball.x-dir.x)*(inf-inf)-(ball.y-dir.y)*(wx-wx) )
 
-        if (ball < paddle - halfSize * margin)
-            return -1;
-        if (ball > paddle + halfSize * margin)
-            return 1;
-        return 0;
+        */
+    }
+
+    cpuSeekTarget() {
+        const error = this.cpuTarget - this.paddlePositions[1];
+
+        if (Math.abs(error) < 0.05) {
+            return 0;
+        }
+        return error > 0 ? 1 : -1;
     }
 
     movePaddles(delta) {
         let inputs = [
             state.input.getPaddleInput(0),
-            this.isCPU ? this.cpuMove() : state.input.getPaddleInput(1)
+            this.isCPU ? this.cpuSeekTarget() : state.input.getPaddleInput(1)
         ];
 
         const limit = this.level.boardSize.y / 2;
