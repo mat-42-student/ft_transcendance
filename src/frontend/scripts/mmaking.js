@@ -4,12 +4,76 @@ import { WebGame } from './WebGame.js';
 
 export class Mmaking
 {
-    constructor(mainSocket)
+    constructor()
     {
-        this.waited_page = null;
-        this.gameSocket = null;
+        this.invited_by = {};
+		this.guests = {};
+		this.opponents = {};
+		this.SearchRandomGame = false;
+		this.cancel = {'random': false, 'invitation': false, 'tournament': false};
+		this.salonInvite = false;
+		this.salonRandom = false;
+		this.game = null;
     }
 
+	render()
+	{
+		if (Object.values(this.cancel).includes(true))
+		{
+			if(this.cancel['random'] == true)
+			{
+				closeDynamicCard();
+				this.listening_button_match_Random();
+			}
+			
+			if (this.cancel['invitation'] == true)
+			{
+				this.renderGuests()
+			}
+		}
+	}
+
+	renderGuests()
+	{
+		for (const [key, value] of Object.entries(this.guests))
+		{
+			opponent = state.socialApp.friendList[key];
+			if (value == false || value == true)
+			{
+				this.ResetCardFriend(opponent)
+
+				if (value == true)
+					this.setOpponentInvite(opponent.username, `../../media/${opponent.avatar}` );
+			}
+			else if (value == null)
+			{
+				this.guestInvitedCard(opponent)
+			}
+		}
+	}
+
+
+	rederRandom()
+	{
+		if (this.SearchRandomGame == true)
+		{
+			initDynamicCard('versus');
+		}
+		else if (this.salonRandom == true)
+		{
+			for (const [key, value] of Object.entries(this.opponents))
+			{
+				this.setOpponent(value.username, `../../media/${value.avatar}`)
+			}
+			state.gameApp.launchGameSocket(this.game);
+		}
+	}
+
+	guestInvitedCard(guestCard)
+	{
+		const frienditem = guestCard.closest('.friend-item');
+		frienditem.style.backgroundColor = 'blue';
+	}
 
     refresh_eventlisteners()
     {
@@ -52,7 +116,7 @@ export class Mmaking
         if (data.body.status == 'ingame')
         {
             for (const [key, value] of Object.entries(data.body.opponents))
-                this.setOpponent(value.username, '../../../media/avatars/default.png')
+                this.setOpponent(value.username, '../../../media/default.png', value.type_game)
 
             state.gameApp.launchGameSocket(data.body.id_game);
         }
@@ -72,6 +136,7 @@ export class Mmaking
 					return ;
 				}
 			});
+			closeDynamicCard();
 		}
 		// Routing to communication mode Invite
         else if (data.body.type_game.invite)
@@ -194,8 +259,6 @@ export class Mmaking
             await initDynamicCard('vs_active');
 			this.desableOverlay();
 
-            
-
             const acceptInvitation = document.querySelector('.invitation .btn-accepter');
 			const refuseInvitation = document.querySelector('.invitation .btn-refuser');
 
@@ -215,6 +278,7 @@ export class Mmaking
 
                 closeDynamicCard()
             });
+
 			refuseInvitation.addEventListener('click', async (event)=>{
 
                 const data = {
@@ -282,13 +346,38 @@ export class Mmaking
         closeDynamicCard();
     }
 
-    setOpponent(name, photo) {
+    setOpponent(name, photo, type_game) {
         document.getElementById("opponent-info").style.display = "block";
         document.getElementById("opponent-name").textContent = name;
         document.getElementById("opponent-photo").src = photo;
-        document.getElementById("status").textContent = "Adversaire trouvé !";
-        document.getElementById("loader").style.display = "none";
-        document.getElementById("waiting-text").textContent = "Préparez-vous à jouer !";
+		try
+		{
+			if (type_game == '1vs1R')
+			{
+				random = document.getElementById("random-loader");
+
+				// random.style.display = "none";
+				document.getElementById("status").textContent = "Adversaire trouvé !";
+				document.getElementById("loader").style.display = "none";
+				document.getElementById("waiting-text").textContent = "Préparez-vous à jouer !";
+			}
+			else if (type_game == 'invite')
+			{
+				btnStartGameInvite = document.getElementById('start-game');
+				btnStartGameInvite.style.display = 'none';
+			}
+		}
+		catch (error)
+		{
+			console.log(error);
+		}
+        document.getElementById("cancel-button").style.display = "none";
+    }
+
+	setOpponentInvite(name, photo) {
+        document.getElementById("opponent-info").style.display = "block";
+        document.getElementById("opponent-name").textContent = name;
+        document.getElementById("opponent-photo").src = photo;
         document.getElementById("cancel-button").style.display = "none";
     }
 
