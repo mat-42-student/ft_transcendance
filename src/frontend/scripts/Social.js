@@ -61,7 +61,7 @@ export class SocialApp{
     }
 
     renderFriendStatus(id) {
-        const friendItem = document.querySelector(`.friend-detail[data-user-id="${id}"]`);
+        const friendItem = document.querySelector(`.friend-item-${id}`);
         if (friendItem) {
             const status = this.friendList.get(id).status
             const statusSpan = friendItem.querySelector('.friend-status');
@@ -101,22 +101,26 @@ export class SocialApp{
                     <span class="friend-name">${friend.username}</span>
                     <div class="friend-detail" data-user-id="${friend.id}">
                         <span class="friend-status ${friend.status}"></span>
-                        <button class="btn-match"><img src="/ressources/vs.png"></button>
+                        <button class="btn-match"><img id=btn-match-picture-${friend.id} src="/ressources/vs.png"></button>
                         <button class="btn-chat"><img src="/ressources/chat.png"></button>
                     </div>
                 </div>
             `;
             htmlFriendList.appendChild(friendItem);
 
-            // add data-user-id="${friend.id} to entire card (Adrien©)
-            friendItem.dataset.userid = friend.id;
+            // add data-user-id="${friend.id}" to entire card (Adrien©)
+            // friendItem.dataset.userid = friend.id;
+			friendItem.classList.add(`friend-item-${friend.id}`);
     
             const btnChat = friendItem.querySelector('.btn-chat');
             const btnMatch = friendItem.querySelector('.btn-match');
     
             btnChat.dataset.friendId = friend.id;
             btnMatch.dataset.friendId = friend.id;
+			
+			// add by Adrien
             btnMatch.dataset.invite = 0;
+			btnMatch.classList.add(`btn-match-${friend.id}`);
     
             btnChat.addEventListener('click', this.handleChatClick);
             btnMatch.addEventListener('click', this.handleMatchClick);
@@ -130,7 +134,7 @@ export class SocialApp{
 
     handleMatchClick(event) {
         const friendId = event.currentTarget.dataset.friendId;
-        state.mmakingApp.invite(friendId, event.currentTarget);
+        state.mmakingApp.btnInviteDesactive(event);
     }
 
     removeAllFriendListeners() {
