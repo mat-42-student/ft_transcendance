@@ -5,6 +5,9 @@ import asyncio
 import time
 from asyncio import run as arun, sleep as asleep, create_task
 from signal import signal, SIGTERM, SIGINT
+from .models import Game, Tournament, User
+from asgiref.sync import sync_to_async
+from datetime import datetime
 
 # Custom Class
 from .Player import Player
@@ -42,10 +45,10 @@ class Command(BaseCommand):
             }
             
              # Data to save all game by the type_game
-            self.game = {
-                "1vs1R": [],
-                "invite": [],
-                "tournament": []
+            self.games = {
+                "1vs1R": {},
+                "invite": {},
+                "tournament": {}
             }
             
             # Global dict
@@ -83,8 +86,9 @@ class Command(BaseCommand):
                         else:
                             await self.SelectTypeGame(message)
                     elif (msg.get('channel') == self.channel_pong):
-                        await self.infoGame(message)
-                        print("listen again...")
+                        await self.parseInfoGame(message)
+                    
+                    print("listen again...")
                 except Exception as e:
                     print(e)
 
@@ -106,6 +110,7 @@ class Command(BaseCommand):
         if self.redis_client:
             await self.redis_client.close()
             
+    #############      GENERAL     #############
     
     # Create Player if he didn't already exist somewhere
     async def manage_player(self, header, body):
@@ -170,41 +175,32 @@ class Command(BaseCommand):
         elif (body.get('type_game') == 'tournament'):
             # Research Player with opponents < 4 and the type_game is tournament
             print(f'tournament')
+            
+            
+            
+    async def send_1vs1(self, salon, idgame):
+         for key, player in salon.players.items():
+            await self.start_toFront(key, salon, idgame)
+            await player.updateStatus(self.redis_client, self.channel_deepSocial, "ingame")
+    #############      GENERAL     #############
+            
 
             
 
-    # Setup data to player (username, avatar), create and update salon then create game  
-    async def random(self, player):
-        """Setup data to player (username, avatar), create and update salon then create game """
+
         
-        # Check the status for research random game
-        if (await player.checkStatus(self.redis_client, self.channel_social) != 'online'):
-            return 
-        
-        # Setup player
-        player.get_user()
-        
-        # Create and update Salon
-        salon = self.createSalonRandom(player.type_game)
-        salon.players.update({player.user_id: player})
-        salon.type_game = player.type_game
-        
-        # Create and update Game
-        self.salons[player.type_game].append(salon)
-        
-        # Update status player with Social
-        await player.updateStatus(self.redis_client, self.channel_deepSocial, 'pending')
-        
-        # Launch game if Salon has 2 players
-        if (len(salon.players) >= 2):
-            self.create_game(salon.type_game, salon)
-            await self.send_1vs1R(salon)
-        
+    #############      INVITE     #############
     
     # Process to invite
     async def invitation(self, player, obj_invite):
 
-        print("Invitation")
+        print(f'Salon invite length -> {len(self.salons['invite'])}')
+        for salon in self.salons['invite']:
+            print(f'Length of players : {len(salon.players)}')
+            try:
+                print(f"{salon}")
+            except Exception as e:
+                print(f'Exception print Salon -> {e}')
         # Check the frienship with endpoint
         # Check status player
         
@@ -289,7 +285,7 @@ class Command(BaseCommand):
             try:
                 guest.user_id = int(obj_invite['guest_id'])
             except Exception as e:
-                print(e)
+                print(f'try conversion -> {e}')
                 return
             
 
@@ -320,20 +316,7 @@ class Command(BaseCommand):
             await self.confirmSendInvitationGame(player.user_id, guest.user_id, None)
         
 
-    # Search or create a Salon, if players in Salon < 2 return it else create it
-    def createSalonRandom(self, type_game):
-        """Search or create a Salon, if players in Salon < 2 return it else create it"""
-        mainSalon = Salon()
-        mainSalon.type_game = type_game
-        for salon in self.salons[type_game]:
-            if (len(salon.players) < 2):
-                mainSalon = salon
-                try:
-                    self.salons[salon.type_game].remove(salon)
-                except Exception as e:
-                    print(e)
-                break
-        return (mainSalon)
+
 
     def createSalonInvite(self, type_game, host):
         """Search Salon belongs to host or create it, if players has not it"""
@@ -365,27 +348,110 @@ class Command(BaseCommand):
                     
                     # start the game
                     if (checkplayers == 2):
+                        player1 = None
+                        player2 = None
                         for pid in salon.players:
-                            await self.start_toFront(pid, salon)
+                            
+                            if (pid == player.user_id):
+                                player1 = pid
+                            else:
+                                player2 = pid
+                        
+                        game = await self.create_game_sync(None, player1, player2, 'friendly', 'friendly')
+                        self.games[salon.type_game].update({game.id: salon})
+                        await self.send_1vs1(salon, game.id)
+                        self.deleteSalon(salon)
+                        print(f'length salon invite after start the game -> {len(self.salons['invite'])}')
+                        print(f'length salon invite after start the game -> {len(self.games['invite'])}')
+                        for salon in self.salons['invite']:
+                            try:
+                                print(f'length players in salon -> {len(salon.players)}')
+                            except Exception as e:
+                                print(f'Exception after start the game -> {e}')
                         return True
                     else:
                         return False
                         
                         
-                        
-    
-    def create_game(self, type_game, salon):
-        # Create game in database with an id and send start game clients and set status
-        self.game[type_game].append(salon)
-       
+    def deleteSalon(self, salontodelete):
+        try:
+            self.salons[salontodelete.type_game].remove(salontodelete)
+        except Exception as e:
+            print(f'Exception to delete salon -> {e}')
+    #############      INVITE     #############
+            
+            
+            
+    #############      RANDOM     #############
+
+
+    # Setup data to player (username, avatar), create and update salon then create game  
+    async def random(self, player):
+        """Setup data to player (username, avatar), create and update salon then create game """
         
-    async def send_1vs1R(self, salon):
-         for key, player in salon.players.items():
-            await self.start_toFront(key, salon)
-            await player.updateStatus(self.redis_client, self.channel_deepSocial, "ingame")
+        # Check the status for research random game
+        if (await player.checkStatus(self.redis_client, self.channel_social) != 'online'):
+            return 
+        
+        # Setup player
+        player.get_user()
+        
+        # Create and update Salon
+        salon = self.createSalonRandom(player.type_game)
+        salon.players.update({player.user_id: player})
+        salon.type_game = player.type_game
+        
+        # Create and update Game
+        self.salons[player.type_game].append(salon)
+        
+        # Update status player with Social
+        await player.updateStatus(self.redis_client, self.channel_deepSocial, 'pending')
+        
+        # Launch game if Salon has 2 players
+        if (len(salon.players) >= 2):
+            idgame = await self.create_game(salon.type_game, salon)
+            if (idgame is None):
+                return
+            else:
+                await self.send_1vs1(salon, idgame)
+
+
+    # Search or create a Salon, if players in Salon < 2 return it else create it
+    def createSalonRandom(self, type_game):
+        """Search or create a Salon, if players in Salon < 2 return it else create it"""
+        mainSalon = Salon()
+        mainSalon.type_game = type_game
+        for salon in self.salons[type_game]:
+            if (len(salon.players) < 2):
+                mainSalon = salon
+                try:
+                    self.salons[salon.type_game].remove(salon)
+                except Exception as e:
+                    print(e)
+                break
+        return (mainSalon)
     
+    async def create_game(self, type_game, salon):
+        # Create game in database with an id and send start game clients and set status
+        players_id = []
+        for player_id in salon.players:
+            players_id.append(player_id)
+   
+        game = await self.create_game_sync(None, players_id[0], players_id[1], 'ranked', 'ranked')
+        if (game is None):
+            return None
+        self.games[type_game].update({game.id: salon})
+        return game.id
+       
+    
+    #############      RANDOM     #############
+
+
+
+    #############      JSON     #############
+
     # Send status ingame to Front to start a game with all opponents
-    async def start_toFront(self, id, salon):
+    async def start_toFront(self, id, salon, gameid):
         data = {
             'header':{
                 'service': 'mmaking',
@@ -394,6 +460,7 @@ class Command(BaseCommand):
             },
             'body':{
                 'status': 'ingame',
+                'id_game': gameid,
                 'cancel': False
             }
         }
@@ -401,8 +468,6 @@ class Command(BaseCommand):
         del data['body']['opponents'][id]
         await self.redis_client.publish(self.channel_front, json.dumps(data))
 
-
-    #############       INVITATION JSON     #############
 
     # Send invitation game to Client
     async def invitationGameToGuest(self, host, guest, accept):
@@ -483,9 +548,8 @@ class Command(BaseCommand):
             }
         }
         await self.redis_client.publish(self.channel_front, json.dumps(data))
-
-    #############       INVITATION JSON     #############
-
+        
+        
     # Send status ingame to Social to setup status in front
     async def start_1vs1RtoSocial(self, id):
         data = {
@@ -500,14 +564,80 @@ class Command(BaseCommand):
         }
         await self.redis_client.publish(self.channel_social, json.dumps(data))
 
+    #############       JSON     #############
+
+
+    #############       Communication with Game     #############
+
+
+
     def getplayers(self, idgame):
-        return [1,2]
+        players = []
+        game_database = None
+        try:
+            # idgame = int(idgame)
+            game_database = Game.objects.get(id=idgame)
+        except Exception as e:
+            print(f'Game does not exist -> {e}')
+            return None
+        for type_game in self.games:
+            salon = self.games[type_game][idgame]
+            if (salon):                
+                for player in salon.players.values():
+                    if (player.user_id == game_database.player1.id or player.user_id == game_database.player2.id):
+                        players.append(player.user_id)
+                        
+                        
+                    
+        print(f'send players to pong -> {players}')
+        if (len(players) >= 2):
+            return players
+        else:
+            return None
+
+
+    async def parseInfoGame(self, data):
+        print(f'parseInfoGame -> {data}')
+        if (data.get('game_id')):
+            await self.infoGame(data)
+        
+        elif(data.get('score')):
+            await self.updateScore(data.get('score'))
     
-        # for type_game in self.game:
-        #     for salon in type_game:
-        #         if (salon)
-                
-                
+    async def updateScore(self, score):
+        print(f'score -> {score}')
+
+        if (len(score) < 3):
+            return False
+        
+        players = []
+        score_int = {}
+
+        for key, value in score.items():
+            try:
+                if (key != 'game_id'):
+                    players.append(int(key))
+                    score_int[int(key)] = int(value)
+                else:
+                    score_int[key] = int(value)
+
+
+            except Exception as e:
+                print(f'Try conversion -> {e}')
+                return False
+            
+        for player in players:
+            if (not await sync_to_async(self.checkPlayerInGame)(player, score_int['game_id'])):
+                return False
+            
+        print(f'score_int {score_int}')
+        update = await sync_to_async(self.SetScoreGame)(players, score_int)
+        if (update):
+            return True
+        else:
+            return False
+
+    
     async def infoGame(self, data):
         """ answers backend requests on channel 'info_mmaking' """
         try:
@@ -517,7 +647,90 @@ class Command(BaseCommand):
             print(f'infoGame Exception = {e}')
             return
         if game_id:
-            players = self.getplayers(game_id)
+            players =  await sync_to_async(self.getplayers)(game_id)
+        if (players is None):
+            return
         key = f"game_{game_id}_players"
         print(f"publish info : {key, json.dumps(players)}")
         await self.redis_client.set(key, json.dumps(players), ex = 2)
+        
+    #############       Communication with Game     #############
+
+
+
+    #############       Database     #############
+
+    def SetScoreGame(self, players, score_int):
+        try:
+            game = self.getGame(score_int['game_id'])
+            print(game)
+            if (game is None):
+                return False
+            
+            for player in players:
+                if (game.player1.id == player):
+                    game.score_player1 = score_int[player]
+                elif (game.player2.id == player):
+                    game.score_player2 = score_int[player]
+
+            if (game.score_player1 > game.score_player2):
+                game.winner = game.player1
+            else:
+                game.winner = game.player2
+            game.save()
+        except Exception as e:
+            print(f'error set score {e}')
+            return False
+
+        return True
+
+
+    def getGame(self, idgame):
+        try:
+            game = Game.objects.get(id=idgame)
+            return game
+        except Game.DoesNotExist as e:
+            print(e)
+            return None
+
+    def checkPlayerInGame(self, player_id, gameId):
+        try:
+            player = User.objects.get(id=player_id)
+            game = self.getGame(gameId)
+
+            if (player.id == game.player1.id ):
+                return True
+            elif (player.id == game.player2.id ):
+                return True
+            else:
+                False
+        except Exception as e:
+            print(f'Someone not exist -> {e}')
+            return False
+        
+                  
+
+    async def create_game_sync(self, tournament_id, player1_id, player2_id, game_type, round="Ranked"):
+        # Simulating ORM object creation (replace this with actual ORM code)
+        # tournament = Tournament.objects.get(id=tournament_id)
+        try:
+            player1 = await User.objects.aget(id=player1_id)
+            player2 = await User.objects.aget(id=player2_id)
+        except Exception as e:
+            print(f"Some player not exist -> {e}")
+            return 
+        # Create the game in the database (ID is auto-generated by the database)
+        game = await Game.objects.acreate(
+            tournament=tournament_id,
+            player1=player1,
+            player2=player2,
+            score_player1=0,
+            score_player2=0,
+            date=datetime.now(),
+            round=round,
+            game_type=game_type
+        )
+        await game.asave()
+        return game
+    #############       Database     #############
+    

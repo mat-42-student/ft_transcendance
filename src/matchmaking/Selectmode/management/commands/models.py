@@ -192,6 +192,7 @@ class Relationship(models.Model):
 # Choices for game rounds
 ROUND_CHOICES = [
     ("friendly", "Friendly Match"),
+    ("ranked", "Ranked"),
     ("first_round", "First Round"),
     ("quarter_final", "Quarter-Final"),
     ("semi_final", "Semi-Final"),
@@ -201,6 +202,7 @@ ROUND_CHOICES = [
 # Game type choices (tournament or friendly)
 GAME_TYPE_CHOICES = [
     ("friendly", "Friendly Match"),
+    ("ranked", "Ranked"),
     ("tournament", "Tournament Game"),
 ]
 
@@ -236,4 +238,4 @@ class Game(models.Model):
     def __str__(self):
         if self.tournament:
             return f"{self.round}: {self.player1.username} vs {self.player2.username} - {self.tournament.name}"
-        return f"Friendly: {self.player1.username} vs {self.player2.username}"
+        return f"Friendly {self.id}: {self.player1.username} vs {self.player2.username}"

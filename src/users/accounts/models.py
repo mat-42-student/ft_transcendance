@@ -187,3 +187,53 @@ class Relationship(models.Model):
 
     def __str__(self):
         return f"{self.from_user.username} -> {self.to_user.username} ({self.status})"
+    
+
+# Choices for game rounds
+ROUND_CHOICES = [
+    ("friendly", "Friendly Match"),
+    ("first_round", "First Round"),
+    ("quarter_final", "Quarter-Final"),
+    ("semi_final", "Semi-Final"),
+    ("final", "Final"),
+]
+
+# Game type choices (tournament or friendly)
+GAME_TYPE_CHOICES = [
+    ("friendly", "Friendly Match"),
+    ("tournament", "Tournament Game"),
+]
+
+class Tournament(models.Model):
+    name = models.CharField(max_length=255)
+    location = models.CharField(max_length=255, blank=True, null=True)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    organizer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="organized_tournaments")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'Tournament'
+
+    def __str__(self):
+        return self.name
+
+class Game(models.Model):
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, null=True, blank=True, related_name="games")
+    player1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="games_as_player1")
+    player2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="games_as_player2")
+    score_player1 = models.IntegerField(default=0)
+    score_player2 = models.IntegerField(default=0)
+    date = models.DateTimeField()
+    winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="won_games")
+    round = models.CharField(max_length=20, choices=ROUND_CHOICES, default="friendly")
+    game_type = models.CharField(max_length=20, choices=GAME_TYPE_CHOICES, default="friendly")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'Game'
+
+    def __str__(self):
+        if self.tournament:
+            return f"{self.round}: {self.player1.username} vs {self.player2.username} - {self.tournament.name}"
+        return f"Friendly: {self.player1.username} vs {self.player2.username}"

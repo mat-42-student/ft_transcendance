@@ -48,6 +48,8 @@ export async function goHome() {
 
         window.history.replaceState({}, '', `#home`);
         setupHomePage();
+        if(state.mmakingApp)
+            state.mmakingApp.refresh_eventlisteners();
     } catch (error) {
         console.error('Error loading page:', error);
         return;
