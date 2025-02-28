@@ -1,21 +1,24 @@
 import { state } from './main.js';
 
-export class Game {
+export class WebGame {
 
 
     constructor() {
         this.socket = null;
     }
 
-    launchGameSocket() {
-        let socketURL = "wss://" + window.location.hostname + ":3000/game/4/?t=" + state.client.accessToken;
+    launchGameSocket(gameId) {
+        if (!gameId) // debug
+            gameId = 1; // effacer asap
+		state.client.refreshSession();
+        let socketURL = "wss://" + window.location.hostname + ":3000/game/" + gameId + "/?t=" + state.client.accessToken;
         // websocat --insecure wss://nginx:3000/game/1234/?t=pouetpouet
         // websocat ws://pong:8006/game/1234/?t
         this.socket = new WebSocket(socketURL);
         this.socket.onerror = async function(e) {
             console.error(e.message);
         };
-    
+
         this.socket.onopen = async function(e) {
             this.send(JSON.stringify({
                 // 'from': state.client.userName,
@@ -23,15 +26,18 @@ export class Game {
                 })
             );
         };
-        
+
         this.socket.onclose = async function(e) {
         };
-    
+
         this.socket.onmessage = async function(e) {
             let data = JSON.parse(e.data);
-            console.log('data = ' + data);
+            console.log('data = ' + JSON.stringify(data));
             if (data.action == "info") {
                 console.log('info');
+            }
+            if (data.action == "wait") {
+                console.log('waiting');
             }
             if (data.action =="move") {
                 console.log('info');
@@ -39,7 +45,7 @@ export class Game {
             if (data.action == "disconnect") {
                 this.playing = false;
                 this.close();
-                cancelAnimationFrame(raf);
+                // cancelAnimationFrame(raf);
             }
         };
     }

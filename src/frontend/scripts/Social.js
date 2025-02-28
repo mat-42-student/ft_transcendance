@@ -3,68 +3,67 @@ import { state } from './main.js'
 export class SocialApp{
 
     constructor(){
-        this.friendlist = null;
+        this.friendList = null;
+        this.myStatus = null;
     }
 
     async fetchFriends() {
-        const token = state.client.accessToken;
-        if (!token) {
+        if (!state.client.accessToken) {
             console.error("User is not connected");
             return;
         }
         try {
-            const response = await fetch('api/v1/users/relationships/my-relationships/', {
+            const response = await fetch('api/v1/users/' + state.client.userId + '/friends/', {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${state.client.accessToken}`,
                 },
             });
             if (response.ok) {
                 const data = await response.json();
-                const friendsData = data.friends || [];
-                if (!Array.isArray(friendsData)) {
-                    console.error("Data is not an array :", friendsData);
+                const friendsData = data.friends;
+                if (!friendsData) {
+                    console.error("Error fetching friends: ", friendsData);
                     return;
                 }
-                if (!state.client.userId) {
-                    console.error("User unknown");
-                    return;
-                }
-                const friends = friendsData.map(rel => {
-                    // Vérifie si l'utilisateur connecté est `from_user` ou `to_user`
-                    return rel.from_user.id === state.client.userId ? rel.to_user : rel.from_user;
-                });
-                this.friendlist = new Map(friends.map(user => [user.id, user]));
-                this.displayFriendsList();
+                this.friendList = new Map(friendsData.map(friend => [friend.id, friend]));
             } else {
-                console.error("Error while loading friendlist :", response.status);
+                console.error("Error while loading friendList :", response.status);
             }
         } catch (error) {
             console.error("Fetch error: ", error);
         }
+        this.displayFriendList();
     }
 
     getFriend(id) {
-        return this.friendlist.get(Number(id));
+        id = Number(id);
+        return Number.isInteger(id) ? this.friendList.get(id) : null;
     }
 
     close() {
         this.removeAllFriendListeners();
         document.querySelector('.friends-list').innerHTML = '<p>Sign in to interact with friends</p>';
-        this.friendlist = null;
+        this.friendList = null;
     }
 
     incomingMsg(data) {
-        let friend = this.friendlist.get(data.user_id);
+        if (data.user_id == state.client.userId) {
+            this.myStatus = data.status;
+            return ;
+        }
+        let friend = this.friendList.get(data.user_id);
         if (!friend)
-            return;
-        friend['status'] = data.status;
+            return ;
+        friend.status = data.status;
         this.renderFriendStatus(data.user_id);
+        if (data.user_id == state.chatApp.activeChatUserId)
+            state.chatApp.toggleChatInput(data.status);
     }
 
     renderFriendStatus(id) {
         const friendItem = document.querySelector(`.friend-detail[data-user-id="${id}"]`);
         if (friendItem) {
-            const status = this.friendlist.get(id).status
+            const status = this.friendList.get(id).status
             const statusSpan = friendItem.querySelector('.friend-status');
             statusSpan.classList.remove('online', 'ingame', 'offline', 'pending');
             statusSpan.classList.add(status);
@@ -80,20 +79,20 @@ export class SocialApp{
         }
     }
 
-    displayFriendsList() {
-        const friendsList = document.querySelector('.friends-list');
-        friendsList.querySelectorAll('.friend-item').forEach(friendItem => {
+    displayFriendList() {
+        const htmlFriendList = document.querySelector('.friends-list');
+        htmlFriendList.querySelectorAll('.friend-item').forEach(friendItem => {
             const btnChat = friendItem.querySelector('.btn-chat');
             const btnMatch = friendItem.querySelector('.btn-match');
             btnChat.removeEventListener('click', this.handleChatClick);
             btnMatch.removeEventListener('click', this.handleMatchClick);
         });
-        friendsList.innerHTML = '';
-        if (this.friendlist == null) {
-            friendsList.innerHTML = '<p>Seems you have no friends</p>';
+        htmlFriendList.innerHTML = '';
+        if (this.friendList == null || this.friendList.size == 0) {
+            htmlFriendList.innerHTML = '<p>I\'m sorry you have no friends</p>';
             return;
         }
-        this.friendlist.forEach((friend) => {
+        this.friendList.forEach((friend) => {
             const friendItem = document.createElement('li');
             friendItem.classList.add('friend-item');
             friendItem.innerHTML = `
@@ -107,9 +106,9 @@ export class SocialApp{
                     </div>
                 </div>
             `;
-            friendsList.appendChild(friendItem);
+            htmlFriendList.appendChild(friendItem);
 
-            // add data-user-id="${friend.id} to entire card (create by adrien)
+            // add data-user-id="${friend.id} to entire card (Adrien©)
             friendItem.dataset.userid = friend.id;
     
             const btnChat = friendItem.querySelector('.btn-chat');
@@ -128,7 +127,7 @@ export class SocialApp{
         const friendId = event.currentTarget.dataset.friendId;
         state.chatApp.changeChatUser(friendId);
     }
-    
+
     handleMatchClick(event) {
         const friendId = event.currentTarget.dataset.friendId;
         state.mmakingApp.invite(friendId, event.currentTarget);

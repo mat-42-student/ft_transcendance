@@ -1,0 +1,27 @@
+#start-game {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: green;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#start-game:hover {
+    background-color: rgb(2, 223, 2);
+}
+
+#cancel-button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#cancel-button:hover {
+    background-color: #c0392b;
+}

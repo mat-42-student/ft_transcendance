@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
 
@@ -23,8 +23,7 @@ class UserManager(BaseUserManager):
         db_table = 'user_manager'
     
 # User model (inherits Django user model) -> Ajouter: bio, tableaux historique 1à dernières games ???
-class User(AbstractBaseUser, PermissionsMixin):
-
+class User(AbstractBaseUser):
     STATUS_CHOICES = [
         ('online', 'Online'),
         ('offline', 'Offline'),
@@ -36,13 +35,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         unique=True,
         validators=[MinLengthValidator(3)]
     )
-    first_name = models.CharField(
-        max_length=50,
-        validators=[MinLengthValidator(3)]
-    )
-    last_name = models.CharField(
-        max_length=50,
-        validators=[MinLengthValidator(3)]
+    password = models.CharField( # Utilisation d'un mot de passe hashé -> SUPPRIMER pour laisser django gérer hashage ou utiliser set_password()
+        max_length=128, 
+        validators=[MinLengthValidator(5)]
     )
     email = models.EmailField(
         max_length=254,
@@ -96,8 +91,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = []
-
+    REQUIRED_FIELDS = ['password', 'email']
 
     def __str__(self):
         return self.username
@@ -198,6 +192,7 @@ class Relationship(models.Model):
 # Choices for game rounds
 ROUND_CHOICES = [
     ("friendly", "Friendly Match"),
+    ("ranked", "Ranked"),
     ("first_round", "First Round"),
     ("quarter_final", "Quarter-Final"),
     ("semi_final", "Semi-Final"),
@@ -207,6 +202,7 @@ ROUND_CHOICES = [
 # Game type choices (tournament or friendly)
 GAME_TYPE_CHOICES = [
     ("friendly", "Friendly Match"),
+    ("ranked", "Ranked"),
     ("tournament", "Tournament Game"),
 ]
 
@@ -242,4 +238,4 @@ class Game(models.Model):
     def __str__(self):
         if self.tournament:
             return f"{self.round}: {self.player1.username} vs {self.player2.username} - {self.tournament.name}"
-        return f"Friendly: {self.player1.username} vs {self.player2.username}"
+        return f"Friendly {self.id}: {self.player1.username} vs {self.player2.username}"

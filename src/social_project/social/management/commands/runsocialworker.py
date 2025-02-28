@@ -18,14 +18,7 @@ class Command(BaseCommand):
         self.running = True
         self.user_status = {}
         try:
-            self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
-            self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
-            self.gateway_group = "deep_social"
-            self.info_group = "info_social"
-            print(f"Subscribing to channels: {self.gateway_group}, {self.info_group}")
-            await self.pubsub.subscribe(self.gateway_group)
-            await self.pubsub.subscribe(self.info_group)
-            self.listen_task = create_task(self.listen())
+            await self.connect_redis()
             while self.running:
                 await asleep(1)
         except Exception as e:
@@ -33,17 +26,33 @@ class Command(BaseCommand):
         finally:
             await self.cleanup_redis()
 
+    async def connect_redis(self):
+        self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
+        self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
+        self.REDIS_GROUPS = {
+            "gateway": "deep_social",
+            "info": "info_social",
+            "users": "users_social",
+        }
+        print(f"Subscribing to channels: {', '.join(self.REDIS_GROUPS.values())}")
+        await self.pubsub.subscribe(*self.REDIS_GROUPS.values())
+        self.listen_task = create_task(self.listen())
+
     async def listen(self):
         print(f"Listening for messages...")
         async for msg in self.pubsub.listen():
             if msg:
                 try:
                     data = json.loads(msg['data'])
-                    if msg.get('channel') == "info_social":
-                        await self.get_info_process(data)
+                    channel = msg.get('channel')
+                    if channel == self.REDIS_GROUPS['info']:
+                        await self.info_process(data)
+                        continue
+                    if channel == self.REDIS_GROUPS['users']:
+                        await self.users_process(data)
                         continue
                     if self.valid_social_json(data):
-                        await self.process_message(data)
+                        await self.social_process(data)
                 except Exception as e:
                     print(e)
 
@@ -55,7 +64,7 @@ class Command(BaseCommand):
             return False
         return True
 
-    async def process_message(self, data):
+    async def social_process(self, data):
         data['header']['dest'] = 'front' # data destination after deep processing
         user_id = data['header']['id']
         friends_data = self.get_friend_list(user_id)
@@ -77,14 +86,21 @@ class Command(BaseCommand):
         if status == 'info':
             status = 'online' # user wanted infos but is online
         if status == "offline" and self.user_status.get(user_id) == "pending":
-            await self.redis_client.publish(self.info_group, json.dumps({
+            await self.redis_client.publish(self.REDIS_GROUPS['info'], json.dumps({
                 "user_id": user_id,
                 "status": "offline"
             }))
         self.user_status[user_id] = status # Update current user status
         print(f"User {user_id} is now {status}")
+        await self.send_me_my_own_status(user_id)
 
-    async def get_info_process(self, data):
+    async def users_process(self, data):
+        """ answers backend requests on channel 'info_social' """
+        print(f"users_process: {data}")
+        
+
+    async def info_process(self, data):
+        """ answers backend requests on channel 'info_social' """
         try:
             user_id = int(data.get('user_id', 'x'))
         except Exception as e:
@@ -144,35 +160,36 @@ class Command(BaseCommand):
     async def send_me_my_friends_status(self, user_id, friends):
         """ publish status of all friends and adress them to 'user_id' """
         for friend in friends:
-            data = {
-                "header": {
-                    "service": "social",
-                    "dest": "front",
-                    "id": user_id
-                },
-                "body":{
-                    "user_id": friend,
-                    "status": self.user_status.get(friend, "offline")
-                }
-            }
+            data = self.build_social_data(user_id, friend)
             # print(f"getting my friends status : {data}")
-            await self.redis_client.publish(self.gateway_group, json.dumps(data))
+            await self.redis_client.publish(self.REDIS_GROUPS['gateway'], json.dumps(data))
+
+    async def send_me_my_own_status(self, user_id):
+        """ publish my status and adress them to me """
+        data = self.build_social_data(user_id, user_id)
+        print(f"getting my own status : {data}")
+        await self.redis_client.publish(self.REDIS_GROUPS['gateway'], json.dumps(data))
 
     async def send_my_status(self, user_id, friend):
-        """ publish status of 'user_id' and adress it to 'friend' """
+        """ publish status of 'user_id' and adress it to 'friend', and also to 'user_id' """
+        data = self.build_social_data(friend, user_id)
+        # print(f"Publishing my status to my online friends: {data}")
+        await self.redis_client.publish(self.REDIS_GROUPS['gateway'], json.dumps(data))
+
+    def build_social_data(self, user_id, friend):
+        """user_id will receive friend info"""
         data = {
             "header": {
                 "service": "social",
                 "dest": "front",
-                "id": friend
+                "id": user_id
             },
             "body":{
-                "user_id": user_id,
-                "status": self.user_status.get(user_id, "offline")
+                "user_id": friend,
+                "status": self.user_status.get(friend, "offline")
             }
         }
-        # print(f"Publishing my status to my online friends: {data}")
-        await self.redis_client.publish(self.gateway_group, json.dumps(data))
+        return data
 
     def signal_handler(self, sig, frame):
         try:
@@ -184,7 +201,7 @@ class Command(BaseCommand):
     async def cleanup_redis(self):
         print("Cleaning up Redis connections...")
         if self.pubsub:
-            await self.pubsub.unsubscribe(self.gateway_group)
+            await self.pubsub.unsubscribe(self.REDIS_GROUPS['gateway'])
             await self.pubsub.close()
         if self.redis_client:
             await self.redis_client.close()

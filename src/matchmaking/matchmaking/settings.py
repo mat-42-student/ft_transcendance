@@ -37,15 +37,13 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'Selectmode',
-    'rest_framework',
+    'Selectmode'
 ]
 
 MIDDLEWARE = [
@@ -76,7 +74,6 @@ TEMPLATES = [
     },
 ]
 
-ASGI_APPLICATION = 'matchmaking.asgi.application'
 REDIS_URL = "redis://redis:6379/1"
 
 CHANNEL_LAYERS = {

@@ -27,7 +27,7 @@ class Player ():
         return (player)
         
     def __str__(self):
-        return (f'Player {self.user_id}')
+        return (f'Player {self.user_id} type_game: {self.type_game}')
     
     def get_user(self):
         """Get information from API user and set this in instances"""

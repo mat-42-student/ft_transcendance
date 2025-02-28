@@ -14,7 +14,7 @@ SECRET_KEY = 'django-insecure-uf14@2_-p3x8u%k1qw9d_$0meb9gv$8j^=idwdbvxm1%+3as_1
 DEBUG = True
 
 # Autorise uniquement localhost pour le serveur de développement
-ALLOWED_HOSTS = ['users', 'social', 'chat', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['*']
 
 JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")
 JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")

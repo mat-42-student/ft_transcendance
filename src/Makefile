@@ -8,14 +8,17 @@ DOCKERFILE = ./_Base/Dockerfile.django
 
 all: build_base build run
 
+run:	
+	docker compose up
+
 build_base:
 	docker build -t $(DOCKER_IMAGE_NAME) -f $(DOCKERFILE) .
 
 build:
 	docker compose build
 
-run:
-	docker compose up
+jbuild:
+	docker compose -f my_compose.yml up --build
 
 down:
 	docker compose down
@@ -33,4 +36,4 @@ fclean: clean
 clean: stop
 	docker compose down -v
 	
-re: clean build_base build run
+re: clean all

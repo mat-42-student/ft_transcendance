@@ -77,9 +77,8 @@ export async function startLocalGame(isCPU) {
 
     __level = new (LEVELS.pickRandomLevel())();
 
-    const size = global.unitRect(__level.boardDiagonal);
-    gg.boardSize.x = size.x;
-    gg.boardSize.y = size.y;
+    gg.boardSize.x = 2.5;
+    gg.boardSize.y = 1;
 
     gg.playerNames[1] = isCPU ? generateRandomNick() : 'Player 2';
 
