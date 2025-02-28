@@ -3,6 +3,7 @@ from time import time
 from json import dumps
 from asyncio import sleep as asleep
 from .const import LEFT, RIGHT, FPS, DELTATIME, GREEN, RED, RESET, STATS
+from .bounce import bounce
 
 
 # TODO: this will be read from a dictionary of levels, matching on level name
@@ -89,7 +90,7 @@ class Game:
 
         # the ball hit the paddle -> Bounce
         else:
-            self.ball_direction[0] *= -1
+            self.ball_direction = bounce(self.ball_direction, self.ball_pos, self.players[side].pos, self.players[side].pad_size)
 
     def set_player_move(self, id, move):
         self.players[id].move = int(move)
