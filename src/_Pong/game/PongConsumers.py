@@ -236,7 +236,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             return
         who = "master" if self.master else "guest"
         print(f"{RED}Player {self.player_id}({who}) has left{RESET}")
-        if self.master and not self.game.over: # game is ending because master left #FIXME AttributeError: 'NoneType' object has no attribute 'over'
+        if self.master and self.game and not self.game.over:
             print(f"{RED}Game #{self.game.id} over (player {self.player_id} left){RESET}")
             await self.disconnect_endgame(self.player_id)
         if self.room_group_name:

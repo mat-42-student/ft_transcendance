@@ -102,8 +102,6 @@ class Game:
             player.move_paddle(self.pad_speed)
 
     def get_game_state(self):
-        print('TEST', self.__dict__)
-        # print(self.ball_pos)
         return {
             "action":"info",
             "ball": self.ball_pos,

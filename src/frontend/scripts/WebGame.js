@@ -69,6 +69,7 @@ export class WebGame extends GameBase {
             console.log('data = ' + JSON.stringify(data));
             if (data.action == 'init') {
                 console.log('init', data);
+                state.gameApp.side = data.side;
             }
             if (data.action == "info") {
                 console.log('info');
