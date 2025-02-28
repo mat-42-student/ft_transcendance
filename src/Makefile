@@ -7,7 +7,10 @@ DOCKERFILE = ./_Base/Dockerfile.django
 # Targets
 .PHONY: all build run re clean
 
-all: re
+all: build_base build run
+
+run:	
+	docker compose up
 
 build_base:
 	docker build -t $(DOCKER_IMAGE_NAME) -f $(DOCKERFILE) .
@@ -17,9 +20,6 @@ build:
 
 jbuild:
 	docker compose -f my_compose.yml up --build
-
-run:
-	docker compose up
 
 down:
 	docker compose down
@@ -37,4 +37,4 @@ fclean: clean
 clean: stop
 	docker compose down -v
 	
-re: clean build_base build run
+re: clean all
