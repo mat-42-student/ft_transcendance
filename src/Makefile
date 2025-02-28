@@ -7,10 +7,10 @@ DOCKERFILE = ./_Base/Dockerfile.django
 # Targets
 .PHONY: all build run re clean
 
-run:
-	docker compose up
-
 all: build_base build run
+
+run:	
+	docker compose up
 
 build_base:
 	docker build -t $(DOCKER_IMAGE_NAME) -f $(DOCKERFILE) .
