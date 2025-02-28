@@ -66,10 +66,12 @@ export class WebGame extends GameBase {
             const wg = state.gameApp;
             wg.isPlaying = true;  //TODO this should be based on loading
             let data = JSON.parse(e.data);
-            console.log('data = ' + JSON.stringify(data));
+            if (data.action != 'info')
+                console.log('data = ', data);
             if (data.action == 'init') {
                 console.log('init', data);
-                state.gameApp.side = data.side;
+                state.gameApp.side = Number(data.side);
+                state.gameApp.isPlaying = true;
             }
             if (data.action == "info") {
                 console.log('info');
@@ -103,10 +105,12 @@ export class WebGame extends GameBase {
     #sendInput() {
         let currentInput = state.input.getPaddleInput(this.side);
         if (this.previousInput != currentInput) {
-            this.socket.send(JSON.stringify({
+            let input = JSON.stringify({
                 "action": "move",
                 "key": currentInput
-            }));
+            });
+            this.socket.send(input);
+            console.log('SENT INPUT:', input);  //TODO remove log
             this.previousInput = currentInput;
         }
     }

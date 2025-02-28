@@ -213,8 +213,7 @@ export class Mmaking
 			{
 				this.setOpponent(value.username, `../../../media/${value.avatar}`)
 			}
-			console.log('rederRandom');  //TODO remove log 'rederRandom'
-			// state.gameApp.launchGameSocket(this.game);
+			state.gameApp.launchGameSocket(this.game);
 		}
 
 	}
@@ -290,7 +289,7 @@ export class Mmaking
         {
             for (const [key, value] of Object.entries(data.body.opponents))
                 this.setOpponent(value.username, '../../../media/default.png', value.type_game)
-
+/* TODO move this block: this happens after initializing a Webgame, responding to message init
             let levelName = null;
             try {
                 levelName = 'debug';  //TODO get server to pick this
@@ -306,7 +305,7 @@ export class Mmaking
                 // Game is still playable without opponent name: complain, but continue.
                 console.error('Opponent name could not be retrieved.');
             }
-
+ */
             let gameId;
             try {
                 gameId = data.body.id_game;

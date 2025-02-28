@@ -135,7 +135,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         # print(f"text_data: {text_data}")
         data = self.load_valid_json(text_data)
         if not (data):
-            print("wrong data incoming")
+            print("wrong data incoming", text_data)
             return
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "handle.message", "message": data}
@@ -145,13 +145,21 @@ class PongConsumer(AsyncWebsocketConsumer):
         try:
             data = json.loads(data)
             if "action" not in data:
-                return None
+                raise Exception()
             data["side"] = self.side
             if data["action"] == "wannaplay!":
                 data["username"] = self.player_name
                 data["id"] = self.player_id
                 return data
+            if data["action"] == "move":
+                if "key" not in data or data["key"] not in [-1, 0, 1]:
+                    raise Exception()
+                return data
+            # If we get to this point, we received a packet that we don't know.
+            # Write a new if statement to properly validate it.
+            raise Exception()
         except:
+            print(RED, 'Invalid packet:', data, RESET)
             return None
 
     async def handle_message(self, data):
@@ -203,32 +211,13 @@ class PongConsumer(AsyncWebsocketConsumer):
         if self.master:
             create_task(self.game.play())
 
-    def valid_move_message(self, message):
-        try:
-            player = int(message.get("from", "x"))
-            key = int(message.get("key", "x"))
-        except ValueError:
-            return False
-        if player not in [0, 1] or key not in [-1, 0, 1]:
-            return False
-        return True
-
     async def wait_a_bit(self, data):
         time = data.get('time', 1)
         await self.send(json.dumps({"action":"wait", "time":time}))
 
     async def moveplayer(self, message):
-        if not self.valid_move_message(message):
-            print("invalid move")
-            return
         if self.master: # transmit move to game engine
-            self.game.set_player_move(int(message["from"]), int(message["key"]))
-        # players handle their own moves client-side, we only transmit the moves to the opposing player
-        if message["from"] != str(self.side):
-            try:
-                await self.send(message)
-            except:
-                pass
+            self.game.players[message["side"]].move = message["key"]
 
     # client ws was closed, sending disconnection to other client
     async def disconnect(self, close_code):
@@ -241,7 +230,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             await self.disconnect_endgame(self.player_id)
         if self.room_group_name:
             await self.channel_layer.group_send(
-                self.room_group_name, {"type": "disconnect.now", "from": self.player_id}
+                self.room_group_name, {"type": "disconnect.now", "side": self.player_id}
             )
         await self.send_online_status('online')
 
@@ -257,7 +246,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             print(f"{RED}Game #{self.game.id} over (player {user} left){RESET}")
             await self.disconnect_endgame(user)
         # if self.player_id != user:
-        await self.send(text_data=json.dumps({"action": "disconnect", "from": user}))
+        await self.send(text_data=json.dumps({"action": "disconnect", "side": user}))
         # await self.disconnect(0)
 
     async def disconnect_endgame(self, user):

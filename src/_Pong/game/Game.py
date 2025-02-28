@@ -21,8 +21,10 @@ class Player:
 
     def move_paddle(self, speed):
         HALF_HEIGHT = BOARD_SIZE[1] / 2
-        if (not (self.move < 0 and self.pos <= -HALF_HEIGHT)
-            and (self.move > 0 and self.pos >= HALF_HEIGHT)):
+        is_too_low = self.pos <= -HALF_HEIGHT
+        is_too_high = self.pos >= HALF_HEIGHT
+        if ((self.move < 0 and not is_too_low)
+            or (self.move > 0 and not is_too_high)):
             self.pos += self.move * speed * DELTATIME
 
     def score_up(self):
@@ -68,9 +70,9 @@ class Game:
             self.ball_direction[1] *= -1
         # left / right collision
         if (self.ball_pos[0] <= BOARD_SIZE[0]/-2):
-            await self.side_collided(LEFT)
-        if (self.ball_pos[0] >= BOARD_SIZE[0]/2):
             await self.side_collided(RIGHT)
+        if (self.ball_pos[0] >= BOARD_SIZE[0]/2):
+            await self.side_collided(LEFT)
 
     async def side_collided(self, side):
         is_ball_below_paddle = self.ball_pos[1] < self.players[side].pos - self.players[side].pad_size/2
@@ -91,11 +93,6 @@ class Game:
 
     def set_player_move(self, id, move):
         self.players[id].move = int(move)
-        # prevent hax allowing the player to move way too fast
-        if (self.players[id].move < 1.0):
-            self.players[id].move = -1
-        elif (self.players[id].move > 1.0):
-            self.players[id].move = 1
 
     def move_players(self):
         for player in self.players:
