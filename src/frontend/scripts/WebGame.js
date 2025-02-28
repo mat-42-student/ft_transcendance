@@ -110,7 +110,6 @@ export class WebGame extends GameBase {
                 "key": currentInput
             });
             this.socket.send(input);
-            console.log('SENT INPUT:', input);  //TODO remove log
             this.previousInput = currentInput;
         }
     }

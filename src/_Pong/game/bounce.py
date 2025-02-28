@@ -11,7 +11,7 @@ RAD360 = pi * 2
 
 
 def bounce(ball_direction, ball_pos, paddle_pos, paddle_size):
-	collision_side = int(ball_direction[0] > 0)  #REVIEW this might be flipped?
+	collision_side = int(ball_direction[0] > 0)
 	signed_side = collision_side * 2 - 1
 	max_angle_rad = radians(STATS["maxAngleDeg"])
 
