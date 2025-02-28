@@ -361,13 +361,6 @@ class Command(BaseCommand):
                         self.games[salon.type_game].update({game.id: salon})
                         await self.send_1vs1(salon, game.id)
                         self.deleteSalon(salon)
-                        print(f'length salon invite after start the game -> {len(self.salons['invite'])}')
-                        print(f'length salon invite after start the game -> {len(self.games['invite'])}')
-                        for salon in self.salons['invite']:
-                            try:
-                                print(f'length players in salon -> {len(salon.players)}')
-                            except Exception as e:
-                                print(f'Exception after start the game -> {e}')
                         return True
                     else:
                         return False

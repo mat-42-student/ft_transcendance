@@ -5,12 +5,222 @@ import { LocalGame } from './LocalGame.js';
 
 export class Mmaking
 {
-    constructor(mainSocket)
+    constructor()
     {
-        this.waited_page = null;
-        this.gameSocket = null;
-        this.refresh_eventlisteners();
+		this.invited_by = {};
+		this.guests = {};
+		for (let [key, value] of state.socialApp.friendList)
+		{
+			const keyNumber = Number(key);
+			if (keyNumber != NaN)
+			{
+				console.log(typeof(keyNumber))
+				this.invited_by[keyNumber] = false;
+				this.guests[keyNumber] = false;
+			}
+		}
+		this.host = false;
+		this.opponents = {};
+		this.SearchRandomGame = false;
+		this.cancel = {'random': false, 'invitation': false, 'tournament': false};
+		this.salonInvite = false;
+		this.salonRandom = false;
+		this.game = null;
     }
+
+	async renderMatchmaking()
+	{
+		await this.renderHost();
+		this.renderGuest();
+	}
+
+	async renderHost()
+	{
+
+		for (const [key, value] of Object.entries(this.guests))
+		{
+			const friend = state.socialApp.friendList.get(Number(key));
+
+			console.log(typeof(key));
+			const cardFriend = document.getElementsByClassName(`friend-item-${key}`);
+
+			if (friend && (value == true || value == false))
+			{
+				if (value == true)
+				{
+					console.log('Reset card friend');
+					this.cardFriendReset(cardFriend[0])
+				}
+				else
+				{
+					this.cardFriendReset(cardFriend[0]);
+				}
+			}
+			else if (friend && value == null)
+			{
+				this.cardFriendInvited(cardFriend[0])
+			}
+		}
+
+	}
+
+	cardFriendInvited(friendCard)
+	{
+		friendCard.style.backgroundColor = 'blue';
+	}
+
+	cardFriendReset(friendCard)
+	{
+		friendCard.style.backgroundColor = "#f8f9fa";
+	}
+
+
+	async renderGuest()
+	{
+		for (const [key, value] of Object.entries(this.invited_by))
+		{
+			const btnHost = document.getElementsByClassName(`btn-match-${key}`);
+			const btnMatchPicture = document.getElementById(`btn-match-picture-${key}`)
+			const friend = state.socialApp.friendList.get(Number(key));
+
+			if(value == false)
+			{
+				console.group(key);
+				btnMatchPicture.src = "/ressources/vs.png";
+				btnHost[0].removeEventListener('click',(event)=>this.btnInviteActive(event));
+				btnHost[0].addEventListener('click', (event) => this.btnInviteDesactive(event));
+			}
+			else if (value == null)
+			{
+				btnMatchPicture.src = "/ressources/vs_active.png";
+				btnHost[0].removeEventListener('click',this.btnInviteDesactive);
+				btnHost[0].removeEventListener('click',state.socialApp.handleMatchClick);
+				btnHost[0].addEventListener('click', (event) => this.btnInviteActive(event));
+			}
+			else if (value == true && this.salonInvite == true)
+			{
+				closeDynamicCard();
+				await initDynamicCard('salonGuest');
+				this.setOpponentInvite(value.username, `../../../media/${value.avatar}`)
+			}
+		}
+	}
+
+	renderSalonInvite()
+	{
+		if (salonInvite == true)
+		{
+			const friend = null;
+			if (this.host == true)
+			{
+				initDynamicCard('salonHost');
+			}
+			else if (this.host == false)
+				initDynamicCard('salonGuest');
+		}
+		this.setOpponentInvite(friend.username, `../../../media/${friend.avatar}` );
+	}
+
+
+	async btnInviteDesactive(event)
+	{
+		const friendId = event.currentTarget.dataset.friendId;
+
+
+		const data =
+		{
+			'type_game': {
+				'invite': {
+					'guest_id': friendId
+				}
+			}
+		};
+
+		this.guests[friendId] = null;
+		this.invited_by[friendId] = false;
+		this.salonInvite = true;
+		this.host = true;
+
+		await this.sendMsg(data);
+		this.renderMatchmaking();
+	}
+
+	async btnInviteActive(event)
+	{
+		const friendId = event.currentTarget.dataset.friendId;
+		const btnInviteAccept = document.getElementsByClassName('btn-accepter');
+		const btnInviteRefuse = document.getElementsByClassName('btn-refuser');
+
+		await initDynamicCard('vs_active');
+
+		btnInviteAccept[0].addEventListener('click', (event) => this.btnInviteAccept(event));
+		btnInviteRefuse[0].addEventListener('click', (event) => this.btnInviteRefuse(event));
+	}
+
+	async btnInviteAccept(event)
+	{
+		const friendId = event.currentTarget.dataset.friendId;
+
+		const data = {
+			'type_game': {
+				'invite':{
+					'host_id': friendId,
+					'accept': true
+				}
+			}
+		};
+
+		this.guests[friendId] = false;
+		this.invited_by[friendId] = true;
+		this.host = false;
+		this.salonInvite = true;
+
+		await this.sendMsg(data);
+		this.renderMatchmaking();
+	}
+
+	async btnInviteRefuse(event)
+	{
+		const friendId = event.currentTarget.dataset.friendId;
+
+		const data = {
+			'type_game': {
+				'invite':{
+					'host_id': friendId,
+					'accept': false
+				}
+			}
+		};
+
+		this.guests[friendId] = false;
+		this.invited_by[friendId] = false;
+		this.host = true;
+		this.salonInvite = false;
+
+		await this.sendMsg(data);
+	}
+
+
+	rederRandom()
+	{
+		if (this.SearchRandomGame == true)
+		{
+			initDynamicCard('versus');
+		}
+		if (this.salonRandom == true)
+		{
+			for (const [key, value] of Object.entries(this.opponents))
+			{
+				this.setOpponent(value.username, `../../../media/${value.avatar}`)
+			}
+			state.gameApp.launchGameSocket(this.game);
+		}
+
+	}
+
+
+
+
 
 
     refresh_eventlisteners()
@@ -70,7 +280,7 @@ export class Mmaking
             },
             'body': message
         };
-    await state.mainSocket.send(JSON.stringify(data));
+    	await state.mainSocket.send(JSON.stringify(data));
     }
 
     async incomingMsg(data)
@@ -78,7 +288,7 @@ export class Mmaking
         if (data.body.status == 'ingame')
         {
             for (const [key, value] of Object.entries(data.body.opponents))
-                this.setOpponent(value.username, '../../../media/avatars/default.png')
+                this.setOpponent(value.username, '../../../media/default.png', value.type_game)
 
             let levelName = null;
             try {
@@ -124,98 +334,16 @@ export class Mmaking
 					return ;
 				}
 			});
+			closeDynamicCard();
 		}
 		// Routing to communication mode Invite
         else if (data.body.type_game.invite)
         {
-            const invite = data.body.type_game.invite;
-			const guest_id = Number(data.body.type_game.invite.guest_id);
-			const host_id = Number(data.body.type_game.invite.host_id);
-            console.log(invite);
+			const invite = data.body.type_game.invite;
+            if (invite.host_id)
+				this.invited_by[invite.host_id] = null;
 
-			// Invitation is accepted: all next msg by server come here
-			try
-			{
-				if (invite.accept == true)
-				{
-					if (host_id)
-					{
-						await initDynamicCard('salonGuest');
-
-					}
-					else if (guest_id)
-					{
-						await initDynamicCard('salonHost');
-						const startgame = document.getElementById("start-game");
-						console.log(startgame);
-						startgame.addEventListener('click', async (event) =>
-						{
-							const data = {
-								'type_game': {
-									'invite':{
-										'guest_id': guest_id,
-										'accept': true,
-										'startgame': true
-									}
-								}
-							};
-							await this.sendMsg(data);
-						});
-
-					}
-
-					this.desableOverlay();
-					this.setGuest(invite.username, '../../../media/avatars/default.png');
-
-					const friendlist = document.querySelectorAll('.friend-item');
-
-					friendlist.forEach(friend => {
-
-							const btnmatch = friend.querySelector('.btn-match');
-							this.ResetCardFriend(btnmatch)
-							return ;
-
-					});
-				}
-				else if (invite.accept == false)
-				{
-					const friendlist = document.querySelectorAll('.friend-item');
-
-					friendlist.forEach(friend => {
-						if (friend.dataset.userid == data.body.type_game.invite.guest_id )
-						{
-							const btnmatch = friend.querySelector('.btn-match');
-							this.ResetCardFriend(btnmatch)
-							return ;
-						}
-					});
-				}
-
-				// Invitation come here to notif the client
-				else if (invite.accept == null)
-				{
-					const friendlist = document.querySelectorAll('.friend-item');
-
-					friendlist.forEach(friend => {
-						if (friend.dataset.userid == data.body.type_game.invite.host_id )
-						{
-							const btnmatch = friend.querySelector('.btn-match');
-							const imgmatch = btnmatch.getElementsByTagName('img');
-							imgmatch[0].src = "/ressources/vs_active.png";
-							btnmatch.dataset.invite = 1;
-							return ;
-						}
-					});
-				}
-			}
-			catch (error)
-			{
-
-				console.log("RESET btn-match")
-				// Reset btn-match if server send cancel
-
-				console.log(error);
-			}
+			this.renderMatchmaking();
         }
     }
 
@@ -237,68 +365,6 @@ export class Mmaking
 		overlay[0].classList.add('hidden');
 	}
 
-
-
-    async invite(guestid, target)
-    {
-        if (target.dataset.invite == 1)
-        {
-            await initDynamicCard('vs_active');
-			this.desableOverlay();
-
-
-
-            const acceptInvitation = document.querySelector('.invitation .btn-accepter');
-			const refuseInvitation = document.querySelector('.invitation .btn-refuser');
-
-            acceptInvitation.addEventListener('click', async (event)=>{
-
-                const data = {
-                    'type_game': {
-                        'invite':{
-                            'host_id': guestid,
-                            'accept': true
-                        }
-                    }
-                };
-                await this.sendMsg(data);
-                target.dataset.invite = false
-                target.getElementsByTagName('img')[0].src = '/ressources/vs.png';
-
-                closeDynamicCard()
-            });
-			refuseInvitation.addEventListener('click', async (event)=>{
-
-                const data = {
-                    'type_game': {
-                        'invite':{
-                            'host_id': guestid,
-                            'accept': false
-                        }
-                    }
-                };
-                await this.sendMsg(data);
-                target.dataset.invite = false
-                target.getElementsByTagName('img')[0].src = '/ressources/vs.png';
-
-                closeDynamicCard()
-            });
-        }
-        else
-        {
-            const data =
-            {
-                'type_game': {
-                    'invite': {
-                        'guest_id': guestid
-                    }
-                }
-            };
-            await this.sendMsg(data);
-			this.waitReponseofGuest(target);
-        }
-    }
-
 	waitReponseofGuest(target)
 	{
 		//target.style.display = 'none';
@@ -306,12 +372,7 @@ export class Mmaking
 		frienditem.style.backgroundColor = 'blue';
 	}
 
-	ResetCardFriend(target)
-	{
-		//target.style.display = 'block';
-		const frienditem = target.closest('.friend-item');
-		frienditem.style.backgroundColor = "#f8f9fa";
-	}
+
 
 	//friendIngame()
 
@@ -334,13 +395,38 @@ export class Mmaking
         closeDynamicCard();
     }
 
-    setOpponent(name, photo) {
+    setOpponent(name, photo, type_game) {
         document.getElementById("opponent-info").style.display = "block";
         document.getElementById("opponent-name").textContent = name;
         document.getElementById("opponent-photo").src = photo;
-        document.getElementById("status").textContent = "Adversaire trouvé !";
-        document.getElementById("loader").style.display = "none";
-        document.getElementById("waiting-text").textContent = "Préparez-vous à jouer !";
+		try
+		{
+			if (type_game == '1vs1R')
+			{
+				random = document.getElementById("random-loader");
+
+				// random.style.display = "none";
+				document.getElementById("status").textContent = "Adversaire trouvé !";
+				document.getElementById("loader").style.display = "none";
+				document.getElementById("waiting-text").textContent = "Préparez-vous à jouer !";
+			}
+			else if (type_game == 'invite')
+			{
+				btnStartGameInvite = document.getElementById('start-game');
+				btnStartGameInvite.style.display = 'none';
+			}
+		}
+		catch (error)
+		{
+			console.log(error);
+		}
+        document.getElementById("cancel-button").style.display = "none";
+    }
+
+	setOpponentInvite(name, photo) {
+        document.getElementById("opponent-info").style.display = "block";
+        document.getElementById("opponent-name").textContent = name;
+        document.getElementById("opponent-photo").src = photo;
         document.getElementById("cancel-button").style.display = "none";
     }
 
