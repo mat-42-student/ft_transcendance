@@ -7,6 +7,7 @@ import { Input } from './game3d/Input.js';
 import { Engine } from './game3d/Engine.js';
 import { Clock } from './Clock.js';
 import LevelIdle from './game3d/gameobjects/levels/LevelIdle.js';
+import {WebGame} from './WebGame.js'
 
 export const state = {
     client: new Client(),
@@ -77,8 +78,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (playButton) {
         playButton.addEventListener('click', async (e) => {
             e.preventDefault();
-            if (state.gameApp)
-                state.gameApp.launchGameSocket();
+            // if (!state.gameApp)
+
+            state.gameApp = new WebGame('debug', 'asdhsajdhsajkdsjk');
+            state.gameApp.launchGameSocket();
+            console.log('hello')
         });
     }
 
@@ -96,20 +100,20 @@ document.addEventListener('DOMContentLoaded', () => {
         searchInput.addEventListener("input", async () => {
             const query = searchInput.value.trim();
             // let timeout = null;
-    
+
             // clearTimeout(timeout);
 
             if (query.length === 0) {
                 searchResults.style.display = "none";
                 return;
             }
-    
+
             // if (query.length === 0) {
             //     searchResults.innerHTML = "";
             //     lastQuery = "";
             //     return;
             // }
-    
+
             // Vérifie si la nouvelle entrée prolonge la précédente pour éviter des requêtes inutiles
             // if (!query.startsWith(lastQuery)) {
             //     searchResults.innerHTML = ""; // Réinitialise les résultats si un caractère est supprimé
@@ -119,25 +123,25 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch(`/api/v1/users/?search=${query}`);
                 const users = await response.json();
-            
+
                 // Réinitialiser la liste des résultats
                 searchResults.innerHTML = "";
-            
+
                 if (users.length > 0) {
                     users.slice(0, 5).forEach(user => {
                         const li = document.createElement("li");
                         li.textContent = user.username;
-            
+
                         li.addEventListener("click", () => {
                             searchInput.value = user.username;
                             searchResults.innerHTML = "";
                             searchResults.style.display = "none"; // Cacher après sélection
                             goProfile(user.id);
                         });
-            
+
                         searchResults.appendChild(li);
                     });
-            
+
                     searchResults.style.display = "block"; // Afficher les résultats
                 } else {
                     searchResults.style.display = "none"; // Cacher si aucun résultat
@@ -145,18 +149,18 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error("Erreur lors de la recherche :", error);
             }
-    
+
             // timeout = setTimeout(() => {
             //     fetch(`/api/v1/users/?search=${encodeURIComponent(query)}`)
             //         .then(response => response.json())
             //         .then(data => {
             //             searchResults.innerHTML = "";
-    
+
             //             if (data.length === 0) {
             //                 searchResults.innerHTML = "<li>Aucun résultat</li>";
             //                 return;
             //             }
-    
+
             //             data.forEach(user => {
             //                 const li = document.createElement("li");
             //                 li.textContent = user.username;
@@ -178,11 +182,11 @@ document.addEventListener('DOMContentLoaded', () => {
     //         searchResults.style.display = "none";
     //         return;
     //     }
-    
+
         // try {
         //     const response = await fetch(`/api/v1/users/?search=${query}`);
         //     const users = await response.json();
-    
+
         //     if (users.length > 0) {
         //         searchResults.innerHTML = users
         //             .slice(0, 5)

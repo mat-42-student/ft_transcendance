@@ -70,7 +70,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         except jwt.InvalidTokenError as e:
             print(e)
         return None
-    
+
     def get_public_key(self):
         try:
             response = requests.get(f"http://auth-service:8000/api/v1/auth/public-key/")
@@ -103,7 +103,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             await asleep(0.5)
         if expected_players is None:
             print("No answer from mmaking")
-            # await self.close(code=1002) # activate when mmaking will answer 
+            # await self.close(code=1002) # activate when mmaking will answer
             return
         try:
             expected_players = json.loads(expected_players)
@@ -113,7 +113,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             return
         if self.player_id not in expected_players:
             print("Unexpected player")
-            await self.close(code=1002)        
+            await self.close(code=1002)
 
     async def send_online_status(self, status):
         """Send all friends our status"""
@@ -182,7 +182,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.game = Game(self.game_id, self.player_id, self.player_name, user_id, user_name, self)
         json_data = {
             "action" : "init",
-            "dir" : self.game.ball_spd,
+            "dir" : self.game.ball_speed,
             "lplayer": self.game.players[LEFT].name,
             "rplayer": self.game.players[RIGHT].name,
             "lpos":self.game.players[LEFT].pos,
@@ -237,7 +237,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         who = "master" if self.master else "guest"
         print(f"{RED}Player {self.player_id}({who}) has left{RESET}")
         if self.master and not self.game.over: # game is ending because master left #FIXME AttributeError: 'NoneType' object has no attribute 'over'
-            print(f"{RED}Game #{self.game.id} over (player {self.player_id} left){RESET}")        
+            print(f"{RED}Game #{self.game.id} over (player {self.player_id} left){RESET}")
             await self.disconnect_endgame(self.player_id)
         if self.room_group_name:
             await self.channel_layer.group_send(
@@ -251,10 +251,10 @@ class PongConsumer(AsyncWebsocketConsumer):
         user = event["from"]
         print(f"{YELLOW}Disconnect_now from {user}{RESET}")
         if self.master and self.game.over: # game ended normally
-            print(f"{RED}Game #{self.game.id} over (maxscore reached){RESET}")        
+            print(f"{RED}Game #{self.game.id} over (maxscore reached){RESET}")
             await self.send_score()
         elif self.master and not self.game.over: # game is ending because one player left
-            print(f"{RED}Game #{self.game.id} over (player {user} left){RESET}")        
+            print(f"{RED}Game #{self.game.id} over (player {user} left){RESET}")
             await self.disconnect_endgame(user)
         # if self.player_id != user:
         await self.send(text_data=json.dumps({"action": "disconnect", "from": user}))
@@ -267,7 +267,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         print(f"{RED}Player {user} left")
         await self.send_score()
         self.game = None
-        
+
     async def send_score(self):
         score = self.game.get_score()
         await self.redis_client.publish("info_mmaking", json.dumps(score))

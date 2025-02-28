@@ -2,7 +2,7 @@ from random import randint, choice
 from time import time
 from json import dumps
 from asyncio import sleep as asleep
-from .const import LEFT, RIGHT, HEIGHT, FPS, DELTATIME, GREEN, RED, RESET, STATS
+from .const import LEFT, RIGHT, FPS, DELTATIME, GREEN, RED, RESET, STATS
 
 
 # TODO: this will be read from a dictionary of levels, matching on level name
@@ -33,17 +33,15 @@ class Game:
 
     def __init__(self, game_id, id1, username1, id2, username2, wsh):
         self.wsh = wsh
-        self.players = []
+        self.players = [Player(username1, id1), Player(username2, id2)]
         self.over = False
         self.id = game_id
         self.ball_speed = STATS['initialBallSpeed']
         self.pad_speed = STATS['initialPadSpeed']
-        self.players.append(Player(username1, id1))
-        self.players.append(Player(username2, id2))
         self.recenter()
         print(f"{GREEN}New game {game_id} launched opposing **{self.players[LEFT].name}({self.players[LEFT].id})** vs {self.players[RIGHT].name}({self.players[RIGHT].id}{RESET}")
 
-    async def recenter(self):
+    def recenter(self):
         self.ball_pos = [0, 0]
         self.ball_direction = [0.7071067811865475 * choice([1, -1]), 0.7071067811865475]
         self.players[0].pos = self.players[1].pos = 0
@@ -63,8 +61,8 @@ class Game:
 
     async def move_ball(self):
         # move
-        self.ball_pos[0] += DELTATIME * self.ball_direction[0] * self.speed
-        self.ball_pos[1] += DELTATIME * self.ball_direction[1] * self.speed
+        self.ball_pos[0] += DELTATIME * self.ball_direction[0] * self.ball_speed
+        self.ball_pos[1] += DELTATIME * self.ball_direction[1] * self.ball_speed
         # top / bottom collision
         if (self.ball_pos[1] <= BOARD_SIZE[1]/-2 or self.ball_pos[1] >= BOARD_SIZE[1]/2):
             self.ball_direction[1] *= -1
@@ -104,6 +102,8 @@ class Game:
             player.move_paddle(self.pad_speed)
 
     def get_game_state(self):
+        print('TEST', self.__dict__)
+        # print(self.ball_pos)
         return {
             "action":"info",
             "ball": self.ball_pos,

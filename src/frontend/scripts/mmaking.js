@@ -213,7 +213,8 @@ export class Mmaking
 			{
 				this.setOpponent(value.username, `../../../media/${value.avatar}`)
 			}
-			state.gameApp.launchGameSocket(this.game);
+			console.log('rederRandom');  //TODO remove log 'rederRandom'
+			// state.gameApp.launchGameSocket(this.game);
 		}
 
 	}
@@ -316,6 +317,7 @@ export class Mmaking
             }
 
             state.gameApp = new WebGame(levelName, opponentName);
+			console.log('mmaking launchGameSocket');  //TODO remove log 'mmaking launchGameSocket'
             state.gameApp.launchGameSocket(gameId);
         }
 		else if (data.body.cancel == true)

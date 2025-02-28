@@ -49,6 +49,7 @@ export class WebGame extends GameBase {
         };
 
         this.socket.onopen = async function(e) {
+            console.log('onopen', this)
             this.send(JSON.stringify({
                 // 'from': state.client.userName,
                 'action' :"wannaplay!",
@@ -66,6 +67,9 @@ export class WebGame extends GameBase {
             wg.isPlaying = true;  //TODO this should be based on loading
             let data = JSON.parse(e.data);
             console.log('data = ' + JSON.stringify(data));
+            if (data.action == 'init') {
+                console.log('init', data);
+            }
             if (data.action == "info") {
                 console.log('info');
                 wg.ballPosition.x = data.ball[0];
