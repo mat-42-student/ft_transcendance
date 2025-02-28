@@ -111,7 +111,7 @@ export class LocalGame extends GameBase {
     }
 
     cpuFindTarget() {
-        this.cpuTarget = 0;  //TODO
+        this.cpuTarget = -0.2;  //TODO
         /*
         https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line
         ( (x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4) )
@@ -138,6 +138,7 @@ export class LocalGame extends GameBase {
     }
 
     movePaddles(delta) {
+        this.cpuFindTarget();
         let inputs = [
             state.input.getPaddleInput(0),
             this.isCPU ? this.cpuSeekTarget() : state.input.getPaddleInput(1)
