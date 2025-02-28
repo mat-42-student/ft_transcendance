@@ -72,7 +72,7 @@ class Game:
         # left / right collision
         if (self.ball_pos[0] <= BOARD_SIZE[0]/-2):
             await self.side_collided(RIGHT)
-        if (self.ball_pos[0] >= BOARD_SIZE[0]/2):
+        elif (self.ball_pos[0] >= BOARD_SIZE[0]/2):
             await self.side_collided(LEFT)
 
     async def side_collided(self, side):

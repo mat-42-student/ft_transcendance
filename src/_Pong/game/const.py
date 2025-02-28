@@ -18,14 +18,14 @@ DELTATIME = 1.0 / FPS
 # Should be (manually) kept in sync with LocalGame.js
 STATS = {
     "initialPadSize": 0.2,
-    "initialPadSpeed": 0.12,
-    "padShrinkFactor": 0.9,
-    "padAccelerateFactor": 1.2,
+    "initialPadSpeed": 0.2,
+    "padShrinkFactor": 0.95,
+    "padAccelerateFactor": 1.1,
 
-    "initialBallSpeed": 0.18,
-    "ballAccelerateFactor": 1.2,
+    "initialBallSpeed": 0.4,
+    "ballAccelerateFactor": 1.1,
     "redirectionFactor": 1.5,
-    "maxAngleDeg": 70.0,
+    "maxAngleDeg": 45.0,
 
     "maxScore": 5
 }
