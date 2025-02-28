@@ -111,13 +111,13 @@ export class LocalGame extends GameBase {
     }
 
     cpuFindTarget() {
-        this.cpuTarget = ;  //TODO
+        this.cpuTarget = 0;  //TODO
         /*
         https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line
         ( (x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4) )
         /
         ( (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4) )
-        
+
         Ball trajectory: (ball.x, ball.y) (dir.x, dir.y)
         Wall: (wx, inf) (wx, inf)
 
