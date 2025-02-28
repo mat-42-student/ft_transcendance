@@ -6,6 +6,16 @@ services:
   #       dockerfile: Dockerfile.django
   #     image: django-base
 
+  # vault:
+  #   image: hashicorp/vault:latest
+  #   ports:
+  #     - "8200:8200"
+  #   environment:
+  #     VAULT_DEV_ROOT_TOKEN_ID: "root"  # For dev only
+  #     VAULT_DEV_LISTEN_ADDRESS: "127.0.0.1:8200"
+  #   volumes:
+  #     - vault_data:/vault/data
+
   auth-service:
     container_name: auth-service
     build:
@@ -208,6 +218,7 @@ volumes:
   postgres_data:
   media:
   static_volume:
+  vault_data:
 
 networks:
   nginx-network:

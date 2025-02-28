@@ -10,6 +10,7 @@ import requests
 from .models import Game, Tournament, User
 from asgiref.sync import sync_to_async
 from datetime import datetime
+import os
 
 # Custom Class
 from .Player import Player

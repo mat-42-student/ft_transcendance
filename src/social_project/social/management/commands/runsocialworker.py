@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep, create_task
 from django.conf import settings
+import os
 
 class Command(BaseCommand):
     help = "Async pub/sub redis worker. Listens 'deep_social' channel"
@@ -115,7 +116,7 @@ class Command(BaseCommand):
     def get_friend_list(self, user_id):
         """ Request friendlist from container 'users' """
 
-        # Fetch token for machine-to-machine communications: start
+        # Fetch token for machine-to-machine communications
         try:
             url = settings.OAUTH2_CCF_TOKEN_URL
             headers = {
@@ -133,7 +134,7 @@ class Command(BaseCommand):
 
                 token = token_data.get('access_token')
             else:
-                print(f"Error: {response.status_code} - {response.text}")
+                print(f"Error: {response.status_code} - {response.text} - {settings.OAUTH2_CCF_CLIENT_ID} - {settings.OAUTH2_CCF_CLIENT_SECRET}")
 
         except requests.exceptions.RequestException as e:
             print(f"Error in request : {e}")

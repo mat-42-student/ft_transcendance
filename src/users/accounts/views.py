@@ -223,6 +223,21 @@ class UserViewSet(viewsets.ModelViewSet):
         """
         requested_user = self.get_object()  # Récupère l'utilisateur cible
 
+        # Handle machine clients (oauth_client)
+        if request.user.username == 'oauth_client' and request.user.is_authenticated:
+            try:
+                user = User.objects.get(pk=pk)
+                friends = User.objects.filter(
+                    Q(relationships_initiated__to_user=user, relationships_initiated__status='friend') |
+                    Q(relationships_received__from_user=user, relationships_received__status='friend')
+                ).distinct()
+
+                serializer = UserMinimalSerializer(friends, many=True)
+                return Response({'friends': serializer.data}, status=200)
+
+            except User.DoesNotExist:
+                return Response({'error': 'User not found'}, status=404)
+
         # Vérification des permissions
         if request.user != requested_user and not request.user.is_superuser:
             raise PermissionDenied("Vous n'avez pas la permission d'accéder aux contacts de cet utilisateur.")
