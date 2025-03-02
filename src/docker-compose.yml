@@ -1,20 +1,9 @@
 services:
-
   # django-base:
   #     build:
   #       context: .
   #       dockerfile: Dockerfile.django
   #     image: django-base
-
-  # vault:
-  #   image: hashicorp/vault:latest
-  #   ports:
-  #     - "8200:8200"
-  #   environment:
-  #     VAULT_DEV_ROOT_TOKEN_ID: "root"  # For dev only
-  #     VAULT_DEV_LISTEN_ADDRESS: "127.0.0.1:8200"
-  #   volumes:
-  #     - vault_data:/vault/data
 
   auth-service:
     container_name: auth-service
@@ -24,6 +13,7 @@ services:
     volumes:
       - ./auth_service:/code
       - static_volume:/code/staticfiles
+      - shared_credentials:/shared_credentials
     depends_on:
       postgres:
         condition: service_healthy
@@ -72,9 +62,13 @@ services:
     env_file:
       - .env
     depends_on:
-      - redis
+      redis:
+        condition: service_started 
+      auth-service:
+        condition: service_started 
     volumes:
       - ./chat/:/code
+      - shared_credentials:/shared_credentials
     networks:
       - db-network
       - redis-network
@@ -90,8 +84,12 @@ services:
       - .env
     volumes:
       - ./social_project/:/code
+      - shared_credentials:/shared_credentials
     depends_on:
-      - redis
+      redis:
+        condition: service_started 
+      auth-service:
+        condition: service_started 
     networks:
       - redis-network
       - deep-network
@@ -127,11 +125,14 @@ services:
       - .env
     volumes:
       - ./matchmaking:/code
+      - shared_credentials:/shared_credentials
     depends_on:
       postgres:
         condition: service_healthy
       pong:
         condition: service_started
+      auth-service:
+        condition: service_started 
     expose:
       - "8000"
     networks:
@@ -218,7 +219,7 @@ volumes:
   postgres_data:
   media:
   static_volume:
-  vault_data:
+  shared_credentials:
 
 networks:
   nginx-network:
