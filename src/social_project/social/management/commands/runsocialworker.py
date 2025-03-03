@@ -138,7 +138,6 @@ class Command(BaseCommand):
 
         except requests.exceptions.RequestException as e:
             print(f"Error in request : {e}")
-        #
 
         url = f"http://users:8000/api/v1/users/{user_id}/friends/"
 

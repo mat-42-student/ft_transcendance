@@ -12,7 +12,5 @@ done
 # Load environment variables
 echo "Loading environment variables from $SHARED_ENV"
 export $(grep -v '^#' "$SHARED_ENV" | xargs)
-echo $OAUTH2_CCF_CLIENT_ID
-echo $OAUTH2_CCF_CLIENT_SECRET
 
 python manage.py runchatworker

@@ -163,7 +163,7 @@ class Command(BaseCommand):
         if (not player):
             return
         
-        # Fetch token for machine-to-machine communications: start
+        # Fetch token for machine-to-machine communications
         try:
             url = settings.OAUTH2_CCF_TOKEN_URL
             headers = {
@@ -187,7 +187,6 @@ class Command(BaseCommand):
 
         except requests.exceptions.RequestException as e:
             print(f"Error in request : {e}")
-        #
 
         # Setup token to request endpoints api
         player.token = token

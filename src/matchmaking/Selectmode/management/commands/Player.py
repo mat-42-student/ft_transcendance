@@ -33,7 +33,7 @@ class Player ():
     def get_user(self):
         """Get information from API user and set this in instances"""
 
-        # Fetch token for machine-to-machine communications: start
+        # Fetch token for machine-to-machine communications
         try:
             url = settings.OAUTH2_CCF_TOKEN_URL
             headers = {
@@ -55,15 +55,12 @@ class Player ():
 
         except requests.exceptions.RequestException as e:
             print(f"Error in request : {e}")
-        #
 
         url = f"http://users:8000/api/v1/users/{self.user_id}/"  # Remplace par ton URL réelle
 
         headers = {
             "Authorization": f"Bearer {token}",  # Ajoute le token d'authentification
         }
-
-        print(f"TOKEN = {token}") # debug
 
         response = requests.get(url, headers=headers)
 

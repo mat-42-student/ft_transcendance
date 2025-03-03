@@ -75,7 +75,7 @@ class Command(BaseCommand):
     def is_muted(self, exp, recipient) -> bool :
         """is exp muted by recipient ? Raises an UserNotFoundException if recipient doesnt exist"""
 
-        # Fetch token for machine-to-machine communications: start
+        # Fetch token for machine-to-machine communications
         try:
             url = settings.OAUTH2_CCF_TOKEN_URL
             headers = {
@@ -97,7 +97,6 @@ class Command(BaseCommand):
 
         except requests.exceptions.RequestException as e:
             print(f"Error in request : {e}")
-        #
 
         url = f"http://users:8000/api/v1/users/{recipient}/blocks/"
 
