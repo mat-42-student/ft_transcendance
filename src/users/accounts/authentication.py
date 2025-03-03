@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 import jwt
 from rest_framework.authentication import BaseAuthentication
 from requests import post
+import os
 
 User = get_user_model()
 
@@ -54,7 +55,7 @@ class RemoteOAuth2Authentication(BaseAuthentication):
         response = post(
             'http://auth-service:8000/api/v1/auth/o/introspect/',
             data={'token': token},
-            auth=(settings.OAUTH2_CCF_CLIENT_ID, settings.OAUTH2_CCF_CLIENT_SECRET),
+            auth=(os.getenv('OAUTH2_CCF_CLIENT_ID'), os.getenv('OAUTH2_CCF_CLIENT_SECRET')),
         )
         if response.status_code == 200 and response.json().get('active'):
             client_id = response.json().get('client_id')

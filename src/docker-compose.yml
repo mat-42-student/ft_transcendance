@@ -37,6 +37,7 @@ services:
     volumes:
       - ./media:/media
       - ./users:/code
+      - shared_credentials:/shared_credentials
     env_file:
       - .env
     networks:

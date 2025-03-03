@@ -171,8 +171,8 @@ class Command(BaseCommand):
             }
             data = {
                 'grant_type': 'client_credentials',
-                'client_id': settings.OAUTH2_CCF_CLIENT_ID,
-                'client_secret': settings.OAUTH2_CCF_CLIENT_SECRET
+                'client_id': os.getenv('OAUTH2_CCF_CLIENT_ID'),
+                'client_secret': os.getenv('OAUTH2_CCF_CLIENT_SECRET')
             }
             response = requests.post(url, headers=headers, data=data)
 
@@ -181,6 +181,8 @@ class Command(BaseCommand):
 
                 token = token_data.get('access_token')
             else:
+                print(f"client_ID={os.getenv('OAUTH2_CCF_CLIENT_ID')}")
+                print(f"client_secrET={os.getenv('OAUTH2_CCF_CLIENT_SECRET')}")
                 print(f"Error: {response.status_code} - {response.text}")
 
         except requests.exceptions.RequestException as e:

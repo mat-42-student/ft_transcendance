@@ -1,5 +1,20 @@
 #!/usr/bin/env sh
 
+# Path to the shared .env file
+SHARED_ENV="/shared_credentials/.env"
+
+# Wait for the .env file to exist
+echo "Waiting for $SHARED_ENV..."
+while [ ! -f "$SHARED_ENV" ]; do
+  sleep 2
+done
+
+# Load environment variables
+echo "Loading environment variables from $SHARED_ENV"
+export $(grep -v '^#' "$SHARED_ENV" | xargs)
+echo $OAUTH2_CCF_CLIENT_ID
+echo $OAUTH2_CCF_CLIENT_SECRET
+
 # python ./manage.py makemigrations accounts --no-input
 # python ./manage.py migrate --no-input
 exec gunicorn --reload --bind 0.0.0.0:8000 users.wsgi:application

@@ -4,7 +4,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from oauth2_provider.models import Application
-# import secrets
+import secrets
 
 User = get_user_model()
 
@@ -34,10 +34,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f'Error creating system user: {e}'))
             return
         
-        # client_id = secrets.token_urlsafe(40)
-        # client_secret = secrets.token_urlsafe(60)
-        client_id = "test"
-        client_secret = "test"
+        client_id = secrets.token_urlsafe(40)
+        client_secret = secrets.token_urlsafe(60)
         
         app, created = Application.objects.update_or_create(
             name="Shared Client",
@@ -51,13 +49,13 @@ class Command(BaseCommand):
         )
 
         credentials = {
-            "client_id": app.client_id,
-            "client_secret": app.client_secret
+            "client_id": client_id,
+            "client_secret": client_secret
         }
 
         with open("/shared_credentials/.env", "w") as f:
-            f.write(f"OAUTH_CCF_CLIENT_ID={credentials['client_id']}\n")
-            f.write(f"OAUTH_CCF_CLIENT_SECRET={credentials['client_secret']}\n")
+            f.write(f"OAUTH2_CCF_CLIENT_ID={credentials['client_id']}\n")
+            f.write(f"OAUTH2_CCF_CLIENT_SECRET={credentials['client_secret']}\n")
 
         # Log credentials
         # logger.info(json.dumps(credentials))
@@ -65,10 +63,6 @@ class Command(BaseCommand):
         # self.store_in_vault(credentials)
         
         # self.stdout.write(self.style.SUCCESS('OAuth application created/updated successfully!'))
-
-"""
-Testing another implementation
-"""
 
 # import secrets
 # import os

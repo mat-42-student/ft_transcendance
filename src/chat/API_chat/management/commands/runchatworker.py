@@ -83,8 +83,8 @@ class Command(BaseCommand):
             }
             data = {
                 'grant_type': 'client_credentials',
-                'client_id': settings.OAUTH2_CCF_CLIENT_ID,
-                'client_secret': settings.OAUTH2_CCF_CLIENT_SECRET
+                'client_id': os.getenv('OAUTH2_CCF_CLIENT_ID'),
+                'client_secret': os.getenv('OAUTH2_CCF_CLIENT_SECRET')
             }
             response = requests.post(url, headers=headers, data=data)
 
