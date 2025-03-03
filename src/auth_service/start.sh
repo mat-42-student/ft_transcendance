@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-mkdir  mkdir -p /shared_credentials
+mkdir  -p /shared_credentials
 python ./manage.py collectstatic
 python ./manage.py makemigrations authentication --no-input
 python ./manage.py migrate --no-input
