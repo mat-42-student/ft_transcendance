@@ -314,27 +314,6 @@ class UserViewSet(viewsets.ModelViewSet):
 class RelationshipViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
-    @action(detail=False, methods=['get'], url_path='my-relationships')
-    def get_user_relationships(self, request):
-        """Récupérer les relations de l'utilisateur."""
-        user = request.user
-
-        # Récupération des relations
-        friends = Relationship.objects.filter(
-            (models.Q(from_user=user) | models.Q(to_user=user)),
-            status=Relationship.FRIEND
-        )
-        sent_requests = Relationship.objects.filter(from_user=user, status=Relationship.PENDING)
-        received_requests = Relationship.objects.filter(to_user=user, status=Relationship.PENDING)
-
-        # Sérialisation des relations
-        data = {
-            "friends": RelationshipSerializer(friends, many=True).data,
-            "sent_requests": RelationshipSerializer(sent_requests, many=True).data,
-            "received_requests": RelationshipSerializer(received_requests, many=True).data,
-        }
-        return Response(data, status=status.HTTP_200_OK)
-
     @action(detail=True, methods=['post'], url_path='add-friend')
     def add_friend(self, request, pk=None):
         """Envoyer une demande d'ami ou accepter automatiquement si l'autre utilisateur a déjà initié une demande."""
@@ -390,6 +369,7 @@ class RelationshipViewSet(viewsets.ViewSet):
         relation.save()
         return Response({"detail": "Demande d'ami acceptée."}, status=status.HTTP_200_OK)
 
+    # add remove action on pending requests to urslef (authentified user) -> to deny requests
     @action(detail=True, methods=['delete'], url_path='remove-friend')
     def remove_friend(self, request, pk=None):
         """Supprimer un ami."""
@@ -409,3 +389,56 @@ class RelationshipViewSet(viewsets.ViewSet):
         relation.status = Relationship.NONE
         relation.save()
         return Response({"detail": "Ami supprimé."}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], url_path='received-requests')
+    def get_friend_requests_received(self, request):
+        """Récupérer les demandes d'ami reçues par l'utilisateur."""
+        user = request.user
+
+        # Récupérer les utilisateurs qui ont envoyé une demande d'ami à l'utilisateur courant
+        received_requests = Relationship.objects.filter(
+            to_user=user,
+            status=Relationship.PENDING
+        ).values_list('from_user', flat=True)  # Récupère uniquement les IDs des utilisateurs
+
+        users = User.objects.filter(id__in=received_requests)
+        data = UserMinimalSerializer(users, many=True).data
+
+        return Response({"received_requests": data}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], url_path='sent-requests')
+    def get_friend_requests_sent(self, request):
+        """Récupérer les demandes d'ami envoyées par l'utilisateur."""
+        user = request.user
+
+        # Récupérer les utilisateurs à qui l'utilisateur courant a envoyé une demande d'ami
+        sent_requests = Relationship.objects.filter(
+            from_user=user,
+            status=Relationship.PENDING
+        ).values_list('to_user', flat=True)  # Récupère uniquement les IDs des utilisateurs
+
+        users = User.objects.filter(id__in=sent_requests)
+        data = UserMinimalSerializer(users, many=True).data
+
+        return Response({"sent_requests": data}, status=status.HTTP_200_OK)
+    
+    # @action(detail=False, methods=['get'], url_path='my-relationships')
+    # def get_user_relationships(self, request):
+    #     """Récupérer les relations de l'utilisateur."""
+    #     user = request.user
+
+    #     # Récupération des relations
+    #     friends = Relationship.objects.filter(
+    #         (models.Q(from_user=user) | models.Q(to_user=user)),
+    #         status=Relationship.FRIEND
+    #     )
+    #     sent_requests = Relationship.objects.filter(from_user=user, status=Relationship.PENDING)
+    #     received_requests = Relationship.objects.filter(to_user=user, status=Relationship.PENDING)
+
+    #     # Sérialisation des relations
+    #     data = {
+    #         "friends": RelationshipSerializer(friends, many=True).data,
+    #         "sent_requests": RelationshipSerializer(sent_requests, many=True).data,
+    #         "received_requests": RelationshipSerializer(received_requests, many=True).data,
+    #     }
+    #     return Response(data, status=status.HTTP_200_OK)
