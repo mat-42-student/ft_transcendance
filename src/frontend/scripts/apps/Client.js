@@ -1,13 +1,14 @@
-import { state } from './main.js';
+import { state } from '../main.js';
 import { MainSocket } from './MainSocket.js';
+import { fetchFriends, fetchSentRequests, fetchReceivedRequests } from '../api/users.js';
 
 export class Client{
 
     constructor() {
+        this.state = null;
         this.userId = null;
         this.userName = null;
         this.accessToken = null;
-        this.state = null;
     }
 
     // Avoiding circular imports (main.js/Client.js)
@@ -64,7 +65,8 @@ export class Client{
     async globalRender() {
         this.renderProfileBtn();
         if (this.state.socialApp) {
-            await this.state.socialApp.fetchFriends();
+            await fetchFriends();
+            state.socialApp.displayFriendList(); // reloca hors de fetchFriends()
             await this.state.socialApp.getInfos();
         }
         if (this.state.chatApp)
@@ -134,10 +136,13 @@ export class Client{
         }
     }
 
+    // bouger fetch dans api/users.js -> init `data` -> data = fetchProfil() -> if !data = error -> else use data as actual `data`
     // status perso -> state.socialapp.mystatus
-    // Nouvelle fonction d'affichage #profile -> gère profil utilisateur authentifié et utilisateurs tiers, affichage dynamic des infos et options
-    // Si aucun userId ou id == User authentifié setup page profile auth, sinon affichage profil utilisateur tiers (gestion Relationship fonctionelle)
     async loadUserProfile(userId) {
+    /*
+    Nouvelle fonction d'affichage #profile -> gère profil utilisateur authentifié et utilisateurs tiers, affichage dynamic des infos et options
+    Si aucun userId ou id == User authentifié setup page profile auth, sinon affichage profil utilisateur tiers (gestion Relationship fonctionelle)
+    */
         try {
             if (!userId)
                 userId = this.userId;
@@ -222,55 +227,3 @@ export class Client{
         }
     }
 }
-
-// updateProfilePage() {
-// 	const avatarElement = document.querySelector('.profile-avatar');
-// 	const usernameElement = document.querySelector('.profile-username');
-// 	// const statusElement = document.querySelector('.profile-status');
-
-// 	if (avatarElement) {
-// 		avatarElement.src = this.avatar ? `/media/avatars/${this.avatar}` : '/media/avatars/default.png';
-// 	}
-
-// 	if (usernameElement) {
-// 		usernameElement.textContent = this.userName || 'Unknown User';
-// 	}
-
-// 	// if (statusElement) { // à changer
-// 	// 	statusElement.classList.remove('online', 'offline', 'ingame', 'pending');
-// 	// 	statusElement.classList.add(this.status || 'online');
-
-// 	// 	const messageElement = statusElement.querySelector('.message');
-// 	// 	if (messageElement) {
-// 	// 		messageElement.textContent = this.status.charAt(0).toUpperCase() + this.status.slice(1);
-// 	// 	}
-// 	// }
-// }
-
-// async fetchUserProfile() {
-// 	if (!this.accessToken) {
-// 		console.error("No access token found.");
-// 		return;
-// 	}
-
-// 	try {
-// 		const response = await fetch(`/api/v1/users/${this.userId}/`, {
-// 			headers: {
-// 				'Authorization': `Bearer ${this.accessToken}`,
-// 			},
-// 		});
-
-// 		if (response.ok) {
-// 			const data = await response.json();
-// 			this.userName = data.username;
-// 			this.avatar = data.avatar;
-// 			// this.status = data.status; // changer gestion status par full front + ws pour echange entre users
-// 			// console.log("Status reçu :", data.status); //debug
-// 			this.updateProfilePage();
-// 		} else {
-// 			console.error("Failed to fetch user profile:", response.status);
-// 		}
-// 	} catch (error) {
-// 		console.error("Error fetching user profile:", error);
-// 	}
-// }

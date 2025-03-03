@@ -1,38 +1,13 @@
-import { state } from './main.js'
+import { state } from '../main.js'
+import { fetchReceivedRequests } from '../api/users.js';
 
 export class SocialApp{
 
     constructor(){
-        this.friendList = null;
         this.myStatus = null;
-    }
-
-    async fetchFriends() {
-        if (!state.client.accessToken) {
-            console.error("User is not connected");
-            return;
-        }
-        try {
-            const response = await fetch('api/v1/users/' + state.client.userId + '/friends/', {
-                headers: {
-                    'Authorization': `Bearer ${state.client.accessToken}`,
-                },
-            });
-            if (response.ok) {
-                const data = await response.json();
-                const friendsData = data.friends;
-                if (!friendsData) {
-                    console.error("Error fetching friends: ", friendsData);
-                    return;
-                }
-                this.friendList = new Map(friendsData.map(friend => [friend.id, friend]));
-            } else {
-                console.error("Error while loading friendList :", response.status);
-            }
-        } catch (error) {
-            console.error("Fetch error: ", error);
-        }
-        this.displayFriendList();
+        this.friendList = null;
+        this.friendReceivedRequests = null;
+        this.friendSentRequests = null;
     }
 
     getFriend(id) {
@@ -122,6 +97,35 @@ export class SocialApp{
             btnMatch.addEventListener('click', this.handleMatchClick);
         });
     }
+
+    async displayReceivedRequests() {
+        try {
+            await fetchReceivedRequests(); // Assure-toi que les données sont chargées avant de les afficher
+
+            if (!this.friendReceivedRequests || this.friendReceivedRequests.size === 0) {
+                console.log('Aucune demande d\'ami reçue ou utilisateur non authentifié.');
+                return;
+            }
+
+            console.log('Demandes d\'ami reçues :');
+            console.table([...this.friendReceivedRequests.values()], ['id', 'username', 'avatar']);
+
+        } catch (error) {
+            console.error('Erreur lors de l\'affichage des demandes d\'amis :', error);
+        }
+    }
+
+    // displayReceivedRequests() {
+    //     try {
+    //         fetchReceivedRequests();
+    //         if (this.friendReceivedRequests == null)
+    //             console.log('no friend requests received or user not authentified');
+    //         else
+    //             console.log('received requests: ' + this.friendReceivedRequests);
+    //     } catch (error) {
+    //         console.error('cannot display received requests');
+    //     }
+    // }
 
     handleChatClick(event) {
         const friendId = event.currentTarget.dataset.friendId;

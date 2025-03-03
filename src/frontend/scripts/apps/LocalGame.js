@@ -2,8 +2,8 @@ import {MathUtils, Vector2} from 'three';
 import engine from "engine";
 import global from "global";
 import input from "input";
-import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
-import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
+import * as LEVELS from '../game3d/gameobjects/levels/_exports.js';
+import LevelBase from '../game3d/gameobjects/levels/LevelBase.js';
 
 
 //TODO AI: predict impact and go there, since shallow angles move faster than the paddle
