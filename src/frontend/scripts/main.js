@@ -1,7 +1,8 @@
 import { setupNavigation, goHome, goProfile } from './nav.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
-import { Client } from './Client.js';
+import { Client } from './apps/Client.js';
 import { isAuthenticated } from './api/auth.js';
+import { SocialApp } from './apps/Social.js';
 
 export const state = {
     client: new Client(),
@@ -28,7 +29,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastQuery = "";
 
     setupNavigation();
-    goHome();
+    goHome(); // Ici -> enlever tout en gardant handlehashchange pour permettre de pas automatiquement aller à home quand rechargement
+
+    setInterval(() => {
+        state.socialApp.displayReceivedRequests();
+    }, 10000);
+    
 
     state.client.refreshSession('#profile');
 
