@@ -53,7 +53,7 @@ class RemoteOAuth2Authentication(BaseAuthentication):
         token = auth_header.split(' ')[1]
 
         response = post(
-            'http://auth-service:8000/api/v1/auth/o/introspect/',
+            'http://auth:8000/api/v1/auth/o/introspect/',
             data={'token': token},
             auth=(os.getenv('OAUTH2_CCF_CLIENT_ID'), os.getenv('OAUTH2_CCF_CLIENT_SECRET')),
         )

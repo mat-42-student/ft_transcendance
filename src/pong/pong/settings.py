@@ -4,72 +4,51 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-r)*s-=2l!4jiwy_qk5xk+s)s9@l*$c8fb@!1k#!@u_nh7(yq=2'
+SECRET_KEY = 'django-insecure-4km45i&y$i697xd4csxg&v18q%!g_*2=1t7li($&2acii-&$e_'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    '.42mulhouse.fr', # All subdomains of 42mulhouse.fr
+    'pong',
+]
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# settings.py
 
 
-JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")
-JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")
-JWT_ALGORITHM = 'RS256'
+# Application definition
 
 INSTALLED_APPS = [
+    'uvicorn',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
-    'corsheaders',
-    'authentication',
-    'oauth2_provider',
+    'game',
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
-        'authentication.authentication.JWTAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
-    ],
-}
-
-# OAuth2 Provider settings
-OAUTH2_PROVIDER = {
-    'SCOPES_BACKEND_CLASS': 'oauth2_provider.scopes.SettingsScopes',
-    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
-    'SCOPES': {
-        'read': 'Read access',
-        'write': 'Write access',
-    },
-}
-
-# OAuth 2.0 Authorization Code grant
-OAUTH2_ACF_REDIRECT_URI = 'https://localhost:3000/api/v1/auth/oauth/callback/'
-OAUTH2_ACF_CLIENT_ID = 'u-s4t2ud-42cc8fc914c6cc052826b177e11fa51f02e32acc8ffb2601fe88a36f65e4035b'
-OAUTH2_ACF_CLIENT_SECRET = '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'
-
-ROOT_URLCONF = 'auth_service.urls'
+ROOT_URLCONF = 'pong.urls'
 
 TEMPLATES = [
     {
@@ -87,7 +66,22 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'auth_service.wsgi.application'
+WSGI_APPLICATION = 'pong.wsgi.application'
+ASGI_APPLICATION = "pong.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
+
+
+# Database
+# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+
 
 DATABASES = {
     'default': {
@@ -100,16 +94,8 @@ DATABASES = {
     }
 }
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis:6379/0",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
-        "KEY_PREFIX": "tokens"
-    }
-}
+# Password validation
+# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -126,28 +112,35 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+# Internationalization
+# https://docs.djangoproject.com/en/5.0/topics/i18n/
+
 LANGUAGE_CODE = 'en-us'
+
 TIME_ZONE = 'UTC'
+
 USE_I18N = True
+
 USE_TZ = True
 
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.0/howto/static-files/
+
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CSRF_TRUSTED_ORIGINS = ['https://localhost:3000']
-
-AUTH_USER_MODEL = 'authentication.User'
-
-# CORS settings
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:5500",
-#     "http://127.0.0.1:5500",
-# ]
-# CORS_ALLOW_ALL_ORIGINS = True
-
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'game.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}

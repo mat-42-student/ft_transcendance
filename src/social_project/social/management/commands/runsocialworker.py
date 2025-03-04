@@ -118,7 +118,7 @@ class Command(BaseCommand):
 
         # Fetch token for machine-to-machine communications
         try:
-            url = settings.OAUTH2_CCF_TOKEN_URL
+            url = os.getenv('OAUTH2_CCF_TOKEN_URL')
             headers = {
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
@@ -131,11 +131,7 @@ class Command(BaseCommand):
 
             if response.status_code == 200:
                 token_data = response.json()
-
                 token = token_data.get('access_token')
-            else:
-                print(f"Error: {response.status_code} - {response.text} - {os.getenv('OAUTH2_CCF_CLIENT_ID')} - {os.getenv('OAUTH2_CCF_CLIENT_SECRET')}")
-
         except requests.exceptions.RequestException as e:
             print(f"Error in request : {e}")
 
