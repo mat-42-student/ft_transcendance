@@ -12,6 +12,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+
 JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")
 JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")
 JWT_ALGORITHM = 'RS256'
@@ -26,6 +30,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'authentication',
+    'oauth2_provider',
 ]
 
 MIDDLEWARE = [
@@ -41,9 +46,28 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
         'authentication.authentication.JWTAuthentication',
     ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
 }
+
+# OAuth2 Provider settings
+OAUTH2_PROVIDER = {
+    'SCOPES_BACKEND_CLASS': 'oauth2_provider.scopes.SettingsScopes',
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
+    'SCOPES': {
+        'read': 'Read access',
+        'write': 'Write access',
+    },
+}
+
+# OAuth 2.0 Authorization Code grant
+OAUTH2_ACF_REDIRECT_URI = 'https://localhost:3000/api/v1/auth/oauth/callback/'
+OAUTH2_ACF_CLIENT_ID = 'u-s4t2ud-42cc8fc914c6cc052826b177e11fa51f02e32acc8ffb2601fe88a36f65e4035b'
+OAUTH2_ACF_CLIENT_SECRET = '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'
 
 ROOT_URLCONF = 'auth_service.urls'
 
@@ -111,10 +135,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CSRF_TRUSTED_ORIGINS = [
-#     'http://127.0.0.1:9090',
-#     'http://localhost:9090',
-# ]
+CSRF_TRUSTED_ORIGINS = ['https://localhost:3000']
 
 AUTH_USER_MODEL = 'authentication.User'
 
@@ -129,7 +150,4 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
-# OAuth 2.0
-OAUTH_CLIENT_ID = 'u-s4t2ud-42cc8fc914c6cc052826b177e11fa51f02e32acc8ffb2601fe88a36f65e4035b'
-OAUTH_CLIENT_SECRET = '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'
-OAUTH_REDIRECT_URI = 'https://localhost:3000/api/v1/auth/oauth/callback/'
+

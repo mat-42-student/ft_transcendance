@@ -5,17 +5,18 @@ import asyncio
 import time
 from asyncio import run as arun, sleep as asleep, create_task
 from signal import signal, SIGTERM, SIGINT
+from django.conf import settings
+import requests
 from .models import Game, Tournament, User
 from asgiref.sync import sync_to_async
 from datetime import datetime
+import os
 
 # Custom Class
 from .Player import Player
 from .Salon import Salon
 from .Guest import Guest
 from .Random1vs1 import Random1vs1
-
-
 
 class Command(BaseCommand):
     help = "Commande pour écouter un canal Redis avec Pub/Sub"   
@@ -162,8 +163,33 @@ class Command(BaseCommand):
         if (not player):
             return
         
+        # Fetch token for machine-to-machine communications
+        try:
+            url = settings.OAUTH2_CCF_TOKEN_URL
+            headers = {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+            data = {
+                'grant_type': 'client_credentials',
+                'client_id': os.getenv('OAUTH2_CCF_CLIENT_ID'),
+                'client_secret': os.getenv('OAUTH2_CCF_CLIENT_SECRET')
+            }
+            response = requests.post(url, headers=headers, data=data)
+
+            if response.status_code == 200:
+                token_data = response.json()
+
+                token = token_data.get('access_token')
+            else:
+                print(f"client_ID={os.getenv('OAUTH2_CCF_CLIENT_ID')}")
+                print(f"client_secrET={os.getenv('OAUTH2_CCF_CLIENT_SECRET')}")
+                print(f"Error: {response.status_code} - {response.text}")
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error in request : {e}")
+
         # Setup token to request endpoints api
-        player.token = header['token']
+        player.token = token
 
         if (body.get('type_game') == '1vs1R'): # 1vs1R
             player.type_game = '1vs1R'

@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.renderers import JSONRenderer
 from rest_framework.permissions import AllowAny
-from rest_framework.permissions import IsAuthenticated
+from oauth2_provider.models import AccessToken
 from rest_framework import status
 from django.conf import settings
 from django.http import JsonResponse
@@ -24,8 +24,23 @@ from .utils import is_token_revoked
 from django.shortcuts import redirect
 from .models import Ft42Profile
 from django.http import HttpResponse
+from django.core.cache import cache
+from rest_framework.permissions import IsAuthenticated
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
+from oauth2_provider.contrib.rest_framework import TokenHasScope
 
+
+class SecureAPIView(APIView):
+    authentication_classes = [OAuth2Authentication]
+    permission_classes = [TokenHasScope]
+    required_scopes = ['read']
+
+    def get(self, request):
+        return Response({"message": "Authenticated via OAuth2 CCF"})
+    
 class PublicKeyView(APIView):
+    permission_classes = [AllowAny]
+
     def get(self, request):
         public_key = """
         -----BEGIN PUBLIC KEY-----
@@ -37,9 +52,6 @@ class PublicKeyView(APIView):
         oH2s6dVoczMWvQvqr10xc9TPCefefPNE2lqpH2IrQIDAQAB
         -----END PUBLIC KEY-----
         """
-
-        if request.GET.get("form") == "oneline":
-            public_key = public_key.replace("\n", "").replace(" ", "")
 
         return JsonResponse({'public_key': public_key.strip()}, status=status.HTTP_200_OK)
 class VerifyTokenView(APIView):
@@ -91,8 +103,10 @@ class LoginView(APIView):
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=60),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
             'iat': datetime.datetime.now(datetime.timezone.utc),
+            'jti': str(uuid.uuid4()),
+            'typ': "user"
         }
 
         refresh_payload = {
@@ -100,6 +114,8 @@ class LoginView(APIView):
             'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
+            'jti': str(uuid.uuid4()),
+            'typ': "user"
         }
 
         access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
@@ -156,9 +172,10 @@ class RefreshTokenView(APIView):
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=60),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
+            'typ': "user"
         }
 
         refresh_payload = {
@@ -167,6 +184,7 @@ class RefreshTokenView(APIView):
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
+            'typ': "user"
         }
 
         new_access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
@@ -189,6 +207,7 @@ class RefreshTokenView(APIView):
 class LogoutView(APIView):
     renderer_classes = [JSONRenderer]
 
+
     def post(self, request):
         refresh_token = request.COOKIES.get('refreshToken')
         if refresh_token:
@@ -204,8 +223,8 @@ class LogoutView(APIView):
 
         # response = Response()
 class Enroll2FAView(APIView):
-    permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
+
 
     def post(self, request):
         user = request.user
@@ -244,7 +263,6 @@ class Enroll2FAView(APIView):
 
         return Response(response_data, status=status.HTTP_200_OK)
 class Verify2FAView(APIView):
-    permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
@@ -261,9 +279,8 @@ class Verify2FAView(APIView):
             user.save()
             return Response({"success": "true", "message": "2FA has been enabled."}, status=200)
         else:
-            return Response({"error": "Invalid or expired 2FA code"}, status=401)
+            return Response({"error": "Invalid or expired 2FA code"}, status=401)          
 class Disable2FAView(APIView):
-    permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
@@ -271,13 +288,15 @@ class Disable2FAView(APIView):
         user.is_2fa_enabled = False 
         user.save()
         return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK)  
-class OAuthLoginView(APIView):    
+class OAuthLoginView(APIView):
+    permission_classes = [AllowAny]
+
     def get(self, request):
         state = generate_state()
         request.session['oauth_state'] = state
         params = {
-            'client_id': settings.OAUTH_CLIENT_ID,
-            'redirect_uri': settings.OAUTH_REDIRECT_URI,
+            'client_id': settings.OAUTH2_ACF_CLIENT_ID,
+            'redirect_uri': settings.OAUTH2_ACF_REDIRECT_URI,
             'response_type': 'code',
             'scope': 'public',
             'state': state,
@@ -294,10 +313,10 @@ class OAuthCallbackView(APIView):
 
         token_data = {
             'grant_type': 'authorization_code',
-            'client_id': settings.OAUTH_CLIENT_ID,
-            'client_secret': settings.OAUTH_CLIENT_SECRET,
+            'client_id': settings.OAUTH2_ACF_CLIENT_ID,
+            'client_secret': settings.OAUTH2_ACF_CLIENT_SECRET,
             'code': code,
-            'redirect_uri': settings.OAUTH_REDIRECT_URI,
+            'redirect_uri': settings.OAUTH2_ACF_REDIRECT_URI,
         }
         token_url = 'https://api.intra.42.fr/oauth/token'
         token_response = requests.post(token_url, data=token_data)
@@ -345,6 +364,8 @@ class OAuthCallbackView(APIView):
             'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
+            'jti': str(uuid.uuid4()),
+            'typ': "user"
         }
 
         refresh_token = jwt.encode(refresh_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
@@ -375,5 +396,6 @@ class OAuthCallbackView(APIView):
             path='/'
         )
 
-        return response
+        return response  
+
     

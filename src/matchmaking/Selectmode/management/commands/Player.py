@@ -1,6 +1,8 @@
 import json
 import requests
 import asyncio
+import os
+from django.conf import settings
 #from .Guest import Guest
 
 class Player ():
@@ -29,12 +31,35 @@ class Player ():
         return (f'Player {self.user_id} type_game: {self.type_game}')
     
     def get_user(self):
-        """Get information to API user and set this in instances"""
+        """Get information from API user and set this in instances"""
+
+        # Fetch token for machine-to-machine communications
+        try:
+            url = settings.OAUTH2_CCF_TOKEN_URL
+            headers = {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+            data = {
+                'grant_type': 'client_credentials',
+                'client_id': os.getenv('OAUTH2_CCF_CLIENT_ID'),
+                'client_secret': os.getenv('OAUTH2_CCF_CLIENT_SECRET')
+            }
+            response = requests.post(url, headers=headers, data=data)
+
+            if response.status_code == 200:
+                token_data = response.json()
+
+                token = token_data.get('access_token')
+            else:
+                print(f"Error: {response.status_code} - {response.text}")
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error in request : {e}")
+
         url = f"http://users:8000/api/v1/users/{self.user_id}/"  # Remplace par ton URL réelle
 
         headers = {
-            "Authorization": f"Bearer {self.token}",  # Ajoute le token d'authentification
-            "Content-Type": "application/json",  # Optionnel, selon ton API
+            "Authorization": f"Bearer {token}",  # Ajoute le token d'authentification
         }
 
         response = requests.get(url, headers=headers)
@@ -45,7 +70,7 @@ class Player ():
             self.username = data.get('username')
             self.picture = data.get('avatar')
         else:
-            print("error: User not found")
+            print("error: UUser not found")
     
     async def checkStatus(self, redis, channel):
         test = 5

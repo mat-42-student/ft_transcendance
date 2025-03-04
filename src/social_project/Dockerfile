@@ -1,11 +1,11 @@
-FROM django-base
+# FROM django-base
 
-# RUN apt update -y
+# WORKDIR /code
+
+# ENTRYPOINT ["python", "manage.py", "runsocialworker"]
+
+FROM django-base
 
 WORKDIR /code
 
-# COPY requirements.txt .
-
-# RUN pip install --no-cache-dir -r requirements.txt
-
-ENTRYPOINT ["python", "manage.py", "runsocialworker"]
+CMD ["./start.sh"]

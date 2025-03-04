@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
 
@@ -22,8 +22,10 @@ class UserManager(BaseUserManager):
     class Meta:
         db_table = 'user_manager'
     
+
+
 # User model (inherits Django user model) -> Ajouter: bio, tableaux historique 1à dernières games ???
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     STATUS_CHOICES = [
         ('online', 'Online'),
         ('offline', 'Offline'),
@@ -35,9 +37,13 @@ class User(AbstractBaseUser):
         unique=True,
         validators=[MinLengthValidator(3)]
     )
-    password = models.CharField( # Utilisation d'un mot de passe hashé -> SUPPRIMER pour laisser django gérer hashage ou utiliser set_password()
-        max_length=128, 
-        validators=[MinLengthValidator(5)]
+    first_name = models.CharField(
+        max_length=50,
+        validators=[MinLengthValidator(3)]
+    )
+    last_name = models.CharField(
+        max_length=50,
+        validators=[MinLengthValidator(3)]
     )
     email = models.EmailField(
         max_length=254,
@@ -91,7 +97,7 @@ class User(AbstractBaseUser):
     objects = UserManager()
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['password', 'email']
+    REQUIRED_FIELDS = []
 
     def __str__(self):
         return self.username

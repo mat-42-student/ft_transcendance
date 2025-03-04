@@ -4,6 +4,8 @@ from signal import signal, SIGTERM, SIGINT
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep, create_task
+import os
+from django.conf import settings
 
 class Command(BaseCommand):
     help = "Listen to 'deep_chat' pub/sub redis channel"
@@ -72,7 +74,38 @@ class Command(BaseCommand):
 
     def is_muted(self, exp, recipient) -> bool :
         """is exp muted by recipient ? Raises an UserNotFoundException if recipient doesnt exist"""
+
+        # Fetch token for machine-to-machine communications
+        try:
+            url = settings.OAUTH2_CCF_TOKEN_URL
+            headers = {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+            data = {
+                'grant_type': 'client_credentials',
+                'client_id': os.getenv('OAUTH2_CCF_CLIENT_ID'),
+                'client_secret': os.getenv('OAUTH2_CCF_CLIENT_SECRET')
+            }
+            response = requests.post(url, headers=headers, data=data)
+
+            if response.status_code == 200:
+                token_data = response.json()
+
+                token = token_data.get('access_token')
+            else:
+                print(f"Error: {response.status_code} - {response.text}")
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error in request : {e}")
+
+        url = f"http://users:8000/api/v1/users/{recipient}/blocks/"
+
+        headers = {
+            "Authorization": f"Bearer {token}", # Ajoute le token d'authentification
+        }
+
         response = requests.get(f"http://users:8000/api/v1/users/{recipient}/blocks/")
+
         if response.status_code == 200:
             try:
                 data = response.json()

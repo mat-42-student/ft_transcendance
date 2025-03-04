@@ -1,4 +1,5 @@
-# SECURITY WARNING: don't run with debug turned on in production!
+import os
+
 DEBUG = True
 
 ALLOWED_HOSTS = []
@@ -17,3 +18,5 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+OAUTH2_CCF_TOKEN_URL = 'http://auth-service:8000/api/v1/auth/o/token/'

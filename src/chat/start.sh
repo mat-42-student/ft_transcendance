@@ -13,7 +13,4 @@ done
 echo "Loading environment variables from $SHARED_ENV"
 export $(grep -v '^#' "$SHARED_ENV" | xargs)
 
-python ./manage.py makemigrations Selectmode --no-input
-
-exec python ./manage.py listenredis
-    
+python manage.py runchatworker

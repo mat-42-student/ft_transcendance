@@ -1,5 +1,4 @@
 services:
-
   # django-base:
   #     build:
   #       context: .
@@ -13,13 +12,15 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./auth_service:/code
+      - static_volume:/code/staticfiles
+      - shared_credentials:/shared_credentials
     depends_on:
       postgres:
         condition: service_healthy
     expose:
       - "8000"
     env_file:
-      - ./auth_service/.env
+      - .env
     restart: on-failure
     networks:
       - nginx-network
@@ -36,8 +37,9 @@ services:
     volumes:
       - ./media:/media
       - ./users:/code
+      - shared_credentials:/shared_credentials
     env_file:
-      - ./auth_service/.env
+      - .env
     networks:
       - db-network
       - nginx-network
@@ -59,11 +61,15 @@ services:
       dockerfile: Dockerfile
     stop_grace_period: 2s
     env_file:
-      - ./chat/.env
+      - .env
     depends_on:
-      - redis
+      redis:
+        condition: service_started 
+      auth-service:
+        condition: service_started 
     volumes:
       - ./chat/:/code
+      - shared_credentials:/shared_credentials
     networks:
       - db-network
       - redis-network
@@ -79,8 +85,12 @@ services:
       - .env
     volumes:
       - ./social_project/:/code
+      - shared_credentials:/shared_credentials
     depends_on:
-      - redis
+      redis:
+        condition: service_started 
+      auth-service:
+        condition: service_started 
     networks:
       - redis-network
       - deep-network
@@ -113,14 +123,17 @@ services:
       context: matchmaking
       dockerfile: Dockerfile
     env_file:
-      - ./matchmaking/.env
+      - .env
     volumes:
       - ./matchmaking:/code
+      - shared_credentials:/shared_credentials
     depends_on:
       postgres:
         condition: service_healthy
       pong:
         condition: service_started
+      auth-service:
+        condition: service_started 
     expose:
       - "8000"
     networks:
@@ -145,6 +158,7 @@ services:
     volumes:
       - ./media:/media
       - ./frontend:/usr/share/nginx/frontend
+      - static_volume:/code/staticfiles
     networks:
       - nginx-network
     restart: on-failure
@@ -155,7 +169,7 @@ services:
       context: _Pong
       dockerfile: Dockerfile
     env_file:
-      - ./_Pong/.env
+      - .env
     volumes:
       - ./_Pong/:/code
     depends_on:
@@ -205,6 +219,8 @@ services:
 volumes:
   postgres_data:
   media:
+  static_volume:
+  shared_credentials:
 
 networks:
   nginx-network:
