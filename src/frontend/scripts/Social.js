@@ -109,7 +109,7 @@ export class SocialApp{
             htmlFriendList.appendChild(friendItem);
 
             // add data-user-id="${friend.id}" to entire card (Adrien©)
-            // friendItem.dataset.userid = friend.id;
+            friendItem.dataset.userid = friend.id;
 			friendItem.classList.add(`friend-item-${friend.id}`);
     
             const btnChat = friendItem.querySelector('.btn-chat');

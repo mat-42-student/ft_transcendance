@@ -21,16 +21,18 @@ export class Mmaking
 		this.host = false;
 		this.opponents = {};
 		this.SearchRandomGame = false;
-		this.cancel = {'random': false, 'invitation': false, 'tournament': false};
+		this.cancel = false;
 		this.salonInvite = false;
 		this.salonRandom = false;
+		this.type_game = null;
 		this.game = null;
     }
 
 	async renderMatchmaking()
 	{
 		await this.renderHost();
-		this.renderGuest();
+		await this.renderGuest();
+		await this.renderCancel();
 	}
 
 	async renderHost()
@@ -40,7 +42,6 @@ export class Mmaking
 		{
 			const friend = state.socialApp.friendList.get(Number(key));
 
-			console.log(typeof(key));
 			const cardFriend = document.getElementsByClassName(`friend-item-${key}`);
 
 			if (friend && (value == true || value == false))
@@ -48,7 +49,21 @@ export class Mmaking
 				if (value == true)
 				{
 					console.log('Reset card friend');
-					this.cardFriendReset(cardFriend[0])
+					this.cardFriendReset(cardFriend[0]);
+					await initDynamicCard('salonHost');
+					this.setFriend(friend.username, `../../../media/${friend.avatar}`)
+
+					const btnstartgame = document.getElementById('start-game');
+					const btncancelGame = document.getElementById('cancel-button');
+
+					btnstartgame.addEventListener('click', (event) => this.startGame(event, key));
+					btncancelGame.addEventListener('click', (event) => this.cancelGame(event));
+					
+
+
+					if(this.game == true)
+						this.setOpponent(friend.username, `../../../media/${friend.avatar}`, 'invite');
+
 				}
 				else
 				{
@@ -80,46 +95,85 @@ export class Mmaking
 		{
 			const btnHost = document.getElementsByClassName(`btn-match-${key}`);
 			const btnMatchPicture = document.getElementById(`btn-match-picture-${key}`)
-			const friend = state.socialApp.friendList.get(Number(key));
+			console.log(Number(key));
+			let friend = Number(key);
+			if (friend != NaN)
+				friend = state.socialApp.friendList.get(friend);
 
-			if(value == false)
+			if(value == false || (value == true && this.salonInvite == true))
 			{
-				console.group(key);
+				console.log(key);
 				btnMatchPicture.src = "/ressources/vs.png";
 				btnHost[0].removeEventListener('click',(event)=>this.btnInviteActive(event));
 				btnHost[0].addEventListener('click', (event) => this.btnInviteDesactive(event));
+
+				if (value == true)
+				{
+					closeDynamicCard();
+					await initDynamicCard('salonGuest');
+					const btncancelGame = document.getElementById('cancel-button');
+
+					// this.setOpponentInvite(friend.username, `../../../media/${friend.avatar}`)
+					this.setFriend(friend.username, `../../../media/${friend.avatar}`)
+					btncancelGame.addEventListener('click', (event) => this.cancelGame(event));
+
+				}
 			}
 			else if (value == null)
 			{
 				btnMatchPicture.src = "/ressources/vs_active.png";
 				btnHost[0].removeEventListener('click',this.btnInviteDesactive);
 				btnHost[0].removeEventListener('click',state.socialApp.handleMatchClick);
-				btnHost[0].addEventListener('click', (event) => this.btnInviteActive(event));
-			}
-			else if (value == true && this.salonInvite == true)
-			{
-				closeDynamicCard();
-				await initDynamicCard('salonGuest');
-				this.setOpponentInvite(value.username, `../../../media/${value.avatar}`)
+				btnHost[0].addEventListener('click', (event) => this.btnInviteActive(event, key));
 			}
 		}
 	}
 
-	renderSalonInvite()
+	async renderCancel()
 	{
-		if (salonInvite == true)
+		if (this.cancel == true)
 		{
-			const friend = null;
-			if (this.host == true)
-			{
-				initDynamicCard('salonHost');
-			}
-			else if (this.host == false)
-				initDynamicCard('salonGuest');
+			closeDynamicCard();
 		}
-		this.setOpponentInvite(friend.username, `../../../media/${friend.avatar}` );
 	}
 
+	async startGame(friendId)
+	{
+		const data = {
+			'type_game': {
+				'invite':{
+					'guest_id': friendId,
+					'accept': true,
+					'startgame': true 
+				}
+			}
+		};
+		await this.sendMsg(data);
+	}
+
+	async cancelGame(event)
+	{
+		const data = {
+			'type_game': {
+				'type_game':{
+					'invite':{
+
+					},
+				},
+			},
+			'cancel' : true
+		};
+
+		this.salonInvite = false;
+		this.salonRandom = false;
+		this.type_game = null;
+		this.SearchRandomGame = false;
+		this.game = null;
+		this.cancel = true;
+
+		await this.sendMsg(data);
+		this.renderMatchmaking();
+	}
 
 	async btnInviteDesactive(event)
 	{
@@ -141,41 +195,42 @@ export class Mmaking
 		this.host = true;
 
 		await this.sendMsg(data);
-		this.renderMatchmaking();
+		await this.renderMatchmaking();
 	}
 
-	async btnInviteActive(event)
+	async btnInviteActive(event, key)
 	{
-		const friendId = event.currentTarget.dataset.friendId;
+		const friendId = key;
 		const btnInviteAccept = document.getElementsByClassName('btn-accepter');
 		const btnInviteRefuse = document.getElementsByClassName('btn-refuser');
 
 		await initDynamicCard('vs_active');
 		
-		btnInviteAccept[0].addEventListener('click', (event) => this.btnInviteAccept(event));
+		btnInviteAccept[0].addEventListener('click', (event) => this.btnInviteAccept(event, friendId));
 		btnInviteRefuse[0].addEventListener('click', (event) => this.btnInviteRefuse(event));
 	}
 
-	async btnInviteAccept(event)
+	async btnInviteAccept(event, friendId)
 	{
-		const friendId = event.currentTarget.dataset.friendId;
+		// const friendId = event.currentTarget.dataset.friendId;
 
+		console.log(`friendId -> ${friendId}`);
 		const data = {
 			'type_game': {
 				'invite':{
 					'host_id': friendId,
 					'accept': true
-				}
+				},
 			}
 		};
 
 		this.guests[friendId] = false;
-		this.invited_by[friendId] = true;
+		this.invited_by[friendId] = false;
 		this.host = false;
 		this.salonInvite = true;
 
 		await this.sendMsg(data);
-		this.renderMatchmaking();
+		await this.renderMatchmaking();
 	}
 
 	async btnInviteRefuse(event)
@@ -290,7 +345,24 @@ export class Mmaking
         {
 			const invite = data.body.type_game.invite;
             if (invite.host_id)
-				this.invited_by[invite.host_id] = null;
+			{
+				if (invite.accept == true)
+				{
+					this.invited_by[invite.host_id] = true;
+
+				}
+				else
+				{
+					this.invited_by[invite.host_id] = null;
+
+				}
+				console.log('invited_by: ' + invite.host_id);
+			}
+			else if (invite.guest_id)
+			{
+				if (invite.accept == true)
+					this.guests[invite.guest_id] = true;
+			}
 
 			this.renderMatchmaking();
         }
@@ -325,24 +397,24 @@ export class Mmaking
 
 	//friendIngame()
 
-    async cancel_game()
-    {
-        document.getElementById("status").textContent = "Recherche annulée";
-        document.getElementById("loader").style.display = "none";
-        document.getElementById("waiting-text").textContent = "Vous avez annulé la recherche.";
-        document.getElementById("cancel-button").style.display = "none";
+    // async cancel_game()
+    // {
+    //     document.getElementById("status").textContent = "Recherche annulée";
+    //     document.getElementById("loader").style.display = "none";
+    //     document.getElementById("waiting-text").textContent = "Vous avez annulé la recherche.";
+    //     document.getElementById("cancel-button").style.display = "none";
 
-        const data = {
-            'status': "pending",
-            'type_game': "1vs1R",
-            'cancel': true
-        };
+    //     const data = {
+    //         'status': "pending",
+    //         'type_game': "1vs1R",
+    //         'cancel': true
+    //     };
 
 
-        this.sendMsg(data)
+    //     this.sendMsg(data)
 
-        closeDynamicCard();
-    }
+    //     closeDynamicCard();
+    // }
 
     setOpponent(name, photo, type_game) {
         document.getElementById("opponent-info").style.display = "block";
@@ -379,7 +451,7 @@ export class Mmaking
         document.getElementById("cancel-button").style.display = "none";
     }
 
-    setGuest(name, picture)
+    setFriend(name, picture)
     {
         document.getElementById("opponent-info").style.display = "block";
         document.getElementById("opponent-name").textContent = name;
