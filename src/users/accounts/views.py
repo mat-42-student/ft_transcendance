@@ -61,7 +61,7 @@ class UserRegisterView(APIView):
                 key='refreshToken',
                 value=refresh_token, 
                 httponly=True,
-                samesite='None',
+                samesite='Lax',
                 secure=True,
                 path='/'
             )

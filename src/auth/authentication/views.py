@@ -126,7 +126,7 @@ class LoginView(APIView):
             key='refreshToken',
             value=refresh_token, 
             httponly=True,
-            samesite='None',
+            samesite='Lax',
             secure=True,
             path='/'
         )
@@ -195,7 +195,7 @@ class RefreshTokenView(APIView):
             key='refreshToken',
             value=new_refresh_token,
             httponly=True,
-            samesite='None',
+            samesite='Lax',
             secure=True,
             path='/'
         )
@@ -391,7 +391,7 @@ class OAuthCallbackView(APIView):
             key='refreshToken',
             value=refresh_token, 
             httponly=True,
-            samesite='None',
+            samesite='Lax',
             secure=True,
             path='/'
         )
