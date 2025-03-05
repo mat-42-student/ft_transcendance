@@ -132,7 +132,7 @@ class Game:
             await self.move_ball()
             last_frame_time = time()
         await self.wsh.channel_layer.group_send(
-            self.wsh.room_group_name, {"type": "disconnect.now", "from": "server"}
+            self.wsh.room_group_name, {"type": "disconnect.now", "side": "server"}
         )
 
     def get_score(self):
