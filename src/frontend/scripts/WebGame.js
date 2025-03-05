@@ -93,6 +93,7 @@ export class WebGame extends GameBase {
             if (data.action == "disconnect") {
                 console.log('Server asked for disconnect');
                 wg.close();
+                // wg = null; ???
             }
         };
     }

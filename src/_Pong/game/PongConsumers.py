@@ -3,8 +3,8 @@ import jwt
 import requests
 import time
 from asyncio import create_task, sleep as asleep
-from redis.asyncio import from_url
-from channels.generic.websocket import AsyncWebsocketConsumer
+from redis.asyncio import from_url #type: ignore
+from channels.generic.websocket import AsyncWebsocketConsumer #type: ignore
 from urllib.parse import parse_qs
 from .Game import Game
 from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT
@@ -13,8 +13,8 @@ from collections import deque
 class PongConsumer(AsyncWebsocketConsumer):
 
     # Anti-flood system
-    MESSAGE_LIMIT = 5
-    TIME_WINDOW = 1
+    MESSAGE_LIMIT = 20 # each player inputs counts 2 : keydown and keyup
+    TIME_WINDOW = 1 # seconds
 
     def init(self):
         self.player_id = None
@@ -142,13 +142,15 @@ class PongConsumer(AsyncWebsocketConsumer):
         if len(self.message_timestamps) >= self.MESSAGE_LIMIT:
             first_timestamp = self.message_timestamps[0]
             if current_time - first_timestamp <= self.TIME_WINDOW:
+                print(self.player_name, "triggered anti flood system")
                 return True
         return False
 
     # Receive message from WebSocket: immediate publish into channels lobby
     async def receive(self, text_data=None, bytes_data=None):
         if await self.user_flooding():
-            self.close(code=1008)
+            await self.send(text_data=json.dumps({"action": "disconnect"}))
+            await self.close(code=1008)
             return
         data = self.load_valid_json(text_data)
         if not (data):
@@ -254,7 +256,10 @@ class PongConsumer(AsyncWebsocketConsumer):
     # If self.game.over, game was stopped beacuse maxscore has been reached
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
         print("disco_now", event)
-        user = event["side"]
+        user = event.get("side")
+        if user is None:
+            self.close(code=1008)
+            return
         print(f"{YELLOW}Disconnect_now from {user}{RESET}")
         if self.master and self.game.over: # game ended normally
             print(f"{RED}Game #{self.game.id} over (maxscore reached){RESET}")
@@ -262,9 +267,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         elif self.master and not self.game.over: # game is ending because one player left
             print(f"{RED}Game #{self.game.id} over (player {user} left){RESET}")
             await self.disconnect_endgame(user)
-        # if self.player_id != user:
-        await self.send(text_data=json.dumps({"action": "disconnect", "side": user}))
-        # await self.disconnect(0)
+        await self.send(text_data=json.dumps({"action": "disconnect"}))
 
     async def disconnect_endgame(self, user):
         self.game.players[0].score = 10 if self.player_id != user else 0
