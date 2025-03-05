@@ -100,7 +100,7 @@ export class Engine {
 			this.paramsForAddDuringRender = null;
 		}
 
-		if (state.gameApp && state.gameApp.isPlaying)
+		// if (state.gameApp && state.gameApp.isPlaying)
 			this.renderer.render(this.scene, this.scene.smoothCamera.camera);
 
 		this.isProcessingFrame = false;

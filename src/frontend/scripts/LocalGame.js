@@ -54,6 +54,7 @@ export class LocalGame extends GameBase {
 
         //TODO wait for level to finish loading before continuing
         this.recenter();
+        this.cpuDecide();
     }
 
 	frame(delta, time) {
@@ -94,10 +95,9 @@ export class LocalGame extends GameBase {
     // MARK: Game simulation
 
     recenter() {
-        this.ballPosition = { x: 0, y: 0 };
+        this.ballPosition = new Vector2(0, 0);
         this.ballDirection = new Vector2(this.roundStartSide ? -1 : 1, 1).normalize()
         this.paddlePositions[0] = this.paddlePositions[1] = 0;
-
     }
 
 
@@ -108,37 +108,48 @@ export class LocalGame extends GameBase {
 
         this.ballSpeed *= STATS.ballAccelerateFactor;
         this.paddleSpeeds[1] = this.paddleSpeeds[0] *= STATS.padAccelerateFactor;
+
+        this.cpuDecide();
+    }
+
+    cpuDecide(flip = false) {
+        let isBallComingTowardsBot = this.ballDirection.x < 0;
+        if (flip) isBallComingTowardsBot = !isBallComingTowardsBot;
+        if (isBallComingTowardsBot)
+            this.cpuFindTarget();
+        else
+            this.cpuTarget = 0;
     }
 
     cpuFindTarget() {
-        this.cpuTarget = -0.2;  //TODO
-        /*
-        https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line
-        ( (x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4) )
-        /
-        ( (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4) )
+        // Basically a direct port of https://www.desmos.com/calculator/revv9si2to
+        let a = this.ballPosition;
+        let b = this.ballPosition.clone().add(this.ballDirection);
+        let slope = (b.y - a.y) / (b.x - a.x)
+        let offset = a.y - slope * a.x;
 
-        Ball trajectory: (ball.x, ball.y) (dir.x, dir.y)
-        Wall: (wx, inf) (wx, inf)
+        // Reimplementing a modulo function, because JS % is not the intended behaviour of modulo.
+        // This way, it matches my Desmos visualization.
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Remainder#description
+        let mod = (n, d) => { return ((n % d) + d) % d; }
 
-        ( (ball.x*dir.y-ball.y*dir.x)*(inf-inf)-(ball.y-dir.y)*(wx*inf-inf*wx) )
-        /
-        ( (ball.x-dir.x)*(inf-inf)-(ball.y-dir.y)*(wx-wx) )
+        let line = (x) => { return slope * x + offset; };
+        let sawWave = (x) => { return mod(line(x) + 0.5, 1) - 0.5; };
+        let squareWave = (x) => { return -Math.sign(mod(0.5 * slope * x + 0.5 * offset + 0.25, 1) - 0.5); };
+        let triangleWave = (x) => { return sawWave(x) * squareWave(x); };
 
-        */
+        let wallX = this.level.boardSize.x / 2;
+        if (this.ballDirection.x < 0)
+            wallX *= -1;
+        this.cpuTarget = triangleWave(wallX);
     }
 
     cpuSeekTarget() {
         const error = this.cpuTarget - this.paddlePositions[1];
-
-        if (Math.abs(error) < 0.05) {
-            return 0;
-        }
         return error > 0 ? 1 : -1;
     }
 
     movePaddles(delta) {
-        this.cpuFindTarget();
         let inputs = [
             state.input.getPaddleInput(0),
             this.isCPU ? this.cpuSeekTarget() : state.input.getPaddleInput(1)
@@ -164,8 +175,8 @@ export class LocalGame extends GameBase {
 
         let bounces = 0;
         for (; true; bounces++) {
-            if (bounces > 100) {
-                throw Error(`Bounced ${bounces} times in a single frame, interrupting infinite loop.`);
+            if (bounces > 2) {
+                console.error(`Bounced ${bounces} times in a single frame, game appears to be lagging.`);
             }
 
             let collisionAxis = null;
@@ -194,6 +205,10 @@ export class LocalGame extends GameBase {
                     this.scoreup(collisionSide === 1 ? 0 : 1);
                     break;
                 } else {
+
+                    // Flip argument because the ball direction has not been flipped yet
+                    this.cpuDecide(true);
+
                     const signedSide = collisionSide == 0 ? 1 : -1;
 
                     const hitPosition = UTILS.map(this.ballPosition.y,
@@ -202,6 +217,8 @@ export class LocalGame extends GameBase {
                         -1,
                         1
                     );
+                    //TODO remove bounce accuracy log
+                    console.log(collisionSide ? 'Bot' : ' P1', 'Deviation from paddle center:', Math.round(hitPosition * 100), '%');
 
                     let angle = this.ballDirection.angle();
                     if (angle > UTILS.RAD180) {
@@ -248,11 +265,10 @@ export class LocalGame extends GameBase {
             this.ballDirection[collisionAxis] *= -1;
         }
 
-        if (bounces > 1) {
+        if (bounces >= 2) {
             console.warn(
     `Ball bounced ${bounces} times in a single frame, which is unusual.
-    Did the game freeze long enough for the ball to travel to multiple borders?
-    Did the ball nearly exactly hit a corner of the board, and bounce twice?`
+    Did the game freeze long enough for the ball to travel to multiple borders?`
             );
         }
     }

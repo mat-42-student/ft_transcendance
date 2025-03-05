@@ -6,6 +6,7 @@ import DebugPaddle from './DebugPaddle.js';
 import DebugBoard from './DebugBoard.js';
 import * as UTILS from '../../../../utils.js';
 import DebugScoreIndicator from './DebugScoreIndicator.js';
+import SceneOriginHelper from '../../utils/SceneOriginHelper.js';
 
 
 export default class LevelDebug extends LevelBase {
@@ -31,6 +32,7 @@ export default class LevelDebug extends LevelBase {
 		this.add(new DebugScoreIndicator(0));
 		this.add(new DebugScoreIndicator(1));
 		this.add(new DebugBoard());
+		this.add(new SceneOriginHelper());
 
 		this.smoothCamera.diagonal = 40;
 		this.smoothCamera.mousePositionMultiplier.set(0.1, 0.1);
