@@ -29,8 +29,8 @@ export default class DebugPaddle extends Paddle {
 			const halfHeight = state.gameApp.paddleHeights[this.playerIndex] / 2;
 
 			this.#box3helper.box.set(
-				new THREE.Vector3(0, 0, -halfHeight),
-				new THREE.Vector3(0, 0.05, halfHeight)
+				new THREE.Vector3(0, -0.05, -halfHeight),
+				new THREE.Vector3(0, 0, halfHeight)
 			);
 		}
 	}
