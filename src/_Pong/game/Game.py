@@ -70,9 +70,9 @@ class Game:
         if (self.ball_pos[1] <= BOARD_SIZE[1]/-2 or self.ball_pos[1] >= BOARD_SIZE[1]/2):
             self.ball_direction[1] *= -1
         # left / right collision
-        if (self.ball_pos[0] <= BOARD_SIZE[0]/-2):
+        if (self.ball_pos[0] < BOARD_SIZE[0]/-2):
             await self.side_collided(RIGHT)
-        elif (self.ball_pos[0] >= BOARD_SIZE[0]/2):
+        elif (self.ball_pos[0] > BOARD_SIZE[0]/2):
             await self.side_collided(LEFT)
 
     async def side_collided(self, side):
@@ -90,7 +90,14 @@ class Game:
 
         # the ball hit the paddle -> Bounce
         else:
-            self.ball_direction = bounce(self.ball_direction, self.ball_pos, self.players[side].pos, self.players[side].pad_size)
+            # Undo movement, so that there is no way the ball is still outside the board
+            # on next frame's check... maybe with an extremely shallow trajectory.
+            self.ball_pos[1] -= DELTATIME * self.ball_direction[1] * self.ball_speed
+            self.ball_direction = bounce(
+                self.ball_direction, self.ball_pos,
+                self.players[side].pos, self.players[side].pad_size,
+                side
+            )
 
     def set_player_move(self, id, move):
         self.players[id].move = int(move)
