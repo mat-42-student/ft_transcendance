@@ -1,3 +1,19 @@
+networks:
+  nginx-network:
+    driver: bridge
+  db-network:
+    driver: bridge
+  redis-network:
+    driver: bridge
+  deep-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  media:
+  static_volume:
+  shared_credentials:
+
 services:
   # django-base:
   #     build:
@@ -216,18 +232,3 @@ services:
       - redis-network
     restart: on-failure
 
-volumes:
-  postgres_data:
-  media:
-  static_volume:
-  shared_credentials:
-
-networks:
-  nginx-network:
-    driver: bridge
-  db-network:
-    driver: bridge
-  redis-network:
-    driver: bridge
-  deep-network:
-    driver: bridge

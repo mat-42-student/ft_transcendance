@@ -11,12 +11,16 @@ from .models import Game, Tournament, User
 from asgiref.sync import sync_to_async
 from datetime import datetime
 import os
+from django.core.cache import cache
+from .utils import get_ccf_token_cache
+
 
 # Custom Class
 from .Player import Player
 from .Salon import Salon
 from .Guest import Guest
 from .Random1vs1 import Random1vs1
+from .utils import get_ccf_token
 
 class Command(BaseCommand):
     help = "Commande pour écouter un canal Redis avec Pub/Sub"   
@@ -163,24 +167,7 @@ class Command(BaseCommand):
         if (not player):
             return
         
-        # Fetch token for machine-to-machine communications
-        try:
-            url = os.getenv('OAUTH2_CCF_TOKEN_URL')
-            headers = {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            }
-            data = {
-                'grant_type': 'client_credentials',
-                'client_id': os.getenv('OAUTH2_CCF_CLIENT_ID'),
-                'client_secret': os.getenv('OAUTH2_CCF_CLIENT_SECRET')
-            }
-            response = requests.post(url, headers=headers, data=data)
-
-            if response.status_code == 200:
-                token_data = response.json()
-                token = token_data.get('access_token')
-        except requests.exceptions.RequestException as e:
-            print(f"Error in request : {e}")
+        token = get_ccf_token_cache()
 
         # Setup token to request endpoints api
         player.token = token

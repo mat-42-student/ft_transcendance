@@ -1,34 +1,31 @@
-from .models import User
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.renderers import JSONRenderer
-from rest_framework.permissions import AllowAny
-from oauth2_provider.models import AccessToken
-from rest_framework import status
-from django.conf import settings
-from django.http import JsonResponse
-from urllib.parse import urlencode
 import jwt
 import datetime
 import requests
 import pyotp
 import qrcode
 import uuid
-from qrcode.constants import ERROR_CORRECT_L
 from io import BytesIO
 import base64
+from qrcode.constants import ERROR_CORRECT_L
+from urllib.parse import urlencode
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.renderers import JSONRenderer
+from rest_framework.permissions import AllowAny
+from rest_framework import status
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
+from oauth2_provider.contrib.rest_framework import TokenHasScope
+from .models import User
+from .models import Ft42Profile
 from .utils import generate_state
 from .utils import revoke_token
 from .utils import is_token_revoked
+from django.conf import settings
+from django.http import JsonResponse
 from django.shortcuts import redirect
-from .models import Ft42Profile
 from django.http import HttpResponse
 from django.core.cache import cache
-from rest_framework.permissions import IsAuthenticated
-from oauth2_provider.contrib.rest_framework import OAuth2Authentication
-from oauth2_provider.contrib.rest_framework import TokenHasScope
-
 
 class SecureAPIView(APIView):
     authentication_classes = [OAuth2Authentication]
@@ -37,7 +34,6 @@ class SecureAPIView(APIView):
 
     def get(self, request):
         return Response({"message": "Authenticated via OAuth2 CCF"})
-    
 class PublicKeyView(APIView):
     permission_classes = [AllowAny]
 
@@ -397,5 +393,3 @@ class OAuthCallbackView(APIView):
         )
 
         return response  
-
-    

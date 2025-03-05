@@ -6,6 +6,37 @@ from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep, create_task
 from django.conf import settings
 import os
+from django.core.cache import cache
+
+def get_ccf_token():
+    url = os.getenv('OAUTH2_CCF_TOKEN_URL')
+    client_id = os.getenv('OAUTH2_CCF_CLIENT_ID')
+    client_secret = os.getenv('OAUTH2_CCF_CLIENT_SECRET')
+
+    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+    data = {
+        'grant_type': 'client_credentials',
+        'client_id': client_id,
+        'client_secret': client_secret
+    }
+
+    try:
+        response = requests.post(url, headers=headers, data=data)
+        response.raise_for_status()
+        token_data = response.json()
+        return token_data['access_token'], token_data.get('expires_in', 3600)
+    except requests.exceptions.RequestException as e:
+        print(f"Error in request : {e}")
+
+def get_ccf_token_cache():
+    token = cache.get('oauth_token')
+    if token:
+        return token
+    else:
+        # Fetch new token from auth service
+        new_token, expires_in = get_ccf_token()
+        cache.set('oauth_token', new_token, expires_in - 60)
+        return new_token
 
 class Command(BaseCommand):
     help = "Async pub/sub redis worker. Listens 'deep_social' channel"
@@ -116,27 +147,9 @@ class Command(BaseCommand):
     def get_friend_list(self, user_id):
         """ Request friendlist from container 'users' """
 
-        # Fetch token for machine-to-machine communications
-        try:
-            url = os.getenv('OAUTH2_CCF_TOKEN_URL')
-            headers = {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            }
-            data = {
-                'grant_type': 'client_credentials',
-                'client_id': os.getenv('OAUTH2_CCF_CLIENT_ID'),
-                'client_secret': os.getenv('OAUTH2_CCF_CLIENT_SECRET')
-            }
-            response = requests.post(url, headers=headers, data=data)
-
-            if response.status_code == 200:
-                token_data = response.json()
-                token = token_data.get('access_token')
-        except requests.exceptions.RequestException as e:
-            print(f"Error in request : {e}")
+        token = get_ccf_token_cache()
 
         url = f"http://users:8000/api/v1/users/{user_id}/friends/"
-
         headers = {
             "Authorization": f"Bearer {token}", # Ajoute le token d'authentification
         }
