@@ -52,7 +52,7 @@ export class Mmaking
         if (data.body.status == 'ingame')
         {
             for (const [key, value] of Object.entries(data.body.opponents))
-                this.setOpponent(value.username, '../../../media/avatars/default.png')
+                this.setOpponent(value.username, '../../../media/default.png')
 
             state.gameApp.launchGameSocket(7);
         }
@@ -113,7 +113,7 @@ export class Mmaking
 					}
 					
 					this.desableOverlay();
-					this.setGuest(invite.username, '../../../media/avatars/default.png');
+					this.setGuest(invite.username, '../../../media/default.png');
 
 					const friendlist = document.querySelectorAll('.friend-item');
 

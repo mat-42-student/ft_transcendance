@@ -1,20 +1,31 @@
-import { initDynamicCard } from "./components/dynamic_card.js";
-import { isAuthenticated } from "./api/auth.js";
 import { state } from './main.js';
+import { initDynamicCard } from "./components/dynamic_card.js";
 
-export function setupHomePage() {
-    // document.querySelectorAll('.btn-versus').forEach(button => {
-    //     button.addEventListener('click', () => {
-    //         initDynamicCard('versus');
-    //     });
-    // });
+export function setupHomePage() {}
+
+// Ajouter écouteurs d'événements sur les boutons dans le container des actions -> ?? À compléter avec html profile restant
+export function setupProfilePage() {
+    const actionsEl = document.getElementById("profile-actions");
+    if (!actionsEl) return;
+
+    actionsEl.addEventListener("click", (event) => {
+        const button = event.target.closest("button");
+        if (!button || !button.dataset.action) return;
+
+        const action = button.dataset.action;
+        const userId = button.dataset.userId; // Récupère l'ID de l'utilisateur cible
+
+        handleProfileAction(action, userId);
+    });
 }
 
-// Nouvelle fonction pour gestion des actions depuis #profile (auth || tiers) -> fonctionelle mais incomplète
 // Logique trop compliquée ? changer pour initDynamicCard en fonction de l'action ?
 // Ajouter rechargement page ou changement de hash pour changements après une action ou faire ça dans appels fonctions tierses
 // à mettre dans un autre fichier (réagencement prévu)
 async function handleProfileAction(action, userId) {
+    /*
+    Fonction pour gestion des actions depuis #profile (auth || tiers) -> fonctionelle mais incomplète
+    */
     const UserUrl = `api/v1/users/${userId}/${action}/`;
     const RelationUrl = `api/v1/users/relationships/${userId}/${action}/`;
     let method;
@@ -79,58 +90,3 @@ async function handleProfileAction(action, userId) {
         console.error("Erreur API:", error);
     }
 }
-
-// Ajouter écouteurs d'événements sur les boutons dans le container des actions -> ?? À compléter avec html profile restant
-export function setupProfilePage() {
-    const actionsEl = document.getElementById("profile-actions");
-    if (!actionsEl) return;
-
-    actionsEl.addEventListener("click", (event) => {
-        const button = event.target.closest("button");
-        if (!button || !button.dataset.action) return;
-
-        const action = button.dataset.action;
-        const userId = button.dataset.userId; // Récupère l'ID de l'utilisateur cible
-
-        handleProfileAction(action, userId);
-    });
-}
-
-// export function setupProfilePage() {
-//     const interval = setInterval(() => {
-//         const logoutContainer = document.getElementById('logout-container');
-//         const logoutButton = document.getElementById('btn-logout');
-
-//         if (logoutContainer && logoutButton) {
-//             clearInterval(interval); // Stop checking once the elements are found
-
-//             if (isAuthenticated()) {
-//                 logoutContainer.classList.remove('hidden');
-//             } else {
-//                 logoutContainer.classList.add('hidden');
-//             }
-
-//             logoutButton.addEventListener('click', () => {
-//                 state.client.logout();
-//             });
-
-//             document.querySelectorAll('.btn-block').forEach(button => {
-//                 button.addEventListener('click', () => {
-//                     initDynamicCard('block');
-//                 });
-//             });
-
-//             document.querySelectorAll('.btn-unblock').forEach(button => {
-//                 button.addEventListener('click', () => {
-//                     initDynamicCard('unblock');
-//                 });
-//             });
-
-//             document.querySelectorAll('.btn-2fa').forEach(button => {
-//                 button.addEventListener('click', () => {
-//                     initDynamicCard('2fa');
-//                 });
-//             });
-//         }
-//     }, 100); // Retry every 100ms until elements are available
-// }

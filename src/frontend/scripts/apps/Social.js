@@ -115,18 +115,6 @@ export class SocialApp{
         }
     }
 
-    // displayReceivedRequests() {
-    //     try {
-    //         fetchReceivedRequests();
-    //         if (this.friendReceivedRequests == null)
-    //             console.log('no friend requests received or user not authentified');
-    //         else
-    //             console.log('received requests: ' + this.friendReceivedRequests);
-    //     } catch (error) {
-    //         console.error('cannot display received requests');
-    //     }
-    // }
-
     handleChatClick(event) {
         const friendId = event.currentTarget.dataset.friendId;
         state.chatApp.changeChatUser(friendId);

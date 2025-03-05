@@ -164,8 +164,6 @@ export class Client{
             if (usernameEl)
                 usernameEl.textContent = data.username;
 
-            console.log(data.avatar);
-
             const avatarEl = document.getElementById("profile-avatar");
             if (avatarEl)
                 avatarEl.src = data.avatar;
