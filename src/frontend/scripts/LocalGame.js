@@ -164,8 +164,8 @@ export class LocalGame extends GameBase {
 
         let bounces = 0;
         for (; true; bounces++) {
-            if (bounces > 100) {
-                throw Error(`Bounced ${bounces} times in a single frame, interrupting infinite loop.`);
+            if (bounces > 2) {
+                console.error(`Bounced ${bounces} times in a single frame, game appears to be lagging.`);
             }
 
             let collisionAxis = null;
@@ -248,11 +248,10 @@ export class LocalGame extends GameBase {
             this.ballDirection[collisionAxis] *= -1;
         }
 
-        if (bounces > 1) {
+        if (bounces >= 2) {
             console.warn(
     `Ball bounced ${bounces} times in a single frame, which is unusual.
-    Did the game freeze long enough for the ball to travel to multiple borders?
-    Did the ball nearly exactly hit a corner of the board, and bounce twice?`
+    Did the game freeze long enough for the ball to travel to multiple borders?`
             );
         }
     }
