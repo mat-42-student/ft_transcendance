@@ -2,7 +2,8 @@ import { initAuthFormListeners } from './auth_form.js';
 import { enroll2fa } from '../api/auth.js';
 import { verify2fa } from '../api/auth.js';
 // import { state } from '../main.js';
-import { handleHashChange } from '../nav.js';
+// import { handleHashChange } from '../nav.js';
+import { navigator } from '../nav.js';
 
 
 const dynamicCardRoutes = {

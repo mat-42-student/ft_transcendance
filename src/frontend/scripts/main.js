@@ -1,8 +1,8 @@
-import { setupNavigation, goHome, goProfile } from './nav.js';
-import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
+import { navigator } from './nav.js';
 import { Client } from './apps/Client.js';
 import { isAuthenticated } from './api/auth.js';
-import { SocialApp } from './apps/Social.js';
+import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
+// import { SocialApp } from './apps/Social.js';
 
 export const state = {
     client: new Client(),
@@ -14,201 +14,118 @@ export const state = {
 };
 
 state.client.setState(state);
-window.state = state; // for eval purpose
+window.state = state; // Debugging purpose
 
-document.addEventListener('DOMContentLoaded', () => {
-    const homeButton = document.getElementById('btn-home');
-    const profileButton = document.getElementById('btn-profile');
-    const refreshButton = document.getElementById('btn-refresh');
-    const playButton = document.getElementById('btn-play');
-    const closeButton = document.getElementById('close-dynamic-card');
-    const requestsButton = document.querySelector('.btn-friend-requests');
+// Fonction d'initialisation
+async function initApp() {
+    await state.client.refreshSession();  // Attendre que la session soit restaurée
+    navigator.handleHashChange();  // Ensuite seulement, traiter le changement de hash
+    setupEventListeners();
+}
+
+// Attendre que le DOM soit prêt avant d'initialiser l'application
+document.addEventListener('DOMContentLoaded', initApp);
+
+// state.client.refreshSession();
+
+// // setInterval(() => {
+// //     state.socialApp.displayReceivedRequests();
+// // }, 10000);
+
+// document.addEventListener('DOMContentLoaded', () => {
+//     navigator.handleHashChange();
+//     setupEventListeners();
+// });
+
+function setupEventListeners() {
+    addClickEvent('btn-home', () => navigator.goToPage('home'));
+    addClickEvent('btn-refresh', () => state.client.globalRender());
+    addClickEvent('btn-profile', handleProfileClick);
+    addClickEvent('btn-play', () => state.gameApp?.launchGameSocket());
+    addClickEvent('close-dynamic-card', closeDynamicCard);
+    addClickEvent('.btn-friend-requests', () => initDynamicCard('requests'));
+
+    setupSearchInput();
+}
+
+function addClickEvent(selector, callback) {
+    const element = document.getElementById(selector) || document.querySelector(selector);
+    if (element) {
+        element.addEventListener('click', (e) => {
+            e.preventDefault();
+            callback(e);
+        });
+    }
+}
+
+async function handleProfileClick(e) {
+    e.preventDefault();
+    if (!(await isAuthenticated())) {
+        await state.client.refreshSession('#profile');
+        if (!(await isAuthenticated())) {
+            initDynamicCard('auth');
+            return;
+        }
+    }
+    navigator.goToPage('profile');
+}
+
+function setupSearchInput() {
     const searchInput = document.getElementById("searchInput");
     const searchResults = document.getElementById("searchResults");
-    // const friendButtons = document.querySelectorAll('.friend-item'); // -> nécessite auth pour récup items + comment récup id depuis `friend-item` ??
-    let lastQuery = "";
 
-    setupNavigation();
-    goHome(); // Ici -> enlever tout en gardant handlehashchange pour permettre de pas automatiquement aller à home quand rechargement
+    if (!searchInput || !searchResults) return;
 
-    setInterval(() => {
-        state.socialApp.displayReceivedRequests();
-    }, 10000);
-    
+    searchInput.addEventListener("input", async () => {
+        const query = searchInput.value.trim();
 
-    state.client.refreshSession('#profile');
+        if (!query) {
+            searchResults.style.display = "none";
+            return;
+        }
 
-    if (homeButton) {
-        homeButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            goHome();
-        });
-    }
+        try {
+            const response = await fetch(`/api/v1/users/?search=${query}`);
+            const users = await response.json();
 
-    if (profileButton) {
-        profileButton.addEventListener('click', async (e) => {
-            e.preventDefault();
-            if (await isAuthenticated() == false) {
-                await state.client.refreshSession('#profile');
-                if (!(await isAuthenticated())) {
-                    initDynamicCard('auth');
-                    return;
-                }
-            } else {
-                goProfile();
-            }
-        });
-    }
-
-    if (refreshButton) {
-        refreshButton.addEventListener('click', async (e) => {
-            e.preventDefault();
-            state.client.globalRender();
-        });
-    }
-
-    if (playButton) {
-        playButton.addEventListener('click', async (e) => {
-            e.preventDefault();
-            if (state.gameApp)
-                state.gameApp.launchGameSocket();
-        });
-    }
-    
-    if (closeButton) {
-        closeButton.addEventListener('click', closeDynamicCard);
-    }
-
-    if (requestsButton) {
-        requestsButton.addEventListener('click', () => {
-            initDynamicCard('requests');
-        });
-    }
-
-    if (searchInput) {
-        searchInput.addEventListener("input", async () => {
-            const query = searchInput.value.trim();
-            // let timeout = null;
-    
-            // clearTimeout(timeout);
-
-            if (query.length === 0) {
-                searchResults.style.display = "none";
-                return;
-            }
-    
-            // if (query.length === 0) {
-            //     searchResults.innerHTML = "";
-            //     lastQuery = "";
-            //     return;
-            // }
-    
-            // Vérifie si la nouvelle entrée prolonge la précédente pour éviter des requêtes inutiles
-            // if (!query.startsWith(lastQuery)) {
-            //     searchResults.innerHTML = ""; // Réinitialise les résultats si un caractère est supprimé
-            // }
-            // lastQuery = query;
-
-            try {
-                const response = await fetch(`/api/v1/users/?search=${query}`);
-                const users = await response.json();
-            
-                // Réinitialiser la liste des résultats
-                searchResults.innerHTML = "";
-            
-                if (users.length > 0) {
-                    users.slice(0, 5).forEach(user => {
-                        const li = document.createElement("li");
-                        li.textContent = user.username;
-            
-                        li.addEventListener("click", () => {
-                            searchInput.value = user.username;
-                            searchResults.innerHTML = "";
-                            searchResults.style.display = "none"; // Cacher après sélection
-                            goProfile(user.id);
-                        });
-            
-                        searchResults.appendChild(li);
+            searchResults.innerHTML = "";
+            if (users.length > 0) {
+                users.slice(0, 5).forEach(user => {
+                    const li = document.createElement("li");
+                    li.textContent = user.username;
+                    li.addEventListener("click", () => {
+                        searchInput.value = user.username;
+                        searchResults.innerHTML = "";
+                        searchResults.style.display = "none";
+                        navigator.goToPage('profile', user.id)
                     });
-            
-                    searchResults.style.display = "block"; // Afficher les résultats
-                } else {
-                    searchResults.style.display = "none"; // Cacher si aucun résultat
-                }
-            } catch (error) {
-                console.error("Erreur lors de la recherche :", error);
-            }
-    
-            // timeout = setTimeout(() => {
-            //     fetch(`/api/v1/users/?search=${encodeURIComponent(query)}`)
-            //         .then(response => response.json())
-            //         .then(data => {
-            //             searchResults.innerHTML = "";
-    
-            //             if (data.length === 0) {
-            //                 searchResults.innerHTML = "<li>Aucun résultat</li>";
-            //                 return;
-            //             }
-    
-            //             data.forEach(user => {
-            //                 const li = document.createElement("li");
-            //                 li.textContent = user.username;
-            //                 li.addEventListener("click", () => {
-            //                     searchInput.value = user.username;
-            //                     searchResults.innerHTML = "";
-            //                 });
-            //                 searchResults.appendChild(li);
-            //             });
-            //         })
-            //         .catch(error => console.error("Erreur de recherche:", error));
-            // }, 300); // Debounce de 300ms
-        });
-    }
+                    searchResults.appendChild(li);
+                });
 
-    // searchInput.addEventListener("input", async () => {
-    //     const query = searchInput.value.trim();
-    //     if (query.length === 0) {
-    //         searchResults.style.display = "none";
-    //         return;
-    //     }
-    
-        // try {
-        //     const response = await fetch(`/api/v1/users/?search=${query}`);
-        //     const users = await response.json();
-    
-        //     if (users.length > 0) {
-        //         searchResults.innerHTML = users
-        //             .slice(0, 5)
-        //             .map(user => `<div class="search-item">${user.username}</div>`)
-        //             .join("");
-        //         searchResults.style.display = "block";
-        //     } else {
-        //         searchResults.style.display = "none";
-        //     }
-        // } catch (error) {
-        //     console.error("Erreur lors de la recherche :", error);
-        // }
-    // });
+                searchResults.style.display = "block";
+            } else {
+                searchResults.style.display = "none";
+            }
+        } catch (error) {
+            console.error("Erreur lors de la recherche :", error);
+        }
+    });
 
     document.addEventListener("click", (event) => {
         if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
             searchResults.innerHTML = "";
+            searchResults.style.display = "none";
         }
     });
-});
+}
 
 // page unload // necessary ??
-window.addEventListener('beforeunload', function(event) {
-    if (state.mainSocket && state.mainSocket.socket)
-        state.mainSocket.close();
-    if (state.gameApp && state.gameApp.socket)
-        state.gameApp.close();
+window.addEventListener('beforeunload', function() {
+    state.mainSocket?.close();
+    state.gameApp?.socket?.close();
 });
-
 
 // wait for n sec
 export function delay(n) {
-    return new Promise(function(resolve) {
-      setTimeout(resolve, n * 1000);
-    });
+    return new Promise(resolve => setTimeout(resolve, n * 1000));
 }

@@ -1,84 +1,71 @@
+import { state } from "./main.js";
+import { isAuthenticated } from './api/auth.js';
 import { setupHomePage, setupProfilePage } from "./pages.js";
 import { closeDynamicCard, initDynamicCard } from './components/dynamic_card.js';
-import { isAuthenticated } from './api/auth.js';
 import { updateAuthForm } from "./components/auth_form.js";
-import { state } from "./main.js";
 
-export async function handleHashChange() {
-    const cardContainer = document.getElementById('dynamic-card-container');
-    const hash = window.location.hash;
-    const isAuth = await isAuthenticated();
-    
-    if (hash == '#register' || hash == '#signin') { // si hash pour auth, check si carte activée, si oui update formulaire, sinon init 
-        if (isAuth) // redirection vers profile si authentifié
-            return goProfile();
-        
-        if (cardContainer.classList == 'hidden')
-            initDynamicCard('auth');
-        return updateAuthForm(hash);
-    } // Ajouter les cas possibles connus
-    
-    if (cardContainer.classList != 'hidden') { // fermer carte si hash de page
-        closeDynamicCard();
-        if (hash == '#home')
-            return goHome();
-        if (hash == '#profile')
-            return goProfile();
-    }
-    return;
-}
-
-export function setupNavigation() {
-    window.addEventListener('popstate', (e) => {
-        e.preventDefault();
-        handleHashChange(); // handleHashChange() remplace navigateTo() pour une meilleure navigation via l'historique
-    });
-}
-
-// remplace navigateTo() pour la partie #home
-export async function goHome() {
-    const mainContent = document.querySelector('.main-content');
-
-    if (!mainContent) return;
-
-    try {
-        const response = await fetch('./partials/home.html');
-        const html = await response.text();
-        document.querySelector('.main-content').innerHTML = html;
-
-        window.history.replaceState({}, '', `#home`);
-        setupHomePage();
-    } catch (error) {
-        console.error('Error loading page:', error);
-        return;
-    }
-    return;
-}
-
-// remplace navigateTo() pour la partie #profile -> plus simple, gère auth & nouvel affichage #profile -> fonctionne avec ou sans argument
-export async function goProfile(userId) {
-    const mainContent = document.querySelector('.main-content');
-
-    if (!mainContent) return;
-    const isAuth = await isAuthenticated();
-
-    if (!isAuth) {
-        window.history.replaceState({}, '', `#signin`);
-        return initDynamicCard('auth');
+class Navigator {
+    constructor() {
+        this.mainContent = document.querySelector('.main-content');
+        this.cardContainer = document.getElementById('dynamic-card-container');
+        window.addEventListener('popstate', () => this.handleHashChange());
     }
 
-    try {
-        const response = await fetch('./partials/profile.html');
-        const html = await response.text();
-        document.querySelector('.main-content').innerHTML = html;
+    async handleHashChange() {
+        const hash = window.location.hash;
+        const isAuth = await isAuthenticated();
 
-        // Attendre que le DOM ait bien pris en compte les changements
-        requestAnimationFrame(() => state.client.loadUserProfile(userId));
-        setupProfilePage();
-        window.history.replaceState({}, '', `#profile`);
-    } catch (error) {
-        console.error('Error loading page:', error);
-        return;
+        const pageMap = {
+            '#home': () => this.goToPage('home'),
+            '#profile': () => this.goToPage('profile')
+        };
+
+        // Gestion des cas d'authentification
+        if (hash === '#register' || hash === '#signin') {
+            if (isAuth) return pageMap['#profile'];
+            if (this.cardContainer.classList.contains('hidden')) initDynamicCard('auth');
+            return updateAuthForm(hash);
+        }
+
+        // Fermer la carte dynamique si on change de page
+        if (!this.cardContainer.classList.contains('hidden')) {
+            closeDynamicCard();
+        }
+
+        return (pageMap[hash] || pageMap['#home'])();
     }
-    return;
+
+    async goToPage(page, userId = null) {
+        if (!this.mainContent) return;
+
+        const pageFiles = {
+            home: { url: './partials/home.html', setup: setupHomePage },
+            profile: { url: './partials/profile.html', setup: setupProfilePage }
+        };
+
+        if (!pageFiles[page]) return console.error('Page not found:', page);
+
+        if (page === 'profile' && !(await isAuthenticated())) {
+            window.history.replaceState({}, '', `#signin`);
+            return initDynamicCard('auth');
+        }
+
+        try {
+            const response = await fetch(pageFiles[page].url);
+            const html = await response.text();
+            this.mainContent.innerHTML = html;
+
+            requestAnimationFrame(() => {
+                if (page === 'profile') state.client.loadUserProfile(userId);
+            });
+
+            pageFiles[page].setup();
+            window.history.replaceState({}, '', `#${page}`);
+        } catch (error) {
+            console.error('Error loading page:', error);
+        }
+    }
 }
+
+// Exporter une instance unique
+export const navigator = new Navigator();
