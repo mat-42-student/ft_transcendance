@@ -1,37 +1,42 @@
 import json
 import jwt
 import requests
+import time
 from asyncio import create_task, sleep as asleep
 from redis.asyncio import from_url
 from channels.generic.websocket import AsyncWebsocketConsumer
 from urllib.parse import parse_qs
 from .Game import Game
 from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT
+from collections import deque
 
 class PongConsumer(AsyncWebsocketConsumer):
+
+    # Anti-flood system
+    MESSAGE_LIMIT = 5
+    TIME_WINDOW = 1
 
     def init(self):
         self.player_id = None
         self.player_name = None
         self.game_id = None
         self.nb_players = 0
-        self.in_game = False
         self.master = False
         self.game = None
         self.side = None
-        self.game_mode = None
         self.room_group_name = None
         self.public_key = None
         self.redis_client = None
         self.pubsub = None
         self.connected = False
+        self.message_timestamps = deque(maxlen=self.MESSAGE_LIMIT) # collecting message's timestamp
 
     async def connect(self):
         self.init()
         self.get_user_infos()
         if self.player_id is None:
             print("User is not authenticated. Aborting")
-            await self.close(code=1002)
+            await self.close(code=1008) #1008: Policy violation
             return
         try:
             await self.join_redis_channels()
@@ -103,17 +108,17 @@ class PongConsumer(AsyncWebsocketConsumer):
             await asleep(0.5)
         if expected_players is None:
             print("No answer from mmaking")
-            # await self.close(code=1002) # activate when mmaking will answer
+            # await self.close(code=1008) # activate when mmaking will answer
             return
         try:
             expected_players = json.loads(expected_players)
         except json.JSONDecodeError as e:
             print("Invalid JSON:", e)
-            await self.close(code=1002)
+            await self.close(code=1008)
             return
         if self.player_id not in expected_players:
             print("Unexpected player")
-            await self.close(code=1002)
+            await self.close(code=1008)
 
     async def send_online_status(self, status):
         """Send all friends our status"""
@@ -130,9 +135,21 @@ class PongConsumer(AsyncWebsocketConsumer):
         # print(f"Sending data to deep_social: {data}")
         await self.redis_client.publish("deep_social", json.dumps(data))
 
+    # return True if user has sent more than MESSAGE_LIMIT in TIME_WINDOW seconds
+    async def user_flooding(self):
+        current_time = time.time()
+        self.message_timestamps.append(current_time)
+        if len(self.message_timestamps) >= self.MESSAGE_LIMIT:
+            first_timestamp = self.message_timestamps[0]
+            if current_time - first_timestamp <= self.TIME_WINDOW:
+                return True
+        return False
+
     # Receive message from WebSocket: immediate publish into channels lobby
     async def receive(self, text_data=None, bytes_data=None):
-        # print(f"text_data: {text_data}")
+        if await self.user_flooding():
+            self.close(code=1008)
+            return
         data = self.load_valid_json(text_data)
         if not (data):
             print("wrong data incoming", text_data)
@@ -177,13 +194,13 @@ class PongConsumer(AsyncWebsocketConsumer):
             return await self.wannaplay(data.get("id"), data.get("username"))
 
     async def wannaplay(self, user_id, user_name):
-        # if self.in_game:
-        #     await self.send(json.dumps({"error":"You already playin mofo"}))
-        #     return
-        # self.in_game = True
         self.nb_players += 1
         print(f"{self.player_id} wannaplay on channel {self.room_group_name}. Currently {self.nb_players} players in lobby")
         if self.nb_players != 2:
+            return
+        if self.player_id == user_id:    
+            await self.send(json.dumps({"error":"You already playin mofo"}))
+            await self.close(code=1008)
             return
         self.master = True
         print(f"{YELLOW}Found two players. Master is {self.player_name}{RESET}")
@@ -195,7 +212,6 @@ class PongConsumer(AsyncWebsocketConsumer):
             "rplayer": self.game.players[RIGHT].name,
             "lpos":self.game.players[LEFT].pos,
             "rpos":self.game.players[RIGHT].pos,
-            "mode":self.game_mode,
         }
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "handle.message", "message": json_data}
@@ -237,7 +253,8 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def disconnect_now(self, event):
     # If self.game.over, game was stopped beacuse maxscore has been reached
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-        user = event["from"]
+        print("disco_now", event)
+        user = event["side"]
         print(f"{YELLOW}Disconnect_now from {user}{RESET}")
         if self.master and self.game.over: # game ended normally
             print(f"{RED}Game #{self.game.id} over (maxscore reached){RESET}")
