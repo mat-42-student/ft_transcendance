@@ -81,7 +81,6 @@ class Command(BaseCommand):
                 try:
                     message = json.loads(msg.get('data'))
                     if (msg.get('channel') == self.channel_front): # Do nothing if msg is send on info_social
-                        print(message)
                         if (message.get('header').get('dest') == 'front'):
                             pass
                         else:
@@ -240,7 +239,7 @@ class Command(BaseCommand):
         if (status != 'online' or status is None):
             try:
                 guestid = int(obj_invite.get('guest_id'))
-                await self.cancelInvitation(player.user_id, guestid)
+                await self.cancelInvitation(player.user_id, guestid, 'guest_id')
             except Exception as e:
                 print(e)
             return 
@@ -251,7 +250,6 @@ class Command(BaseCommand):
 
         # Receive the msg by Guest    
         if (obj_invite.get('host_id')):
-            print("process host_id")
             host_id = None
             try:
                 host_id = int(obj_invite.get('host_id'))
@@ -261,6 +259,15 @@ class Command(BaseCommand):
             # If guest accept invitation
             if (obj_invite.get('accept') == True):
 
+                # Research salon create by guest
+                for salon in self.salons['invite']:
+                    for gamerId, gamer in salon.players.items():
+                        if (gamerId == player.user_id):
+                            for friendId, friend in gamer.guests.items():
+                                print(f'send CancelInvitationto {friendId}')
+                                await self.cancelInvitation(friendId, player.user_id, 'host_id')
+                                await self.cancelInvitation(player.user_id, friendId, 'guest_id')
+                    
                 # Research salon of the host
                 for salon in self.salons['invite']:
                     host = salon.players.get(host_id)
@@ -270,7 +277,8 @@ class Command(BaseCommand):
                         for guestid in list(host.guests):
                             # Cancel invitation of other guests
                             if (guestid != player.user_id):
-                                await self.cancelInvitation(guestid, host.user_id)
+                                await self.cancelInvitation(guestid, host.user_id, 'host_id')
+                                await self.cancelInvitation(host_id, guestid, 'guest_id')
                                 del host.guests[guestid]
                             # Add guest to salon by Host
                             else:
@@ -321,7 +329,7 @@ class Command(BaseCommand):
             status = await guest.checkStatus(self.redis_client, self.channel_social)
             if (status != 'online' or status is None):
                 print(f"Guest Status is Bad -> {status}")
-                await self.cancelInvitation(player.user_id, guest.user_id)
+                await self.cancelInvitation(player.user_id, guest.user_id, 'guest_id')
                 return 
 
             # Add to dict of Host the guests
@@ -390,7 +398,6 @@ class Command(BaseCommand):
                         return True
                     else:
                         return False
-                        
                         
     def deleteSalon(self, salontodelete):
         try:
@@ -550,7 +557,7 @@ class Command(BaseCommand):
         }
         await self.redis_client.publish(self.channel_front, json.dumps(data))
         
-    async def cancelInvitation(self, hostid, guestid):
+    async def cancelInvitation(self, hostid, guestid, to):
         data = {
             'header':{
                 'service': 'mmaking',
@@ -560,7 +567,7 @@ class Command(BaseCommand):
             'body':{
                 'type_game': {
                     'invite':{
-                        'host_id': guestid,
+                        to: guestid,
                     },
                 },
                 'cancel': True

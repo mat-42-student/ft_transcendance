@@ -8,14 +8,18 @@ export class Mmaking
     {
 		this.invited_by = {};
 		this.guests = {};
+		// Store bound functions
+		this.boundEventListeners = {};
 		for (let [key, value] of state.socialApp.friendList)
 		{
 			const keyNumber = Number(key);
 			if (keyNumber != NaN)
 			{
-				console.log(typeof(keyNumber))
+				console.log(keyNumber)
 				this.invited_by[keyNumber] = false;
 				this.guests[keyNumber] = false;
+				this.buildEventsbtnInvite(keyNumber);
+
 			}
 		}
 		this.host = false;
@@ -23,10 +27,26 @@ export class Mmaking
 		this.SearchRandomGame = false;
 		this.cancel = false;
 		this.salonInvite = false;
+		this.salonHost = false;
+		this.salonLoad = false
 		this.salonRandom = false;
 		this.type_game = null;
 		this.game = null;
+		this.gameId = null;
     }
+
+	async buildEventsbtnInvite(keyNumber)
+	{
+		const btnmatch = document.querySelector(`.btn-match-${keyNumber}`);
+
+		if (!this.boundEventListeners[keyNumber]) {
+			this.boundEventListeners[keyNumber] = {
+				btnInviteActive: this.btnInviteActive.bind(this, keyNumber),
+				btnInviteDesactive: this.btnInviteDesactive.bind(this, keyNumber),
+			};
+		}
+		btnmatch.addEventListener('click', this.boundEventListeners[keyNumber].btnInviteDesactive);
+	}
 
 	async renderMatchmaking()
 	{
@@ -41,41 +61,40 @@ export class Mmaking
 		for (const [key, value] of Object.entries(this.guests))
 		{
 			const friend = state.socialApp.friendList.get(Number(key));
-
 			const cardFriend = document.getElementsByClassName(`friend-item-${key}`);
 
-			if (friend && (value == true || value == false))
+			// If you guest has response yes, no or you are in salon
+			if (friend && (value == true || value == false || this.salonHost))
 			{
+				this.cardFriendReset(cardFriend[0]);
 				if (value == true)
 				{
-					console.log('Reset card friend');
-					this.cardFriendReset(cardFriend[0]);
 					await initDynamicCard('salonHost');
-					this.setFriend(friend.username, `../../../media/${friend.avatar}`)
+					this.setFriendwithoutLoader(friend.username, `../../../media/${friend.avatar}`)
 
 					const btnstartgame = document.getElementById('start-game');
 					const btncancelGame = document.getElementById('cancel-button');
 
 					btnstartgame.addEventListener('click', (event) => this.startGame(event, key));
-					btncancelGame.addEventListener('click', (event) => this.cancelGame(event));
-					
-
-
-					if(this.game == true)
-						this.setOpponent(friend.username, `../../../media/${friend.avatar}`, 'invite');
+					btncancelGame.addEventListener('click', (event) => this.cancelGame(event, key));
 
 				}
-				else
-				{
-					this.cardFriendReset(cardFriend[0]);
-				}
+				
 			}
+			// If you invite the guest
 			else if (friend && value == null)
 			{
 				this.cardFriendInvited(cardFriend[0])
 			}
-		}
 
+			// If you are in game
+			if (this.game == true)
+			{
+				closeDynamicCard();
+				state.gameApp.launchGameSocket(this.gameId);
+				this.game = false;
+			}
+		}
 	}
 
 	cardFriendInvited(friendCard)
@@ -93,38 +112,57 @@ export class Mmaking
 	{
 		for (const [key, value] of Object.entries(this.invited_by))
 		{
-			const btnHost = document.getElementsByClassName(`btn-match-${key}`);
-			const btnMatchPicture = document.getElementById(`btn-match-picture-${key}`)
-			console.log(Number(key));
-			let friend = Number(key);
-			if (friend != NaN)
-				friend = state.socialApp.friendList.get(friend);
+			if (this.salonHost == false && this.salonInvite == false)
+				closeDynamicCard();
+			else if (this.salonLoad == true)
+				await initDynamicCard('salonLoad');
 
+			const btnHost = document.querySelector(`.btn-match-${key}`);
+			const btnMatchPicture = document.getElementById(`btn-match-picture-${key}`);
+			const friend = state.socialApp.friendList.get(Number(key));
+
+
+			// Ensure the correct key is used
+			const keyNumber = Number(key);
+
+			// Bind functions with the key parameter and store them
+			if (!this.boundEventListeners[keyNumber]) {
+				this.boundEventListeners[keyNumber] = {
+					btnInviteActive: this.btnInviteActive.bind(this, keyNumber),
+					btnInviteDesactive: this.btnInviteDesactive.bind(this, keyNumber),
+				};
+			}
+
+			// if you have refuse or accept the invtiation you come here
 			if(value == false || (value == true && this.salonInvite == true))
 			{
-				console.log(key);
 				btnMatchPicture.src = "/ressources/vs.png";
-				btnHost[0].removeEventListener('click',(event)=>this.btnInviteActive(event));
-				btnHost[0].addEventListener('click', (event) => this.btnInviteDesactive(event));
+				btnHost.removeEventListener('click', this.boundEventListeners[keyNumber].btnInviteActive);
+				btnHost.addEventListener('click', this.boundEventListeners[keyNumber].btnInviteDesactive);
 
 				if (value == true)
 				{
-					closeDynamicCard();
-					await initDynamicCard('salonGuest');
 					const btncancelGame = document.getElementById('cancel-button');
 
-					// this.setOpponentInvite(friend.username, `../../../media/${friend.avatar}`)
-					this.setFriend(friend.username, `../../../media/${friend.avatar}`)
-					btncancelGame.addEventListener('click', (event) => this.cancelGame(event));
+					this.setFriendwithLoader(friend.username, `../../../media/${friend.avatar}`)
+					btncancelGame.addEventListener('click', (event) => this.cancelGame(event, key));
 
 				}
 			}
-			else if (value == null)
+			// If you haven't response to invitation
+			else
 			{
 				btnMatchPicture.src = "/ressources/vs_active.png";
-				btnHost[0].removeEventListener('click',this.btnInviteDesactive);
-				btnHost[0].removeEventListener('click',state.socialApp.handleMatchClick);
-				btnHost[0].addEventListener('click', (event) => this.btnInviteActive(event, key));
+				btnHost.removeEventListener('click', this.boundEventListeners[keyNumber].btnInviteDesactive);
+				btnHost.addEventListener('click', this.boundEventListeners[keyNumber].btnInviteActive);
+			}
+			
+			// if you are in game
+			if (this.game == true)
+			{
+				closeDynamicCard();
+				state.gameApp.launchGameSocket(this.gameId);
+				this.game = false;
 			}
 		}
 	}
@@ -148,10 +186,16 @@ export class Mmaking
 				}
 			}
 		};
+
 		await this.sendMsg(data);
+
+		this.salonHost = false;
+		this.guests[friendId] = false;
+		this.renderMatchmaking();
+
 	}
 
-	async cancelGame(event)
+	async cancelGame(event, friendId)
 	{
 		const data = {
 			'type_game': {
@@ -164,33 +208,37 @@ export class Mmaking
 			'cancel' : true
 		};
 
+		this.guests[friendId] = false;
+		this.invited_by[friendId] = false;
 		this.salonInvite = false;
 		this.salonRandom = false;
 		this.type_game = null;
 		this.SearchRandomGame = false;
-		this.game = null;
+		this.game = false;
 		this.cancel = true;
+		this.salonHost = false;
 
 		await this.sendMsg(data);
-		this.renderMatchmaking();
+		await this.renderMatchmaking();
 	}
 
-	async btnInviteDesactive(event)
+	async btnInviteDesactive(key)
 	{
-		const friendId = event.currentTarget.dataset.friendId;
+		// const friendId = event.currentTarget.dataset.friendId;
 
 
 		const data =
 		{
 			'type_game': {
 				'invite': {
-					'guest_id': friendId
+					'guest_id': key
 				}
 			}
 		};
 
-		this.guests[friendId] = null;
-		this.invited_by[friendId] = false;
+		console.log("btninviteDesactive " + key);
+		this.guests[key] = null;
+		this.invited_by[key] = false;
 		this.salonInvite = true;
 		this.host = true;
 
@@ -198,16 +246,17 @@ export class Mmaking
 		await this.renderMatchmaking();
 	}
 
-	async btnInviteActive(event, key)
+	async btnInviteActive(key)
 	{
 		const friendId = key;
+		console.log(key);
 		const btnInviteAccept = document.getElementsByClassName('btn-accepter');
 		const btnInviteRefuse = document.getElementsByClassName('btn-refuser');
 
 		await initDynamicCard('vs_active');
 		
 		btnInviteAccept[0].addEventListener('click', (event) => this.btnInviteAccept(event, friendId));
-		btnInviteRefuse[0].addEventListener('click', (event) => this.btnInviteRefuse(event));
+		btnInviteRefuse[0].addEventListener('click', (event) => this.btnInviteRefuse(event, friendId));
 	}
 
 	async btnInviteAccept(event, friendId)
@@ -228,15 +277,15 @@ export class Mmaking
 		this.invited_by[friendId] = false;
 		this.host = false;
 		this.salonInvite = true;
+		this.salonLoad = true;
 
 		await this.sendMsg(data);
 		await this.renderMatchmaking();
 	}
 
-	async btnInviteRefuse(event)
+	async btnInviteRefuse(event, friendId)
 	{
-		const friendId = event.currentTarget.dataset.friendId;
-
+		console.log(friendId);
 		const data = {
 			'type_game': {
 				'invite':{
@@ -248,10 +297,10 @@ export class Mmaking
 
 		this.guests[friendId] = false;
 		this.invited_by[friendId] = false;
-		this.host = true;
 		this.salonInvite = false;
 
 		await this.sendMsg(data);
+		await this.renderMatchmaking();
 	}
 
 
@@ -316,29 +365,27 @@ export class Mmaking
     async incomingMsg(data)
     {
         if (data.body.status == 'ingame')
-        {
-            for (const [key, value] of Object.entries(data.body.opponents))
-                this.setOpponent(value.username, '../../../media/default.png', value.type_game)
-
-            state.gameApp.launchGameSocket(data.body.id_game);
+        { 
+			this.game = true;
+			this.gameId =  data.body.id_game;
+			this.salonInvite = false;
+			this.salonLoad = false;
         }
 		else if (data.body.cancel == true)
 		{
-			console.log('Reset img and card');
-			const friendlist = document.querySelectorAll('.friend-item');
-	
-			friendlist.forEach(friend => {
-				if (friend.dataset.userid == data.body.type_game.invite.host_id )
+			if (data.body.type_game.invite)
+			{
+				const invite = data.body.type_game.invite;
+				if (invite.host_id)
 				{
-					const btnmatch = friend.querySelector('.btn-match');
-					const imgmatch = btnmatch.getElementsByTagName('img');
-					imgmatch[0].src = "/ressources/vs.png";
-					this.ResetCardFriend(btnmatch);
-					btnmatch.dataset.invite = false;
-					return ;
+					this.invited_by[invite.host_id] = false;
 				}
-			});
-			closeDynamicCard();
+				else if (invite.guest_id)
+				{
+					this.guests[invite.guest_id] = false;
+
+				}
+			}
 		}
 		// Routing to communication mode Invite
         else if (data.body.type_game.invite)
@@ -356,16 +403,27 @@ export class Mmaking
 					this.invited_by[invite.host_id] = null;
 
 				}
+				this.salonLoad = false;
+
 				console.log('invited_by: ' + invite.host_id);
 			}
 			else if (invite.guest_id)
 			{
 				if (invite.accept == true)
+				{
 					this.guests[invite.guest_id] = true;
+					this.salonHost = true;
+
+				}
+				else if (invite.accept == false)
+				{
+					this.guests[invite.guest_id] = false;
+				}
 			}
 
-			this.renderMatchmaking();
         }
+		await this.renderMatchmaking();
+
     }
 
 	desableOverlay()
@@ -451,12 +509,19 @@ export class Mmaking
         document.getElementById("cancel-button").style.display = "none";
     }
 
-    setFriend(name, picture)
+    setFriendwithoutLoader(name, picture)
     {
         document.getElementById("opponent-info").style.display = "block";
         document.getElementById("opponent-name").textContent = name;
         document.getElementById("opponent-photo").src = picture;
+    }
 
+    setFriendwithLoader(name, picture)
+    {
+        document.getElementById("opponent-info").style.display = "block";
+        document.getElementById("opponent-name").textContent = name;
+        document.getElementById("opponent-photo").src = picture;
+		document.getElementById("random-loader").style.display = "none";
     }
 
     createCard() {

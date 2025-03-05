@@ -1,4 +1,5 @@
 import { state } from './main.js'
+import { Mmaking } from './mmaking.js';
 
 export class SocialApp{
 
@@ -123,7 +124,6 @@ export class SocialApp{
 			btnMatch.classList.add(`btn-match-${friend.id}`);
     
             btnChat.addEventListener('click', this.handleChatClick);
-            btnMatch.addEventListener('click', this.handleMatchClick);
         });
     }
 
@@ -132,9 +132,8 @@ export class SocialApp{
         state.chatApp.changeChatUser(friendId);
     }
 
-    handleMatchClick(event) {
-        const friendId = event.currentTarget.dataset.friendId;
-        state.mmakingApp.btnInviteDesactive(event);
+    handleMatchClick(friendId) {
+        state.mmakingApp.btnInviteDesactive(friendId);
     }
 
     removeAllFriendListeners() {

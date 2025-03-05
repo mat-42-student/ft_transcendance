@@ -15,6 +15,7 @@ const dynamicCardRoutes = {
     'vs_active': './partials/cards/vs_active.html',
 	'salonHost': './partials/cards/salonHost.html',
 	'salonGuest': './partials/cards/salonGuest.html',
+	'salonLoad': './partials/cards/salonLoad.html',
 };
 
 export async function initDynamicCard(routeKey) {
