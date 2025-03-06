@@ -64,46 +64,4 @@ class Command(BaseCommand):
         
         # self.stdout.write(self.style.SUCCESS('OAuth application created/updated successfully!'))
 
-# import secrets
-# import os
-# from django.core.management.base import BaseCommand
-# from oauth2_provider.models import Application
-# from django.contrib.auth.models import User
-
-# class Command(BaseCommand):
-#     help = 'Creates OAuth2 client application'
-
-#     def handle(self, *args, **kwargs):
-#         SHARED_ENV_PATH = "/shared_credentials/.env"
-#         os.makedirs(os.path.dirname(SHARED_ENV_PATH), exist_ok=True)
-
-#         if not os.path.exists(SHARED_ENV_PATH):
-#             client_id = secrets.token_urlsafe(40)
-#             client_secret = secrets.token_urlsafe(60)
-            
-#             with open(SHARED_ENV_PATH, "w") as f:
-#                 f.write(f"OAUTH_CCF_CLIENT_ID={client_id}\n")
-#                 f.write(f"OAUTH_CCF_CLIENT_SECRET={client_secret}\n")
-#         else:
-#             with open(SHARED_ENV_PATH, "r") as f:
-#                 lines = f.readlines()
-#                 client_id = lines[0].split("=")[1].strip()
-#                 client_secret = lines[1].split("=")[1].strip()
-
-#         # Create user and application
-#         user, _ = User.objects.get_or_create(username="system_user")
-        
-#         Application.objects.update_or_create(
-#             name="Shared Client",
-#             defaults={
-#                 "user": user,
-#                 "client_id": client_id,
-#                 "client_secret": client_secret,
-#                 "client_type": Application.CLIENT_CONFIDENTIAL,
-#                 "authorization_grant_type": Application.GRANT_CLIENT_CREDENTIALS,
-#             }
-#         )
-
-#         self.stdout.write(self.style.SUCCESS('OAuth client configured'))
-
 

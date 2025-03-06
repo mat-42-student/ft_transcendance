@@ -67,7 +67,7 @@ export async function initDynamicCard(routeKey) {
 
             if (oauthButton) {
                 oauthButton.addEventListener('click', () => {
-                    window.location.href = 'https://localhost:3000/api/v1/auth/oauth/login/';
+                    window.location.href = '/api/v1/auth/oauth/login/';
                 });
             }
             

@@ -25,7 +25,12 @@ SECRET_KEY = 'django-insecure-07auai45r7xxwpi94@z253^)955urq@q_n_p%5xcgwox0m*w#)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    '.42mulhouse.fr', # All subdomains of 42mulhouse.fr
+    'gateway',
+]
 
 # Application definition
 
@@ -153,8 +158,3 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #         'rest_framework.permissions.IsAuthenticated',
 #     ],
 # }
-
-# OAuth 2.0 Client Credentials flow
-OAUTH2_CCF_TOKEN_URL = os.getenv("OAUTH2_CCF_TOKEN_URL")
-OAUTH2_CCF_CLIENT_ID = os.getenv("OAUTH2_CCF_CLIENT_ID")
-OAUTH2_CCF_CLIENT_SECRET = os.getenv("OAUTH2_CCF_CLIENT_SECRET")

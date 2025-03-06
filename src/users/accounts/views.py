@@ -1,3 +1,5 @@
+import jwt
+import datetime
 import django.db.models as models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -12,10 +14,6 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from .models import User
-import jwt
-import datetime
-
-
 from .models import User, Relationship
 from .serializers import (
     UserListSerializer, 
@@ -61,7 +59,7 @@ class UserRegisterView(APIView):
                 key='refreshToken',
                 value=refresh_token, 
                 httponly=True,
-                samesite='None',
+                samesite='Lax',
                 secure=True,
                 path='/'
             )
@@ -71,9 +69,9 @@ class UserRegisterView(APIView):
             }
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 # User ViewSet
 class UserViewSet(viewsets.ModelViewSet):
+
     queryset = User.objects.all()
 
     def get_permissions(self):
@@ -223,7 +221,7 @@ class UserViewSet(viewsets.ModelViewSet):
         """
         requested_user = self.get_object()  # Récupère l'utilisateur cible
 
-        # Handle machine clients (oauth_client)
+        # Handle machine clients
         if request.user.username == 'oauth_client' and request.user.is_authenticated:
             try:
                 user = User.objects.get(pk=pk)
@@ -333,8 +331,6 @@ class UserViewSet(viewsets.ModelViewSet):
             response_data["is_friend"] = True
 
         return Response(response_data, status=200)
-        
-
 # Relationship ViewSet
 class RelationshipViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]

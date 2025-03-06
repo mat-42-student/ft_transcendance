@@ -10,7 +10,12 @@ SECRET_KEY = 'django-insecure-r)*s-=2l!4jiwy_qk5xk+s)s9@l*$c8fb@!1k#!@u_nh7(yq=2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    '.42mulhouse.fr', # All subdomains of 42mulhouse.fr
+    'auth',
+]
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
@@ -69,7 +74,7 @@ OAUTH2_ACF_REDIRECT_URI = 'https://localhost:3000/api/v1/auth/oauth/callback/'
 OAUTH2_ACF_CLIENT_ID = 'u-s4t2ud-42cc8fc914c6cc052826b177e11fa51f02e32acc8ffb2601fe88a36f65e4035b'
 OAUTH2_ACF_CLIENT_SECRET = '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'
 
-ROOT_URLCONF = 'auth_service.urls'
+ROOT_URLCONF = 'auth.urls'
 
 TEMPLATES = [
     {
@@ -87,7 +92,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'auth_service.wsgi.application'
+WSGI_APPLICATION = 'auth.wsgi.application'
 
 DATABASES = {
     'default': {
@@ -107,9 +112,11 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
-        "KEY_PREFIX": "tokens"
-    }
+        "KEY_PREFIX": "jwt_refresh_tokens",
+    },
 }
+
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {

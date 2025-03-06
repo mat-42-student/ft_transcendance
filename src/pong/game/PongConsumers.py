@@ -73,7 +73,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     
     def get_public_key(self):
         try:
-            response = requests.get(f"http://auth-service:8000/api/v1/auth/public-key/")
+            response = requests.get(f"http://auth:8000/api/v1/auth/public-key/")
             if response.status_code == 200:
                 self.public_key = response.json().get("public_key")
             else:

@@ -1,3 +1,19 @@
+networks:
+  nginx-network:
+    driver: bridge
+  db-network:
+    driver: bridge
+  redis-network:
+    driver: bridge
+  deep-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  media:
+  static_volume:
+  shared_credentials:
+
 services:
   # django-base:
   #     build:
@@ -5,13 +21,13 @@ services:
   #       dockerfile: Dockerfile.django
   #     image: django-base
 
-  auth-service:
-    container_name: auth-service
+  auth:
+    container_name: auth
     build:
-      context: ./auth_service
+      context: ./auth
       dockerfile: Dockerfile
     volumes:
-      - ./auth_service:/code
+      - ./auth:/code
       - static_volume:/code/staticfiles
       - shared_credentials:/shared_credentials
     depends_on:
@@ -51,7 +67,7 @@ services:
     #   timeout: 5s
     #   retries: 3
     depends_on:
-      auth-service:
+      auth:
         condition: service_started
 
   chat:
@@ -65,7 +81,7 @@ services:
     depends_on:
       redis:
         condition: service_started 
-      auth-service:
+      auth:
         condition: service_started 
     volumes:
       - ./chat/:/code
@@ -89,7 +105,7 @@ services:
     depends_on:
       redis:
         condition: service_started 
-      auth-service:
+      auth:
         condition: service_started 
     networks:
       - redis-network
@@ -132,7 +148,7 @@ services:
         condition: service_healthy
       pong:
         condition: service_started
-      auth-service:
+      auth:
         condition: service_started 
     expose:
       - "8000"
@@ -153,7 +169,7 @@ services:
       - "3000:443"
     depends_on:
       - users
-      - auth-service
+      - auth
       - matchmaking
     volumes:
       - ./media:/media
@@ -166,12 +182,12 @@ services:
   pong:
     container_name: pong
     build:
-      context: _Pong
+      context: pong
       dockerfile: Dockerfile
     env_file:
       - .env
     volumes:
-      - ./_Pong/:/code
+      - ./pong/:/code
     depends_on:
       - redis
     expose:
@@ -216,18 +232,3 @@ services:
       - redis-network
     restart: on-failure
 
-volumes:
-  postgres_data:
-  media:
-  static_volume:
-  shared_credentials:
-
-networks:
-  nginx-network:
-    driver: bridge
-  db-network:
-    driver: bridge
-  redis-network:
-    driver: bridge
-  deep-network:
-    driver: bridge
