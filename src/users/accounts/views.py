@@ -154,9 +154,9 @@ class UserViewSet(viewsets.ModelViewSet):
             # Ajouter l'utilisateur à la liste des bloqués
             request.user.blocked_users.add(user_to_block)
 
-            # Supprimer les relations existantes
-            request.user.relationships_initiated.filter(to_user=user_to_block).delete()
-            request.user.relationships_received.filter(from_user=user_to_block).delete()
+            # # Supprimer les relations existantes
+            # request.user.relationships_initiated.filter(to_user=user_to_block).delete()
+            # request.user.relationships_received.filter(from_user=user_to_block).delete()
 
             return Response({"detail": "Utilisateur bloqué."}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
