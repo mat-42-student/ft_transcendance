@@ -1,13 +1,13 @@
 import json
 import jwt
 import requests
-import time
 from asyncio import create_task, sleep as asleep
 from redis.asyncio import from_url #type: ignore
 from channels.generic.websocket import AsyncWebsocketConsumer #type: ignore
 from urllib.parse import parse_qs
 from .Game import Game
 from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT
+import time
 from collections import deque
 
 class PongConsumer(AsyncWebsocketConsumer):
@@ -36,8 +36,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.init()
         self.get_user_infos()
         if self.player_id is None:
-            print("User is not authenticated. Aborting")
-            await self.close(code=1008) #1008: Policy violation
+            await self.kick(message="Unauthentified")
             return
         try:
             await self.join_redis_channels()
@@ -79,7 +78,7 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     def get_public_key(self):
         try:
-            response = requests.get(f"http://auth-service:8000/api/v1/auth/public-key/")
+            response = requests.get(f"http://auth:8000/api/v1/auth/public-key/")
             if response.status_code == 200:
                 self.public_key = response.json().get("public_key")
             else:
@@ -151,13 +150,12 @@ class PongConsumer(AsyncWebsocketConsumer):
             return
         data = await self.load_valid_json(text_data)
         if not (data):
-            print("wrong data incoming", text_data)
             return
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "handle.message", "message": data}
         )
 
-    async def kick(self, close_code=1008, message=""):
+    async def kick(self, close_code=1008, message="Policy Violation"):
         print(RED, self.player_name, message, RESET)
         try:
             await self.send(text_data=json.dumps({"action": "disconnect"}))
