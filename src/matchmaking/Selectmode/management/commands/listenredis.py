@@ -132,7 +132,7 @@ class Command(BaseCommand):
                     if (already_player and (body.get('cancel') or body.get('disconnect'))):
                         await already_player.updateStatus(self.redis_client, self.channel_deepSocial, "online")
                         print(f'{salon} | {already_player}')
-                        self.deletePlayer(salon, already_player)
+                        await self.deletePlayer(salon, already_player)
                         return False
                     
                     if (already_player):
@@ -145,15 +145,25 @@ class Command(BaseCommand):
             print(e)
     
     # Delete player somewhere
-    def deletePlayer(self, salon ,player):
+    async def deletePlayer(self, salon ,player):
+        copy_salon = salon
         try:
             if (salon.type_game == 'invite'):
                 print("Send all Guest the invitation is unvalible and destroy the salon and player")
+                for key, value in salon.players.items():
+                    print(f"type of value = {type(value)}")
+                    print(f'Isinstance = {isinstance(value, Guest)}')
+                    if (not isinstance(value, Guest) and key != player.user_id):
+                        await self.cancelInvitation(key, player.user_id ,'guest_id')
+                    elif (key != player.user_id):
+                        await self.cancelInvitation(key, player.user_id, 'host_id')
+                    await value.updateStatus(self.redis_client, self.channel_deepSocial, 'online' )
+                self.salons[salon.type_game].remove(salon)
             elif (salon.type_game == '1vs1R'):
                 print("Just destroy the player")
             del salon.players[player.user_id]
         except Exception as e:
-            print(e)
+            print(f'Delete player {e}')
             
 
     # Research and verify conditions for the type_game selected
@@ -239,24 +249,19 @@ class Command(BaseCommand):
                 return 
             # If guest accept invitation
             if (obj_invite.get('accept') == True):
+                
+                # Need this variable to delete salon if Guets has already invited friend
 
-                # Research salon create by guest
-                for salon in self.salons['invite']:
-                    for gamerId, gamer in salon.players.items():
-                        if (gamerId == player.user_id):
-                            for friendId, friend in gamer.guests.items():
-                                print(f'send CancelInvitationto {friendId}')
-                                await self.cancelInvitation(friendId, player.user_id, 'host_id')
-                                await self.cancelInvitation(player.user_id, friendId, 'guest_id')
-                    
+
                 # Research salon of the host
                 for salon in self.salons['invite']:
                     host = salon.players.get(host_id)
                     if (host):
-                        
+                        # Delete everywhere we find guests and host
+                        await self.deleteEverywhereGuestAndHost(player, host_id=host_id)
                         # Guest
                         for guestid in list(host.guests):
-                            # Cancel invitation of other guests
+                            # Cancel invitation of other guests of host
                             if (guestid != player.user_id):
                                 await self.cancelInvitation(guestid, host.user_id, 'host_id')
                                 await self.cancelInvitation(host_id, guestid, 'guest_id')
@@ -273,22 +278,34 @@ class Command(BaseCommand):
                                 # update status Guest
                                 await guest.updateStatus(self.redis_client, self.channel_deepSocial, 'pending')
                                 await self.invitationGameToGuest(guest, host, True)
+
+
                                 
                         # Host
                         await host.updateStatus(self.redis_client, self.channel_deepSocial, 'pending')
                         print("Response by server to host")
                         await self.invitationGameToHost(host, player, True)
+
+
                         
             elif (obj_invite.get('accept') == False):
                 # Research salon of the host
+                print(f'Guest refuse invitation = {player}')
+                salonCopy = None
                 for salon in self.salons['invite']:
                     try:
                         host = salon.players.get(host_id)
                         if (host):
                             del host.guests[player.user_id]
+                            await self.invitationGameToHost(host, player, False)
+                            if (len(host.guests) == 0):
+                                salonCopy = salon
                     except Exception as e:
                         print(f'exception is raise {e}')
-                await self.invitationGameToHost(host, player, False)
+                try:
+                        self.salons[player.type_game].remove(salonCopy)
+                except Exception as e:
+                    print(f'try to delete salon if len(guests) == 0: {e}')
                         
                 
 
@@ -331,6 +348,39 @@ class Command(BaseCommand):
             await self.confirmSendInvitationGame(player.user_id, guest.user_id, None)
         
 
+    async def deleteEverywhereGuestAndHost(self, player, host_id=-1):
+        '''Delete the players (player and host_id) in all guests tab of all Hosts, all guests in this tab.  \n
+        If no host player default host_id = -1 \n
+        player = Instance Player \n
+        host_id = int
+        '''
+        salonsTodelete = []
+        print(f'host_id {host_id}')
+
+        for salon in self.salons['invite']:
+            for gamerId, gamer in salon.players.items():
+
+                if (gamerId == player.user_id):
+                    for friendId, friend in gamer.guests.items():
+                        print(f'send CancelInvitationto {friendId}')
+                        await self.cancelInvitation(friendId, gamer.user_id, 'host_id')
+                        await self.cancelInvitation(gamer.user_id, friendId, 'guest_id')
+                        salonsTodelete.append(salon)
+
+                if (player.user_id in gamer.guests and gamerId != host_id):
+                    await self.cancelInvitation(gamerId, player.user_id, 'guest_id')
+                    await self.cancelInvitation(player.user_id, gamerId, 'host_id')
+                    del gamer.guests[player.user_id]
+
+                if (host_id in gamer.guests):
+                    await self.cancelInvitation(gamerId, host_id, 'guest_id')
+                    await self.cancelInvitation(host_id, gamerId, 'host_id')
+                    del gamer.guests[host_id]
+
+                if (len(gamer.guests) == 0):
+                    salonsTodelete.append(salon)
+        for salon in salonsTodelete:
+            self.salons[player.type_game].remove(salon)
 
 
     def createSalonInvite(self, type_game, host):
@@ -344,7 +394,7 @@ class Command(BaseCommand):
                     print('This Host already exist !!!!!')
                     return salon
                 else:
-                    print("Return not salon")
+                    print("It is a Guest")
                     return None
         mainSalon.type_game = type_game
         self.salons[type_game].append(mainSalon)
