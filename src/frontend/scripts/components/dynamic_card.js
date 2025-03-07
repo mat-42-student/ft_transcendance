@@ -15,9 +15,14 @@ const dynamicCardRoutes = {
     'vs_active': './partials/cards/vs_active.html',
 	'salonHost': './partials/cards/salonHost.html',
 	'salonGuest': './partials/cards/salonGuest.html',
-	'salonLoad': './partials/cards/salonLoad.html',
+	'load': './partials/cards/salonLoad.html',
 };
 
+const closeDynamicCardHidden = [
+    'salonHost',
+    'salonGuest',
+    'load'
+]
 export async function initDynamicCard(routeKey) {
     const cardContainer = document.getElementById('dynamic-card-container');
     const cardContent = document.getElementById('dynamic-card-content');
@@ -42,6 +47,10 @@ export async function initDynamicCard(routeKey) {
 
         // Afficher la carte dynamique
         cardContainer.classList.remove('hidden');
+
+        // delete close dynamicard with cross
+        if(closeDynamicCardHidden.includes(routeKey))
+            document.getElementById('close-dynamic-card').style.display = 'none';
 
         // 2FA
         const twoFactorEnrollButton = document.getElementById('btn-enroll-2fa');

@@ -29,6 +29,7 @@ export class Client{
         	this.state.mainSocket = new MainSocket();
         	await this.state.mainSocket.init();
 		}
+        this.globalRender();
     }
 
     async logout() {
@@ -69,6 +70,8 @@ export class Client{
         }
         if (this.state.chatApp)
             this.state.chatApp.renderChat();
+        if (this.state.mmakingApp)
+            await this.state.mmakingApp.renderMatchmaking();
     }
 
     renderProfileBtn(){

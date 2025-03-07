@@ -181,6 +181,14 @@ class Command(BaseCommand):
         # Setup token to request endpoints api
         player.token = token
 
+        print(f'Salon invite length -> {len(self.salons['invite'])}')
+        for salon in self.salons['invite']:
+            print(f'Length of players : {len(salon.players)}')
+            try:
+                print(f"{salon.players}")
+            except Exception as e:
+                print(f'Exception print Salon -> {e}')
+    
         if (body.get('type_game') == '1vs1R'): # 1vs1R
             player.type_game = '1vs1R'
             await self.random(player)
@@ -210,13 +218,7 @@ class Command(BaseCommand):
     # Process to invite
     async def invitation(self, player, obj_invite):
 
-        print(f'Salon invite length -> {len(self.salons['invite'])}')
-        for salon in self.salons['invite']:
-            print(f'Length of players : {len(salon.players)}')
-            try:
-                print(f"{salon}")
-            except Exception as e:
-                print(f'Exception print Salon -> {e}')
+
         # Check the frienship with endpoint
         # Check status player
         
@@ -380,7 +382,7 @@ class Command(BaseCommand):
                 if (len(gamer.guests) == 0):
                     salonsTodelete.append(salon)
         for salon in salonsTodelete:
-            self.salons[player.type_game].remove(salon)
+            self.salons['invite'].remove(salon)
 
 
     def createSalonInvite(self, type_game, host):
@@ -452,7 +454,10 @@ class Command(BaseCommand):
         
         # Setup player
         player.get_user()
+        await self.deleteEverywhereGuestAndHost(player)
         
+        print(f'player.type_game = {player.type_game}')
+
         # Create and update Salon
         salon = self.createSalonRandom(player.type_game)
         salon.players.update({player.user_id: player})

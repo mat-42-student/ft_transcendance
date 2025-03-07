@@ -33,6 +33,7 @@ export class Mmaking
 		this.type_game = null;
 		this.game = null;
 		this.gameId = null;
+		this.btnsearchRandomisActive = false;
     }
 
 	async buildEventsbtnInvite(keyNumber)
@@ -71,6 +72,7 @@ export class Mmaking
 				if (value == true)
 				{
 					await initDynamicCard('salonHost');
+					document.getElementById('player-name').textContent = state.client.userName;
 					this.setFriendwithoutLoader(friend.username, `../../../media/${friend.avatar}`)
 
 					const btnstartgame = document.getElementById('start-game');
@@ -92,7 +94,7 @@ export class Mmaking
 			if (this.game == true)
 			{
 				closeDynamicCard();
-				this.cardFriendReset(cardFriend);
+				this.cardFriendReset(cardFriend[0]);
 				state.gameApp.launchGameSocket(this.gameId);
 				this.game = false;
 			}
@@ -109,15 +111,16 @@ export class Mmaking
 		friendCard.style.backgroundColor = "#f8f9fa";
 	}
 
-
 	async renderGuest()
 	{
 		for (const [key, value] of Object.entries(this.invited_by))
 		{
-			if (this.salonHost == false && this.salonInvite == false)
+			if (this.salonHost == false && (this.salonInvite == false && this.salonLoad == false && this.SearchRandomGame == false))
 				closeDynamicCard();
-			else if (this.salonLoad == true)
-				await initDynamicCard('salonLoad');
+			if (this.salonLoad == true)
+				await initDynamicCard('load');
+			else if(this.salonInvite == true && value == true)
+				await initDynamicCard('salonGuest');
 
 			const btnHost = document.querySelector(`.btn-match-${key}`);
 			const btnMatchPicture = document.getElementById(`btn-match-picture-${key}`);
@@ -136,23 +139,24 @@ export class Mmaking
 			}
 
 			// if you have refuse or accept the invtiation you come here
-			if(value == false || (value == true && this.salonInvite == true))
+			if((value == false && btnMatchPicture && btnHost) || (value == true && this.salonInvite == true))
 			{
 				btnMatchPicture.src = "/ressources/vs.png";
 				btnHost.removeEventListener('click', this.boundEventListeners[keyNumber].btnInviteActive);
 				btnHost.addEventListener('click', this.boundEventListeners[keyNumber].btnInviteDesactive);
-
+				
 				if (value == true)
 				{
 					const btncancelGame = document.getElementById('cancel-button');
 
-					this.setFriendwithLoader(friend.username, `../../../media/${friend.avatar}`)
+					document.getElementById('player-name').textContent = state.client.userName;
+					this.setFriendwithoutLoader(friend.username, `../../../media/${friend.avatar}`);
 					btncancelGame.addEventListener('click', (event) => this.cancelGame(event, keyNumber, 'invite'));
 
 				}
 			}
 			// If you haven't response to invitation
-			else
+			else if(btnHost && btnMatchPicture)
 			{
 				btnMatchPicture.src = "/ressources/vs_active.png";
 				btnHost.removeEventListener('click', this.boundEventListeners[keyNumber].btnInviteDesactive);
@@ -167,14 +171,6 @@ export class Mmaking
 				state.gameApp.launchGameSocket(this.gameId);
 				this.game = false;
 			}
-		}
-	}
-
-	async renderCancel()
-	{
-		if (this.cancel == true)
-		{
-			closeDynamicCard();
 		}
 	}
 
@@ -222,8 +218,6 @@ export class Mmaking
 
 	async btnInviteDesactive(key)
 	{
-		// const friendId = event.currentTarget.dataset.friendId;
-
 
 		const data =
 		{
@@ -273,7 +267,7 @@ export class Mmaking
 		this.guests[friendId] = false;
 		this.invited_by[friendId] = false;
 		this.host = false;
-		this.salonInvite = true;
+		this.salonInvite = false;
 		this.salonLoad = true;
 
 		await this.sendMsg(data);
@@ -303,47 +297,38 @@ export class Mmaking
 
 	async renderRandom()
 	{
+		const btnRandom = document.getElementById('versus');
+
 		if (this.SearchRandomGame == true)
 		{
 			await initDynamicCard('versus');
+			document.getElementById('player-name').textContent = state.client.userName;
             document.getElementById("cancel-button").addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, '1vs1R'));
+		}
+		else if (this.SearchRandomGame == false && this.btnsearchRandomisActive == false)
+		{
+			btnRandom.addEventListener('click', (event)=>this.btnsearchRandomGame());
+			this.btnsearchRandomisActive = true;
 		}
 		if (this.game == true)
 		{
+			document.getElementById('player-name').textContent = state.client.userName;
 			state.gameApp.launchGameSocket(this.gameId);
 		}
 
 	}
 
-
-
-
-
-
-
-    refresh_eventlisteners()
-    {
-        this.listening_button_match_Random();
-    }
-
-    listening_button_match_Random()
-    {
-        const randomBtn = document.getElementById('versus');
-        if (!randomBtn)
-            return ;
-        randomBtn.addEventListener('click', async ()=>
-        {
-            const data = {
-                'status': "online",
-                'type_game': "1vs1R"
-            };
-            await this.sendMsg(data)
-			this.SearchRandomGame = true;
-			await this.renderMatchmaking();
-
-        });
-
-    }
+	async btnsearchRandomGame()
+	{
+		const data = {
+			'status': "online",
+			'type_game': "1vs1R"
+		};
+		await this.sendMsg(data)
+		this.SearchRandomGame = true;
+		this.btnInviteActive = true;
+		await this.renderMatchmaking();
+	}
 
     async sendMsg(message) {
 
@@ -396,7 +381,8 @@ export class Mmaking
 				if (invite.accept == true)
 				{
 					this.invited_by[invite.host_id] = true;
-
+					this.salonLoad = false;
+					this.salonInvite = true;
 				}
 				else
 				{
@@ -426,59 +412,6 @@ export class Mmaking
 
     }
 
-	desableOverlay()
-	{
-		// Style of my card. My card don't block website
-		const overlay = document.getElementsByClassName('overlay');
-		const dynamicContainer = document.getElementById('dynamic-card-container');
-
-		// style of dynamic card container
-		dynamicContainer.style.zIndex = 0;
-		dynamicContainer.style.width = "auto";
-		dynamicContainer.style.height = "auto";
-		dynamicContainer.style.top = "50%";
-		dynamicContainer.style.left = "50%";
-
-
-		// style overlay
-		overlay[0].classList.add('hidden');
-	}
-
-	waitReponseofGuest(target)
-	{
-		//target.style.display = 'none';
-		const frienditem = target.closest('.friend-item');
-		frienditem.style.backgroundColor = 'blue';
-	}
-
-    setOpponent(name, photo, type_game) {
-        document.getElementById("opponent-info").style.display = "block";
-        document.getElementById("opponent-name").textContent = name;
-        document.getElementById("opponent-photo").src = photo;
-		try
-		{
-			if (type_game == '1vs1R')
-			{
-				random = document.getElementById("random-loader");
-
-				// random.style.display = "none";
-				document.getElementById("status").textContent = "Adversaire trouvé !";
-				document.getElementById("loader").style.display = "none";
-				document.getElementById("waiting-text").textContent = "Préparez-vous à jouer !";
-			}
-			else if (type_game == 'invite')
-			{
-				btnStartGameInvite = document.getElementById('start-game');
-				btnStartGameInvite.style.display = 'none';
-			}
-		}
-		catch (error)
-		{
-			console.log(error);
-		}
-        document.getElementById("cancel-button").style.display = "none";
-    }
-
 	setOpponentInvite(name, photo) {
         document.getElementById("opponent-info").style.display = "block";
         document.getElementById("opponent-name").textContent = name;
@@ -499,31 +432,5 @@ export class Mmaking
         document.getElementById("opponent-name").textContent = name;
         document.getElementById("opponent-photo").src = picture;
 		document.getElementById("random-loader").style.display = "none";
-    }
-
-    createCard() {
-        const card = document.createElement("div");
-        card.classList.add("invitation");
-
-        const title = document.createElement("h2");
-        title.textContent = "Invitation";
-
-        const message = document.createElement("p");
-        message.textContent = "Souhaitez-vous accepter cette demande ?";
-
-        const acceptButton = document.createElement("button");
-        acceptButton.classList.add("btn-invitation", "btn-accepter");
-        acceptButton.textContent = "✅";
-
-        const refuseButton = document.createElement("button");
-        refuseButton.classList.add("btn-invitation", "btn-refuser");
-        refuseButton.textContent = "❌";
-
-        card.appendChild(title);
-        card.appendChild(message);
-        card.appendChild(acceptButton);
-        card.appendChild(refuseButton);
-
-        return card;
     }
 }
