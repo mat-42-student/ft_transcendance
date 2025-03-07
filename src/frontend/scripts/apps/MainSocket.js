@@ -3,7 +3,6 @@ import { SocialApp } from './Social.js';
 import { WebGame } from './WebGame.js';
 import { Mmaking } from './mmaking.js';
 import { state } from '../main.js';
-import { fetchFriends } from '../api/users.js';
 
 export class MainSocket {
 
@@ -20,7 +19,7 @@ export class MainSocket {
 		this.socket = new WebSocket(socketURL);
 		state.chatApp = new ChatApp();
 		state.socialApp = new SocialApp();
-		await fetchFriends();
+		await state.socialApp.fetchFriends();
 		state.socialApp.displayFriendList(); // reloca hors de fetchFriends()
 		state.mmakingApp = new Mmaking();
 		state.gameApp = new WebGame();
