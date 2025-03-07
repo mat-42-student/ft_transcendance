@@ -216,7 +216,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.game = Game(self.game_id, self.player_id, self.player_name, user_id, user_name, self)
         json_data = {
             "action" : "init",
-            "dir" : self.game.ball_speed,
+            "dir" : self.game.ball_spd,
             "lplayer": self.game.players[LEFT].name,
             "rplayer": self.game.players[RIGHT].name,
             "lpos":self.game.players[LEFT].pos,
@@ -264,7 +264,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
         user = event.get("side")
         if user is None:
-            self.close(code=1008)
+            await self.close(code=1008)
             return
         # print(f"{YELLOW}Disconnect_now from {user}{RESET}")
         if self.master and self.game.over: # game ended normally
