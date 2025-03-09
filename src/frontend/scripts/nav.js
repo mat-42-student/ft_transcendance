@@ -1,8 +1,7 @@
-import { state } from "./main.js";
-import { isAuthenticated } from './api/auth.js';
-import { setupHomePage, setupProfilePage } from "./pages.js";
-import { closeDynamicCard, initDynamicCard } from './components/dynamic_card.js';
+import { state } from './main.js';
+import { initHomePage, initProfilePage } from "./pages.js";
 import { updateAuthForm } from "./components/auth_form.js";
+import { closeDynamicCard, initDynamicCard } from './components/dynamic_card.js';
 
 class Navigator {
     constructor() {
@@ -11,9 +10,39 @@ class Navigator {
         window.addEventListener('popstate', () => this.handleHashChange());
     }
 
+    async goToPage(page, userId = null) {
+        if (!this.mainContent) return;
+
+        const pageFiles = {
+            home: { url: './partials/home.html', setup: initHomePage },
+            profile: { url: './partials/profile.html', setup: initProfilePage }
+        };
+
+        if (!pageFiles[page]) return console.error('Page not found:', page);
+
+        if (page === 'profile' && !(await state.client.isAuthenticated())) {
+            window.history.replaceState({}, '', `#signin`);
+            return initDynamicCard('auth');
+        }
+
+        try {
+            const response = await fetch(pageFiles[page].url);
+            const html = await response.text();
+            this.mainContent.innerHTML = html;
+
+            requestAnimationFrame(() => {
+                pageFiles[page].setup(userId);
+            });
+
+            window.history.replaceState({}, '', `#${page}`);
+        } catch (error) {
+            console.error('Error loading page:', error);
+        }
+    }
+
     async handleHashChange() {
         const hash = window.location.hash;
-        const isAuth = await isAuthenticated();
+        const isAuth = await state.client.isAuthenticated();
 
         const pageMap = {
             '#home': () => this.goToPage('home'),
@@ -34,38 +63,6 @@ class Navigator {
 
         return (pageMap[hash] || pageMap['#home'])();
     }
-
-    async goToPage(page, userId = null) {
-        if (!this.mainContent) return;
-
-        const pageFiles = {
-            home: { url: './partials/home.html', setup: setupHomePage },
-            profile: { url: './partials/profile.html', setup: setupProfilePage }
-        };
-
-        if (!pageFiles[page]) return console.error('Page not found:', page);
-
-        if (page === 'profile' && !(await isAuthenticated())) {
-            window.history.replaceState({}, '', `#signin`);
-            return initDynamicCard('auth');
-        }
-
-        try {
-            const response = await fetch(pageFiles[page].url);
-            const html = await response.text();
-            this.mainContent.innerHTML = html;
-
-            requestAnimationFrame(() => {
-                if (page === 'profile') state.client.loadUserProfile(userId);
-            });
-
-            pageFiles[page].setup();
-            window.history.replaceState({}, '', `#${page}`);
-        } catch (error) {
-            console.error('Error loading page:', error);
-        }
-    }
 }
 
-// Exporter une instance unique
 export const navigator = new Navigator();

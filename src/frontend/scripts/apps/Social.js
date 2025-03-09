@@ -1,7 +1,5 @@
 import { state } from '../main.js';
-import { apiRequest } from '../api/users.js';
-
-const API_BASE = '/api/v1/users';
+import { fetchFriends, fetchReceivedRequests, fetchSentRequests } from '../api/users.js';
 
 export class SocialApp {
     constructor() {
@@ -107,70 +105,29 @@ export class SocialApp {
         this.attachEventListeners();
     }
 
-    async fetchFriends() {
-        if (!state.client.accessToken) return;
-        try {
-            const data = await apiRequest(`${API_BASE}/${state.client.userId}/friends/`, 'GET');
-            if (!data?.friends) {
-                console.error("Error fetching friends: data.friends is undefined");
-                return;
-            }
-            this.friendList = new Map(data.friends.map(friend => [friend.id, friend]));
-            this.displayFriendList();
-        } catch (error) {
-            console.error('Erreur lors du chargement des amis:', error);
-        }
+
+    async getFriends() {
+        const friends = await fetchFriends(state.client.userId);
+        this.friendList = new Map(friends.map(friend => [friend.id, friend]));
+        this.displayFriendList();
     }
 
-    async fetchReceivedRequests() {
-        if (!state.client.accessToken) return;
-        try {
-            const data = await apiRequest(`${API_BASE}/relationships/received-requests/`, 'GET');
-            if (!data?.received_requests) {
-                console.error("Error fetching received requests: data.received_requests is undefined");
-                return;
-            }
-            this.friendReceivedRequests = new Map(data.received_requests.map(friend => [friend.id, friend]));
-            // this.displayReceivedRequests();
-        } catch (error) {
-            console.error('Erreur lors du chargement des demandes reçues:', error);
-        }
+    async getReceivedRequests() {
+        const receivedRequests = await fetchReceivedRequests;
+        this.friendReceivedRequests = new Map(receivedRequests.map(friend => [friend.id, friend]));
     }
 
-    async fetchSentRequests() {
-        if (!state.client.accessToken) return;
-        try {
-            const data = await apiRequest(`${API_BASE}/relationships/sent-requests/`, 'GET');
-            if (!data?.sent_requests) {
-                console.error("Error fetching sent requests: data.sent_requests is undefined");
-                return;
-            }
-            this.friendSentRequests = new Map(data.sent_requests.map(friend => [friend.id, friend]));
-            // this.displaySentRequests();
-        } catch (error) {
-            console.error('Erreur lors du chargement des demandes envoyées:', error);
-        }
-    }
-
-    async modifyRelationship(userId, action, method) {
-        try {
-            await apiRequest(`${API_BASE}/relationships/${userId}/${action}/`, method);
-            await Promise.all([
-                this.fetchFriends(),
-                this.fetchReceivedRequests(),
-                this.fetchSentRequests()
-            ]);
-        } catch (error) {
-            console.error(`Erreur lors de la modification de la relation (${action}):`, error);
-        }
+    async getSentRequests() {
+        const sentRequests = await fetchSentRequests;
+        this.friendSentRequests = new Map(sentRequests.map(friend => [friend.id, friend]));
     }
     
     blockUser(userId) {
-        return this.modifyRelationship(userId, 'block', 'POST');
+        return modifyRelationship(userId, 'block', 'POST');
     }
     
     unblockUser(userId) {
-        return this.modifyRelationship(userId, 'unblock', 'DELETE');
+        return modifyRelationship(userId, 'unblock', 'DELETE');
     }
 }
 
@@ -227,49 +184,49 @@ export class SocialApp {
 //         }
 //     }
 
-    // displayFriendList() {
-    //     const htmlFriendList = document.querySelector('.friends-list');
-    //     htmlFriendList.querySelectorAll('.friend-item').forEach(friendItem => {
-    //         const btnChat = friendItem.querySelector('.btn-chat');
-    //         const btnMatch = friendItem.querySelector('.btn-match');
-    //         btnChat.removeEventListener('click', this.handleChatClick);
-    //         btnMatch.removeEventListener('click', this.handleMatchClick);
-    //     });
-    //     htmlFriendList.innerHTML = '';
-    //     if (this.friendList == null || this.friendList.size == 0) {
-    //         htmlFriendList.innerHTML = '<p>I\'m sorry you have no friends</p>';
-    //         return;
-    //     }
-    //     this.friendList.forEach((friend) => {
-    //         const friendItem = document.createElement('li');
-    //         friendItem.classList.add('friend-item');
-    //         friendItem.innerHTML = `
-    //             <img class="friend-avatar" src="/media/avatars/${friend.avatar}" alt="${friend.username}">
-    //             <div class="friend-info">
-    //                 <span class="friend-name">${friend.username}</span>
-    //                 <div class="friend-detail" data-user-id="${friend.id}">
-    //                     <span class="friend-status ${friend.status}"></span>
-    //                     <button class="btn-match"><img src="/ressources/vs.png"></button>
-    //                     <button class="btn-chat"><img src="/ressources/chat.png"></button>
-    //                 </div>
-    //             </div>
-    //         `;
-    //         htmlFriendList.appendChild(friendItem);
+// displayFriendList() {
+//     const htmlFriendList = document.querySelector('.friends-list');
+//     htmlFriendList.querySelectorAll('.friend-item').forEach(friendItem => {
+//         const btnChat = friendItem.querySelector('.btn-chat');
+//         const btnMatch = friendItem.querySelector('.btn-match');
+//         btnChat.removeEventListener('click', this.handleChatClick);
+//         btnMatch.removeEventListener('click', this.handleMatchClick);
+//     });
+//     htmlFriendList.innerHTML = '';
+//     if (this.friendList == null || this.friendList.size == 0) {
+//         htmlFriendList.innerHTML = '<p>I\'m sorry you have no friends</p>';
+//         return;
+//     }
+//     this.friendList.forEach((friend) => {
+//         const friendItem = document.createElement('li');
+//         friendItem.classList.add('friend-item');
+//         friendItem.innerHTML = `
+//             <img class="friend-avatar" src="/media/avatars/${friend.avatar}" alt="${friend.username}">
+//             <div class="friend-info">
+//                 <span class="friend-name">${friend.username}</span>
+//                 <div class="friend-detail" data-user-id="${friend.id}">
+//                     <span class="friend-status ${friend.status}"></span>
+//                     <button class="btn-match"><img src="/ressources/vs.png"></button>
+//                     <button class="btn-chat"><img src="/ressources/chat.png"></button>
+//                 </div>
+//             </div>
+//         `;
+//         htmlFriendList.appendChild(friendItem);
 
-    //         // add data-user-id="${friend.id} to entire card (Adrien©)
-    //         friendItem.dataset.userid = friend.id;
-    
-    //         const btnChat = friendItem.querySelector('.btn-chat');
-    //         const btnMatch = friendItem.querySelector('.btn-match');
-    
-    //         btnChat.dataset.friendId = friend.id;
-    //         btnMatch.dataset.friendId = friend.id;
-    //         btnMatch.dataset.invite = 0;
-    
-    //         btnChat.addEventListener('click', this.handleChatClick);
-    //         btnMatch.addEventListener('click', this.handleMatchClick);
-    //     });
-    // }
+//         // add data-user-id="${friend.id} to entire card (Adrien©)
+//         friendItem.dataset.userid = friend.id;
+
+//         const btnChat = friendItem.querySelector('.btn-chat');
+//         const btnMatch = friendItem.querySelector('.btn-match');
+
+//         btnChat.dataset.friendId = friend.id;
+//         btnMatch.dataset.friendId = friend.id;
+//         btnMatch.dataset.invite = 0;
+
+//         btnChat.addEventListener('click', this.handleChatClick);
+//         btnMatch.addEventListener('click', this.handleMatchClick);
+//     });
+// }
 
 //     handleChatClick(event) {
 //         const friendId = event.currentTarget.dataset.friendId;

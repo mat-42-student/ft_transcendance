@@ -1,6 +1,5 @@
 import { navigator } from './nav.js';
 import { Client } from './apps/Client.js';
-import { isAuthenticated } from './api/auth.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
 // import { SocialApp } from './apps/Social.js';
 
@@ -52,9 +51,9 @@ function addClickEvent(selector, callback) {
 
 async function handleProfileClick(e) {
     e.preventDefault();
-    if (!(await isAuthenticated())) {
+    if (!(await state.client.isAuthenticated())) {
         await state.client.refreshSession('#profile');
-        if (!(await isAuthenticated())) {
+        if (!(await state.client.isAuthenticated())) {
             initDynamicCard('auth');
             return;
         }

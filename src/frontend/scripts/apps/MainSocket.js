@@ -19,8 +19,7 @@ export class MainSocket {
 		this.socket = new WebSocket(socketURL);
 		state.chatApp = new ChatApp();
 		state.socialApp = new SocialApp();
-		await state.socialApp.fetchFriends();
-		state.socialApp.displayFriendList(); // reloca hors de fetchFriends()
+		await state.socialApp.getFriends();
 		state.mmakingApp = new Mmaking();
 		state.gameApp = new WebGame();
 
@@ -60,14 +59,32 @@ export class MainSocket {
 		this.socket.send(data);
 	}
 
-    close() {
-        state.chatApp.close();
-        state.chatApp = null;
-        state.socialApp.close();
-		state.socialApp = null;
+	// Ajout verifs
+	close() {
+		if (this.socket) {
+			this.socket.close();
+			this.socket = null;
+		}
+		if (state.chatApp) {
+			state.chatApp.close();
+			state.chatApp = null;
+		}
+		if (state.socialApp) {
+			state.socialApp.close();
+			state.socialApp = null;
+		}
 		// state.mmakingApp.close();
 		// state.mmakingApp = null;
-        this.socket.close();
-        this.socket = null;
-    }
+	}
+
+    // close() {
+    //     state.chatApp.close();
+    //     state.chatApp = null;
+    //     state.socialApp.close();
+	// 	state.socialApp = null;
+	// 	// state.mmakingApp.close();
+	// 	// state.mmakingApp = null;
+    //     this.socket.close();
+    //     this.socket = null;
+    // }
 }

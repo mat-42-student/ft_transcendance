@@ -1,5 +1,6 @@
 import { state } from '../main.js';
 import { MainSocket } from './MainSocket.js';
+import { verifyToken } from '../api/auth.js';
 
 export class Client {
     constructor() {
@@ -53,7 +54,7 @@ export class Client {
     async globalRender() {
         this.renderProfileBtn();
         if (this.state.socialApp) {
-            await this.state.socialApp.fetchFriends();
+            await this.state.socialApp.getFriends();
             this.state.socialApp.displayFriendList();
             await this.state.socialApp.getInfos();
         }
@@ -82,80 +83,24 @@ export class Client {
             await this.login(data.accessToken);
             if (location) window.location.hash = location;
         } catch (error) {
-            console.warn(error);
+            // console.warn(error);
         }
     }
 
-    async fetchUserProfile(userId) {
+    // Vérifie si l'utilisateur est authentifié par la présence d'un accessToken
+    async isAuthenticated() {
+        const token = state.client.accessToken;
+        if (!token) return false;
+        
         try {
-            const response = await fetch(`api/v1/users/${userId}/profile/`, {
-                headers: { "Authorization": `Bearer ${this.accessToken}` }
-            });
-            if (!response.ok) throw new Error("Erreur lors de la récupération du profil");
-            return await response.json();
+            const response = await verifyToken();
+            return response.ok;
         } catch (error) {
-            console.error("Erreur :", error);
-            return null;
+            console.error('Erreur lors de la vérification du token:', error);
+            return false;
         }
-    }
-
-    updateProfileUI(data) {
-        if (!data) return;
-        document.getElementById("profile-username")?.textContent = data.username;
-        document.getElementById("profile-avatar")?.setAttribute("src", data.avatar);
-        document.getElementById("profile-status")?.textContent = `Statut: ${data.status || "Inconnu"}`;
-        document.getElementById("profile-actions").innerHTML = this.getUserActionsHTML(data);
-    }
-
-    getUserActionsHTML(data) {
-        if (data.is_self) {
-            return `
-                <button data-action="2fa" data-user-id="${data.id}" title="Enable Two-Factor Authentication">
-                    <img src="/ressources/2fa.svg" alt="Enable 2fa">
-                </button>
-                <button data-action="update" data-user-id="${data.id}" title="Update Profile">
-                    <img src="/ressources/update.png" alt="Update Profile">
-                </button>
-                <button data-action="logout" data-user-id="${data.id}" title="Logout">
-                    <img src="/ressources/logout.png" alt="Logout">
-                </button>`;
-        } else if (data.has_blocked_user) {
-            return `<p>Vous avez été bloqué par cet utilisateur.</p>`;
-        } else if (data.is_blocked_by_user) {
-            return `
-                <p>Vous avez bloqué cet utilisateur.</p>
-                <button data-action="unblock" data-user-id="${data.id}" title="Unblock">
-                    <img src="/ressources/unblock.png" alt="Unblock">
-                </button>`;
-        } else if (data.is_friend) {
-            return `
-                <button data-action="match" data-user-id="${data.id}" title="Match">
-                    <img src="/ressources/vs.png" alt="Match">
-                </button>
-                <button data-action="chat" data-user-id="${data.id}" title="Chat">
-                    <img src="/ressources/chat.png" alt="Chat">
-                </button>
-                <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
-                    <img src="/ressources/remove-friend.png" alt="Remove Friend">
-                </button>
-                <button data-action="block" data-user-id="${data.id}" title="Block">
-                    <img src="/ressources/block.png" alt="Block">
-                </button>`;
-        } else {
-            return `
-                <button data-action="add-friend" data-user-id="${data.id}" title="Add Friend">
-                    <img src="/ressources/add-friend.png" alt="Add a Friend">
-                </button>`;
-        }
-    }
-
-    async loadUserProfile(userId = this.userId) {
-        const data = await this.fetchUserProfile(userId);
-        this.updateProfileUI(data);
     }
 }
-
-
 
 // import { state } from '../main.js';
 // import { MainSocket } from './MainSocket.js';
@@ -291,95 +236,6 @@ export class Client {
 //             // console.log("Session successfully restored");
 //         } catch (error) {
 //             // console.warn(error);
-//         }
-//     }
-
-//     // bouger fetch dans api/users.js -> init `data` -> data = fetchProfil() -> if !data = error -> else use data as actual `data`
-//     // status perso -> state.socialapp.mystatus
-//     async loadUserProfile(userId) {
-//     /*
-//     Nouvelle fonction d'affichage #profile -> gère profil utilisateur authentifié et utilisateurs tiers, affichage dynamic des infos et options
-//     Si aucun userId ou id == User authentifié setup page profile auth, sinon affichage profil utilisateur tiers (gestion Relationship fonctionelle)
-//     */
-//         try {
-//             if (!userId)
-//                 userId = this.userId;
-
-//             const response = await fetch(`api/v1/users/${userId}/profile/`, {
-//                 headers: {
-//                     "Authorization": `Bearer ${state.client.accessToken}`
-//                 }
-//             });
-    
-//             if (!response.ok) {
-//                 throw new Error("Erreur lors de la récupération du profil");
-//             }
-    
-//             const data = await response.json();
-    
-//             // Vérifie que les éléments existent avant de les modifier -> ?? Appliquer même fonctionnement que pour container des actions à celui des infos
-//             const usernameEl = document.getElementById("profile-username");
-//             if (usernameEl)
-//                 usernameEl.textContent = data.username;
-
-//             const avatarEl = document.getElementById("profile-avatar");
-//             if (avatarEl)
-//                 avatarEl.src = data.avatar;
-            
-//             const actionsEl = document.getElementById("profile-actions");
-//             if (actionsEl) {
-//                 // actionsEl.innerHTML = ""; // Nettoyage des boutons
-
-//                 if (data.is_self) {
-//                     actionsEl.innerHTML = `
-//                         <button data-action="2fa" data-user-id="${data.id}" title="Enable Two-Factor Authentication">
-//                             <img src="/ressources/2fa.svg" alt="Enable 2fa">
-//                         </button>
-//                         <button data-action="update" data-user-id="${data.id}" title="Update Profile">
-//                             <img src="/ressources/update.png" alt="Update Profile">
-//                         </button>
-//                         <button data-action="logout" data-user-id="${data.id}" title="Logout">
-//                             <img src="/ressources/logout.png" alt="Logout">
-//                         </button>
-//                     `;
-//                 } else if (data.has_blocked_user) {
-//                     actionsEl.innerHTML = `<p>Vous avez été bloqué par cet utilisateur.</p>`;
-//                 } else if (data.is_blocked_by_user) {
-//                     actionsEl.innerHTML = `
-//                         <p>Vous avez bloqué cet utilisateur.</p>
-//                         <br>
-//                         <button data-action="unblock" data-user-id="${data.id}" title="Unblock">
-//                             <img src="/ressources/unblock.png" alt="Unblock">
-//                         </button>
-//                     `;
-//                 } else if (data.is_friend) {
-//                     actionsEl.innerHTML = `
-//                         <button data-action="match" data-user-id="${data.id}" title="Match">
-//                             <img src="/ressources/vs.png" alt="Match">
-//                         </button>
-//                         <button data-action="chat" data-user-id="${data.id}" title="Chat">
-//                             <img src="/ressources/chat.png" alt="Chat">
-//                         </button>
-//                         <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
-//                             <img src="/ressources/remove-friend.png" alt="Remove Friend">
-//                         </button>
-//                         <button data-action="block" data-user-id="${data.id}" title="Block">
-//                             <img src="/ressources/block.png" alt="Block">
-//                         </button>
-//                     `;
-//                 } else {
-//                     actionsEl.innerHTML = `
-//                         <button data-action="add-friend" data-user-id="${data.id}" title="Add Friend">
-//                             <img src="/ressources/add-friend.png" alt="Add a Friend">
-//                         </button>
-//                     `;
-//                 }
-//             }
-
-//         } catch (error) {
-//             console.error("Erreur :", error);
-//             const actionsEl = document.getElementById("profile-actions");
-//             if (actionsEl) actionsEl.innerHTML = `<p>Impossible de charger le profil.</p>`;
 //         }
 //     }
 // }
