@@ -71,7 +71,6 @@ class UserRegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 # User ViewSet
 class UserViewSet(viewsets.ModelViewSet):
-
     queryset = User.objects.all()
 
     def get_permissions(self):
@@ -151,7 +150,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['post'], permission_classes=[JWTAuthentication], url_path='block')
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated], url_path='block')
     def block_user(self, request, pk=None):
         """Bloquer un utilisateur."""
         try:
@@ -170,7 +169,7 @@ class UserViewSet(viewsets.ModelViewSet):
         except User.DoesNotExist:
             return Response({"detail": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
 
-    @action(detail=True, methods=['delete'], permission_classes=[JWTAuthentication], url_path='unblock')
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated], url_path='unblock')
     def unblock_user(self, request, pk=None):
         """Débloquer un utilisateur."""
         try:
