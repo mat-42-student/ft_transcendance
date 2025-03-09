@@ -1,131 +1,23 @@
-import { closeDynamicCard } from '../components/dynamic_card.js';
 import { state } from '../main.js';
-import { cleanErrorMessage } from '../utils.js';
+import { cleanErrorMessage } from '../components/auth_form.js';
+import { closeDynamicCard } from '../components/dynamic_card.js';
 
-// Vérifie si l'utilisateur est authentifié par la presence de accessToken
-export async function isAuthenticated() {
-    const token = state.client.accessToken;
-    if (!token) {
-        return false;
-    }
-    try {
-        const response = await fetch('/api/v1/auth/verify/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({}),
-        });
+// Vérifie le token via l'API
+export async function verifyToken(token) {
+    const response = await fetch('/api/v1/auth/verify/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.client.accessToken}`,
+        },
+        body: JSON.stringify({}),
+    });
 
-        if (response.ok) {
-            return true;
-        } else {
-            state.client.accessToken = null;
-            return false;
-        }
-    } catch (error) {
-        console.error('Erreur lors de la vérification du token:', error);
-        return false;
-    }
-}
-
-// Fonction d'envoi des requêtes API pour connexion ou enregistrement
-export async function handleAuthSubmit(event) {
-    event.preventDefault();
-    cleanErrorMessage();
-
-    const username = document.getElementById('auth-username').value.trim();
-    const email = document.getElementById('auth-email').value.trim();
-    const password = document.getElementById('auth-password').value.trim();
-    const totpContainer = document.getElementById('totp-container');
-    const confirm_password = document.getElementById('auth-confirm-password').value.trim();
-    const hash = window.location.hash;
-
-    if (!hash || (hash !== '#register' && hash !== '#signin')) {
-        hash = '#signin';
-        window.location.hash = hash;
-    }
-
-    if (hash === '#register' && password !== confirm_password) {
-        const loginErrorContainer = document.getElementById('auth-error');
-        loginErrorContainer.textContent = "Passwords don't match";
-        loginErrorContainer.classList.remove('hidden');
-        return;
-    }
-
-    let apiUrl, payload;
-
-    if (hash === '#register') {
-        apiUrl = '/api/v1/users/register/';
-        payload = { username, email, password, confirm_password };
-    } else if (hash === '#signin') {
-        apiUrl = '/api/v1/auth/login/';
-        payload = { email, password };
+    if (response.ok) {
+        return response;
     } else {
-        console.error('Action inconnue pour le formulaire d\'authentification.');
-        return;
-    }
-
-    try {
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', },
-            body: JSON.stringify(payload),
-        });
-        if (response.ok) {
-            const data = await response.json();
-            try {
-                await state.client.login(data.accessToken);
-            }
-            catch (error) {
-                console.error(error);
-            }
-            window.location.hash = '#profile';
-            closeDynamicCard(); // on reste sur #home ou on renvoie sur #profile direct une fois connecté ?
-        } else {
-            const errorData = await response.json();
-
-            if (errorData && errorData.error === '2fa_required!') {
-                const totp = document.getElementById('auth-totp').value.trim();
-                apiUrl = '/api/v1/auth/login/';
-                payload = { email, password, totp };
-                totpContainer.classList.remove('hidden');
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', },
-                    body: JSON.stringify(payload),
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    try {
-                        await state.client.login(data.accessToken);
-                    }
-                    catch (error) {
-                        console.error(error);
-                    }
-                    window.location.hash = '#profile';
-                    // fetchUsers();
-                    closeDynamicCard();        
-                } else {
-                    const errorData = await response.json();
-                    console.error('Erreur API:', errorData);
-                    return;
-                }
-            } else if (errorData && (errorData.detail === 'User not found!' || errorData.detail === 'Incorrect password!')){
-                const loginErrorContainer = document.getElementById('auth-error');
-                loginErrorContainer.textContent = "Incorrect username or password";
-                loginErrorContainer.classList.remove('hidden');
-                return;
-
-            } else {
-                console.error('Erreur API:', errorData);
-                return;
-            }
-        }
-    } catch (error) {
-        console.error('Erreur lors de la requête API :', error);
+        state.client.accessToken = null; // Invalider le token en cas d'échec
+        return response;
     }
 }
 
@@ -187,4 +79,119 @@ export function verify2fa() {
         }
     })
     .catch(error => console.error('Error:', error));
+}
+
+// Fonction d'envoi des requêtes API pour la connexion ou l'enregistrement
+export async function handleAuthSubmit(event) {
+    event.preventDefault();
+    cleanErrorMessage();
+
+    const { username, email, password, confirm_password, hash } = getAuthFormData();
+
+    // Validation du mot de passe pour l'inscription
+    if (hash === '#register' && password !== confirm_password) {
+        displayErrorMessage("Passwords don't match");
+        return;
+    }
+
+    const { apiUrl, payload } = getApiUrlAndPayload(hash, username, email, password, confirm_password);
+
+    if (!apiUrl) {
+        console.error('Action inconnue pour le formulaire d\'authentification.');
+        return;
+    }
+
+    try {
+        const response = await sendAuthRequest(apiUrl, payload);
+        if (response.ok) {
+            const data = await response.json();
+            await handleAuthResponse(data);
+        } else {
+            await handleAuthError(response);
+        }
+    } catch (error) {
+        console.error('Erreur lors de la requête API :', error);
+    }
+}
+
+// Récupère les données du formulaire d'authentification
+function getAuthFormData() {
+    const username = document.getElementById('auth-username').value.trim();
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value.trim();
+    const confirm_password = document.getElementById('auth-confirm-password').value.trim();
+    const hash = window.location.hash || '#signin';
+    return { username, email, password, confirm_password, hash };
+}
+
+// Récupère l'URL de l'API et la charge utile en fonction du mode d'authentification
+function getApiUrlAndPayload(hash, username, email, password, confirm_password) {
+    let apiUrl = '';
+    let payload = {};
+    
+    if (hash === '#register') {
+        apiUrl = '/api/v1/users/register/';
+        payload = { username, email, password, confirm_password };
+    } else if (hash === '#signin') {
+        apiUrl = '/api/v1/auth/login/';
+        payload = { email, password };
+    }
+
+    return { apiUrl, payload };
+}
+
+// Envoie la requête d'authentification à l'API
+async function sendAuthRequest(apiUrl, payload) {
+    return await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+}
+
+// Traite la réponse d'authentification (connexion ou inscription réussie)
+async function handleAuthResponse(data) {
+    try {
+        await state.client.login(data.accessToken);
+        window.location.hash = '#profile';
+        closeDynamicCard();
+    } catch (error) {
+        console.error('Erreur lors de la gestion de la réponse d\'authentification :', error);
+    }
+}
+
+// Gère les erreurs d'authentification (par exemple, 2FA ou erreur utilisateur)
+async function handleAuthError(response) {
+    const errorData = await response.json();
+    if (errorData.error === '2fa_required!') {
+        handle2FA(response);
+    } else if (errorData.detail === 'User not found!' || errorData.detail === 'Incorrect password!') {
+        displayErrorMessage("Incorrect username or password");
+    } else {
+        console.error('Erreur API:', errorData);
+    }
+}
+
+// Gère l'activation de la 2FA si nécessaire
+function handle2FA(response) {
+    const totpContainer = document.getElementById('totp-container');
+    totpContainer.classList.remove('hidden');
+    
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value.trim();
+    const totp = document.getElementById('auth-totp').value.trim();
+
+    const payload = { email, password, totp };
+
+    sendAuthRequest('/api/v1/auth/login/', payload)
+        .then(response => response.json())
+        .then(data => handleAuthResponse(data))
+        .catch(error => console.error('Erreur lors de la 2FA:', error));
+}
+
+// Affiche un message d'erreur générique dans le formulaire
+function displayErrorMessage(message) {
+    const loginErrorContainer = document.getElementById('auth-error');
+    loginErrorContainer.textContent = message;
+    loginErrorContainer.classList.remove('hidden');
 }
