@@ -369,26 +369,33 @@ class RelationshipViewSet(viewsets.ViewSet):
         relation.save()
         return Response({"detail": "Demande d'ami acceptée."}, status=status.HTTP_200_OK)
 
-    # add remove action on pending requests to urslef (authentified user) -> to deny requests
     @action(detail=True, methods=['delete'], url_path='remove-friend')
     def remove_friend(self, request, pk=None):
-        """Supprimer un ami."""
-        friend = get_object_or_404(User, id=pk)
+        """Supprimer un ami ou rejeter une demande d'ami en attente."""
+        user = get_object_or_404(User, id=pk)
 
         try:
             # Trouver la relation existante quelle que soit la direction
             relation = Relationship.objects.get(
-                Q(from_user=request.user, to_user=friend) | 
-                Q(from_user=friend, to_user=request.user), 
-                status=Relationship.FRIEND
+                Q(from_user=request.user, to_user=user) | 
+                Q(from_user=user, to_user=request.user)
             )
         except Relationship.DoesNotExist:
-            return Response({"detail": "Cette relation n'existe pas."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Aucune relation trouvée."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Supprimer la relation
-        relation.status = Relationship.NONE
-        relation.save()
-        return Response({"detail": "Ami supprimé."}, status=status.HTTP_200_OK)
+        # Si la relation est une demande d'ami en attente, la supprimer
+        if relation.status == Relationship.PENDING:
+            relation.delete()
+            return Response({"detail": "Demande d'ami rejetée."}, status=status.HTTP_200_OK)
+
+        # Si c'est une relation d'amitié, la désactiver
+        if relation.status == Relationship.FRIEND:
+            relation.status = Relationship.NONE
+            relation.save()
+            return Response({"detail": "Ami supprimé."}, status=status.HTTP_200_OK)
+
+        # Si la relation est déjà "NONE", il n'y a rien à faire
+        return Response({"detail": "Aucune action nécessaire."}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'], url_path='received-requests')
     def get_friend_requests_received(self, request):
