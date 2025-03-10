@@ -16,13 +16,17 @@ const dynamicCardRoutes = {
 	'salonHost': './partials/cards/salonHost.html',
 	'salonGuest': './partials/cards/salonGuest.html',
 	'load': './partials/cards/salonLoad.html',
+	'tournament': './partials/cards/tournament.html',
 };
 
 const closeDynamicCardHidden = [
     'salonHost',
     'salonGuest',
-    'load'
+    'load',
+    'versus'
 ]
+
+
 export async function initDynamicCard(routeKey) {
     const cardContainer = document.getElementById('dynamic-card-container');
     const cardContent = document.getElementById('dynamic-card-content');

@@ -207,11 +207,11 @@ GAME_TYPE_CHOICES = [
 ]
 
 class Tournament(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, blank=True, null=True)
     location = models.CharField(max_length=255, blank=True, null=True)
-    start_date = models.DateField()
-    end_date = models.DateField()
-    organizer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="organized_tournaments")
+    start_date = models.DateField(auto_now_add=True)
+    end_date = models.DateField(auto_now=True)
+    organizer = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="organized_tournaments")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

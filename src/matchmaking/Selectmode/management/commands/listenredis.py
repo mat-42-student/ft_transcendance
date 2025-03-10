@@ -61,6 +61,9 @@ class Command(BaseCommand):
             self.tournament = {}
             self.invite = {} # dict with host_id key and host_player value
             self.message = None
+
+            # limit players tournament
+            self.maxPlayersTournament = 4
             
             # Subscribe all channels
             await self.pubsub.subscribe(self.channel_front)
@@ -131,7 +134,7 @@ class Command(BaseCommand):
                     # Check if player want give up the search or is disconnect
                     if (already_player and (body.get('cancel') or body.get('disconnect'))):
                         await already_player.updateStatus(self.redis_client, self.channel_deepSocial, "online")
-                        print(f'{salon} | {already_player}')
+                        print(f'{salon}')
                         await self.deletePlayer(salon, already_player)
                         return False
                     
@@ -147,6 +150,7 @@ class Command(BaseCommand):
     # Delete player somewhere
     async def deletePlayer(self, salon ,player):
         copy_salon = salon
+        print(f'salon.type_game with player to deleted : {salon.type_game}')
         try:
             if (salon.type_game == 'invite'):
                 print("Send all Guest the invitation is unvalible and destroy the salon and player")
@@ -161,6 +165,8 @@ class Command(BaseCommand):
                 self.salons[salon.type_game].remove(salon)
             elif (salon.type_game == '1vs1R'):
                 print("Just destroy the player")
+            elif (salon.type_game == 'tournament'):
+                print(f'delete {player} of tournament')
             del salon.players[player.user_id]
         except Exception as e:
             print(f'Delete player {e}')
@@ -189,8 +195,8 @@ class Command(BaseCommand):
             except Exception as e:
                 print(f'Exception print Salon -> {e}')
     
-        if (body.get('type_game') == '1vs1R'): # 1vs1R
-            player.type_game = '1vs1R'
+        if (body.get('type_game') == '1vs1R' or body.get('type_game') == 'tournament'): # 1vs1R
+            player.type_game = body.get('type_game')
             await self.random(player)
         elif (body.get('type_game').get('invite')): # Invite
             player.type_game = 'invite'
@@ -204,7 +210,7 @@ class Command(BaseCommand):
             
     async def send_1vs1(self, salon, idgame):
          for key, player in salon.players.items():
-            await self.start_toFront(key, salon, idgame)
+            await self.start_toFront(key, player, idgame)
             await player.updateStatus(self.redis_client, self.channel_deepSocial, "ingame")
     #############      GENERAL     #############
             
@@ -470,14 +476,34 @@ class Command(BaseCommand):
         await player.updateStatus(self.redis_client, self.channel_deepSocial, 'pending')
         
         # Launch game if Salon has 2 players
-        if (len(salon.players) >= 2):
-            idgame = await self.create_game(salon.type_game, salon)
+        if (salon.type_game == '1vs1R' and len(salon.players) >= 2 and len(self.salons[salon.type_game]) == 1 ):
+            idgame = await self.create_game(salon.type_game, salon, None)
             if (idgame is None):
                 return
             else:
                 await self.send_1vs1(salon, idgame)
+        elif (salon.type_game == 'tournament'and len(self.salons[salon.type_game]) == 2 and self.allSalonsAreFull()):
+            tournament = await sync_to_async(self.create_tournament)()
+            if (tournament):
+                # send bracket to players
 
+                # send ingame to players
+                for salon in self.salons[player.type_game]:
+                    idgame = await self.create_game(salon.type_game, salon, tournament)
+                    await self.send_1vs1(salon, idgame)
 
+                self.games[player.type_game].update({tournament.id: self.salons[player.type_game]})
+                self.salons[player.type_game].clear()
+
+    # check salons
+    def allSalonsAreFull(self):
+        for salon in self.salons['tournament']:
+            if (len(salon.players) < 2):
+                return False
+        
+        return True
+        
+    
     # Search or create a Salon, if players in Salon < 2 return it else create it
     def createSalonRandom(self, type_game):
         """Search or create a Salon, if players in Salon < 2 return it else create it"""
@@ -493,13 +519,12 @@ class Command(BaseCommand):
                 break
         return (mainSalon)
     
-    async def create_game(self, type_game, salon):
+    async def create_game(self, type_game, salon, tournament_id):
         # Create game in database with an id and send start game clients and set status
         players_id = []
         for player_id in salon.players:
             players_id.append(player_id)
-   
-        game = await self.create_game_sync(None, players_id[0], players_id[1], 'ranked', 'ranked')
+        game = await self.create_game_sync(tournament_id, players_id[0], players_id[1], 'ranked', 'ranked')
         if (game is None):
             return None
         self.games[type_game].update({game.id: salon})
@@ -513,7 +538,7 @@ class Command(BaseCommand):
     #############      JSON     #############
 
     # Send status ingame to Front to start a game with all opponents
-    async def start_toFront(self, id, salon, gameid):
+    async def start_toFront(self, id, player, gameid):
         data = {
             'header':{
                 'service': 'mmaking',
@@ -523,11 +548,17 @@ class Command(BaseCommand):
             'body':{
                 'status': 'ingame',
                 'id_game': gameid,
+                player.type_game: True,
                 'cancel': False
             }
         }
-        data['body']['opponents'] = salon.getDictPlayers()
-        del data['body']['opponents'][id]
+        salonNumber = 1
+        bracket = {}
+        for salon in self.salons[player.type_game]:
+            bracket.update({salonNumber: salon.getDictPlayers()})
+            salonNumber = salonNumber + 1
+
+        data['body']['opponents'] = bracket
         await self.redis_client.publish(self.channel_front, json.dumps(data))
 
 
@@ -632,7 +663,6 @@ class Command(BaseCommand):
     #############       Communication with Game     #############
 
 
-
     def getplayers(self, idgame):
         players = []
         game_database = None
@@ -721,6 +751,17 @@ class Command(BaseCommand):
 
 
     #############       Database     #############
+
+    def create_tournament(self):
+        print('Creation Tournament')
+        try:
+            tournament = Tournament.objects.create(name='t')
+            print(f'tournament id = {tournament.id}')
+            return tournament
+
+        except Exception as e:
+            print(f'creation of tournament failed -> {e}')
+            return None
 
     def SetScoreGame(self, players, score_int):
         try:

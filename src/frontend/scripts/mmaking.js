@@ -34,6 +34,8 @@ export class Mmaking
 		this.game = null;
 		this.gameId = null;
 		this.btnsearchRandomisActive = false;
+		this.btnSearchTournamentActive = false;
+		this.bracket = false;
     }
 
 	async buildEventsbtnInvite(keyNumber)
@@ -49,11 +51,16 @@ export class Mmaking
 		btnmatch.addEventListener('click', this.boundEventListeners[keyNumber].btnInviteDesactive);
 	}
 
+	sleep(ms) {
+		return new Promise(resolve => setTimeout(resolve, ms));
+	  }
+
 	async renderMatchmaking()
 	{
 		await this.renderHost();
 		await this.renderGuest();
 		await this.renderRandom();
+		await this.renderTournament();
 	}
 
 	async renderHost()
@@ -94,7 +101,6 @@ export class Mmaking
 			if (this.game == true)
 			{
 				closeDynamicCard();
-				this.cardFriendReset(cardFriend[0]);
 				state.gameApp.launchGameSocket(this.gameId);
 				this.game = false;
 			}
@@ -167,7 +173,6 @@ export class Mmaking
 			if (this.game == true)
 			{
 				closeDynamicCard();
-				
 				state.gameApp.launchGameSocket(this.gameId);
 				this.game = false;
 			}
@@ -202,10 +207,15 @@ export class Mmaking
 		};
 
 		console.log(`cancelGame = ${friendId}`);
-		this.guests[friendId] = false;
-		this.invited_by[friendId] = false;
+		if (friendId != state.client.userId)
+		{
+			this.guests[friendId] = false;
+			this.invited_by[friendId] = false;
+		}
 		this.salonInvite = false;
 		this.salonRandom = false;
+		this.salonTournament = false;
+		this.bracket = false;
 		this.salonLoad = false;
 		this.type_game = null;
 		this.SearchRandomGame = false;
@@ -310,10 +320,12 @@ export class Mmaking
 			btnRandom.addEventListener('click', (event)=>this.btnsearchRandomGame());
 			this.btnsearchRandomisActive = true;
 		}
-		if (this.game == true)
+		if (this.game == true && this.bracket == false)
 		{
-			document.getElementById('player-name').textContent = state.client.userName;
+			// document.getElementById('player-name').textContent = state.client.userName;
+			closeDynamicCard();
 			state.gameApp.launchGameSocket(this.gameId);
+			this.game = false;
 		}
 
 	}
@@ -326,7 +338,108 @@ export class Mmaking
 		};
 		await this.sendMsg(data)
 		this.SearchRandomGame = true;
-		this.btnInviteActive = true;
+		// this.btnInviteActive = true;
+		await this.renderMatchmaking();
+	}
+
+
+	async renderTournament()
+	{
+		if (this.btnSearchTournamentActive == false)
+		{
+			const btnTournament = document.getElementsByClassName('btn-tournament');
+			
+			btnTournament[0].addEventListener('click', (event)=>this.eventSearchTournament(event));
+			this.btnSearchTournamentActive = true;
+		}
+		else if (this.salonTournament == true)
+		{
+			await initDynamicCard('versus');
+            document.getElementById("cancel-button").addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, 'tournament'));
+
+		}
+		else if (!this.salonTournament && !this.salonHost && !this.salonInvite && !this.salonLoad && !this.SearchRandomGame)
+		{
+			closeDynamicCard();
+		}
+		
+		if (this.game == true && this.bracket == true)
+		{
+			closeDynamicCard();
+			await initDynamicCard('tournament');
+			console.log('tournament bracket is setting');
+			const bracketContainer = document.getElementById('tournamentBracket');
+			
+			for (const [key, value] of Object.entries(this.opponents))
+			{
+				let firstPlayer = false;
+				const matchElement = document.createElement('div');
+				const teamContainer = document.createElement('div');
+				matchElement.classList.add('match');
+
+				for (const [id, player] of Object.entries(value))
+				{
+					if (firstPlayer == false)
+					{
+						const team1Element = document.createElement('div');
+						team1Element.classList.add('team-name');
+						team1Element.textContent = player.username;
+
+						const team1Score = document.createElement('span');
+						team1Score.classList.add('score');
+						team1Score.textContent = player.score1 !== undefined ? player.score1 : '-';
+
+						teamContainer.appendChild(team1Element);
+						team1Element.appendChild(team1Score);
+
+
+						const vsElement = document.createElement('div');
+						vsElement.classList.add('vs');
+						vsElement.textContent = 'vs';
+
+						teamContainer.appendChild(vsElement);
+						firstPlayer = true
+
+					}
+					else
+					{
+						const team2Element = document.createElement('div');
+						team2Element.classList.add('team-name');
+						team2Element.textContent = player.username;
+
+						const team2Score = document.createElement('span');
+						team2Score.classList.add('score');
+						team2Score.textContent = player.score2 !== undefined ? player.score2 : '-';
+
+						teamContainer.appendChild(team2Element);        
+						team2Element.appendChild(team2Score);
+
+					}
+				}
+				teamContainer.classList.add('team');
+				matchElement.appendChild(teamContainer);
+				bracketContainer.appendChild(matchElement);
+
+			}
+
+			await this.sleep(5000);
+			closeDynamicCard();
+			state.gameApp.launchGameSocket(this.gameId);
+			this.game = false;
+		}
+	}
+
+
+	async eventSearchTournament(event)
+	{
+		const data = {
+			'status': "online",
+			'type_game': "tournament"
+		};
+
+		await this.sendMsg(data);
+		this.salonTournament = true;
+		
 		await this.renderMatchmaking();
 	}
 
@@ -352,6 +465,17 @@ export class Mmaking
 			this.salonInvite = false;
 			this.salonLoad = false;
 			this.SearchRandomGame = false;
+
+			if (data.body.tournament == true)
+			{
+				this.bracket = true;
+				this.salonTournament = false;
+			}
+			if (data.body.opponents)
+			{
+				this.opponents = data.body.opponents;
+				console.log(this.opponents);
+			}
         }
 		else if (data.body.cancel == true)
 		{
