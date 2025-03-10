@@ -1,6 +1,7 @@
-import { initAuthFormListeners } from './auth_form.js';
 import { enroll2fa } from '../api/auth.js';
 import { verify2fa } from '../api/auth.js';
+import { initAuthFormListeners } from './auth_form.js';
+import { createRequestItem } from './friend_requests.js';
 import { navigator as appNavigator } from '../nav.js';
 
 const dynamicCardRoutes = {
@@ -15,56 +16,84 @@ const dynamicCardRoutes = {
 	'salonGuest': './partials/cards/salonGuest.html',
 };
 
+/*
+    Piste d'exemple pour changement logique de init -> rendre logique spécifique à chaques cards modulaire dans init via un objet
+    cardInitializers stock les logiques propores à chaque routes en liste et le renvoie en fonction de la route dans initDynamicCard
+    - plus lisible
+    - modulaire
+    - pas de if/else massif
+*/
+const cardInitializers = {
+    '2fa': () => {
+        document.getElementById('btn-enroll-2fa')?.addEventListener('click', enroll2fa);
+        document.getElementById('btn-verify-2fa')?.addEventListener('click', verify2fa);
+    },
+    'auth': () => {
+        window.location.hash = '#signin';
+        document.getElementById('oauth-submit')?.addEventListener('click', () => {
+            window.location.href = 'https://localhost:3000/api/v1/auth/oauth/login/';
+        });
+        document.querySelectorAll('#auth-form a[data-action]').forEach(link => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                const action = link.getAttribute('data-action');
+                history.pushState(action, '', `#${action}`);
+                appNavigator.handleHashChange();
+            });
+        });
+        initAuthFormListeners();
+    },
+    'requests': async () => {
+        const requestList = document.getElementById('requests-list');
+        if (!requestList) return;
+
+        try {
+            if (!state.socialApp) {
+                console.error("state.socialApp n'est pas initialisé");
+                return;
+            }
+
+            await state.socialApp.getReceivedRequests();
+            requestList.innerHTML = '';
+
+            const requestsArray = Array.from(state.socialApp.friendReceivedRequests.values());
+
+            if (requestsArray.length === 0) {
+                requestList.innerHTML = '<li class="no-requests">Aucune demande en attente.</li>';
+            } else {
+                for (const user of requestsArray) {
+                    const listItem = await createRequestItem(user);
+                    requestList.appendChild(listItem);
+                }
+            }
+        } catch (error) {
+            console.error("Erreur lors du chargement des requêtes d'amis :", error);
+        }
+    }
+    // Ajoute d'autres initialisations spécifiques ici
+};
+
 export async function initDynamicCard(routeKey) {
     const cardContainer = document.getElementById('dynamic-card-container');
     const cardContent = document.getElementById('dynamic-card-content');
 
-    if (!cardContainer || !cardContent) {
-        console.error("Les éléments dynamiques de la carte sont introuvables.");
+    if (!dynamicCardRoutes[routeKey]) {
+        console.error(`Aucune route trouvée pour la clé : ${routeKey}`);
         return;
     }
 
     try {
-        if (!dynamicCardRoutes[routeKey])
-            throw new Error(`Route inconnue : ${routeKey}`);
-        
         const response = await fetch(dynamicCardRoutes[routeKey]);
-        if (!response.ok)
-            throw new Error(`Erreur de chargement : ${response.status} ${response.statusText}`);
-        
-        const content = await response.text();
-        if (!content.trim())
-            throw new Error(`Le fichier ${dynamicCardRoutes[routeKey]} est vide.`);
+        if (!response.ok) throw new Error(`Impossible de charger : ${dynamicCardRoutes[routeKey]}`);
 
-        cardContent.innerHTML = content;
+        cardContent.innerHTML = await response.text();
         cardContainer.classList.remove('hidden');
 
-        // Délégation d'événements
-        cardContent.addEventListener("click", (event) => {
-            if (event.target.matches("#btn-enroll-2fa")) {
-                enroll2fa();
-            } else if (event.target.matches("#btn-verify-2fa")) {
-                verify2fa();
-            } else if (event.target.matches("#oauth-submit")) {
-                window.location.href = 'https://localhost:3000/api/v1/auth/oauth/login/';
-            }
-        });
-
-        if (routeKey === 'auth') {
-            window.location.hash = '#signin';
-            initAuthFormListeners();
-
-            document.querySelectorAll('#auth-form a[data-action]').forEach(link => {
-                link.addEventListener('click', (event) => {
-                    event.preventDefault();
-                    const action = link.getAttribute('data-action');
-                    history.pushState(action, '', `#${action}`);
-                    appNavigator.handleHashChange();
-                });
-            });
+        if (cardInitializers[routeKey]) {
+            await cardInitializers[routeKey]();
         }
     } catch (error) {
-        console.error(`Erreur lors du chargement de la carte dynamique :`, error);
+        console.error("Erreur lors du chargement de la carte dynamique :", error);
     }
 }
 
@@ -76,64 +105,57 @@ export function closeDynamicCard() {
 }
 
 /*
-    Piste d'exemple pour changement logique de init -> rendre logique spécifique à chaques cards modulaire dans init pour éviter d'allourdir la fonction
-    - lisible
-    - modulaire
-    - pas de if/else massif
+    Version de base de la fonction optimisée
 */
-// const cardInitializers = {
-//     'auth': () => {
-//         window.location.hash = '#signin';
-//         const oauthButton = document.getElementById('oauth-submit');
-//         if (oauthButton) {
-//             oauthButton.addEventListener('click', () => {
-//                 window.location.href = 'https://localhost:3000/api/v1/auth/oauth/login/';
-//             });
-//         }
-//         const authLinks = document.querySelectorAll('#auth-form a[data-action]');
-//         authLinks.forEach(link => {
-//             link.addEventListener('click', (event) => {
-//                 event.preventDefault();
-//                 const action = link.getAttribute('data-action');
-//                 history.pushState(action, '', `#${action}`);
-//                 navigator.handleHashChange();
-//             });
-//         });
-//         initAuthFormListeners();
-//     },
-//     '2fa': () => {
-//         const enrollBtn = document.getElementById('btn-enroll-2fa');
-//         const verifyBtn = document.getElementById('btn-verify-2fa');
-//         if (enrollBtn) enrollBtn.addEventListener('click', enroll2fa);
-//         if (verifyBtn) verifyBtn.addEventListener('click', verify2fa);
-//     },
-//     // Ajoute d'autres initialisations spécifiques ici
-// };
-
 // export async function initDynamicCard(routeKey) {
 //     const cardContainer = document.getElementById('dynamic-card-container');
 //     const cardContent = document.getElementById('dynamic-card-content');
 
-//     const route = dynamicCardRoutes[routeKey];
-//     if (!route) {
-//         console.error(`Aucune route trouvée pour la clé : ${routeKey}`);
+//     if (!cardContainer || !cardContent) {
+//         console.error("Les éléments dynamiques de la carte sont introuvables.");
 //         return;
 //     }
 
 //     try {
-//         const response = await fetch(route);
-//         if (!response.ok) throw new Error(`Impossible de charger le fichier : ${route}`);
+//         if (!dynamicCardRoutes[routeKey])
+//             throw new Error(`Route inconnue : ${routeKey}`);
+        
+//         const response = await fetch(dynamicCardRoutes[routeKey]);
+//         if (!response.ok)
+//             throw new Error(`Erreur de chargement : ${response.status} ${response.statusText}`);
+        
+//         const content = await response.text();
+//         if (!content.trim())
+//             throw new Error(`Le fichier ${dynamicCardRoutes[routeKey]} est vide.`);
 
-//         cardContent.innerHTML = await response.text();
+//         cardContent.innerHTML = content;
 //         cardContainer.classList.remove('hidden');
 
-//         // Exécuter l'initialisation spécifique à la route si elle existe
-//         if (cardInitializers[routeKey]) {
-//             cardInitializers[routeKey]();
-//         }
+//         // Délégation d'événements
+//         cardContent.addEventListener("click", (event) => {
+//             if (event.target.matches("#btn-enroll-2fa")) {
+//                 enroll2fa();
+//             } else if (event.target.matches("#btn-verify-2fa")) {
+//                 verify2fa();
+//             } else if (event.target.matches("#oauth-submit")) {
+//                 window.location.href = 'https://localhost:3000/api/v1/auth/oauth/login/';
+//             }
+//         });
 
-//         return true;
+//         if (routeKey === 'auth') {
+//             window.location.hash = '#signin';
+//             initAuthFormListeners();
+
+//             document.querySelectorAll('#auth-form a[data-action]').forEach(link => {
+//                 link.addEventListener('click', (event) => {
+//                     event.preventDefault();
+//                     const action = link.getAttribute('data-action');
+//                     history.pushState(action, '', `#${action}`);
+//                     appNavigator.handleHashChange();
+//                 });
+//             });
+//         }
 //     } catch (error) {
-//         console.error(`Erreur lors du chargement de la carte dynamique : ${error.message}`);
+//         console.error(`Erreur lors du chargement de la carte dynamique :`, error);
 //     }
 // }

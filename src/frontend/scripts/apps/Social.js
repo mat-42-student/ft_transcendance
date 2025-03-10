@@ -1,12 +1,12 @@
 import { state } from '../main.js';
-import { fetchFriends, fetchReceivedRequests, fetchSentRequests } from '../api/users.js';
+import { fetchFriends, fetchReceivedRequests, fetchSentRequests, modifyRelationship } from '../api/users.js';
 
 export class SocialApp {
     constructor() {
         this.myStatus = null;
         this.friendList = new Map();
-        this.friendReceivedRequests = new Set();
-        this.friendSentRequests = new Set();
+        this.friendReceivedRequests = new Map();
+        this.friendSentRequests = new Map();
     }
 
     attachEventListeners() {
@@ -113,13 +113,21 @@ export class SocialApp {
     }
 
     async getReceivedRequests() {
-        const receivedRequests = await fetchReceivedRequests;
+        const receivedRequests = await fetchReceivedRequests();
         this.friendReceivedRequests = new Map(receivedRequests.map(friend => [friend.id, friend]));
     }
 
     async getSentRequests() {
         const sentRequests = await fetchSentRequests;
         this.friendSentRequests = new Map(sentRequests.map(friend => [friend.id, friend]));
+    }
+
+    acceptFriendRequest(userId) {
+        return modifyRelationship(userId, 'accept-friend', 'POST');
+    }
+
+    rejectFriendRequest(userId) {
+        return modifyRelationship(userId, 'remove-friend', 'DELETE');
     }
     
     blockUser(userId) {

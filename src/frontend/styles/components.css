@@ -1,5 +1,6 @@
 /* CARDS */
 /* Global container for the dynamic card */
+/* Garde la carte d'une taille correcte même si vide */
 #dynamic-card-container {
     position: fixed;
     top: 0;
@@ -9,7 +10,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    /* z-index: 9999; */
 }
 
 /* Background overlay for opacity */
@@ -26,11 +26,12 @@
 /* Card styling */
 #dynamic-card-container .card {
     position: fixed;
+    display: flex;
     z-index: 2;
-    /* max-width: ; */
-    /* width: 50%; */
-    /* max-height: ; */
-    height: auto; /* Define by Adrien to resize automatically the card with the content */
+    min-width: 40%;
+    max-width: 60%;
+    min-height: 25%;
+    max-height: 50%;
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
@@ -57,33 +58,93 @@
     color: #007bff;
 }
 
+#dynamic-card-content {
+    display: flex;
+    width: 100%;
+}
+
 
 
 /* FRIEND REQUEST */
-.friend-request-item {
+/* Conteneur principal */
+#friend-requests-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+/* Liste des demandes */
+#requests-list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    overflow-y: auto;
+}
+
+/* Un élément de demande */
+.request-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 10px 0;
+    background: #f8f8f8;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 5px 0;
+    min-height: 60px;
+    width: 90%;
 }
   
-.friend-request-item img {
+/* Avatar */
+.request-item .avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
+    object-fit: cover;
     margin-right: 10px;
 }
-  
-.friend-request-item button {
-    margin-left: 5px;
-    padding: 5px 10px;
-    border: none;
-    background: #007bff;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
+
+/* Nom d'utilisateur */
+.request-item .username {
+    flex-grow: 1;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
 }
   
-.friend-request-item button:hover {
-    background: #0056b3;
+/* Boutons */
+.request-item .accept-btn,
+.request-item .reject-btn {
+    padding: 6px 12px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 0.9rem;
+}
+
+.accept-btn {
+    background: #28a745;
+    color: white;
+    margin-right: 5px;
+}
+
+.accept-btn:hover {
+    background: #218838;
+}
+
+.reject-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.reject-btn:hover {
+    background: #c82333;
+}
+
+/* Message "Aucune demande en attente" */
+#no-requests-message {
+    font-size: 1rem;
+    color: #666;
 }
