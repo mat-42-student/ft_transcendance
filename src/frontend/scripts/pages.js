@@ -28,6 +28,7 @@ function updateProfileUI(data) {
     actionsEl.innerHTML = generateProfileActions(data);
 }
 
+// Voir si gestion nécessaire quand user est bloqué && à bloqué
 function generateProfileActions(data) {
     if (data.is_self) {
         return `
@@ -42,10 +43,24 @@ function generateProfileActions(data) {
             </button>
         `;
     } else if (data.has_blocked_user) {
-        return `<p>Vous avez été bloqué par cet utilisateur.</p>`;
+        return `<p>Vous avez été mis en sourdine par cet utilisateur.</p>
+                <button data-action="match" data-user-id="${data.id}" title="Match">
+                    <img src="/ressources/vs.png" alt="Match">
+                </button>
+                <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
+                    <img src="/ressources/remove-friend.png" alt="Remove Friend">
+                </button>
+        `;
+        
     } else if (data.is_blocked_by_user) {
         return `
-            <p>Vous avez bloqué cet utilisateur.</p>
+            <p>Vous avez mis en sourdine cet utilisateur.</p>
+            <button data-action="match" data-user-id="${data.id}" title="Match">
+                <img src="/ressources/vs.png" alt="Match">
+            </button>
+            <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
+                <img src="/ressources/remove-friend.png" alt="Remove Friend">
+            </button>
             <button data-action="unblock" data-user-id="${data.id}" title="Unblock">
                 <img src="/ressources/unblock.png" alt="Unblock">
             </button>

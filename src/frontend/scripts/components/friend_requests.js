@@ -1,5 +1,13 @@
 import { state } from "../main.js";
 
+export function updatePendingCountDisplay() {
+    const pendingBadge = document.getElementById('pending-count');
+    if (pendingBadge) {
+        pendingBadge.textContent = state.socialApp.pendingCount;
+        // pendingBadge.style.display = state.socialApp.pendingCount > 0 ? 'inline' : 'none';
+    }
+}
+
 // Création de l'élément <li> pour chaque utilisateur
 export async function createRequestItem(user) {
     const listItem = createElement('li', 'request-item');
@@ -48,10 +56,13 @@ function createElement(tag, className, attributes = {}, innerHTML = '', eventHan
 async function acceptFriendRequest(userId, listItem) {
     await state.socialApp.acceptFriendRequest(userId);  // Fonction de la logique de backend pour accepter
     listItem.remove();  // Retirer l'élément de la liste
+    state.socialApp.getPendingCount();
+    state.socialApp.getFriends();
 }
 
 // Refuser une demande d'ami et mettre à jour la liste
 async function rejectFriendRequest(userId, listItem) {
     await state.socialApp.rejectFriendRequest(userId);  // Fonction de la logique de backend pour refuser
     listItem.remove();  // Retirer l'élément de la liste
+    state.socialApp.getPendingCount();
 }
