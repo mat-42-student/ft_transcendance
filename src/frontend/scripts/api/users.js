@@ -61,6 +61,23 @@ export async function fetchSentRequests() {
     }
 }
 
+// function updatePendingRequestCount(count) {
+//     const pendingCountElement = document.getElementById('pending-requests-count');
+//     if (pendingCountElement) {
+//         pendingCountElement.textContent = count > 0 ? `(${count})` : '';
+//     }
+// }
+
+export async function fetchPendingCount() {
+    try {
+        const data = await apiRequest(`${apiBase}/relationships/pending-count/`, 'GET');
+        return data?.pending_count ?? [];
+        // updatePendingRequestCount(data.pending_count);
+    } catch (error) {
+        console.error('Erreur :', error);
+    }
+}
+
 export async function modifyRelationship(userId, action, method) {
     try {
         await apiRequest(`${apiBase}/relationships/${userId}/${action}/`, method);

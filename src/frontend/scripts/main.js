@@ -1,7 +1,6 @@
 import { navigator } from './nav.js';
 import { Client } from './apps/Client.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
-// import { SocialApp } from './apps/Social.js';
 
 export const state = {
     client: new Client(),
@@ -13,11 +12,7 @@ export const state = {
 };
 
 state.client.setState(state);
-window.state = state; // Debugging purpose
-
-// // setInterval(() => {
-// //     state.socialApp.displayReceivedRequests();
-// // }, 10000);
+window.state = state; // Debugging purpose 
 
 document.addEventListener('DOMContentLoaded', initApp);
 

@@ -20,6 +20,7 @@ export class MainSocket {
 		state.chatApp = new ChatApp();
 		state.socialApp = new SocialApp();
 		await state.socialApp.getFriends();
+		state.socialApp.startPollingPendingCount();  // Lancement automatique du polling
 		state.mmakingApp = new Mmaking();
 		state.gameApp = new WebGame();
 

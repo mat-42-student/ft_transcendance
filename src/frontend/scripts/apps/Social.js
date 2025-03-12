@@ -1,5 +1,6 @@
 import { state } from '../main.js';
-import { fetchFriends, fetchReceivedRequests, fetchSentRequests, modifyRelationship } from '../api/users.js';
+import { updatePendingCountDisplay } from '../components/friend_requests.js';
+import { fetchFriends, fetchPendingCount, fetchReceivedRequests, fetchSentRequests, modifyRelationship } from '../api/users.js';
 
 export class SocialApp {
     constructor() {
@@ -7,6 +8,8 @@ export class SocialApp {
         this.friendList = new Map();
         this.friendReceivedRequests = new Map();
         this.friendSentRequests = new Map();
+        this.pendingCount = 0;
+        this.pollingInterval = null;
     }
 
     attachEventListeners() {
@@ -122,6 +125,12 @@ export class SocialApp {
         this.friendSentRequests = new Map(sentRequests.map(friend => [friend.id, friend]));
     }
 
+    async getPendingCount() {
+        const pendingCount = await fetchPendingCount();
+        this.pendingCount = pendingCount;
+        updatePendingCountDisplay();
+    }
+
     acceptFriendRequest(userId) {
         return modifyRelationship(userId, 'accept-friend', 'POST');
     }
@@ -136,6 +145,19 @@ export class SocialApp {
     
     unblockUser(userId) {
         return modifyRelationship(userId, 'unblock', 'DELETE');
+    }
+
+    startPollingPendingCount(interval = 20000) {
+        if (this.pollingInterval) return; // Évite de lancer plusieurs fois le polling
+        this.getPendingCount();  // Mise à jour immédiate avant le premier intervalle
+        this.pollingInterval = setInterval(() => this.getPendingCount(), interval);
+    }
+
+    stopPollingPendingCount() {
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+        }
     }
 }
 
