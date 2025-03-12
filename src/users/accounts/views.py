@@ -429,6 +429,13 @@ class RelationshipViewSet(viewsets.ViewSet):
 
         return Response({"sent_requests": data}, status=status.HTTP_200_OK)
     
+    @action(detail=False, methods=['get'], url_path='pending-count')
+    def get_pending_requests_count(self, request):
+        """Récupérer le nombre de demandes d'ami en attente pour l'utilisateur."""
+        user = request.user
+        pending_count = Relationship.objects.filter(to_user=user, status=Relationship.PENDING).count()
+        return Response({"pending_count": pending_count}, status=status.HTTP_200_OK)
+    
     # @action(detail=False, methods=['get'], url_path='my-relationships')
     # def get_user_relationships(self, request):
     #     """Récupérer les relations de l'utilisateur."""
