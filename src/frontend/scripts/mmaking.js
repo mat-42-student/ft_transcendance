@@ -23,6 +23,8 @@ export class Mmaking
 
 			}
 		}
+
+		this.buildEvenbtnClient();
 		this.host = false;
 		this.opponents = {};
 		this.SearchRandomGame = false;
@@ -52,9 +54,13 @@ export class Mmaking
 		btnmatch.addEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteDesactive);
 	}
 
-	buildEvenbtnHost(keynumber)
+	buildEvenbtnClient()
 	{
-
+		this.boundEventListenersClient = {
+			btnsearchRandomGame: this.btnsearchRandomGame.bind(this),
+			eventSearchTournament: this.eventSearchTournament.bind(this)
+		  };
+		
 	}
 
 	sleep(ms) {
@@ -436,7 +442,7 @@ export class Mmaking
 	}
 
 
-	async eventSearchTournament(event)
+	async eventSearchTournament(event=null)
 	{
 		const data = {
 			'status': "online",

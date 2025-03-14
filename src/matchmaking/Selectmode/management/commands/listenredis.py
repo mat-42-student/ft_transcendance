@@ -105,7 +105,7 @@ class Command(BaseCommand):
                     
                     print("listen again...")
                 except Exception as e:
-                    print(e)
+                    print(f'error msg: {e}')
 
     # Kill task
     def signal_handler(self, sig, frame):
@@ -154,7 +154,7 @@ class Command(BaseCommand):
             player.type_game = body['type_game']
             return (player)
         except Exception as e:
-            print(e)
+            print(f'Manage player failed: {e}')
     
     # Delete player somewhere
     async def deletePlayer(self, salon ,player):
@@ -196,14 +196,6 @@ class Command(BaseCommand):
         # Setup token to request endpoints api
         player.token = token
 
-        print(f'Salon {player.type_game} length -> {len(self.salons[player.type_game])}')
-        for salon in self.salons[player.type_game]:
-            print(f'Length of players : {len(salon.players)}')
-            try:
-                print(f"{salon.players}")
-            except Exception as e:
-                print(f'Exception print Salon -> {e}')
-    
         if (body.get('type_game') == '1vs1R' or body.get('type_game') == 'tournament'): # 1vs1R
             player.type_game = body.get('type_game')
             await self.random(player)
