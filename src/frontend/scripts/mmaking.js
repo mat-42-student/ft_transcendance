@@ -9,7 +9,8 @@ export class Mmaking
 		this.invited_by = {};
 		this.guests = {};
 		// Store bound functions
-		this.boundEventListeners = {};
+		this.boundEventListenersFriend = {};
+		this.boundEventListenersClient = {};
 		for (let [key, value] of state.socialApp.friendList)
 		{
 			const keyNumber = Number(key);
@@ -42,13 +43,18 @@ export class Mmaking
 	{
 		const btnmatch = document.querySelector(`.btn-match-${keyNumber}`);
 
-		if (!this.boundEventListeners[keyNumber]) {
-			this.boundEventListeners[keyNumber] = {
+		if (!this.boundEventListenersFriend[keyNumber]) {
+			this.boundEventListenersFriend[keyNumber] = {
 				btnInviteActive: this.btnInviteActive.bind(this, keyNumber),
 				btnInviteDesactive: this.btnInviteDesactive.bind(this, keyNumber),
 			};
 		}
-		btnmatch.addEventListener('click', this.boundEventListeners[keyNumber].btnInviteDesactive);
+		btnmatch.addEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteDesactive);
+	}
+
+	buildEvenbtnHost(keynumber)
+	{
+
 	}
 
 	sleep(ms) {
@@ -137,8 +143,8 @@ export class Mmaking
 			const keyNumber = Number(key);
 
 			// Bind functions with the key parameter and store them
-			if (!this.boundEventListeners[keyNumber]) {
-				this.boundEventListeners[keyNumber] = {
+			if (!this.boundEventListenersFriend[keyNumber]) {
+				this.boundEventListenersFriend[keyNumber] = {
 					btnInviteActive: this.btnInviteActive.bind(this, keyNumber),
 					btnInviteDesactive: this.btnInviteDesactive.bind(this, keyNumber),
 				};
@@ -148,8 +154,8 @@ export class Mmaking
 			if((value == false && btnMatchPicture && btnHost) || (value == true && this.salonInvite == true))
 			{
 				btnMatchPicture.src = "/ressources/vs.png";
-				btnHost.removeEventListener('click', this.boundEventListeners[keyNumber].btnInviteActive);
-				btnHost.addEventListener('click', this.boundEventListeners[keyNumber].btnInviteDesactive);
+				btnHost.removeEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteActive);
+				btnHost.addEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteDesactive);
 				
 				if (value == true)
 				{
@@ -165,8 +171,8 @@ export class Mmaking
 			else if(btnHost && btnMatchPicture)
 			{
 				btnMatchPicture.src = "/ressources/vs_active.png";
-				btnHost.removeEventListener('click', this.boundEventListeners[keyNumber].btnInviteDesactive);
-				btnHost.addEventListener('click', this.boundEventListeners[keyNumber].btnInviteActive);
+				btnHost.removeEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteDesactive);
+				btnHost.addEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteActive);
 			}
 			
 			// if you are in game
