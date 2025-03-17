@@ -544,6 +544,51 @@ class Command(BaseCommand):
         if (tournament_id is None):
             self.games[type_game].update({game.id: salon})
         return game.id
+    
+    def setScoreSalonsCacheTournament(self, tournament_id, FinishGames):
+        for game in FinishGames:
+            try:
+                if (game.id in self.games['tournament'][tournament_id]):
+                    salon = self.games['tournament'][tournament_id][game.id]
+                    salon.score1 = game.score_player1
+                    salon.score2 = game.score_player2
+            except Exception as e:
+                print(f'SetScoreSalonCacheTournament failed: {e}')
+    
+
+    def nextRoundTournament(self, previousGames):
+        tournament_id = None
+
+
+        for game in previousGames:
+            try:
+                salon = self.createSalonRandom('tournament')
+                player = Player()
+                player.user_id = game.winner.id
+                player.type_game = 'tournament'
+                player.get_user()
+                salon.players.update({player.user_id: player})
+                self.salons['tournament'].append(salon)
+                tournament_id = game.tournament.id
+            except Exception as e:
+                print(f'Create new salons failed: {e}')
+
+        self.setScoreSalonsCacheTournament(tournament_id, previousGames)
+        
+        for salon in self.salons['tournament']:
+            try:
+                idgame = async_to_sync(self.create_game)('tournament', salon, game.tournament)
+                self.games['tournament'][tournament_id].update({idgame: salon})
+            except Exception as e:
+                print(f'try to insert new salons in tournament failed: {e}')
+
+        print(f'Games tournament length -> {len(self.games['tournament'][tournament_id])}')
+        for salon in self.games['tournament'][tournament_id].values():
+            print(f'Length of players : {len(salon.players)}')
+            try:
+                print(f"{salon.players}")
+            except Exception as e:
+                print(f'Exception print Salon -> {e}')
        
     
     #############      RANDOM     #############
@@ -793,35 +838,7 @@ class Command(BaseCommand):
 
         return gamesOfTournament
     
-    def nextRoundTournament(self, previousGames):
-        tournament_id = None
-        for game in previousGames:
-            try:
-                salon = self.createSalonRandom('tournament')
-                player = Player()
-                player.user_id = game.winner.id
-                player.type_game = 'tournament'
-                player.get_user()
-                salon.players.update({player.user_id: player})
-                self.salons['tournament'].append(salon)
-                tournament_id = game.tournament.id
-            except Exception as e:
-                print(f'Create new salons failed: {e}')
-        
-        for salon in self.salons['tournament']:
-            try:
-                idgame = async_to_sync(self.create_game)('tournament', salon, game.tournament)
-                self.games['tournament'][tournament_id].update({idgame: salon})
-            except Exception as e:
-                print(f'try to insert new salons in tournament failed: {e}')
-
-        print(f'Games tournament length -> {len(self.games['tournament'][tournament_id])}')
-        for salon in self.games['tournament'][tournament_id].values():
-            print(f'Length of players : {len(salon.players)}')
-            try:
-                print(f"{salon.players}")
-            except Exception as e:
-                print(f'Exception print Salon -> {e}')
+    
 
     def create_tournament(self):
         print('Creation Tournament')
