@@ -28,7 +28,7 @@ export function enroll2fa() {
     const verificationSection = document.getElementById('verification-section');
     const infoSection = document.getElementById('info-section');
 
-    fetch('https://localhost:3000/api/v1/auth/2fa/enroll/', {
+    fetch('/api/v1/auth/2fa/enroll/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ export function verify2fa() {
     const verificationSection = document.getElementById('verification-section');
 
 
-    fetch('https://localhost:3000/api/v1/auth/2fa/verify/', {
+    fetch('api/v1/auth/2fa/verify/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

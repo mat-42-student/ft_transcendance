@@ -1,7 +1,12 @@
 import json
 import requests
 import asyncio
+from django.core.cache import cache
+import os
+from django.conf import settings
+from .utils import get_ccf_token_cache
 #from .Guest import Guest
+
 
 class Player ():
     def __init__(self):
@@ -29,12 +34,13 @@ class Player ():
         return (f'Player {self.user_id} type_game: {self.type_game}')
     
     def get_user(self):
-        """Get information to API user and set this in instances"""
-        url = f"http://users:8000/api/v1/users/{self.user_id}/"  # Remplace par ton URL réelle
+        """Get information from API user and set this in instances"""
 
+        token = get_ccf_token_cache()
+
+        url = f"http://users:8000/api/v1/users/{self.user_id}/"  # Remplace par ton URL réelle
         headers = {
-            "Authorization": f"Bearer {self.token}",  # Ajoute le token d'authentification
-            "Content-Type": "application/json",  # Optionnel, selon ton API
+            "Authorization": f"Bearer {token}",  # Ajoute le token d'authentification
         }
 
         response = requests.get(url, headers=headers)

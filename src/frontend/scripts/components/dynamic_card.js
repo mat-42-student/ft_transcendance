@@ -14,7 +14,17 @@ const dynamicCardRoutes = {
     'vs_active': './partials/cards/vs_active.html',
 	'salonHost': './partials/cards/salonHost.html',
 	'salonGuest': './partials/cards/salonGuest.html',
+	'load': './partials/cards/salonLoad.html',
+	'tournament': './partials/cards/tournament.html',
 };
+
+const closeDynamicCardHidden = [
+    'salonHost',
+    'salonGuest',
+    'load',
+    'versus'
+]
+
 
 /*
     Piste d'exemple pour changement logique de init -> rendre logique spécifique à chaques cards modulaire dans init via un objet

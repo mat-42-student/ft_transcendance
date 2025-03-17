@@ -22,6 +22,7 @@ export class MainSocket {
 		await state.socialApp.getFriends();
 		state.socialApp.startPollingPendingCount();  // Lancement automatique du polling
 		state.mmakingApp = new Mmaking();
+
 		state.gameApp = new WebGame();
 
 		this.socket.onerror = async (e)=> {

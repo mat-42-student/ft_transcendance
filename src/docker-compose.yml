@@ -1,25 +1,42 @@
-services:
+networks:
+  nginx-network:
+    driver: bridge
+  db-network:
+    driver: bridge
+  redis-network:
+    driver: bridge
+  deep-network:
+    driver: bridge
 
+volumes:
+  postgres_data:
+  media:
+  static_volume:
+  shared_credentials:
+
+services:
   # django-base:
   #     build:
   #       context: .
   #       dockerfile: Dockerfile.django
   #     image: django-base
 
-  auth-service:
-    container_name: auth-service
+  auth:
+    container_name: auth
     build:
-      context: ./auth_service
+      context: ./auth
       dockerfile: Dockerfile
     volumes:
-      - ./auth_service:/code
+      - ./auth:/app
+      - static_volume:/app/staticfiles
+      - shared_credentials:/app/shared_credentials
     depends_on:
       postgres:
         condition: service_healthy
     expose:
       - "8000"
     env_file:
-      - ./auth_service/.env
+      - .env
     restart: on-failure
     networks:
       - nginx-network
@@ -30,14 +47,17 @@ services:
   users:
     container_name: users
     image: users
-    build: ./users
+    build:
+      context: ./users
+      dockerfile: Dockerfile
     expose:
       - "8000"
     volumes:
+      - ./users:/app
       - ./media:/media
-      - ./users:/code
+      - shared_credentials:/app/shared_credentials
     env_file:
-      - ./auth_service/.env
+      - .env
     networks:
       - db-network
       - nginx-network
@@ -49,7 +69,7 @@ services:
     #   timeout: 5s
     #   retries: 3
     depends_on:
-      auth-service:
+      auth:
         condition: service_started
 
   chat:
@@ -59,11 +79,15 @@ services:
       dockerfile: Dockerfile
     stop_grace_period: 2s
     env_file:
-      - ./chat/.env
+      - .env
     depends_on:
-      - redis
+      redis:
+        condition: service_started 
+      auth:
+        condition: service_started 
     volumes:
-      - ./chat/:/code
+      - ./chat/:/app
+      - shared_credentials:/app/shared_credentials
     networks:
       - db-network
       - redis-network
@@ -78,9 +102,13 @@ services:
     env_file:
       - .env
     volumes:
-      - ./social_project/:/code
+      - ./social_project/:/app
+      - shared_credentials:/app/shared_credentials
     depends_on:
-      - redis
+      redis:
+        condition: service_started 
+      auth:
+        condition: service_started 
     networks:
       - redis-network
       - deep-network
@@ -94,7 +122,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./gateway/:/code
+      - ./gateway/:/app
     depends_on:
       matchmaking:
         condition: service_started
@@ -113,14 +141,17 @@ services:
       context: matchmaking
       dockerfile: Dockerfile
     env_file:
-      - ./matchmaking/.env
+      - .env
     volumes:
-      - ./matchmaking:/code
+      - ./matchmaking:/app
+      - shared_credentials:/app/shared_credentials
     depends_on:
       postgres:
         condition: service_healthy
       pong:
         condition: service_started
+      auth:
+        condition: service_started 
     expose:
       - "8000"
     networks:
@@ -140,11 +171,12 @@ services:
       - "3000:443"
     depends_on:
       - users
-      - auth-service
+      - auth
       - matchmaking
     volumes:
       - ./media:/media
       - ./frontend:/usr/share/nginx/frontend
+      - static_volume:/app/staticfiles
     networks:
       - nginx-network
     restart: on-failure
@@ -152,12 +184,12 @@ services:
   pong:
     container_name: pong
     build:
-      context: _Pong
+      context: pong
       dockerfile: Dockerfile
     env_file:
-      - ./_Pong/.env
+      - .env
     volumes:
-      - ./_Pong/:/code
+      - ./pong/:/app
     depends_on:
       - redis
     expose:
@@ -202,16 +234,3 @@ services:
       - redis-network
     restart: on-failure
 
-volumes:
-  postgres_data:
-  media:
-
-networks:
-  nginx-network:
-    driver: bridge
-  db-network:
-    driver: bridge
-  redis-network:
-    driver: bridge
-  deep-network:
-    driver: bridge

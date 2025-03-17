@@ -1,19 +1,19 @@
+import jwt
+import datetime
 import django.db.models as models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.conf import settings
 from .authentication import JWTAuthentication
+from .authentication import RemoteOAuth2Authentication
+from rest_framework import viewsets, status
 from rest_framework import viewsets, status, filters
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 from .models import User
-import jwt
-import datetime
-
 from .models import User, Relationship
 from .serializers import (
     UserListSerializer, 
@@ -40,7 +40,7 @@ class UserRegisterView(APIView):
             access_payload = {
                 'id': user.id,
                 'username': user.username,
-                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
                 'iat': datetime.datetime.now(datetime.timezone.utc),
             }
 
@@ -59,7 +59,7 @@ class UserRegisterView(APIView):
                 key='refreshToken',
                 value=refresh_token, 
                 httponly=True,
-                samesite='None',
+                samesite='Lax',
                 secure=True,
                 path='/'
             )
@@ -69,7 +69,6 @@ class UserRegisterView(APIView):
             }
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 # User ViewSet
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -106,14 +105,22 @@ class UserViewSet(viewsets.ModelViewSet):
 
         # Vérifie si le client est authentifié
         if request.user.is_authenticated:
-            # Vérifie les relations de blocage
+            # Handle machine clients (oauth_client)
+            if request.user.username == 'oauth_client':
+                serializer = UserDetailSerializer(user)
+                return Response(serializer.data)
+
+            # Handle human clients (JWT):
             if request.user in user.blocked_users.all() or user in request.user.blocked_users.all():  # L'utilisateur ciblé a bloqué le client
                 serializer = UserBlockedSerializer(user, context={'request': request})
+                return Response(serializer.data)
+            
             # Utilise le serializer privé pour l'utilisateur authentifié
-            elif request.user == user:
+            if request.user == user:
                 serializer = UserPrivateDetailSerializer(user, context={'request': request})
             else:    
                 serializer = UserDetailSerializer(user)
+
             return Response(serializer.data)
         
         # Si le client n'est pas authentifié, utilise le serializer public
@@ -143,7 +150,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['post'], permission_classes=[JWTAuthentication], url_path='block')
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated], url_path='block')
     def block_user(self, request, pk=None):
         """Bloquer un utilisateur."""
         try:
@@ -162,7 +169,7 @@ class UserViewSet(viewsets.ModelViewSet):
         except User.DoesNotExist:
             return Response({"detail": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
 
-    @action(detail=True, methods=['delete'], permission_classes=[JWTAuthentication], url_path='unblock')
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated], url_path='unblock')
     def unblock_user(self, request, pk=None):
         """Débloquer un utilisateur."""
         try:
@@ -212,6 +219,21 @@ class UserViewSet(viewsets.ModelViewSet):
         Endpoint pour récupérer la liste des amis d'un utilisateur donné.
         """
         requested_user = self.get_object()  # Récupère l'utilisateur cible
+
+        # Handle machine clients
+        if request.user.username == 'oauth_client' and request.user.is_authenticated:
+            try:
+                user = User.objects.get(pk=pk)
+                friends = User.objects.filter(
+                    Q(relationships_initiated__to_user=user, relationships_initiated__status='friend') |
+                    Q(relationships_received__from_user=user, relationships_received__status='friend')
+                ).distinct()
+
+                serializer = UserMinimalSerializer(friends, many=True)
+                return Response({'friends': serializer.data}, status=200)
+
+            except User.DoesNotExist:
+                return Response({'error': 'User not found'}, status=404)
 
         # Vérification des permissions
         if request.user != requested_user and not request.user.is_superuser:
@@ -308,8 +330,6 @@ class UserViewSet(viewsets.ModelViewSet):
             response_data["is_friend"] = True
 
         return Response(response_data, status=200)
-        
-
 # Relationship ViewSet
 class RelationshipViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]

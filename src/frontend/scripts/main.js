@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', initApp);
 
 // Fonction d'initialisation
 async function initApp() {
-    await state.client.refreshSession();  // Attendre que la session soit restaurée
+    // await state.client.refreshSession();  // Attendre que la session soit restaurée
     navigator.handleHashChange();  // Ensuite seulement, traiter le changement de hash
     setupEventListeners();
 }
@@ -33,6 +33,9 @@ function setupEventListeners() {
 
     setupSearchInput();
 }
+
+if (localStorage.getItem('isCookie'))
+    await state.client.refreshSession('#profile');
 
 function addClickEvent(selector, callback) {
     const element = document.getElementById(selector) || document.querySelector(selector);
