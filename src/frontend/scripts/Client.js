@@ -23,12 +23,13 @@ export class Client{
             console.error(error);
             throw error;
         }
-        this.renderProfileBtn();
+        // this.renderProfileBtn();
 		if (this.state.mainSocket == null)
 		{
         	this.state.mainSocket = new MainSocket();
         	await this.state.mainSocket.init();
 		}
+        localStorage.setItem('log', true);
         this.globalRender();
     }
 
@@ -55,6 +56,7 @@ export class Client{
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Logout failed');
             }
+            localStorage.removeItem('log');
     
             window.location.hash = '#home';
         } catch (error) {
@@ -109,10 +111,9 @@ export class Client{
     // }
 
     async refreshSession(location = null) {
-        // const cookie = await this.hasCookie();
-        // if (this.accessToken || !cookie) {
-        //     return;
-        // }
+        if (localStorage.getItem('log') == null)
+            return;
+
         try {
             const response = await fetch('api/v1/auth/refresh/', {
                 method: 'POST',

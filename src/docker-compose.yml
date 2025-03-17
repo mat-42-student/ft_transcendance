@@ -27,9 +27,9 @@ services:
       context: ./auth
       dockerfile: Dockerfile
     volumes:
-      - ./auth:/code
-      - static_volume:/code/staticfiles
-      - shared_credentials:/shared_credentials
+      - ./auth:/app
+      - static_volume:/app/staticfiles
+      - shared_credentials:/app/shared_credentials
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,13 +47,15 @@ services:
   users:
     container_name: users
     image: users
-    build: ./users
+    build:
+      context: ./users
+      dockerfile: Dockerfile
     expose:
       - "8000"
     volumes:
+      - ./users:/app
       - ./media:/media
-      - ./users:/code
-      - shared_credentials:/shared_credentials
+      - shared_credentials:/app/shared_credentials
     env_file:
       - .env
     networks:
@@ -84,8 +86,8 @@ services:
       auth:
         condition: service_started 
     volumes:
-      - ./chat/:/code
-      - shared_credentials:/shared_credentials
+      - ./chat/:/app
+      - shared_credentials:/app/shared_credentials
     networks:
       - db-network
       - redis-network
@@ -100,8 +102,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./social_project/:/code
-      - shared_credentials:/shared_credentials
+      - ./social_project/:/app
+      - shared_credentials:/app/shared_credentials
     depends_on:
       redis:
         condition: service_started 
@@ -120,7 +122,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./gateway/:/code
+      - ./gateway/:/app
     depends_on:
       matchmaking:
         condition: service_started
@@ -141,8 +143,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./matchmaking:/code
-      - shared_credentials:/shared_credentials
+      - ./matchmaking:/app
+      - shared_credentials:/app/shared_credentials
     depends_on:
       postgres:
         condition: service_healthy
@@ -174,7 +176,7 @@ services:
     volumes:
       - ./media:/media
       - ./frontend:/usr/share/nginx/frontend
-      - static_volume:/code/staticfiles
+      - static_volume:/app/staticfiles
     networks:
       - nginx-network
     restart: on-failure
@@ -187,7 +189,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./pong/:/code
+      - ./pong/:/app
     depends_on:
       - redis
     expose:

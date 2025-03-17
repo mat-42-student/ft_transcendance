@@ -1,5 +1,27 @@
+# FROM django-base
+
+# WORKDIR /app
+
+# COPY . .
+
+# RUN adduser -D appuser && \
+#     mkdir -p /app/shared_credentials && \
+#     chown -R appuser:appuser /app
+
+# RUN chmod +x /app/entrypoint.sh
+
+# USER appuser
+
+# RUN python manage.py collectstatic --no-input
+
+# ENTRYPOINT ["/app/entrypoint.sh"]
+# CMD ["gunicorn", "--bind", "0.0.0.0:8000", "auth.wsgi:application"]
+
 FROM django-base
 
-WORKDIR /code
+WORKDIR /app
 
-CMD ["./start.sh"]
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["gunicorn", "--reload", "--bind", "0.0.0.0:8000", "auth.wsgi:application"]
+
+
