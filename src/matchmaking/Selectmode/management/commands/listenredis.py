@@ -533,12 +533,13 @@ class Command(BaseCommand):
         print(f"In createSalon mainSalon: {mainSalon.players}")
         return (mainSalon)
     
-    async def create_game(self, type_game, salon, tournament_id):
+    async def create_game(self, type_game, salon, tournament_id, round=1):
         # Create game in database with an id and send start game clients and set status
+        print(f'Round in create game {round}')
         players_id = []
         for player_id in salon.players:
             players_id.append(player_id)
-        game = await self.create_game_sync(tournament_id, players_id[0], players_id[1], 'ranked')
+        game = await self.create_game_sync(tournament_id, players_id[0], players_id[1], 'ranked', round)
         if (game is None):
             return None
         if (tournament_id is None):
@@ -555,10 +556,29 @@ class Command(BaseCommand):
             except Exception as e:
                 print(f'SetScoreSalonCacheTournament failed: {e}')
     
+    async def sendNextRoundToClient(self, FinishGames):
+        tournamentId = FinishGames[0].tournament.id
+        notfound = False
+        for gameId, game in  self.games['tournament'][tournamentId].items():
+            for oldGame in FinishGames:
+                if (gameId == oldGame.id):
+                    for playerId, player in game.players.items():
+                        if (oldGame.winner.id != playerId and (oldGame.player1.id == playerId or oldGame.player2.id == playerId)):
+                            print(f'Send nextroundToclient has loose the previous game')
+                            await self.nextRoundTournamentJSON(playerId, player, None, tournamentId)
+                    notfound = False
+                    break
+                else:
+                    notfound = True
+            if (notfound):
+                for playerId, player in game.players.items():
+                    print(f'Send nextroundToclient has win the previous game')
+                    await self.nextRoundTournamentJSON(playerId, player, gameId, tournamentId)
+                        
 
     def nextRoundTournament(self, previousGames):
         tournament_id = None
-
+        round = None
 
         for game in previousGames:
             try:
@@ -570,17 +590,24 @@ class Command(BaseCommand):
                 salon.players.update({player.user_id: player})
                 self.salons['tournament'].append(salon)
                 tournament_id = game.tournament.id
+                round = game.round
             except Exception as e:
                 print(f'Create new salons failed: {e}')
 
         self.setScoreSalonsCacheTournament(tournament_id, previousGames)
         
+        if (round >= self.roundMax + 1):
+            return None
+        
+        # Set next round
+        round = round + 1
         for salon in self.salons['tournament']:
             try:
-                idgame = async_to_sync(self.create_game)('tournament', salon, game.tournament)
+                idgame = async_to_sync(self.create_game)('tournament', salon, game.tournament, round)
                 self.games['tournament'][tournament_id].update({idgame: salon})
             except Exception as e:
                 print(f'try to insert new salons in tournament failed: {e}')
+        self.salons['tournament'].clear()
 
         print(f'Games tournament length -> {len(self.games['tournament'][tournament_id])}')
         for salon in self.games['tournament'][tournament_id].values():
@@ -589,6 +616,9 @@ class Command(BaseCommand):
                 print(f"{salon.players}")
             except Exception as e:
                 print(f'Exception print Salon -> {e}')
+                
+        return round
+        
        
     
     #############      RANDOM     #############
@@ -596,6 +626,29 @@ class Command(BaseCommand):
 
 
     #############      JSON     #############
+    
+    async def nextRoundTournamentJSON(self, id, player, gameid, tournamentId):
+        data = {
+            'header':{
+                'service': 'mmaking',
+                'dest': 'front',
+                'id': id,
+            },
+            'body':{
+                'status': 'ingame',
+                'id_game': gameid,
+                player.type_game: True,
+                'cancel': False
+            }
+        }
+        salonNumber = 1
+        bracket = {}
+        for salon in self.games[player.type_game][tournamentId].values():
+            bracket.update({salonNumber: salon.getDictPlayers()})
+            salonNumber = salonNumber + 1
+
+        data['body']['opponents'] = bracket
+        await self.redis_client.publish(self.channel_front, json.dumps(data))
 
     # Send status ingame to Front to start a game with all opponents
     async def start_toFront(self, id, player, gameid):
@@ -631,12 +684,10 @@ class Command(BaseCommand):
                 'id': host.user_id,
             },
             'body':{
-                'type_game': {
-                    'invite':{
-                        'host_id': guest.user_id,
-                        'username': guest.username,
-                        'accept': accept
-                    },
+                'invite':{
+                    'host_id': guest.user_id,
+                    'username': guest.username,
+                    'accept': accept
                 },
                 'cancel': False
             }
@@ -651,12 +702,11 @@ class Command(BaseCommand):
                 'id': host.user_id,
             },
             'body':{
-                'type_game': {
-                    'invite':{
-                        'guest_id': guest.user_id,
-                        'username': guest.username,
-                        'accept': accept
-                    },
+
+                'invite':{
+                    'guest_id': guest.user_id,
+                    'username': guest.username,
+                    'accept': accept
                 },
                 'cancel': False
             }
@@ -672,12 +722,10 @@ class Command(BaseCommand):
                 'id': hostid,
             },
             'body':{
-                'type_game': {
-                    'invite':{
-                        'guest_id': guestid,
-                        'accept': accept,
-                        'send': True
-                    },
+                'invite':{
+                    'guest_id': guestid,
+                    'accept': accept,
+                    'send': True
                 },
                 'cancel': False
             }
@@ -692,10 +740,8 @@ class Command(BaseCommand):
                 'id': hostid,
             },
             'body':{
-                'type_game': {
-                    'invite':{
-                        to: guestid,
-                    },
+                'invite':{
+                    to: guestid,
                 },
                 'cancel': True
             }
@@ -796,8 +842,12 @@ class Command(BaseCommand):
             return False
         
         gamesOfTournament = await sync_to_async(self.getallgamesForTournament)(game)
-        if (gamesOfTournament is not None):
-            await sync_to_async(self.nextRoundTournament)(gamesOfTournament)
+        print(f"Round of game -> {game.round}")
+        if (gamesOfTournament is not None and game.round < self.roundMax+1):
+            round = await sync_to_async(self.nextRoundTournament)(gamesOfTournament)
+            if (round is not None):
+                await self.sendNextRoundToClient(gamesOfTournament)
+            
             
     
     async def infoGame(self, data):
@@ -895,7 +945,7 @@ class Command(BaseCommand):
         
                   
 
-    async def create_game_sync(self, tournament_id, player1_id, player2_id, game_type, round=1):
+    async def create_game_sync(self, tournament_id, player1_id, player2_id, game_type, nbRound=1):
         # Simulating ORM object creation (replace this with actual ORM code)
         # tournament = Tournament.objects.get(id=tournament_id)
         try:
@@ -912,7 +962,7 @@ class Command(BaseCommand):
             score_player1=0,
             score_player2=0,
             date=datetime.now(),
-            round=round,
+            round=nbRound,
             game_type=game_type
         )
         await game.asave()

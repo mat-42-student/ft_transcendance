@@ -470,7 +470,7 @@ export class Mmaking
 
     async incomingMsg(data)
     {
-        if (data.body.status == 'ingame')
+        if (data.body.status == 'ingame' && data.body.id_game != null)
         { 
 			this.game = true;
 			this.gameId =  data.body.id_game;
@@ -509,9 +509,9 @@ export class Mmaking
 			}
 		}
 		// Routing to communication mode Invite
-        else if (data.body.type_game.invite)
+        else if (data.body.invite)
         {
-			const invite = data.body.type_game.invite;
+			const invite = data.body.invite;
             if (invite.host_id)
 			{
 				if (invite.accept == true)
