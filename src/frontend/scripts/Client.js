@@ -29,7 +29,6 @@ export class Client{
         	this.state.mainSocket = new MainSocket();
         	await this.state.mainSocket.init();
 		}
-        localStorage.setItem('log', true);
         this.globalRender();
     }
 
@@ -56,7 +55,8 @@ export class Client{
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Logout failed');
             }
-            localStorage.removeItem('log');
+            
+            localStorage.removeItem('isCookie');
     
             window.location.hash = '#home';
         } catch (error) {
@@ -111,9 +111,6 @@ export class Client{
     // }
 
     async refreshSession(location = null) {
-        if (localStorage.getItem('log') == null)
-            return;
-
         try {
             const response = await fetch('api/v1/auth/refresh/', {
                 method: 'POST',
@@ -124,6 +121,7 @@ export class Client{
                 throw new Error("Could not refresh token");
             }
             const data = await response.json();
+            localStorage.setItem('isCookie', true);
             try {
                 await this.login(data.accessToken);
             }
