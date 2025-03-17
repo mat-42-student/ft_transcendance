@@ -80,6 +80,7 @@ export async function initDynamicCard(routeKey) {
 
             if (oauthButton) {
                 oauthButton.addEventListener('click', () => {
+                    localStorage.setItem('isCookie', true);
                     window.location.href = '/api/v1/auth/oauth/login/';
                 });
             }
