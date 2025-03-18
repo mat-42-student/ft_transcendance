@@ -11,13 +11,7 @@ const CORNER_DISTANCE = SIZE/2 + 0.01;
 
 export default class DebugScoreIndicator extends ScoreIndicator {
 
-	#addedCount = 0;
-
-	/** @type {THREE.Box3Helper} */
-	#box;
-
-	/** @type {THREE.LineBasicMaterial} */
-	#material;
+	#textMesh;
 
 	#colorFlashInterpolator = 0.0;
 
@@ -63,8 +57,8 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 			depth: 0.01,
 			curveSegments: 12,
 		} );
-		this.textMesh = new THREE.Mesh(this.textGeometry);
-		this.textMesh.position.set(0, 0, -0.1);
+		this.textMesh = new THREE.Mesh(null, new THREE.MeshBasicMaterial({}));
+		this.textMesh.position.set(0, -0.1, -0.1);
 		this.textMesh.rotateX(-Math.PI/2);
 		this.textMesh.rotateZ(Math.PI);
 		this.add(this.textMesh);

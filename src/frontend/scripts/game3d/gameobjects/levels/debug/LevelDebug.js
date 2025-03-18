@@ -7,6 +7,7 @@ import DebugBoard from './DebugBoard.js';
 import * as UTILS from '../../../../utils.js';
 import DebugScoreIndicator from './DebugScoreIndicator.js';
 import SceneOriginHelper from '../../utils/SceneOriginHelper.js';
+import BoardAnchor from '../../utils/BoardAnchor.js';
 
 
 export default class LevelDebug extends LevelBase {
@@ -29,8 +30,23 @@ export default class LevelDebug extends LevelBase {
 		this.add(new DebugBall());
 		this.add(new DebugPaddle(0));
 		this.add(new DebugPaddle(1));
-		this.add(new DebugScoreIndicator(0));
-		this.add(new DebugScoreIndicator(1));
+
+		{
+			const bottom = new BoardAnchor(0, -0.1, -1, this);
+			this.add(bottom);
+			bottom.left.add(new THREE.AxesHelper(0.05));
+			bottom.right.add(new THREE.AxesHelper(0.05));
+		}
+
+		{
+			const top = new BoardAnchor(0, -0.1, 1, this);
+			this.add(top);
+			top.left.add(new THREE.AxesHelper(0.05));
+			top.right.add(new THREE.AxesHelper(0.05));
+		}
+
+		// this.add(new DebugScoreIndicator(0));
+		// this.add(new DebugScoreIndicator(1));
 		this.add(new DebugBoard());
 		this.add(new SceneOriginHelper());
 
@@ -43,6 +59,7 @@ export default class LevelDebug extends LevelBase {
 
 	dispose() {
 		super.dispose();
+		//placeholder override
 	}
 
 
