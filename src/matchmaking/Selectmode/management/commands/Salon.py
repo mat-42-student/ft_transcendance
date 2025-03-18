@@ -21,5 +21,6 @@ class Salon():
                 score1isSet = True
             else:
                 dict.update({'score2':self.score2})
+                score1isSet = False
             players.update({key: dict})
         return (players)

@@ -17,7 +17,7 @@ export class WebGame {
         // websocat ws://pong:8006/game/1234/?t
         this.socket = new WebSocket(socketURL);
         this.socket.onerror = async function(e) {
-            console.error(e.message);
+            console.error(e);
         };
 
         this.socket.onopen = async function(e) {

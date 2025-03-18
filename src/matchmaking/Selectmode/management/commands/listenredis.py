@@ -140,7 +140,7 @@ class Command(BaseCommand):
                         already_player = salon.players.get(header.get('id'))
                         
                     # Check if player want give up the search or is disconnect
-                    if (already_player or (body.get('cancel') or body.get('disconnect'))):
+                    if (already_player and (body.get('cancel') or body.get('disconnect') or body['type_game'].get(already_player.type_game) is None)):
                         if (already_player):
                             await already_player.updateStatus(self.redis_client, self.channel_deepSocial, "online")
                         print(f'{salon}')
@@ -431,7 +431,7 @@ class Command(BaseCommand):
                             else:
                                 player2 = pid
                         
-                        game = await self.create_game_sync(None, player1, player2, 'friendly', 'friendly')
+                        game = await self.create_game_sync(None, player1, player2, 'friendly')
                         self.games[salon.type_game].update({game.id: salon})
                         await self.send_1vs1(salon, game.id)
                         self.deleteSalon(salon)
@@ -779,19 +779,22 @@ class Command(BaseCommand):
             print(f'Game does not exist -> {e}')
             return None
         for type_game in self.games:
-            if (type_game == 'tounament'):
-                for tournament in self.games[type_game].values():
-                    salon = tournament[idgame]
+            try:
+                if (type_game == 'tounament'):
+                    for tournament in self.games[type_game].values():
+                        salon = tournament[idgame]
+                        if (salon):                
+                            for player in salon.players.values():
+                                if (player.user_id == game_database.player1.id or player.user_id == game_database.player2.id):
+                                    players.append(player.user_id)
+                else:
+                    salon = self.games[type_game][idgame]
                     if (salon):                
                         for player in salon.players.values():
                             if (player.user_id == game_database.player1.id or player.user_id == game_database.player2.id):
                                 players.append(player.user_id)
-            else:
-                salon = self.games[type_game][idgame]
-                if (salon):                
-                    for player in salon.players.values():
-                        if (player.user_id == game_database.player1.id or player.user_id == game_database.player2.id):
-                            players.append(player.user_id)
+            except Exception as e:
+                print(f"getplayers failed: {e}")
                         
                         
                     
@@ -841,12 +844,53 @@ class Command(BaseCommand):
         if (not update):
             return False
         
-        gamesOfTournament = await sync_to_async(self.getallgamesForTournament)(game)
-        print(f"Round of game -> {game.round}")
-        if (gamesOfTournament is not None and game.round < self.roundMax+1):
-            round = await sync_to_async(self.nextRoundTournament)(gamesOfTournament)
-            if (round is not None):
-                await self.sendNextRoundToClient(gamesOfTournament)
+        if (await sync_to_async(getattr)(game, 'tournament') is not None):
+            gamesOfTournament = await sync_to_async(self.getallgamesForTournament)(game)
+            print(f"Round of game -> {game.round}")
+            if (gamesOfTournament is not None and game.round < self.roundMax+1):
+                round = await sync_to_async(self.nextRoundTournament)(gamesOfTournament)
+                if (round is not None):
+                    await self.sendNextRoundToClient(gamesOfTournament)
+            else:
+                await self.endGame(game)
+        else:
+            await self.endGame(game)
+        
+    async def endGame(self, game):
+        tournament = await sync_to_async(getattr)(game, 'tournament')
+        gameInCache = None
+        if (tournament is not None):
+            gameInCache = self.games['tournament'][tournament.id][game.id]
+        else:
+            for type_game in self.games:
+                try:
+                    if (type_game == 'tournament'):
+                        pass
+                    else:
+                        gameInCache = self.games[type_game].get(game.id)
+                        if (gameInCache is not None):
+                            break
+                except Exception as e:
+                    print(f'endgame failed: {e}')
+        
+        for playerId in gameInCache.players:
+            try:
+                data = {
+                    'header':{
+                        'service': 'mmaking',
+                        'dest': 'front',
+                        'id': playerId,
+                    },
+                    'body':{
+                        'cancel': True,
+                        'invite': False,
+                        'tournament': True
+                    }
+                }
+                await self.redis_client.publish(self.channel_front, json.dumps(data))
+            except Exception as e:
+                print(f'Send engame failed: {e}')
+                
             
             
     
