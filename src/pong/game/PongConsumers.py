@@ -209,10 +209,10 @@ class PongConsumer(AsyncWebsocketConsumer):
         print(f"{self.player_id} wannaplay on channel {self.room_group_name}. Currently {self.nb_players} players in lobby")
         if self.nb_players != 2:
             return
-        if self.player_id == user_id:
-            await self.send(json.dumps({"error":"You already playin mofo"}))
-            await self.kick(message="You already playin mofo")
-            return
+        # if self.player_id == user_id:
+        #     await self.send(json.dumps({"error":"You already playin mofo"}))
+        #     await self.kick(message="You already playin mofo")
+        #     return
         self.master = True
         print(f"{YELLOW}Found two players. Master is {self.player_name}{RESET}")
         self.game = Game(self.game_id, self.player_id, self.player_name, user_id, user_name, self)
