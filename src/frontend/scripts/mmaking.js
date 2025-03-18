@@ -320,7 +320,7 @@ export class Mmaking
 
 	async renderRandom()
 	{
-		const btnRandom = document.getElementById('versus');
+		const btnRandom = document.getElementById('btn-versus');
 
 		if (this.SearchRandomGame == true)
 		{
@@ -337,6 +337,7 @@ export class Mmaking
 		{
 			// document.getElementById('player-name').textContent = state.client.userName;
 			closeDynamicCard();
+            state.gameApp = new WebGame('debug');
 			state.gameApp.launchGameSocket(this.gameId);
 			this.game = false;
 		}

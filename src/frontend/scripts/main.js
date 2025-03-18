@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             // if (!state.gameApp)
 
-            state.gameApp = new WebGame('debug', 'asdhsajdhsajkdsjk');
+            state.gameApp = new WebGame('debug');
             state.gameApp.launchGameSocket();
             console.log('hello')
         });

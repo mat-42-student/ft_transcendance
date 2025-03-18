@@ -5,7 +5,7 @@ import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
 
 export class WebGame extends GameBase {
 
-    constructor(levelName, opponentName) {
+    constructor(levelName) {
         super();
 
         this.socket = null;
@@ -13,8 +13,7 @@ export class WebGame extends GameBase {
         this.side = 2;  // Set to neutral until server tells us
         this.level = new (LEVELS.LIST[levelName])();
         state.engine.scene = this.level;
-        this.playerNames[0] = state.client.userName;
-        this.playerNames[1] = opponentName;
+        this.playerNames[0] = this.playerNames[1] = '-';
     }
 
     frame(delta, time) {
@@ -38,7 +37,7 @@ export class WebGame extends GameBase {
     launchGameSocket(gameId) {
         if (!gameId) // debug
             gameId = 1; // effacer asap
-        
+
 		state.client.refreshSession();
         let socketURL = "wss://" + window.location.hostname + ":3000/game/" + gameId + "/?t=" + state.client.accessToken;
 
@@ -65,17 +64,19 @@ export class WebGame extends GameBase {
 
         this.socket.onmessage = async function(e) {
             const wg = state.gameApp;
-            wg.isPlaying = true;  //TODO this should be based on loading
             let data = JSON.parse(e.data);
-            if (data.action != 'info')
-                console.log('data = ', data);
+
+            // Debug with less spam from constant 'info' packets.
+            if (data.action != 'info') { console.log('Game packet:', data.action, ', data = ', data); }
+
             if (data.action == 'init') {
-                console.log('init', data);
+                wg.isPlaying = true;  //TODO this should be based on loading
                 state.gameApp.side = Number(data.side);
                 state.gameApp.isPlaying = true;
+                state.gameApp.playerNames[0] = data.lplayer;
+                state.gameApp.playerNames[1] = data.rplayer;
             }
             if (data.action == "info") {
-                console.log('info');
                 wg.ballPosition.x = data.ball[0];
                 wg.ballPosition.y = data.ball[1];
                 wg.paddlePositions[0] = data.lpos;
@@ -86,15 +87,9 @@ export class WebGame extends GameBase {
                 wg.scores[1] = data.rscore;
             }
             if (data.action == "wait") {
-                console.log('waiting');
-            }
-            if (data.action =="move") {
-                console.log('info');
             }
             if (data.action == "disconnect") {
-                console.log('Server asked for disconnect');
                 wg.close();
-                // wg = null; ???
             }
         };
     }
