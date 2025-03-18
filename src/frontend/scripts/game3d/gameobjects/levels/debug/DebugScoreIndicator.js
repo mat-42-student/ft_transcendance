@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { state } from "../../../../main.js";
 import ScoreIndicator from '../../gameplay/ScoreIndicator.js';
@@ -58,21 +57,22 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 		this.#box.material = this.#material;
 		this.add(this.#box);
 
-		const loader = new FontLoader();
-
-		loader.load( 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/fonts/helvetiker_regular.typeface.json', __createText);
+		this.textGeometry = new TextGeometry( `P${this.playerIndex}`, {
+			font: state.engine.font,
+			size: 0.08,
+			depth: 0.01,
+			curveSegments: 12,
+		} );
+		this.textMesh = new THREE.Mesh(this.textGeometry);
+		this.textMesh.position.set(0, 0, -0.1);
+		this.textMesh.rotateX(-Math.PI/2);
+		this.textMesh.rotateZ(Math.PI);
+		this.add(this.textMesh);
 	}
 
 
 	onFrame(delta, time) {
 		super.onFrame(delta, time);
-
-		if (__textGeometry != null) {
-			// yoink
-			this.textGeometry = __textGeometry;
-			__textGeometry = null;
-			this.add(new THREE.Mesh(this.textGeometry));
-		}
 
 		if (this.visible) {
 			this.#colorFlashInterpolator = Math.max(0, this.#colorFlashInterpolator - delta / 3);
@@ -138,17 +138,3 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 		if (this.textGeometry) this.textGeometry.dispose();
 	}
 }
-
-
-function __createText(font) {
-	if (__textGeometry != null) {
-		console.warn('haha whoops time to overwrite this variable');
-	}
-	__textGeometry = new TextGeometry( 'Hello three.js!', {
-		font: font,
-		size: 0.08,
-		depth: 0.01,
-		curveSegments: 12,
-	} );
-}
-let __textGeometry = null;

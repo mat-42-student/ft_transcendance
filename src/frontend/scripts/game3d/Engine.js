@@ -1,5 +1,6 @@
 import { state } from '../main.js';
 import * as THREE from 'three';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import * as UTILS from '../utils.js';
 import LevelBase from './gameobjects/levels/LevelBase.js';
 
@@ -48,6 +49,14 @@ export class Engine {
 			});
 			this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
 			this.renderer.toneMappingExposure = 1;
+
+			this.fontLoader = new FontLoader();
+			this.fontLoader.load(
+				'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/fonts/helvetiker_regular.typeface.json',
+				(font) => {
+					state.engine.font = font;
+				}
+			);
 		}
 
 		const resizeCallback = this.#onResize.bind(this);
