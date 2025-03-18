@@ -4,35 +4,456 @@ import { WebGame } from './WebGame.js';
 
 export class Mmaking
 {
-    constructor(mainSocket)
+    constructor()
     {
-        this.waited_page = null;
-        this.gameSocket = null;
+		this.invited_by = {};
+		this.guests = {};
+		// Store bound functions
+		this.boundEventListenersFriend = {};
+		this.boundEventListenersClient = {};
+		for (let [key, value] of state.socialApp.friendList)
+		{
+			const keyNumber = Number(key);
+			if (keyNumber != NaN)
+			{
+				console.log(keyNumber)
+				this.invited_by[keyNumber] = false;
+				this.guests[keyNumber] = false;
+				this.buildEventsbtnInvite(keyNumber);
+
+			}
+		}
+
+		this.buildEvenbtnClient();
+		this.host = false;
+		this.opponents = {};
+		this.SearchRandomGame = false;
+		this.cancel = false;
+		this.salonInvite = false;
+		this.salonHost = false;
+		this.salonLoad = false
+		this.salonRandom = false;
+		this.type_game = null;
+		this.game = null;
+		this.gameId = null;
+		this.btnsearchRandomisActive = false;
+		this.btnSearchTournamentActive = false;
+		this.bracket = false;
     }
 
+	async buildEventsbtnInvite(keyNumber)
+	{
+		const btnmatch = document.querySelector(`.btn-match-${keyNumber}`);
 
-    refresh_eventlisteners()
-    {
-        this.listening_button_match_Random();
-    }
+		if (!this.boundEventListenersFriend[keyNumber]) {
+			this.boundEventListenersFriend[keyNumber] = {
+				btnInviteActive: this.btnInviteActive.bind(this, keyNumber),
+				btnInviteDesactive: this.btnInviteDesactive.bind(this, keyNumber),
+			};
+		}
+		btnmatch.addEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteDesactive);
+	}
 
-    listening_button_match_Random()
-    {
-        const randomBtn = document.getElementById('versus');
-        if (!randomBtn)
-            return ;
-        randomBtn.addEventListener('click', async ()=>
-        {
-            const data = {
-                'status': "online",
-                'type_game': "1vs1R"
-            };
-            await this.sendMsg(data)
-            this.waited_page = await initDynamicCard('versus')
-            document.getElementById("cancel-button").addEventListener("click", this.cancel_game.bind(this));
-        });
+	buildEvenbtnClient()
+	{
+		this.boundEventListenersClient = {
+			btnsearchRandomGame: this.btnsearchRandomGame.bind(this),
+			eventSearchTournament: this.eventSearchTournament.bind(this)
+		  };
+		
+	}
 
-    }
+	sleep(ms) {
+		return new Promise(resolve => setTimeout(resolve, ms));
+	  }
+
+	async renderMatchmaking()
+	{
+		await this.renderHost();
+		await this.renderGuest();
+		await this.renderRandom();
+		await this.renderTournament();
+	}
+
+	async renderHost()
+	{
+		
+		for (const [key, value] of Object.entries(this.guests))
+		{
+			const friend = state.socialApp.friendList.get(Number(key));
+			const cardFriend = document.getElementsByClassName(`friend-item-${key}`);
+			
+			let keyNumber = Number(key);
+			// If you guest has response yes, no or you are in salon
+			if (friend && (value == true || value == false || this.salonHost))
+			{
+				this.cardFriendReset(cardFriend[0]);
+				if (value == true)
+				{
+					await initDynamicCard('salonHost');
+					document.getElementById('player-name').textContent = state.client.userName;
+					this.setFriendwithoutLoader(friend.username, `../../../media/${friend.avatar}`)
+
+					const btnstartgame = document.getElementById('start-game');
+					const btncancelGame = document.getElementById('cancel-button');
+
+					btnstartgame.addEventListener('click', (event) => this.startGame(event, keyNumber));
+					btncancelGame.addEventListener('click', (event) => this.cancelGame(event, keyNumber, 'invite'));
+
+				}
+				
+			}
+			// If you invite the guest
+			else if (friend && value == null)
+			{
+				this.cardFriendInvited(cardFriend[0])
+			}
+
+			// If you are in game
+			if (this.game == true)
+			{
+				closeDynamicCard();
+				state.gameApp.launchGameSocket(this.gameId);
+				this.game = false;
+			}
+		}
+	}
+
+	cardFriendInvited(friendCard)
+	{
+		friendCard.style.backgroundColor = 'blue';
+	}
+
+	cardFriendReset(friendCard)
+	{
+		friendCard.style.backgroundColor = "#f8f9fa";
+	}
+
+	async renderGuest()
+	{
+		for (const [key, value] of Object.entries(this.invited_by))
+		{
+			if (this.salonHost == false && (this.salonInvite == false && this.salonLoad == false && this.SearchRandomGame == false))
+				closeDynamicCard();
+			if (this.salonLoad == true)
+				await initDynamicCard('load');
+			else if(this.salonInvite == true && value == true)
+				await initDynamicCard('salonGuest');
+
+			const btnHost = document.querySelector(`.btn-match-${key}`);
+			const btnMatchPicture = document.getElementById(`btn-match-picture-${key}`);
+			const friend = state.socialApp.friendList.get(Number(key));
+
+
+			// Ensure the correct key is used
+			const keyNumber = Number(key);
+
+			// Bind functions with the key parameter and store them
+			if (!this.boundEventListenersFriend[keyNumber]) {
+				this.boundEventListenersFriend[keyNumber] = {
+					btnInviteActive: this.btnInviteActive.bind(this, keyNumber),
+					btnInviteDesactive: this.btnInviteDesactive.bind(this, keyNumber),
+				};
+			}
+
+			// if you have refuse or accept the invtiation you come here
+			if((value == false && btnMatchPicture && btnHost) || (value == true && this.salonInvite == true))
+			{
+				btnMatchPicture.src = "/ressources/vs.png";
+				btnHost.removeEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteActive);
+				btnHost.addEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteDesactive);
+				
+				if (value == true)
+				{
+					const btncancelGame = document.getElementById('cancel-button');
+
+					document.getElementById('player-name').textContent = state.client.userName;
+					this.setFriendwithoutLoader(friend.username, `../../../media/${friend.avatar}`);
+					btncancelGame.addEventListener('click', (event) => this.cancelGame(event, keyNumber, 'invite'));
+
+				}
+			}
+			// If you haven't response to invitation
+			else if(btnHost && btnMatchPicture)
+			{
+				btnMatchPicture.src = "/ressources/vs_active.png";
+				btnHost.removeEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteDesactive);
+				btnHost.addEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteActive);
+			}
+			
+			// if you are in game
+			if (this.game == true)
+			{
+				closeDynamicCard();
+				state.gameApp.launchGameSocket(this.gameId);
+				this.game = false;
+			}
+		}
+	}
+
+	async startGame(friendId)
+	{
+		const data = {
+			'type_game': {
+				'invite':{
+					'guest_id': friendId,
+					'accept': true,
+					'startgame': true 
+				}
+			}
+		};
+
+		await this.sendMsg(data);
+
+		this.salonHost = false;
+		this.guests[friendId] = false;
+		this.renderMatchmaking();
+
+	}
+
+	async cancelGame(event, friendId, type_game)
+	{
+		const data = {
+			'type_game': type_game,
+			'cancel' : true
+		};
+
+		console.log(`cancelGame = ${friendId}`);
+		if (friendId != state.client.userId)
+		{
+			this.guests[friendId] = false;
+			this.invited_by[friendId] = false;
+		}
+		this.salonInvite = false;
+		this.salonRandom = false;
+		this.salonTournament = false;
+		this.bracket = false;
+		this.salonLoad = false;
+		this.type_game = null;
+		this.SearchRandomGame = false;
+		this.game = false;
+		this.salonHost = false;
+
+		await this.sendMsg(data);
+		await this.renderMatchmaking();
+	}
+
+	async btnInviteDesactive(key)
+	{
+
+		const data =
+		{
+			'type_game': {
+				'invite': {
+					'guest_id': key
+				}
+			}
+		};
+
+		console.log("btninviteDesactive " + key);
+		this.guests[key] = null;
+		this.invited_by[key] = false;
+		this.host = true;
+
+		await this.sendMsg(data);
+		await this.renderMatchmaking();
+	}
+
+	async btnInviteActive(key)
+	{
+		const friendId = key;
+		console.log(key);
+		const btnInviteAccept = document.getElementsByClassName('btn-accepter');
+		const btnInviteRefuse = document.getElementsByClassName('btn-refuser');
+
+		await initDynamicCard('vs_active');
+		
+		btnInviteAccept[0].addEventListener('click', (event) => this.btnInviteAccept(event, friendId));
+		btnInviteRefuse[0].addEventListener('click', (event) => this.btnInviteRefuse(event, friendId));
+	}
+
+	async btnInviteAccept(event, friendId)
+	{
+		// const friendId = event.currentTarget.dataset.friendId;
+
+		console.log(`friendId -> ${friendId}`);
+		const data = {
+			'type_game': {
+				'invite':{
+					'host_id': friendId,
+					'accept': true
+				},
+			}
+		};
+
+		this.guests[friendId] = false;
+		this.invited_by[friendId] = false;
+		this.host = false;
+		this.salonInvite = false;
+		this.salonLoad = true;
+
+		await this.sendMsg(data);
+		await this.renderMatchmaking();
+	}
+
+	async btnInviteRefuse(event, friendId)
+	{
+		console.log(friendId);
+		const data = {
+			'type_game': {
+				'invite':{
+					'host_id': friendId,
+					'accept': false
+				}
+			}
+		};
+
+		this.guests[friendId] = false;
+		this.invited_by[friendId] = false;
+		this.salonInvite = false;
+
+		await this.sendMsg(data);
+		await this.renderMatchmaking();
+	}
+
+
+	async renderRandom()
+	{
+		const btnRandom = document.getElementById('versus');
+
+		if (this.SearchRandomGame == true)
+		{
+			await initDynamicCard('versus');
+			document.getElementById('player-name').textContent = state.client.userName;
+            document.getElementById("cancel-button").addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, '1vs1R'));
+		}
+		else if (this.SearchRandomGame == false && this.btnsearchRandomisActive == false)
+		{
+			btnRandom.addEventListener('click', (event)=>this.btnsearchRandomGame());
+			this.btnsearchRandomisActive = true;
+		}
+		if (this.game == true && this.bracket == false)
+		{
+			// document.getElementById('player-name').textContent = state.client.userName;
+			closeDynamicCard();
+			state.gameApp.launchGameSocket(this.gameId);
+			this.game = false;
+		}
+
+	}
+
+	async btnsearchRandomGame()
+	{
+		const data = {
+			'status': "online",
+			'type_game': "1vs1R"
+		};
+		await this.sendMsg(data)
+		this.SearchRandomGame = true;
+		// this.btnInviteActive = true;
+		await this.renderMatchmaking();
+	}
+
+
+	async renderTournament()
+	{
+		if (this.btnSearchTournamentActive == false)
+		{
+			const btnTournament = document.getElementsByClassName('btn-tournament');
+			
+			btnTournament[0].addEventListener('click', (event)=>this.eventSearchTournament(event));
+			this.btnSearchTournamentActive = true;
+		}
+		else if (this.salonTournament == true)
+		{
+			await initDynamicCard('versus');
+            document.getElementById("cancel-button").addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, 'tournament'));
+
+		}
+		else if (!this.salonTournament && !this.salonHost && !this.salonInvite && !this.salonLoad && !this.SearchRandomGame)
+		{
+			closeDynamicCard();
+		}
+		
+		if (this.game == true && this.bracket == true)
+		{
+			closeDynamicCard();
+			await initDynamicCard('tournament');
+			console.log('tournament bracket is setting');
+			const bracketContainer = document.getElementById('tournamentBracket');
+			
+			for (const [key, value] of Object.entries(this.opponents))
+			{
+				let firstPlayer = false;
+				const matchElement = document.createElement('div');
+				const teamContainer = document.createElement('div');
+				matchElement.classList.add('match');
+
+				for (const [id, player] of Object.entries(value))
+				{
+					if (firstPlayer == false)
+					{
+						const team1Element = document.createElement('div');
+						team1Element.classList.add('team-name');
+						team1Element.textContent = player.username;
+
+						const team1Score = document.createElement('span');
+						team1Score.classList.add('score');
+						team1Score.textContent = player.score1 !== undefined ? player.score1 : '-';
+
+						teamContainer.appendChild(team1Element);
+						team1Element.appendChild(team1Score);
+
+
+						const vsElement = document.createElement('div');
+						vsElement.classList.add('vs');
+						vsElement.textContent = 'vs';
+
+						teamContainer.appendChild(vsElement);
+						firstPlayer = true
+
+					}
+					else
+					{
+						const team2Element = document.createElement('div');
+						team2Element.classList.add('team-name');
+						team2Element.textContent = player.username;
+
+						const team2Score = document.createElement('span');
+						team2Score.classList.add('score');
+						team2Score.textContent = player.score2 !== undefined ? player.score2 : '-';
+
+						teamContainer.appendChild(team2Element);        
+						team2Element.appendChild(team2Score);
+
+					}
+				}
+				teamContainer.classList.add('team');
+				matchElement.appendChild(teamContainer);
+				bracketContainer.appendChild(matchElement);
+
+			}
+
+			await this.sleep(5000);
+			closeDynamicCard();
+			state.gameApp.launchGameSocket(this.gameId);
+			this.game = false;
+		}
+	}
+
+
+	async eventSearchTournament(event=null)
+	{
+		const data = {
+			'status': "online",
+			'type_game': "tournament"
+		};
+
+		await this.sendMsg(data);
+		this.salonTournament = true;
+		
+		await this.renderMatchmaking();
+	}
 
     async sendMsg(message) {
 
@@ -44,285 +465,108 @@ export class Mmaking
             },
             'body': message
         };
-    await state.mainSocket.send(JSON.stringify(data));
+    	await state.mainSocket.send(JSON.stringify(data));
     }
 
     async incomingMsg(data)
     {
-        if (data.body.status == 'ingame')
-        {
-            for (const [key, value] of Object.entries(data.body.opponents))
-                this.setOpponent(value.username, '../../../media/avatars/default.png')
+        if (data.body.status == 'ingame' && data.body.id_game != null)
+        { 
+			this.game = true;
+			this.gameId =  data.body.id_game;
+			this.salonInvite = false;
+			this.salonLoad = false;
+			this.SearchRandomGame = false;
 
-            state.gameApp.launchGameSocket(data.body.id_game);
+			if (data.body.tournament == true)
+			{
+				this.bracket = true;
+				this.salonTournament = false;
+			}
+			if (data.body.opponents)
+			{
+				this.opponents = data.body.opponents;
+				console.log(this.opponents);
+			}
         }
 		else if (data.body.cancel == true)
 		{
-			console.log('Reset img and card');
-			const friendlist = document.querySelectorAll('.friend-item');
-	
-			friendlist.forEach(friend => {
-				if (friend.dataset.userid == data.body.type_game.invite.host_id )
+			if (data.body.type_game.invite)
+			{
+				const invite = data.body.type_game.invite;
+				if (invite.host_id)
 				{
-					const btnmatch = friend.querySelector('.btn-match');
-					const imgmatch = btnmatch.getElementsByTagName('img');
-					imgmatch[0].src = "/ressources/vs.png";
-					this.ResetCardFriend(btnmatch);
-					btnmatch.dataset.invite = false;
-					return ;
+					this.invited_by[invite.host_id] = false;
+					this.salonLoad = false;
+					this.salonInvite = false;
 				}
-			});
+				else if (invite.guest_id)
+				{
+					this.guests[invite.guest_id] = false;
+					this.salonHost = false;
+
+				}
+			}
 		}
 		// Routing to communication mode Invite
-        else if (data.body.type_game.invite)
+        else if (data.body.invite)
         {
-            const invite = data.body.type_game.invite;
-			const guest_id = Number(data.body.type_game.invite.guest_id);
-			const host_id = Number(data.body.type_game.invite.host_id);
-            console.log(invite);
-
-			// Invitation is accepted: all next msg by server come here
-			try
+			const invite = data.body.invite;
+            if (invite.host_id)
 			{
 				if (invite.accept == true)
 				{
-					if (host_id)
-					{
-						await initDynamicCard('salonGuest');
+					this.invited_by[invite.host_id] = true;
+					this.salonLoad = false;
+					this.salonInvite = true;
+				}
+				else
+				{
+					this.invited_by[invite.host_id] = null;
 
-					}
-					else if (guest_id)
-					{
-						await initDynamicCard('salonHost');
-						const startgame = document.getElementById("start-game");
-						console.log(startgame);
-						startgame.addEventListener('click', async (event) =>
-						{
-							const data = {
-								'type_game': {
-									'invite':{
-										'guest_id': guest_id,
-										'accept': true,
-										'startgame': true 
-									}
-								}
-							};
-							await this.sendMsg(data);
-						});
+				}
+				this.salonLoad = false;
 
-					}
-					
-					this.desableOverlay();
-					this.setGuest(invite.username, '../../../media/avatars/default.png');
+				console.log('invited_by: ' + invite.host_id);
+			}
+			else if (invite.guest_id)
+			{
+				if (invite.accept == true)
+				{
+					this.guests[invite.guest_id] = true;
+					this.salonHost = true;
 
-					const friendlist = document.querySelectorAll('.friend-item');
-
-					friendlist.forEach(friend => {
-
-							const btnmatch = friend.querySelector('.btn-match');
-							this.ResetCardFriend(btnmatch)
-							return ;
-						
-					});
 				}
 				else if (invite.accept == false)
 				{
-					const friendlist = document.querySelectorAll('.friend-item');
-				
-					friendlist.forEach(friend => {
-						if (friend.dataset.userid == data.body.type_game.invite.guest_id )
-						{
-							const btnmatch = friend.querySelector('.btn-match');
-							this.ResetCardFriend(btnmatch)
-							return ;
-						}
-					});
-				}
-
-				// Invitation come here to notif the client
-				else if (invite.accept == null)
-				{
-					const friendlist = document.querySelectorAll('.friend-item');
-				
-					friendlist.forEach(friend => {
-						if (friend.dataset.userid == data.body.type_game.invite.host_id )
-						{
-							const btnmatch = friend.querySelector('.btn-match');
-							const imgmatch = btnmatch.getElementsByTagName('img');
-							imgmatch[0].src = "/ressources/vs_active.png";
-							btnmatch.dataset.invite = 1;
-							return ;
-						}
-					});
+					this.guests[invite.guest_id] = false;
 				}
 			}
-			catch (error)
-			{
-				
-				console.log("RESET btn-match")
-				// Reset btn-match if server send cancel
 
-				console.log(error);
-			}
         }
+		await this.renderMatchmaking();
+
     }
 
-	desableOverlay()
-	{
-		// Style of my card. My card don't block website
-		const overlay = document.getElementsByClassName('overlay');
-		const dynamicContainer = document.getElementById('dynamic-card-container');
-
-		// style of dynamic card container
-		dynamicContainer.style.zIndex = 0;
-		dynamicContainer.style.width = "auto";
-		dynamicContainer.style.height = "auto";
-		dynamicContainer.style.top = "50%";
-		dynamicContainer.style.left = "50%";
-
-
-		// style overlay
-		overlay[0].classList.add('hidden');
-	}
-
-	
-
-    async invite(guestid, target)
-    {
-        if (target.dataset.invite == 1)
-        {
-            await initDynamicCard('vs_active');
-			this.desableOverlay();
-
-            
-
-            const acceptInvitation = document.querySelector('.invitation .btn-accepter');
-			const refuseInvitation = document.querySelector('.invitation .btn-refuser');
-
-            acceptInvitation.addEventListener('click', async (event)=>{
-
-                const data = {
-                    'type_game': {
-                        'invite':{
-                            'host_id': guestid,
-                            'accept': true
-                        }
-                    }
-                };
-                await this.sendMsg(data);
-                target.dataset.invite = false
-                target.getElementsByTagName('img')[0].src = '/ressources/vs.png';
-
-                closeDynamicCard()
-            });
-			refuseInvitation.addEventListener('click', async (event)=>{
-
-                const data = {
-                    'type_game': {
-                        'invite':{
-                            'host_id': guestid,
-                            'accept': false
-                        }
-                    }
-                };
-                await this.sendMsg(data);
-                target.dataset.invite = false
-                target.getElementsByTagName('img')[0].src = '/ressources/vs.png';
-
-                closeDynamicCard()
-            });
-        }
-        else
-        {
-            const data =
-            {
-                'type_game': {
-                    'invite': {
-                        'guest_id': guestid
-                    }
-                }
-            };
-            await this.sendMsg(data);
-			this.waitReponseofGuest(target);
-        }
-    }
-
-	waitReponseofGuest(target)
-	{
-		//target.style.display = 'none';
-		const frienditem = target.closest('.friend-item');
-		frienditem.style.backgroundColor = 'blue';
-	}
-
-	ResetCardFriend(target)
-	{
-		//target.style.display = 'block';
-		const frienditem = target.closest('.friend-item');
-		frienditem.style.backgroundColor = "#f8f9fa";
-	}
-
-	//friendIngame()
-
-    async cancel_game()
-    {
-        document.getElementById("status").textContent = "Recherche annulée";
-        document.getElementById("loader").style.display = "none";
-        document.getElementById("waiting-text").textContent = "Vous avez annulé la recherche.";
-        document.getElementById("cancel-button").style.display = "none";
-
-        const data = {
-            'status': "pending",
-            'type_game': "1vs1R",
-            'cancel': true
-        };
-
-
-        this.sendMsg(data)
-
-        closeDynamicCard();
-    }
-
-    setOpponent(name, photo) {
+	setOpponentInvite(name, photo) {
         document.getElementById("opponent-info").style.display = "block";
         document.getElementById("opponent-name").textContent = name;
         document.getElementById("opponent-photo").src = photo;
-        document.getElementById("status").textContent = "Adversaire trouvé !";
-        document.getElementById("loader").style.display = "none";
-        document.getElementById("waiting-text").textContent = "Préparez-vous à jouer !";
         document.getElementById("cancel-button").style.display = "none";
     }
 
-    setGuest(name, picture)
+    setFriendwithoutLoader(name, picture)
     {
         document.getElementById("opponent-info").style.display = "block";
         document.getElementById("opponent-name").textContent = name;
         document.getElementById("opponent-photo").src = picture;
-
     }
 
-    createCard() {
-        const card = document.createElement("div");
-        card.classList.add("invitation");
-
-        const title = document.createElement("h2");
-        title.textContent = "Invitation";
-
-        const message = document.createElement("p");
-        message.textContent = "Souhaitez-vous accepter cette demande ?";
-
-        const acceptButton = document.createElement("button");
-        acceptButton.classList.add("btn-invitation", "btn-accepter");
-        acceptButton.textContent = "✅";
-
-        const refuseButton = document.createElement("button");
-        refuseButton.classList.add("btn-invitation", "btn-refuser");
-        refuseButton.textContent = "❌";
-
-        card.appendChild(title);
-        card.appendChild(message);
-        card.appendChild(acceptButton);
-        card.appendChild(refuseButton);
-
-        return card;
+    setFriendwithLoader(name, picture)
+    {
+        document.getElementById("opponent-info").style.display = "block";
+        document.getElementById("opponent-name").textContent = name;
+        document.getElementById("opponent-photo").src = picture;
+		document.getElementById("random-loader").style.display = "none";
     }
 }

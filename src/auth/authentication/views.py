@@ -199,7 +199,7 @@ class RefreshTokenView(APIView):
             'success': 'true',
             'accessToken': new_access_token
         }
-        return response
+        return response 
 class LogoutView(APIView):
     renderer_classes = [JSONRenderer]
 

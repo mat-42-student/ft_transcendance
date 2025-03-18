@@ -21,6 +21,7 @@ export class MainSocket {
 		state.socialApp = new SocialApp();
 		await state.socialApp.fetchFriends();
 		state.mmakingApp = new Mmaking();
+
 		state.gameApp = new WebGame();
 
 		this.socket.onerror = async (e)=> {

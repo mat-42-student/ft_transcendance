@@ -8,7 +8,7 @@ from signal import signal, SIGTERM, SIGINT
 from django.conf import settings
 import requests
 from .models import Game, Tournament, User
-from asgiref.sync import sync_to_async
+from asgiref.sync import sync_to_async, async_to_sync
 from datetime import datetime
 import os
 from django.core.cache import cache
@@ -61,6 +61,17 @@ class Command(BaseCommand):
             self.tournament = {}
             self.invite = {} # dict with host_id key and host_player value
             self.message = None
+
+            # limit players tournament
+            self.maxPlayersTournament = 4
+            self.roundMax = 0
+
+            nbPlayer = self.maxPlayersTournament
+            while (nbPlayer / 2 > 1):
+                self.roundMax = self.roundMax + 1
+                nbPlayer = nbPlayer / 2
+            
+            print(f'Max round of tournament without final is {self.roundMax}')
             
             # Subscribe all channels
             await self.pubsub.subscribe(self.channel_front)
@@ -85,7 +96,6 @@ class Command(BaseCommand):
                 try:
                     message = json.loads(msg.get('data'))
                     if (msg.get('channel') == self.channel_front): # Do nothing if msg is send on info_social
-                        print(message)
                         if (message.get('header').get('dest') == 'front'):
                             pass
                         else:
@@ -95,7 +105,7 @@ class Command(BaseCommand):
                     
                     print("listen again...")
                 except Exception as e:
-                    print(e)
+                    print(f'error msg: {e}')
 
     # Kill task
     def signal_handler(self, sig, frame):
@@ -130,10 +140,11 @@ class Command(BaseCommand):
                         already_player = salon.players.get(header.get('id'))
                         
                     # Check if player want give up the search or is disconnect
-                    if (already_player and (body.get('cancel') or body.get('disconnect'))):
-                        await already_player.updateStatus(self.redis_client, self.channel_deepSocial, "online")
-                        print(f'{salon} | {already_player}')
-                        self.deletePlayer(salon, already_player)
+                    if (already_player or (body.get('cancel') or body.get('disconnect'))):
+                        if (already_player):
+                            await already_player.updateStatus(self.redis_client, self.channel_deepSocial, "online")
+                        print(f'{salon}')
+                        await self.deletePlayer(salon, already_player)
                         return False
                     
                     if (already_player):
@@ -143,18 +154,31 @@ class Command(BaseCommand):
             player.type_game = body['type_game']
             return (player)
         except Exception as e:
-            print(e)
+            print(f'Manage player failed: {e}')
     
     # Delete player somewhere
-    def deletePlayer(self, salon ,player):
+    async def deletePlayer(self, salon ,player):
+        copy_salon = salon
+        print(f'salon.type_game with player to deleted : {salon.type_game}')
         try:
             if (salon.type_game == 'invite'):
                 print("Send all Guest the invitation is unvalible and destroy the salon and player")
+                for key, value in salon.players.items():
+                    print(f"type of value = {type(value)}")
+                    print(f'Isinstance = {isinstance(value, Guest)}')
+                    if (not isinstance(value, Guest) and key != player.user_id):
+                        await self.cancelInvitation(key, player.user_id ,'guest_id')
+                    elif (key != player.user_id):
+                        await self.cancelInvitation(key, player.user_id, 'host_id')
+                    await value.updateStatus(self.redis_client, self.channel_deepSocial, 'online' )
+                self.salons[salon.type_game].remove(salon)
             elif (salon.type_game == '1vs1R'):
                 print("Just destroy the player")
+            elif (salon.type_game == 'tournament'):
+                print(f'delete {player} of tournament')
             del salon.players[player.user_id]
         except Exception as e:
-            print(e)
+            print(f'Delete player {e} has failed')
             
 
     # Research and verify conditions for the type_game selected
@@ -172,8 +196,8 @@ class Command(BaseCommand):
         # Setup token to request endpoints api
         player.token = token
 
-        if (body.get('type_game') == '1vs1R'): # 1vs1R
-            player.type_game = '1vs1R'
+        if (body.get('type_game') == '1vs1R' or body.get('type_game') == 'tournament'): # 1vs1R
+            player.type_game = body.get('type_game')
             await self.random(player)
         elif (body.get('type_game').get('invite')): # Invite
             player.type_game = 'invite'
@@ -187,7 +211,7 @@ class Command(BaseCommand):
             
     async def send_1vs1(self, salon, idgame):
          for key, player in salon.players.items():
-            await self.start_toFront(key, salon, idgame)
+            await self.start_toFront(key, player, idgame)
             await player.updateStatus(self.redis_client, self.channel_deepSocial, "ingame")
     #############      GENERAL     #############
             
@@ -201,13 +225,7 @@ class Command(BaseCommand):
     # Process to invite
     async def invitation(self, player, obj_invite):
 
-        print(f'Salon invite length -> {len(self.salons['invite'])}')
-        for salon in self.salons['invite']:
-            print(f'Length of players : {len(salon.players)}')
-            try:
-                print(f"{salon}")
-            except Exception as e:
-                print(f'Exception print Salon -> {e}')
+
         # Check the frienship with endpoint
         # Check status player
         
@@ -221,7 +239,7 @@ class Command(BaseCommand):
         if (status != 'online' or status is None):
             try:
                 guestid = int(obj_invite.get('guest_id'))
-                await self.cancelInvitation(player.user_id, guestid)
+                await self.cancelInvitation(player.user_id, guestid, 'guest_id')
             except Exception as e:
                 print(e)
             return 
@@ -232,7 +250,6 @@ class Command(BaseCommand):
 
         # Receive the msg by Guest    
         if (obj_invite.get('host_id')):
-            print("process host_id")
             host_id = None
             try:
                 host_id = int(obj_invite.get('host_id'))
@@ -241,17 +258,22 @@ class Command(BaseCommand):
                 return 
             # If guest accept invitation
             if (obj_invite.get('accept') == True):
+                
+                # Need this variable to delete salon if Guets has already invited friend
+
 
                 # Research salon of the host
                 for salon in self.salons['invite']:
                     host = salon.players.get(host_id)
                     if (host):
-                        
+                        # Delete everywhere we find guests and host
+                        await self.deleteEverywhereGuestAndHost(player, host_id=host_id)
                         # Guest
                         for guestid in list(host.guests):
-                            # Cancel invitation of other guests
+                            # Cancel invitation of other guests of host
                             if (guestid != player.user_id):
-                                await self.cancelInvitation(guestid, host.user_id)
+                                await self.cancelInvitation(guestid, host.user_id, 'host_id')
+                                await self.cancelInvitation(host_id, guestid, 'guest_id')
                                 del host.guests[guestid]
                             # Add guest to salon by Host
                             else:
@@ -265,22 +287,34 @@ class Command(BaseCommand):
                                 # update status Guest
                                 await guest.updateStatus(self.redis_client, self.channel_deepSocial, 'pending')
                                 await self.invitationGameToGuest(guest, host, True)
+
+
                                 
                         # Host
                         await host.updateStatus(self.redis_client, self.channel_deepSocial, 'pending')
                         print("Response by server to host")
                         await self.invitationGameToHost(host, player, True)
+
+
                         
             elif (obj_invite.get('accept') == False):
                 # Research salon of the host
+                print(f'Guest refuse invitation = {player}')
+                salonCopy = None
                 for salon in self.salons['invite']:
                     try:
                         host = salon.players.get(host_id)
                         if (host):
                             del host.guests[player.user_id]
+                            await self.invitationGameToHost(host, player, False)
+                            if (len(host.guests) == 0):
+                                salonCopy = salon
                     except Exception as e:
                         print(f'exception is raise {e}')
-                await self.invitationGameToHost(host, player, False)
+                try:
+                        self.salons[player.type_game].remove(salonCopy)
+                except Exception as e:
+                    print(f'try to delete salon if len(guests) == 0: {e}')
                         
                 
 
@@ -302,7 +336,7 @@ class Command(BaseCommand):
             status = await guest.checkStatus(self.redis_client, self.channel_social)
             if (status != 'online' or status is None):
                 print(f"Guest Status is Bad -> {status}")
-                await self.cancelInvitation(player.user_id, guest.user_id)
+                await self.cancelInvitation(player.user_id, guest.user_id, 'guest_id')
                 return 
 
             # Add to dict of Host the guests
@@ -323,6 +357,39 @@ class Command(BaseCommand):
             await self.confirmSendInvitationGame(player.user_id, guest.user_id, None)
         
 
+    async def deleteEverywhereGuestAndHost(self, player, host_id=-1):
+        '''Delete the players (player and host_id) in all guests tab of all Hosts, all guests in this tab.  \n
+        If no host player default host_id = -1 \n
+        player = Instance Player \n
+        host_id = int
+        '''
+        salonsTodelete = []
+        print(f'host_id {host_id}')
+
+        for salon in self.salons['invite']:
+            for gamerId, gamer in salon.players.items():
+
+                if (gamerId == player.user_id):
+                    for friendId, friend in gamer.guests.items():
+                        print(f'send CancelInvitationto {friendId}')
+                        await self.cancelInvitation(friendId, gamer.user_id, 'host_id')
+                        await self.cancelInvitation(gamer.user_id, friendId, 'guest_id')
+                        salonsTodelete.append(salon)
+
+                if (player.user_id in gamer.guests and gamerId != host_id):
+                    await self.cancelInvitation(gamerId, player.user_id, 'guest_id')
+                    await self.cancelInvitation(player.user_id, gamerId, 'host_id')
+                    del gamer.guests[player.user_id]
+
+                if (host_id in gamer.guests):
+                    await self.cancelInvitation(gamerId, host_id, 'guest_id')
+                    await self.cancelInvitation(host_id, gamerId, 'host_id')
+                    del gamer.guests[host_id]
+
+                if (len(gamer.guests) == 0):
+                    salonsTodelete.append(salon)
+        for salon in salonsTodelete:
+            self.salons['invite'].remove(salon)
 
 
     def createSalonInvite(self, type_game, host):
@@ -336,7 +403,7 @@ class Command(BaseCommand):
                     print('This Host already exist !!!!!')
                     return salon
                 else:
-                    print("Return not salon")
+                    print("It is a Guest")
                     return None
         mainSalon.type_game = type_game
         self.salons[type_game].append(mainSalon)
@@ -368,17 +435,9 @@ class Command(BaseCommand):
                         self.games[salon.type_game].update({game.id: salon})
                         await self.send_1vs1(salon, game.id)
                         self.deleteSalon(salon)
-                        print(f'length salon invite after start the game -> {len(self.salons['invite'])}')
-                        print(f'length salon invite after start the game -> {len(self.games['invite'])}')
-                        for salon in self.salons['invite']:
-                            try:
-                                print(f'length players in salon -> {len(salon.players)}')
-                            except Exception as e:
-                                print(f'Exception after start the game -> {e}')
                         return True
                     else:
                         return False
-                        
                         
     def deleteSalon(self, salontodelete):
         try:
@@ -402,7 +461,10 @@ class Command(BaseCommand):
         
         # Setup player
         player.get_user()
+        await self.deleteEverywhereGuestAndHost(player)
         
+        print(f'player.type_game = {player.type_game}')
+
         # Create and update Salon
         salon = self.createSalonRandom(player.type_game)
         salon.players.update({player.user_id: player})
@@ -413,42 +475,150 @@ class Command(BaseCommand):
         
         # Update status player with Social
         await player.updateStatus(self.redis_client, self.channel_deepSocial, 'pending')
+
+        print(f'Salon {player.type_game} length -> {len(self.salons[player.type_game])}')
+        for salon in self.salons[player.type_game]:
+            print(f'Length of players : {len(salon.players)}')
+            try:
+                print(f"{salon.players}")
+            except Exception as e:
+                print(f'Exception print Salon -> {e}')
         
         # Launch game if Salon has 2 players
-        if (len(salon.players) >= 2):
-            idgame = await self.create_game(salon.type_game, salon)
+        if (salon.type_game == '1vs1R' and len(salon.players) >= 2 and len(self.salons[player.type_game]) == 1 ):
+            idgame = await self.create_game(salon.type_game, salon, None)
             if (idgame is None):
                 return
             else:
                 await self.send_1vs1(salon, idgame)
+                self.salons[player.type_game].clear()
 
+        elif (salon.type_game == 'tournament'and len(self.salons[salon.type_game]) == self.maxPlayersTournament / 2 and self.allSalonsAreFull()):
+            tournament = await sync_to_async(self.create_tournament)()
+            if (tournament):
+                # send bracket to players
+                
+                self.games[player.type_game].update({tournament.id:{}})
+                # send ingame to players
+                for salon in self.salons[player.type_game]:
+                    idgame = await self.create_game(salon.type_game, salon, tournament)
+                    await self.send_1vs1(salon, idgame)
+                    self.games[player.type_game][tournament.id].update({idgame: salon})
+                    print(f'FIrst games tournament: {self.games[player.type_game][tournament.id]}')
+                self.salons[player.type_game].clear()
 
+    # check salons
+    def allSalonsAreFull(self):
+        for salon in self.salons['tournament']:
+            if (len(salon.players) < 2):
+                return False
+        
+        return True
+        
+    
     # Search or create a Salon, if players in Salon < 2 return it else create it
     def createSalonRandom(self, type_game):
         """Search or create a Salon, if players in Salon < 2 return it else create it"""
         mainSalon = Salon()
         mainSalon.type_game = type_game
         for salon in self.salons[type_game]:
-            if (len(salon.players) < 2):
+            print(f"In createSalon salon: {salon.players}")
+            if (salon is not None and len(salon.players) < 2):
                 mainSalon = salon
                 try:
                     self.salons[salon.type_game].remove(salon)
                 except Exception as e:
                     print(e)
                 break
+        print(f"In createSalon mainSalon: {mainSalon.players}")
         return (mainSalon)
     
-    async def create_game(self, type_game, salon):
+    async def create_game(self, type_game, salon, tournament_id, round=1):
         # Create game in database with an id and send start game clients and set status
+        print(f'Round in create game {round}')
         players_id = []
         for player_id in salon.players:
             players_id.append(player_id)
-   
-        game = await self.create_game_sync(None, players_id[0], players_id[1], 'ranked', 'ranked')
+        game = await self.create_game_sync(tournament_id, players_id[0], players_id[1], 'ranked', round)
         if (game is None):
             return None
-        self.games[type_game].update({game.id: salon})
+        if (tournament_id is None):
+            self.games[type_game].update({game.id: salon})
         return game.id
+    
+    def setScoreSalonsCacheTournament(self, tournament_id, FinishGames):
+        for game in FinishGames:
+            try:
+                if (game.id in self.games['tournament'][tournament_id]):
+                    salon = self.games['tournament'][tournament_id][game.id]
+                    salon.score1 = game.score_player1
+                    salon.score2 = game.score_player2
+            except Exception as e:
+                print(f'SetScoreSalonCacheTournament failed: {e}')
+    
+    async def sendNextRoundToClient(self, FinishGames):
+        tournamentId = FinishGames[0].tournament.id
+        notfound = False
+        for gameId, game in  self.games['tournament'][tournamentId].items():
+            for oldGame in FinishGames:
+                if (gameId == oldGame.id):
+                    for playerId, player in game.players.items():
+                        if (oldGame.winner.id != playerId and (oldGame.player1.id == playerId or oldGame.player2.id == playerId)):
+                            print(f'Send nextroundToclient has loose the previous game')
+                            await self.nextRoundTournamentJSON(playerId, player, None, tournamentId)
+                    notfound = False
+                    break
+                else:
+                    notfound = True
+            if (notfound):
+                for playerId, player in game.players.items():
+                    print(f'Send nextroundToclient has win the previous game')
+                    await self.nextRoundTournamentJSON(playerId, player, gameId, tournamentId)
+                        
+
+    def nextRoundTournament(self, previousGames):
+        tournament_id = None
+        round = None
+
+        for game in previousGames:
+            try:
+                salon = self.createSalonRandom('tournament')
+                player = Player()
+                player.user_id = game.winner.id
+                player.type_game = 'tournament'
+                player.get_user()
+                salon.players.update({player.user_id: player})
+                self.salons['tournament'].append(salon)
+                tournament_id = game.tournament.id
+                round = game.round
+            except Exception as e:
+                print(f'Create new salons failed: {e}')
+
+        self.setScoreSalonsCacheTournament(tournament_id, previousGames)
+        
+        if (round >= self.roundMax + 1):
+            return None
+        
+        # Set next round
+        round = round + 1
+        for salon in self.salons['tournament']:
+            try:
+                idgame = async_to_sync(self.create_game)('tournament', salon, game.tournament, round)
+                self.games['tournament'][tournament_id].update({idgame: salon})
+            except Exception as e:
+                print(f'try to insert new salons in tournament failed: {e}')
+        self.salons['tournament'].clear()
+
+        print(f'Games tournament length -> {len(self.games['tournament'][tournament_id])}')
+        for salon in self.games['tournament'][tournament_id].values():
+            print(f'Length of players : {len(salon.players)}')
+            try:
+                print(f"{salon.players}")
+            except Exception as e:
+                print(f'Exception print Salon -> {e}')
+                
+        return round
+        
        
     
     #############      RANDOM     #############
@@ -456,9 +626,8 @@ class Command(BaseCommand):
 
 
     #############      JSON     #############
-
-    # Send status ingame to Front to start a game with all opponents
-    async def start_toFront(self, id, salon, gameid):
+    
+    async def nextRoundTournamentJSON(self, id, player, gameid, tournamentId):
         data = {
             'header':{
                 'service': 'mmaking',
@@ -468,11 +637,41 @@ class Command(BaseCommand):
             'body':{
                 'status': 'ingame',
                 'id_game': gameid,
+                player.type_game: True,
                 'cancel': False
             }
         }
-        data['body']['opponents'] = salon.getDictPlayers()
-        del data['body']['opponents'][id]
+        salonNumber = 1
+        bracket = {}
+        for salon in self.games[player.type_game][tournamentId].values():
+            bracket.update({salonNumber: salon.getDictPlayers()})
+            salonNumber = salonNumber + 1
+
+        data['body']['opponents'] = bracket
+        await self.redis_client.publish(self.channel_front, json.dumps(data))
+
+    # Send status ingame to Front to start a game with all opponents
+    async def start_toFront(self, id, player, gameid):
+        data = {
+            'header':{
+                'service': 'mmaking',
+                'dest': 'front',
+                'id': id,
+            },
+            'body':{
+                'status': 'ingame',
+                'id_game': gameid,
+                player.type_game: True,
+                'cancel': False
+            }
+        }
+        salonNumber = 1
+        bracket = {}
+        for salon in self.salons[player.type_game]:
+            bracket.update({salonNumber: salon.getDictPlayers()})
+            salonNumber = salonNumber + 1
+
+        data['body']['opponents'] = bracket
         await self.redis_client.publish(self.channel_front, json.dumps(data))
 
 
@@ -485,12 +684,10 @@ class Command(BaseCommand):
                 'id': host.user_id,
             },
             'body':{
-                'type_game': {
-                    'invite':{
-                        'host_id': guest.user_id,
-                        'username': guest.username,
-                        'accept': accept
-                    },
+                'invite':{
+                    'host_id': guest.user_id,
+                    'username': guest.username,
+                    'accept': accept
                 },
                 'cancel': False
             }
@@ -505,12 +702,11 @@ class Command(BaseCommand):
                 'id': host.user_id,
             },
             'body':{
-                'type_game': {
-                    'invite':{
-                        'guest_id': guest.user_id,
-                        'username': guest.username,
-                        'accept': accept
-                    },
+
+                'invite':{
+                    'guest_id': guest.user_id,
+                    'username': guest.username,
+                    'accept': accept
                 },
                 'cancel': False
             }
@@ -526,19 +722,17 @@ class Command(BaseCommand):
                 'id': hostid,
             },
             'body':{
-                'type_game': {
-                    'invite':{
-                        'guest_id': guestid,
-                        'accept': accept,
-                        'send': True
-                    },
+                'invite':{
+                    'guest_id': guestid,
+                    'accept': accept,
+                    'send': True
                 },
                 'cancel': False
             }
         }
         await self.redis_client.publish(self.channel_front, json.dumps(data))
         
-    async def cancelInvitation(self, hostid, guestid):
+    async def cancelInvitation(self, hostid, guestid, to):
         data = {
             'header':{
                 'service': 'mmaking',
@@ -546,10 +740,8 @@ class Command(BaseCommand):
                 'id': hostid,
             },
             'body':{
-                'type_game': {
-                    'invite':{
-                        'host_id': guestid,
-                    },
+                'invite':{
+                    to: guestid,
                 },
                 'cancel': True
             }
@@ -577,7 +769,6 @@ class Command(BaseCommand):
     #############       Communication with Game     #############
 
 
-
     def getplayers(self, idgame):
         players = []
         game_database = None
@@ -588,11 +779,19 @@ class Command(BaseCommand):
             print(f'Game does not exist -> {e}')
             return None
         for type_game in self.games:
-            salon = self.games[type_game][idgame]
-            if (salon):                
-                for player in salon.players.values():
-                    if (player.user_id == game_database.player1.id or player.user_id == game_database.player2.id):
-                        players.append(player.user_id)
+            if (type_game == 'tounament'):
+                for tournament in self.games[type_game].values():
+                    salon = tournament[idgame]
+                    if (salon):                
+                        for player in salon.players.values():
+                            if (player.user_id == game_database.player1.id or player.user_id == game_database.player2.id):
+                                players.append(player.user_id)
+            else:
+                salon = self.games[type_game][idgame]
+                if (salon):                
+                    for player in salon.players.values():
+                        if (player.user_id == game_database.player1.id or player.user_id == game_database.player2.id):
+                            players.append(player.user_id)
                         
                         
                     
@@ -632,18 +831,24 @@ class Command(BaseCommand):
             except Exception as e:
                 print(f'Try conversion -> {e}')
                 return False
-            
+        game = await sync_to_async(self.getGame)(score['game_id'])
         for player in players:
-            if (not await sync_to_async(self.checkPlayerInGame)(player, score_int['game_id'])):
+            if (not await sync_to_async(self.checkPlayerInGame)(player, game)):
                 return False
             
         print(f'score_int {score_int}')
-        update = await sync_to_async(self.SetScoreGame)(players, score_int)
-        if (update):
-            return True
-        else:
+        update = await sync_to_async(self.SetScoreGame)(players, game, score_int)
+        if (not update):
             return False
-
+        
+        gamesOfTournament = await sync_to_async(self.getallgamesForTournament)(game)
+        print(f"Round of game -> {game.round}")
+        if (gamesOfTournament is not None and game.round < self.roundMax+1):
+            round = await sync_to_async(self.nextRoundTournament)(gamesOfTournament)
+            if (round is not None):
+                await self.sendNextRoundToClient(gamesOfTournament)
+            
+            
     
     async def infoGame(self, data):
         """ answers backend requests on channel 'info_mmaking' """
@@ -667,13 +872,37 @@ class Command(BaseCommand):
 
     #############       Database     #############
 
-    def SetScoreGame(self, players, score_int):
+    def getallgamesForTournament(self, game):
         try:
-            game = self.getGame(score_int['game_id'])
-            print(game)
-            if (game is None):
-                return False
+            gamesOfTournament = Game.objects.filter(tournament=game.tournament, round=game.round)
+            if (game.tournament is None):
+                return None
             
+            for game in gamesOfTournament:
+                if (game.score_player1 == 0 and game.score_player2 == 0):
+                    return None
+            print(f'all games: {gamesOfTournament}')
+            
+        except Exception as e:
+            print(f'Game of tournament failed:  {e}')
+
+        return gamesOfTournament
+    
+    
+
+    def create_tournament(self):
+        print('Creation Tournament')
+        try:
+            tournament = Tournament.objects.create(name='t', round_max=self.roundMax)
+            print(f'tournament id = {tournament.id}')
+            return tournament
+
+        except Exception as e:
+            print(f'creation of tournament failed -> {e}')
+            return None
+
+    def SetScoreGame(self, players, game, score_int):
+        try:
             for player in players:
                 if (game.player1.id == player):
                     game.score_player1 = score_int[player]
@@ -700,10 +929,9 @@ class Command(BaseCommand):
             print(e)
             return None
 
-    def checkPlayerInGame(self, player_id, gameId):
+    def checkPlayerInGame(self, player_id, game):
         try:
             player = User.objects.get(id=player_id)
-            game = self.getGame(gameId)
 
             if (player.id == game.player1.id ):
                 return True
@@ -717,7 +945,7 @@ class Command(BaseCommand):
         
                   
 
-    async def create_game_sync(self, tournament_id, player1_id, player2_id, game_type, round="Ranked"):
+    async def create_game_sync(self, tournament_id, player1_id, player2_id, game_type, nbRound=1):
         # Simulating ORM object creation (replace this with actual ORM code)
         # tournament = Tournament.objects.get(id=tournament_id)
         try:
@@ -734,7 +962,7 @@ class Command(BaseCommand):
             score_player1=0,
             score_player2=0,
             date=datetime.now(),
-            round=round,
+            round=nbRound,
             game_type=game_type
         )
         await game.asave()

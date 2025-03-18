@@ -12,8 +12,9 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
-.player-info {
+.player-info-salon {
     margin-bottom: 15px;
+    display: block;
 }
 .player-info img {
     width: 80px;
