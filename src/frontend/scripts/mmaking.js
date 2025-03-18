@@ -40,6 +40,9 @@ export class Mmaking
 		this.btnsearchRandomisActive = false;
 		this.btnSearchTournamentActive = false;
 		this.bracket = false;
+
+		this.bindLocal1v1Button();
+		this.bindLocalBotButton();
     }
 
 	async buildEventsbtnInvite(keyNumber)
