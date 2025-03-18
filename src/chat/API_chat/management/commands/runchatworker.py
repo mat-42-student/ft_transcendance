@@ -4,6 +4,39 @@ from signal import signal, SIGTERM, SIGINT
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep, create_task
+import os
+from django.conf import settings
+from django.core.cache import cache
+
+def get_ccf_token():
+    url = os.getenv('OAUTH2_CCF_TOKEN_URL')
+    client_id = os.getenv('OAUTH2_CCF_CLIENT_ID')
+    client_secret = os.getenv('OAUTH2_CCF_CLIENT_SECRET')
+
+    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+    data = {
+        'grant_type': 'client_credentials',
+        'client_id': client_id,
+        'client_secret': client_secret
+    }
+
+    try:
+        response = requests.post(url, headers=headers, data=data)
+        response.raise_for_status()
+        token_data = response.json()
+        return token_data['access_token'], token_data.get('expires_in', 3600)
+    except requests.exceptions.RequestException as e:
+        print(f"Error in request : {e}")
+
+def get_ccf_token_cache():
+    token = cache.get('oauth_token')
+    if token:
+        return token
+    else:
+        # Fetch new token from auth service
+        new_token, expires_in = get_ccf_token()
+        cache.set('oauth_token', new_token, expires_in - 60)
+        return new_token
 
 class Command(BaseCommand):
     help = "Listen to 'deep_chat' pub/sub redis channel"
@@ -72,7 +105,15 @@ class Command(BaseCommand):
 
     def is_muted(self, exp, recipient) -> bool :
         """is exp muted by recipient ? Raises an UserNotFoundException if recipient doesnt exist"""
-        response = requests.get(f"http://users:8000/api/v1/users/{recipient}/blocks/")
+
+        token = get_ccf_token_cache()
+        url = f"http://users:8000/api/v1/users/{recipient}/blocks/"
+        headers = {
+            "Authorization": f"Bearer {token}",
+        }
+
+        response = requests.get(url, headers=headers)
+
         if response.status_code == 200:
             try:
                 data = response.json()

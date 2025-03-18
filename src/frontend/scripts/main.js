@@ -44,7 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupNavigation();
     goHome();
 
-    state.client.refreshSession('#profile');
+    if (localStorage.getItem('isCookie'))
+        state.client.refreshSession('#profile');
 
     if (homeButton) {
         homeButton.addEventListener('click', (e) => {

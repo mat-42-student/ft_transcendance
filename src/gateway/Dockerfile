@@ -1,11 +1,18 @@
+# FROM django-base
+
+# WORKDIR /app
+
+# COPY . .
+
+# RUN adduser -D appuser && \
+#     chown -R appuser:appuser /app
+
+# USER appuser
+
+# ENTRYPOINT ["uvicorn", "gateway.asgi:application", "--host", "0.0.0.0", "--port", "8057"]
+
 FROM django-base
 
-# RUN apt update -y
+WORKDIR /app
 
-WORKDIR /code
-
-# COPY requirements.txt .
-
-# RUN pip install --no-cache-dir -r requirements.txt
-
-CMD ["sh", "./start.sh"]
+ENTRYPOINT ["uvicorn", "gateway.asgi:application", "--host", "0.0.0.0", "--port", "8057", "--reload"]

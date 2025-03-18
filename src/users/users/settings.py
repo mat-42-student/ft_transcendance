@@ -13,8 +13,12 @@ SECRET_KEY = 'django-insecure-uf14@2_-p3x8u%k1qw9d_$0meb9gv$8j^=idwdbvxm1%+3as_1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# Autorise uniquement localhost pour le serveur de développement
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    '.42mulhouse.fr', # All subdomains of 42mulhouse.fr
+    'users',
+]
 
 JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")
 JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")
@@ -31,6 +35,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'accounts',
+    'oauth2_provider',
 ]
 
 MIDDLEWARE = [
@@ -46,11 +51,18 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'accounts.authentication.RemoteOAuth2Authentication',
         'accounts.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+}
+
+# OAuth2 Provider settings
+OAUTH2_PROVIDER = {
+    'SCOPES_BACKEND_CLASS': 'oauth2_provider.scopes.SettingsScopes',
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
 }
 
 ROOT_URLCONF = 'users.urls'

@@ -1,11 +1,25 @@
+# FROM django-base
+
+# WORKDIR /app
+
+# COPY . .
+
+# RUN adduser -D appuser && \
+#     mkdir -p /app/shared_credentials && \
+#     chown -R appuser:appuser /app
+
+# RUN chmod +x /app/entrypoint.sh
+
+# USER appuser
+
+# ENTRYPOINT ["./entrypoint.sh"]
+# CMD ["python", "manage.py", "runchatworker"]
+
 FROM django-base
 
-# RUN apt update -y
+WORKDIR /app
 
-WORKDIR /code
+RUN mkdir -p /app/shared_credentials
 
-# COPY requirements.txt .
-
-# RUN pip install --no-cache-dir -r requirements.txt
-
-ENTRYPOINT ["python", "manage.py", "runchatworker"]
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["python", "manage.py", "runchatworker"]
