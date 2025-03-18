@@ -37,7 +37,7 @@ class Game:
         self.speed = 1
         self.players.append(Player(username1, id1))
         self.players.append(Player(username2, id2))
-        print(f"{GREEN}New game {game_id} launched opposing **{self.players[LEFT].name}({self.players[LEFT].id})** vs {self.players[RIGHT].name}({self.players[RIGHT].id}{RESET}")
+        print(f"{GREEN}New game {game_id} launched opposing **{self.players[LEFT].name}({self.players[LEFT].id})** vs {self.players[RIGHT].name}({self.players[RIGHT].id}){RESET}")
         self.ball_pos = [WIDTH / 2, HEIGHT / 2]
         self.ball_spd = [self.random_neg_or_not_number(2, 5),
                          self.random_neg_or_not_number(2, 5)]

@@ -10,6 +10,7 @@
 **/*.pyc
 **/*.pyo
 db.sqlite3
+**/migrations/
 
 # Fichiers statiques et médias
 **/staticfiles/
