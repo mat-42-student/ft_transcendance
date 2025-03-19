@@ -16,6 +16,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     MESSAGE_LIMIT = 20 # each player input counts 2 (keydown and keyup)
     TIME_WINDOW = 1 # seconds
     MAX_MESSAGE_SIZE = 50
+    WAITING_FOR_OPPONENT = 10 # seconds
 
     def init(self):
         self.player_id = None
@@ -46,22 +47,21 @@ class PongConsumer(AsyncWebsocketConsumer):
             self.connected = True
             self.room_group_name = f"game_{self.game_id}"
             await self.channel_layer.group_add(self.room_group_name, self.channel_name)
-            await self.redis_client.incr(f"game_{self.game_id}_players")
             await self.wait_for_opponent()
         except Exception as e:
             print(e)
 
     async def wait_for_opponent(self):
+        await self.redis_client.incr(f"game_{self.game_id}_players")
+        await self.redis_client.expire(f"game_{self.game_id}_players", self.WAITING_FOR_OPPONENT)
         start_time = time.time()
-        while time.time() - start_time < 10:
+        while time.time() - start_time < self.WAITING_FOR_OPPONENT:
             nb_players = await self.redis_client.get(f"game_{self.game_id}_players")
-            print(f"Here {self.player_name}, waiting for opponent on game {self.game_id}. Currently {nb_players} players in lobby")
-            match int(nb_players):
-                case 1:
+            # print(f"Here {self.player_name}, waiting for opponent on game {self.game_id}. Currently {nb_players} players in lobby")
+            if nb_players == '1':
                     self.master = True
-                case 2:
+            elif nb_players == '2':
                     print(f"{GREEN}Opponent found{RESET}")
-                    await self.redis_client.delete(f"game_{self.game_id}_players")
                     return
             await asleep(0.5)
         await self.kick(message="No opponent found")
@@ -174,13 +174,14 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def kick(self, close_code=1008, message="Policy Violation"):
         print(RED, self.player_name, message, RESET)
         try:
+            # await self.redis_client.delete(f"game_{self.game_id}_players")
             await self.send(text_data=json.dumps({"action": "disconnect"}))
         except Exception as e:
             # print(e)
             pass
         finally:
             self.connected = False
-            self.send_online_status('online')
+            await self.send_online_status('online')
             await self.close(code=close_code)
 
     async def load_valid_json(self, data):
