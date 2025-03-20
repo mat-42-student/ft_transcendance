@@ -17,6 +17,8 @@ export default class LevelBase extends THREE.Scene {
 		fov: [NaN, NaN, NaN],
 	};
 
+	get viewIndex() { return state.isPlaying ? state.gameApp.side : 2; }
+
 
 	onAdded() {
 		this.smoothCamera = new SmoothCamera();
@@ -26,11 +28,9 @@ export default class LevelBase extends THREE.Scene {
 
 	onFrame(delta, time) {
 		if (this.views != null) {
-			const camIdx = state.isPlaying ? state.gameApp.side : 2;
-
-			this.smoothCamera.position.copy(this.views.position[camIdx]);
-			this.smoothCamera.quaternion.copy(this.views.quaternion[camIdx]);
-			this.smoothCamera.fov = this.views.fov[camIdx];
+			this.smoothCamera.position.copy(this.views.position[this.viewIndex]);
+			this.smoothCamera.quaternion.copy(this.views.quaternion[this.viewIndex]);
+			this.smoothCamera.fov = this.views.fov[this.viewIndex];
 		}
 	}
 

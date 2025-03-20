@@ -16,11 +16,11 @@ export default class TextMesh extends THREE.Mesh {
 
 
 	/**
-	 * @param {THREE.Material} material
+	 * @param {THREE.Material} material Material to use. Remember to dispose it.
 	 * @param {string} text
 	 */
 	constructor(material, text = null) {
-		super(null, material);
+		super(new THREE.BufferGeometry(), material);
 
 		if (text != null)
 			this.setText(text);
@@ -33,8 +33,10 @@ export default class TextMesh extends THREE.Mesh {
 			return;  // skip, optimization
 		this.#oldText = newText;
 
-		if (this.geometry)
+		if (this.geometry != null) {
 			this.geometry.dispose();
+			this.geometry = null;
+		}
 
 		this.geometry = new TextGeometry(
 			newText,
@@ -55,7 +57,6 @@ export default class TextMesh extends THREE.Mesh {
 
 	dispose() {
 		if (this.geometry) this.geometry.dispose();
-		if (this.material) this.material.dispose();
 	}
 
 

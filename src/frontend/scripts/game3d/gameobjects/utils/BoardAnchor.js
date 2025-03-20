@@ -21,8 +21,6 @@ export default class BoardAnchor extends THREE.Group {
 
 		this.add(this.left);
 		this.add(this.right);
-
-		console.log('BoardAnchor:', this.left.position, this.right.position); //TODO remove log
 	}
 
 
