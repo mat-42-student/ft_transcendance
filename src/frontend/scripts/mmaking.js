@@ -326,6 +326,7 @@ export class Mmaking
 				}
 				closeDynamicCard();
 				if (this.gameId != null)
+					state.gameApp = new WebGame('debug');
 					state.gameApp.launchGameSocket(this.gameId);
 				this.game = false;
 				btnTournament[0].removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);
@@ -336,7 +337,7 @@ export class Mmaking
 
 	async renderRandom()
 	{
-		const btnRandom = document.getElementById('btn-versus');
+		const btnRandom = document.getElementById('versus');
 
 		if (this.SearchRandomGame == true)
 		{
