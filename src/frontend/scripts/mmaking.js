@@ -1,6 +1,7 @@
 import { state } from './main.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
 import { WebGame } from './WebGame.js';
+import { LocalGame } from './LocalGame.js';
 
 export class Mmaking
 {
@@ -39,6 +40,9 @@ export class Mmaking
 		this.btnsearchRandomisActive = false;
 		this.btnSearchTournamentActive = false;
 		this.bracket = false;
+
+		this.bindLocal1v1Button();
+		this.bindLocalBotButton();
     }
 
 	async buildEventsbtnInvite(keyNumber)
@@ -60,7 +64,7 @@ export class Mmaking
 			btnsearchRandomGame: this.btnsearchRandomGame.bind(this),
 			eventSearchTournament: this.eventSearchTournament.bind(this)
 		  };
-		
+
 	}
 
 	sleep(ms) {
@@ -77,12 +81,12 @@ export class Mmaking
 
 	async renderHost()
 	{
-		
+
 		for (const [key, value] of Object.entries(this.guests))
 		{
 			const friend = state.socialApp.friendList.get(Number(key));
 			const cardFriend = document.getElementsByClassName(`friend-item-${key}`);
-			
+
 			let keyNumber = Number(key);
 			// If you guest has response yes, no or you are in salon
 			if (friend && (value == true || value == false || this.salonHost))
@@ -101,7 +105,7 @@ export class Mmaking
 					btncancelGame.addEventListener('click', (event) => this.cancelGame(event, keyNumber, 'invite'));
 
 				}
-				
+
 			}
 			// If you invite the guest
 			else if (friend && value == null)
@@ -162,7 +166,7 @@ export class Mmaking
 				btnMatchPicture.src = "/ressources/vs.png";
 				btnHost.removeEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteActive);
 				btnHost.addEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteDesactive);
-				
+
 				if (value == true)
 				{
 					const btncancelGame = document.getElementById('cancel-button');
@@ -180,7 +184,7 @@ export class Mmaking
 				btnHost.removeEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteDesactive);
 				btnHost.addEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteActive);
 			}
-			
+
 			// if you are in game
 			if (this.game == true)
 			{
@@ -198,7 +202,7 @@ export class Mmaking
 				'invite':{
 					'guest_id': friendId,
 					'accept': true,
-					'startgame': true 
+					'startgame': true
 				}
 			}
 		};
@@ -267,7 +271,7 @@ export class Mmaking
 		const btnInviteRefuse = document.getElementsByClassName('btn-refuser');
 
 		await initDynamicCard('vs_active');
-		
+
 		btnInviteAccept[0].addEventListener('click', (event) => this.btnInviteAccept(event, friendId));
 		btnInviteRefuse[0].addEventListener('click', (event) => this.btnInviteRefuse(event, friendId));
 	}
@@ -319,7 +323,7 @@ export class Mmaking
 
 	async renderRandom()
 	{
-		const btnRandom = document.getElementById('versus');
+		const btnRandom = document.getElementById('btn-versus');
 
 		if (this.SearchRandomGame == true)
 		{
@@ -336,6 +340,7 @@ export class Mmaking
 		{
 			// document.getElementById('player-name').textContent = state.client.userName;
 			closeDynamicCard();
+            state.gameApp = new WebGame('debug');
 			state.gameApp.launchGameSocket(this.gameId);
 			this.game = false;
 		}
@@ -360,7 +365,7 @@ export class Mmaking
 		if (this.btnSearchTournamentActive == false)
 		{
 			const btnTournament = document.getElementsByClassName('btn-tournament');
-			
+
 			btnTournament[0].addEventListener('click', (event)=>this.eventSearchTournament(event));
 			this.btnSearchTournamentActive = true;
 		}
@@ -374,14 +379,14 @@ export class Mmaking
 		{
 			closeDynamicCard();
 		}
-		
+
 		if (this.game == true && this.bracket == true)
 		{
 			closeDynamicCard();
 			await initDynamicCard('tournament');
 			console.log('tournament bracket is setting');
 			const bracketContainer = document.getElementById('tournamentBracket');
-			
+
 			for (const [key, value] of Object.entries(this.opponents))
 			{
 				let firstPlayer = false;
@@ -423,7 +428,7 @@ export class Mmaking
 						team2Score.classList.add('score');
 						team2Score.textContent = player.score2 !== undefined ? player.score2 : '-';
 
-						teamContainer.appendChild(team2Element);        
+						teamContainer.appendChild(team2Element);
 						team2Element.appendChild(team2Score);
 
 					}
@@ -451,9 +456,33 @@ export class Mmaking
 
 		await this.sendMsg(data);
 		this.salonTournament = true;
-		
+
 		await this.renderMatchmaking();
 	}
+
+    bindLocalBotButton() {
+        const button = document.getElementById('btn-local-bot');
+        button.addEventListener('click', () => {
+            if (state.gameApp != null) {
+                console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
+                return;
+            }
+
+            state.gameApp = new LocalGame(true);
+        });
+    }
+
+    bindLocal1v1Button() {
+        const button = document.getElementById('btn-local-versus');
+        button.addEventListener('click', () => {
+            if (state.gameApp != null) {
+                console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
+                return;
+            }
+
+            state.gameApp = new LocalGame(false);
+        });
+    }
 
     async sendMsg(message) {
 
@@ -471,7 +500,7 @@ export class Mmaking
     async incomingMsg(data)
     {
         if (data.body.status == 'ingame' && data.body.id_game != null)
-        { 
+        {
 			this.game = true;
 			this.gameId =  data.body.id_game;
 			this.salonInvite = false;

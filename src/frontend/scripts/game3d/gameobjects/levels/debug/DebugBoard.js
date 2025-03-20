@@ -1,4 +1,4 @@
-import global from 'global';
+import { state } from "../../../../main.js";
 import * as THREE from 'three';
 
 
@@ -11,10 +11,16 @@ export default class DebugBoard extends THREE.Box3Helper {
 
 
 	onFrame(delta, time) {
-		this.box.setFromCenterAndSize(
-			new THREE.Vector3(),
-			new THREE.Vector3(global.game.boardSize.x, 0, global.game.boardSize.y),
-		);
+		this.visible = state.isPlaying;
+		if (this.visible) {
+			this.box.setFromCenterAndSize(
+				new THREE.Vector3(),
+				new THREE.Vector3(
+					state.gameApp.level.boardSize.x,
+					0,
+					state.gameApp.level.boardSize.y),
+			);
+		}
 	}
 
 

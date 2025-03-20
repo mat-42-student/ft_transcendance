@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import engine from 'engine';
-import * as GAMEOBJECTS from 'gameobjects';
+import Ball from '../../gameplay/Ball.js';
+import Cross2DHelper from '../../utils/Cross2DHelper.js';
 
 
-export default class DebugBall extends GAMEOBJECTS.GAMEPLAY.Ball {
+export default class DebugBall extends Ball {
 
-	/** @type {GAMEOBJECTS.UTILS.Cross2DHelper} */
+	/** @type {Cross2DHelper} */
 	#cross;
 
 	/** @type {THREE.ArrowHelper} */
@@ -20,7 +20,7 @@ export default class DebugBall extends GAMEOBJECTS.GAMEPLAY.Ball {
 
 
 	onAdded() {
-		this.#cross = new GAMEOBJECTS.UTILS.Cross2DHelper("#33aa33");
+		this.#cross = new Cross2DHelper("#33aa33");
 		this.#cross.rotateOnAxis(
 			new THREE.Vector3(0,1,0),
 			THREE.MathUtils.degToRad(45)

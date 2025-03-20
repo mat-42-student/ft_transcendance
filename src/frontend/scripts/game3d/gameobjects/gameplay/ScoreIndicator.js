@@ -1,10 +1,10 @@
-import global from 'global';
 import * as THREE from 'three';
+import { state } from "../../../main.js";
 
 
 export default class ScoreIndicator extends THREE.Group {
 
-	playerIndex = -1;
+	playerIndex = NaN;
 
 	#previousScore = 0;
 
@@ -20,10 +20,13 @@ export default class ScoreIndicator extends THREE.Group {
 
 
 	onFrame(delta, time) {
-		const score = global.game.scores[this.playerIndex];
-		if (this.#previousScore != score) {
-			this.#previousScore = score;
-			this.scoreChanged(score);
+		this.visible = state.isPlaying;
+		if (this.visible) {
+			const score = state.gameApp.scores[this.playerIndex];
+			if (this.#previousScore != score) {
+				this.#previousScore = score;
+				this.scoreChanged(score);
+			}
 		}
 	}
 

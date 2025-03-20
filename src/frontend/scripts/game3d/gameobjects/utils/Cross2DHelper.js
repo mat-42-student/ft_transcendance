@@ -14,6 +14,7 @@ export default class Cross2DHelper extends THREE.LineSegments {
 		const mat = new THREE.LineBasicMaterial({color: color});
 
 		super(geo, mat);
+		this.name = 'Cross2DHelper';
 	}
 
 

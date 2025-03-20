@@ -1,6 +1,7 @@
 import json
 import jwt
 import requests
+import time
 from asyncio import create_task, sleep as asleep
 from redis.asyncio import from_url #type: ignore
 from channels.generic.websocket import AsyncWebsocketConsumer #type: ignore
@@ -229,7 +230,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.game = Game(self.game_id, self.player_id, self.player_name, user_id, user_name, self)
         json_data = {
             "action" : "init",
-            "dir" : self.game.ball_spd,
+            "dir" : self.game.ball_speed,
             "lplayer": self.game.players[LEFT].name,
             "rplayer": self.game.players[RIGHT].name,
             "lpos":self.game.players[LEFT].pos,

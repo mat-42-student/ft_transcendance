@@ -1,3 +1,5 @@
+from json import loads
+
 RESET = "\033[0m"
 BLUE = "\033[1;34m"
 GREEN = "\033[1;32m"
@@ -9,16 +11,21 @@ LEFT = 0
 RIGHT = 1
 
 
-# Game parameters
-
-WIDTH = 2.5
-HEIGHT = 1
-
-PADWIDTH = 0.3
-PADMINIMUM = 0.07
-PADSHRINK = 0.04
-
 FPS = 60
 DELTATIME = 1.0 / FPS
 
-MAX_SCORE = 2
+# Controls how the game runs.
+# Should be (manually) kept in sync with LocalGame.js
+STATS = {
+    "initialPadSize": 0.2,
+    "initialPadSpeed": 0.2,
+    "padShrinkFactor": 0.95,
+    "padAccelerateFactor": 1.1,
+
+    "initialBallSpeed": 0.4,
+    "ballAccelerateFactor": 1.1,
+    "redirectionFactor": 1.5,
+    "maxAngleDeg": 45.0,
+
+    "maxScore": 5
+}
