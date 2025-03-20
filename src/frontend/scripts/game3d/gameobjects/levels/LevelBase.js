@@ -41,14 +41,12 @@ export default class LevelBase extends THREE.Scene {
 	}
 
 	pause(time) {
-		console.log(`Level paused ( ${time}s )`);  //TODO Remove log LevelBase.pause
 		this.#isPaused = true;
 	}
 
 	unpause() {
 		if (this.#isPaused != false) {
 			this.#isPaused = false;
-			console.log(`Level unpaused`);  //TODO Remove log LevelBase.unpause
 			return true;
 		}
 		return false;

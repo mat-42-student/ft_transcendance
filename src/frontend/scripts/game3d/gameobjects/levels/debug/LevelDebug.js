@@ -9,6 +9,7 @@ import DebugScoreIndicator from './DebugScoreIndicator.js';
 import SceneOriginHelper from '../../utils/SceneOriginHelper.js';
 import BoardAnchor from '../../utils/BoardAnchor.js';
 import TextMesh from '../../utils/TextMesh.js';
+import DebugPauseText from './DebugPauseText.js';
 
 
 export default class LevelDebug extends LevelBase {
@@ -118,13 +119,13 @@ export default class LevelDebug extends LevelBase {
 
 	pause(time) {
 		super.pause(time);
-		//TODO show something on screen
+		this.add(new DebugPauseText('Ready...', time));
 	}
 
 
 	unpause() {
 		if (super.unpause()) {
-			//TODO show something on screen
+			this.add(new DebugPauseText('Go!', 0.5));
 		}
 	}
 
