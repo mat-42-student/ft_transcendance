@@ -116,9 +116,16 @@ export default class LevelDebug extends LevelBase {
 	}
 
 
-	wait(time) {
-		super.wait(time);
+	pause(time) {
+		super.pause(time);
 		//TODO show something on screen
+	}
+
+
+	unpause() {
+		if (super.unpause()) {
+			//TODO show something on screen
+		}
 	}
 
 }

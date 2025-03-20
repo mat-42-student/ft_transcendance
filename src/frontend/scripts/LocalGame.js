@@ -63,6 +63,7 @@ export class LocalGame extends GameBase {
         this.waitTime = Math.max(0, this.waitTime - delta);
 
         if (this.waitTime <= 0) {
+            if (this.level)  this.level.unpause();
             this.movePaddles(delta);
             this.moveBall(delta);
         }
@@ -293,10 +294,9 @@ export class LocalGame extends GameBase {
     }
 
     pause() {
-        const time = 1000;
-        this.waitTime = time;
+        this.waitTime = 1;
         if (this.level) {
-            this.level.wait(time);
+            this.level.pause(this.waitTime);
         }
     }
 

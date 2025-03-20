@@ -40,9 +40,22 @@ export default class LevelBase extends THREE.Scene {
 		// because child classes call super.dispose()
 	}
 
-	wait(time) {
+	pause(time) {
 		// Override this
-		console.log(`LevelBase.wait( time: ${time}s )`);
+		console.log(`Level paused ( ${time}s )`);
+		this.#isPaused = true;
 	}
+
+	unpause() {
+		if (this.#isPaused != false) {
+			this.#isPaused = false;
+			console.log(`Level unpaused`);
+			return true;
+		}
+		return false;
+	}
+
+
+	#isPaused = false;
 
 }
