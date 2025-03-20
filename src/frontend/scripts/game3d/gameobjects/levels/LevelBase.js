@@ -1,33 +1,43 @@
 import * as THREE from 'three';
-import global from 'global';
-import engine from 'engine';
+import { state } from "../../../main.js";
+import SmoothCamera from '../camera/SmoothCamera.js';
 
 
-export default class LevelBase {
+export default class LevelBase extends THREE.Scene {
 
-	/** @type {CameraStats[]} */
-	cameras;
+	/** @type {SmoothCamera} */
+	smoothCamera;
+
+	boardSize = new THREE.Vector2(1, 1);
+
+	/** Null this to skip auto view selection, and set data directly on {@link smoothCamera}. */
+	views = {
+		position: [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()],
+		quaternion: [new THREE.Quaternion(), new THREE.Quaternion(), new THREE.Quaternion()],
+		fov: [NaN, NaN, NaN],
+	};
+
+
+	onAdded() {
+		this.smoothCamera = new SmoothCamera();
+		this.add(this.smoothCamera);
+	}
 
 
 	onFrame(delta, time) {
-		{  // Automatic camera switching
-			const idx = global.game.focusedPlayerIndex >= 0 ? global.game.focusedPlayerIndex : 2;
-			const selectedCamera = this.cameras[idx];
+		if (this.views != null) {
+			const camIdx = state.isPlaying ? state.gameApp.side : 2;
 
-			engine.cameraTarget.position.copy(selectedCamera.position);
-			engine.cameraTarget.quaternion.copy(selectedCamera.quaternion);
-			engine.cameraTarget.fov = selectedCamera.fov;
+			this.smoothCamera.position.copy(this.views.position[camIdx]);
+			this.smoothCamera.quaternion.copy(this.views.quaternion[camIdx]);
+			this.smoothCamera.fov = this.views.fov[camIdx];
 		}
 	}
 
 
-	/** Override this */
-	dispose() {}
+	dispose() {
+		// do nothing, i just want the method to exist in case i need it later,
+		// because child classes call super.dispose()
+	}
 
-
-	static CameraStats = class {
-		position = new THREE.Vector3();
-		quaternion = new THREE.Quaternion();
-		fov = NaN;
-	};
 }
