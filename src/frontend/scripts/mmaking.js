@@ -526,7 +526,7 @@ export class Mmaking
 			else if (data.body.tournament)
 			{
 				this.btnSearchTournamentActive = false;
-				this.btnsearchRandomGameisActive = false;
+				this.btnsearchRandomisActive = false;
 			}
 		}
 		// Routing to communication mode Invite

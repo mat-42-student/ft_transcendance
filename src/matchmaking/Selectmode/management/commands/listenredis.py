@@ -384,13 +384,11 @@ class Command(BaseCommand):
 
                 if (len(gamer.guests) == 0):
                     salonsTodelete.append(salon)
-        print(f"len salonToDelete: {len(salonsTodelete)}")
         for salon in salonsTodelete:
             try:
                 self.salons['invite'].remove(salon)
             except Exception as e:
                 print(f'Delete salon by DeleteEveryWhereGuestAndHost failed: {e}')
-        print(f'Length self.salon[invite]: {len(self.salons['invite'])}')
 
 
     def createSalonInvite(self, type_game, host):
@@ -850,8 +848,11 @@ class Command(BaseCommand):
                 await self.endGame(game)
         else:
             await self.endGame(game)
+            
+            
         
     async def endGame(self, game):
+        print(f'EndGame is started')
         tournament = await sync_to_async(getattr)(game, 'tournament')
         gameInCache = None
         if (tournament is not None):
@@ -879,7 +880,7 @@ class Command(BaseCommand):
                     'body':{
                         'cancel': True,
                         'invite': False,
-                        'tournament': True
+                        'tournament': True,
                     }
                 }
                 await self.redis_client.publish(self.channel_front, json.dumps(data))
