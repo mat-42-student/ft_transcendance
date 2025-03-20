@@ -87,6 +87,9 @@ export class WebGame extends GameBase {
                 wg.scores[1] = data.rscore;
             }
             if (data.action == "wait") {
+                if (state.gameApp.level) {
+                    state.gameApp.level.wait(Number(data.time));
+                }
             }
             if (data.action == "disconnect") {
                 wg.close();

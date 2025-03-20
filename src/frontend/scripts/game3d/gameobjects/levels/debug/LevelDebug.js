@@ -115,4 +115,10 @@ export default class LevelDebug extends LevelBase {
 		if (this.textMaterial) this.textMaterial.dispose();
 	}
 
+
+	wait(time) {
+		super.wait(time);
+		//TODO show something on screen
+	}
+
 }

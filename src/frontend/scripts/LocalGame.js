@@ -35,6 +35,7 @@ export class LocalGame extends GameBase {
 
         this.isCPU = isCPU;
         this.cpuTarget = 0;
+        this.waitTime = 0;
 
         // game simulation stats - might want to keep these numbers synced with web game
         this.ballSpeed = STATS.initialBallSpeed;
@@ -53,13 +54,18 @@ export class LocalGame extends GameBase {
         state.engine.scene = this.level;
 
         //TODO wait for level to finish loading before continuing
+        this.pause();
         this.recenter();
         this.cpuDecide();
     }
 
 	frame(delta, time) {
-        this.movePaddles(delta);
-        this.moveBall(delta);
+        this.waitTime = Math.max(0, this.waitTime - delta);
+
+        if (this.waitTime <= 0) {
+            this.movePaddles(delta);
+            this.moveBall(delta);
+        }
 
         super.frame(delta, time);
 	}
@@ -110,6 +116,7 @@ export class LocalGame extends GameBase {
         this.paddleSpeeds[1] = this.paddleSpeeds[0] *= STATS.padAccelerateFactor;
 
         this.cpuDecide();
+        this.pause();
     }
 
     cpuDecide(flip = false) {
@@ -283,6 +290,14 @@ export class LocalGame extends GameBase {
             return;
         }
         this.newRound();
+    }
+
+    pause() {
+        const time = 1000;
+        this.waitTime = time;
+        if (this.level) {
+            this.level.wait(time);
+        }
     }
 
     /** @param {boolean} isEndingBecauseCancelled */
