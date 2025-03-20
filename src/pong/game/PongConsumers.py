@@ -53,16 +53,23 @@ class PongConsumer(AsyncWebsocketConsumer):
             print(e)
 
     async def wait_for_opponent(self):
-        await self.redis_client.incr(f"game_{self.game_id}_players")
-        await self.redis_client.expire(f"game_{self.game_id}_players", self.WAITING_FOR_OPPONENT)
+        try:
+            key = f"ping{self.game_id}"
+            await self.redis_client.incr(key)
+            await self.redis_client.expire(key, self.WAITING_FOR_OPPONENT)
+        except Exception as e:
+            print("redis incr key: ", key, "exception: ", e)
+            await self.kick(message="Error while waiting for opponent")
+            return
         start_time = time.time()
         while time.time() - start_time < self.WAITING_FOR_OPPONENT:
-            nb_players = await self.redis_client.get(f"game_{self.game_id}_players")
-            # print(f"Here {self.player_name}, waiting for opponent on game {self.game_id}. Currently {nb_players} players in lobby")
+            try:
+                nb_players = await self.redis_client.get(key)
+            except Exception as e:
+                print(e)
             if nb_players == '1':
                     self.master = True
             elif nb_players == '2':
-                    print(f"{GREEN}Opponent found{RESET}")
                     return
             await asleep(0.5)
         await self.kick(message="No opponent found")
