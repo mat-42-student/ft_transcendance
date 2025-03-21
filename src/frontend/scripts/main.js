@@ -69,24 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (refreshButton) {
-        refreshButton.addEventListener('click', async (e) => {
-            e.preventDefault();
-            state.client.globalRender();
-        });
-    }
-
-    if (playButton) {
-        playButton.addEventListener('click', async (e) => {
-            e.preventDefault();
-            // if (!state.gameApp)
-
-            state.gameApp = new WebGame('debug');
-            state.gameApp.launchGameSocket();
-            console.log('hello')
-        });
-    }
-
     if (closeButton) {
         closeButton.addEventListener('click', closeDynamicCard);
     }

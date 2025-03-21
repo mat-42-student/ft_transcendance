@@ -101,22 +101,20 @@ class Command(BaseCommand):
         user_id = data['header']['id']
         friends_data = self.get_friend_list(user_id)
         if not friends_data:
-            # print(f"No friends found for user: {user_id}")
             await self.update_status(user_id, data['body']['status'])
             return
         friends = [item['id'] for item in friends_data]
         if data['body']['status'] == 'info': # User's first connection, get all friends status
             await self.send_me_my_friends_status(user_id, friends)
-        await self.update_status(user_id, data['body']['status'])
-        for friend in friends:
-            if self.user_status.get(friend, "offline") != 'offline':
-                await self.send_my_status(user_id, friend)
+        else:
+            await self.update_status(user_id, data['body']['status'])
+            for friend in friends:
+                if self.user_status.get(friend, "offline") != 'offline':
+                    await self.send_my_status(user_id, friend)
 
     async def update_status(self, user_id, status):
         """ Update self.user_status map.\n
         If user was pending and goes offline, we have to report this to mmaking container """
-        if status == 'info':
-            status = 'online' # user wanted infos but is online
         if status == "offline" and self.user_status.get(user_id) == "pending":
             await self.redis_client.publish(self.REDIS_GROUPS['info'], json.dumps({
                 "user_id": user_id,

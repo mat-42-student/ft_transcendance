@@ -36,7 +36,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         except Exception as e:
             print(f"Connexion to redis error : {e}")
         # await self.get_friends_status()
-        ## await self.send_online_status('online')
+        await self.send_online_status('online')
 
     async def connect_to_redis(self):
         try:
