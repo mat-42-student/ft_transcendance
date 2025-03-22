@@ -2,12 +2,7 @@ import os
 
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    '.42mulhouse.fr', # All subdomains of 42mulhouse.fr
-    'social',
-]
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 

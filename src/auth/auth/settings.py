@@ -10,12 +10,7 @@ SECRET_KEY = 'django-insecure-r)*s-=2l!4jiwy_qk5xk+s)s9@l*$c8fb@!1k#!@u_nh7(yq=2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    '.42mulhouse.fr', # All subdomains of 42mulhouse.fr
-    'auth',
-]
+ALLOWED_HOSTS = ['*']
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
@@ -71,8 +66,8 @@ OAUTH2_PROVIDER = {
 
 # OAuth 2.0 Authorization Code grant
 OAUTH2_ACF_REDIRECT_URI = 'https://localhost:3000/api/v1/auth/oauth/callback/'
-OAUTH2_ACF_CLIENT_ID = 'u-s4t2ud-42cc8fc914c6cc052826b177e11fa51f02e32acc8ffb2601fe88a36f65e4035b'
-OAUTH2_ACF_CLIENT_SECRET = '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'
+OAUTH2_ACF_CLIENT_ID = 'u-s4t2ud-ea3f761522afd081f4554a3e4e918d5a3e302eac00305d8310ea954c32b69368'
+OAUTH2_ACF_CLIENT_SECRET = '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'
 
 ROOT_URLCONF = 'auth.urls'
 

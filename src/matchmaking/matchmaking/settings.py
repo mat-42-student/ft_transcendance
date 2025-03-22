@@ -13,12 +13,7 @@ SECRET_KEY = 'django-insecure-k^yw982$m!331%$9)krnpi=32#-&vgm9qom02)&x+hfnspah09
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    '.42mulhouse.fr', # All subdomains of 42mulhouse.fr
-    'matchmaking',
-]
+ALLOWED_HOSTS = ['*']
 
 # settings.py
 
