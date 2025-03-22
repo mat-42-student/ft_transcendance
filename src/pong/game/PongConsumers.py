@@ -16,6 +16,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     # Anti-flood system
     MESSAGE_LIMIT = 20 # each player input counts 2 (keydown and keyup)
     TIME_WINDOW = 1 # seconds
+    UNMUTE_TIME = 5 # seconds
     MAX_MESSAGE_SIZE = 50
     WAITING_FOR_OPPONENT = 10 # seconds
 
@@ -30,6 +31,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.game = None
         self.side = None
         self.room_group_name = None
+        self.mute = False
         self.public_key = None
         self.redis_client = None
         self.pubsub = None
@@ -165,15 +167,21 @@ class PongConsumer(AsyncWebsocketConsumer):
         current_time = time.time()
         self.message_timestamps.append(current_time)
         if len(self.message_timestamps) >= self.MESSAGE_LIMIT:
-            first_timestamp = self.message_timestamps[0]
-            if current_time - first_timestamp <= self.TIME_WINDOW:
+            if current_time - self.message_timestamps[0] <= self.TIME_WINDOW:
                 return True
         return False
+
+    def unmute_if_expired(self):
+        if self.message_timestamps[0] + self.UNMUTE_TIME < time.time():
+            self.mute = False
 
     # Receive message from WebSocket: immediate publish into channels lobby
     async def receive(self, text_data=None, bytes_data=None):
         if await self.user_flooding():
-            await self.kick(message="Flooding")
+            self.mute = True
+            return
+        if self.mute:
+            self.unmute_if_expired()
             return
         data = await self.load_valid_json(text_data)
         if not (data):
@@ -197,7 +205,7 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     async def load_valid_json(self, data):
         if len(data.encode("utf-8")) > self.MAX_MESSAGE_SIZE:
-            await self.kick(1009, "Message too large")
+            self.mute = True
             return
         try:
             data = json.loads(data)
@@ -231,18 +239,19 @@ class PongConsumer(AsyncWebsocketConsumer):
         if data["action"] == "info":
             return await self.send(json.dumps(data))
         if data["action"] == "wannaplay!":
+            print("wannaplay: ", data)
             return await self.wannaplay(data.get("id"), data.get("username"))
 
     async def wannaplay(self, opponent_id, opponent_name):
+        # print(f"{GREEN}Player {self.player_id}({self.player_name}) wants to play with {opponent_id}({opponent_name}){RESET}")
         self.nb_players += 1
-        if opponent_id != self.player_id:
-            if self.player_id < opponent_id:
-                self.master = True
-        if self.nb_players != 2:
+        if self.player_id < opponent_id:
+            self.master = True
+            self.opponent_id = opponent_id
+            self.opponent_name = opponent_name
+        if self.nb_players != 2 or not self.master:
             return
-        if not self.master or self.game:
-            return
-        self.game = Game(self.game_id, self.player_id, self.player_name, opponent_id, opponent_name, self)
+        self.game = Game(self.game_id, self.player_id, self.player_name, self.opponent_id, self.opponent_name, self)
         json_data = {
             "action" : "init",
             "dir" : self.game.ball_speed,
@@ -324,6 +333,6 @@ class PongConsumer(AsyncWebsocketConsumer):
         score = self.game.get_score()
         await self.redis_client.publish("info_mmaking", json.dumps(score))
 
-    async def send_false_score(self, score1, score2):
-        score = self.game.get_score()
-        await self.redis_client.publish("info_mmaking", json.dumps(score))
+    # async def send_false_score(self, score1, score2):
+    #     score = self.game.get_score()
+    #     await self.redis_client.publish("info_mmaking", json.dumps(score))
