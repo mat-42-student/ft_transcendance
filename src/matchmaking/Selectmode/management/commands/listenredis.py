@@ -20,7 +20,6 @@ from .Player import Player
 from .Salon import Salon
 from .Guest import Guest
 from .Random1vs1 import Random1vs1
-from .utils import get_ccf_token
 
 class Command(BaseCommand):
     help = "Commande pour écouter un canal Redis avec Pub/Sub"   
@@ -193,7 +192,7 @@ class Command(BaseCommand):
         if (not player):
             return
         
-        token = get_ccf_token_cache()
+        token = await get_ccf_token_cache()
 
         # Setup token to request endpoints api
         player.token = token

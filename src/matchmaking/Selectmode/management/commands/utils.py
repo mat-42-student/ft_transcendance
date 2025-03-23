@@ -1,33 +1,30 @@
 from django.core.cache import cache
 import os
-import requests
+from redis.asyncio import Redis
+import httpx
 
-def get_ccf_token():
+async def get_ccf_token():
     url = os.getenv('OAUTH2_CCF_TOKEN_URL')
     client_id = os.getenv('OAUTH2_CCF_CLIENT_ID')
     client_secret = os.getenv('OAUTH2_CCF_CLIENT_SECRET')
 
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-    data = {
-        'grant_type': 'client_credentials',
-        'client_id': client_id,
-        'client_secret': client_secret
-    }
-
-    try:
-        response = requests.post(url, headers=headers, data=data)
+    async with httpx.AsyncClient() as client:
+        data = {
+            "grant_type": "client_credentials",
+            "client_id": client_id,
+            "client_secret": client_secret
+        }
+        response = await client.post(url, data=data)
         response.raise_for_status()
         token_data = response.json()
         return token_data['access_token'], token_data.get('expires_in', 3600)
-    except requests.exceptions.RequestException as e:
-        print(f"Error in request : {e}")
 
-def get_ccf_token_cache():
-    token = cache.get('oauth_token')
+async def get_ccf_token_cache():
+    redis = Redis.from_url("redis://redis:6379", decode_responses=True)
+    token = await redis.get('oauth_token')
     if token:
         return token
     else:
-        # Fetch new token from auth service
-        new_token, expires_in = get_ccf_token()
-        cache.set('oauth_token', new_token, expires_in - 60)
+        new_token, expires_in = await get_ccf_token()
+        await redis.setex('oauth_token', expires_in - 60, new_token)
         return new_token

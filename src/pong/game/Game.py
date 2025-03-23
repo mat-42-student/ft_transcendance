@@ -42,7 +42,7 @@ class Game:
         self.ball_speed = STATS['initialBallSpeed']
         self.pad_speed = STATS['initialPadSpeed']
         self.recenter()
-        print(f"{GREEN}New game {game_id} launched opposing **{self.players[LEFT].name}({self.players[LEFT].id})** vs {self.players[RIGHT].name}({self.players[RIGHT].id}{RESET}")
+        print(f"{GREEN}New game {game_id} launched opposing **{self.players[LEFT].name}({self.players[LEFT].id})** vs {self.players[RIGHT].name}({self.players[RIGHT].id}){RESET}")
 
     def recenter(self):
         self.ball_pos = [0, 0]

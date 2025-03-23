@@ -7,17 +7,23 @@ from datetime import datetime, timezone
 from urllib.parse import parse_qs
 import jwt
 import requests
+import time
+from collections import deque
 
 class GatewayConsumer(AsyncJsonWebsocketConsumer):
     """Main websocket"""
+    # Anti-flood system
+    MESSAGE_LIMIT = 10 # per second
+    TIME_WINDOW = 1 # seconds
+    MAX_MESSAGE_SIZE = 50
 
     async def connect(self):
+        self.message_timestamps = deque(maxlen=self.MESSAGE_LIMIT) # collecting message's timestamp
         self.connected = False
         self.consumer_id = None
         self.get_user_infos()
         if self.consumer_id is None:
-            print("User is not authenticated. Aborting")
-            await self.close(code=1002)
+            self.kick(message="Unauthentified")
             return
         try:
             await self.accept()
@@ -29,8 +35,8 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             await self.connect_to_redis()
         except Exception as e:
             print(f"Connexion to redis error : {e}")
-        await self.get_friends_status()
-        # await self.send_online_status('online')
+        # await self.get_friends_status()
+        await self.send_online_status('online')
 
     async def connect_to_redis(self):
         try:
@@ -41,6 +47,16 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         except Exception as e:
             print(e)
             raise Exception
+
+    async def user_flooding(self):
+        current_time = time.time()
+        self.message_timestamps.append(current_time)
+        if len(self.message_timestamps) >= self.MESSAGE_LIMIT:
+            first_timestamp = self.message_timestamps[0]
+            if current_time - first_timestamp <= self.TIME_WINDOW:
+                await self.kick(message="Flooding")
+                return True
+        return False
 
     async def disconnect(self, close_code):
         if not self.connected:
@@ -91,8 +107,9 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, data):
         """Data incoming from client ws => publish to concerned redis group.\n
         Possible 'service' values are 'mmaking', 'chat', 'social'"""
-        if not self.valid_json_header(data):
-            print(f"Data error (json) : {data}")
+        if await self.user_flooding():
+            return
+        if not await self.valid_json_header(data):
             return
         group = REDIS_GROUPS.get(data['header']['service'])
         if group:
@@ -102,16 +119,32 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             data['body']['timestamp'] = datetime.now(timezone.utc).isoformat()
             await self.forward_with_redis(data, group)
             return
-        print("Unknown recipient, message lost")
+        await self.kick()
 
-    def valid_json_header(self, data):
+    async def kick(self, close_code=1008, message="kick"):
+        print(self.player_name, message)
+        try:
+            await self.send(text_data=dumps({"action": "disconnect"}))
+        except:
+            pass
+        finally:
+            await self.close(code=close_code)
+
+    async def valid_json_header(self, data):
+        if len(data) > self.MAX_MESSAGE_SIZE:
+            await self.kick(1009, "Message too large")
+            return False
         if not isinstance(data, dict):
+            await self.kick(code=1003, message="Unsupported data")
             return False
         if "header" not in data or "body" not in data:
+            await self.kick(code=1003, message="Unsupported data")
             return False
         if not isinstance(data['header'], dict):
+            await self.kick(code=1003, message="Unsupported data")
             return False
         if "service" not in data['header']:
+            await self.kick(code=1003, message="Unsupported data")
             return False
         return True
 
