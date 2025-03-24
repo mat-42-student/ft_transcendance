@@ -62,7 +62,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             await self.redis_client.incr(key)
             await self.redis_client.expire(key, self.WAITING_FOR_OPPONENT)
         except Exception as e:
-            # await self.send_score()            
+            # await self.send_score()
             await self.kick(message="Error while waiting for opponent")
             return
         start_time = time.time()
