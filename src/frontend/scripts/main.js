@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', initApp);
 
 // Fonction d'initialisation
 async function initApp() {
-    // await state.client.refreshSession();  // Attendre que la session soit restaurée
+    await state.client.refreshSession();  // Attendre que la session soit restaurée
     navigator.handleHashChange();  // Ensuite seulement, traiter le changement de hash
     setupEventListeners();
 }
