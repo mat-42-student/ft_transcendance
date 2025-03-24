@@ -12,7 +12,7 @@ volumes:
   postgres_data:
   media:
   static_volume:
-  shared_credentials:
+  # shared_credentials:
 
 services:
   # django-base:
@@ -29,7 +29,7 @@ services:
     volumes:
       - ./auth:/app
       - static_volume:/app/staticfiles
-      - shared_credentials:/app/shared_credentials
+      # - shared_credentials:/app/shared_credentials
     depends_on:
       postgres:
         condition: service_healthy
@@ -55,7 +55,7 @@ services:
     volumes:
       - ./users:/app
       - ./media:/media
-      - shared_credentials:/app/shared_credentials
+      # - shared_credentials:/app/shared_credentials
     env_file:
       - .env
     networks:
@@ -87,7 +87,7 @@ services:
         condition: service_started 
     volumes:
       - ./chat/:/app
-      - shared_credentials:/app/shared_credentials
+      # - shared_credentials:/app/shared_credentials
     networks:
       - db-network
       - redis-network
@@ -103,7 +103,7 @@ services:
       - .env
     volumes:
       - ./social_project/:/app
-      - shared_credentials:/app/shared_credentials
+      # - shared_credentials:/app/shared_credentials
     depends_on:
       redis:
         condition: service_started 
@@ -144,7 +144,7 @@ services:
       - .env
     volumes:
       - ./matchmaking:/app
-      - shared_credentials:/app/shared_credentials
+      # - shared_credentials:/app/shared_credentials
     depends_on:
       postgres:
         condition: service_healthy

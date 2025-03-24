@@ -27,13 +27,13 @@ from django.shortcuts import redirect
 from django.http import HttpResponse
 from django.core.cache import cache
 
-class SecureAPIView(APIView):
-    authentication_classes = [OAuth2Authentication]
-    permission_classes = [TokenHasScope]
-    required_scopes = ['read']
+# class SecureAPIView(APIView):
+#     authentication_classes = [OAuth2Authentication]
+#     permission_classes = [TokenHasScope]
+#     required_scopes = ['read']
 
-    def get(self, request):
-        return Response({"message": "Authenticated via OAuth2 CCF"})
+#     def get(self, request):
+#         return Response({"message": "Authenticated via OAuth2 CCF"})
 class PublicKeyView(APIView):
     permission_classes = [AllowAny]
 
@@ -65,7 +65,7 @@ class VerifyTokenView(APIView):
            raise AuthenticationFailed('Missing token!')
 
         try:
-            jwt.decode(access_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
+            jwt.decode(access_token, settings.FRONTEND_JWT["PUBLIC_KEY"], algorithms=[settings.FRONTEND_JWT["ALGORITHM"]])
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Refresh token expired!')
         except jwt.InvalidTokenError:
@@ -114,8 +114,8 @@ class LoginView(APIView):
             'typ': "user"
         }
 
-        access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
-        refresh_token = jwt.encode(refresh_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+        access_token = jwt.encode(access_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
+        refresh_token = jwt.encode(refresh_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
 
         response = Response()
         response.set_cookie(
@@ -149,7 +149,7 @@ class RefreshTokenView(APIView):
         if not old_refresh_token:
             raise AuthenticationFailed('Refresh token missing!')
         try:
-            old_data = jwt.decode(old_refresh_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
+            old_data = jwt.decode(old_refresh_token, settings.FRONTEND_JWT["PUBLIC_KEY"], algorithms=[settings.FRONTEND_JWT["ALGORITHM"]])
             user = User.objects.filter(id=old_data.get("id")).first()
             if not user:
                 raise AuthenticationFailed('User not found!')
@@ -183,8 +183,8 @@ class RefreshTokenView(APIView):
             'typ': "user"
         }
 
-        new_access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
-        new_refresh_token = jwt.encode(refresh_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+        new_access_token = jwt.encode(access_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
+        new_refresh_token = jwt.encode(refresh_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
 
         response = Response()
         response.set_cookie(
@@ -364,7 +364,7 @@ class OAuthCallbackView(APIView):
             'typ': "user"
         }
 
-        refresh_token = jwt.encode(refresh_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+        refresh_token = jwt.encode(refresh_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
 
         html_content = f"""
                 <!DOCTYPE html>

@@ -19,7 +19,7 @@ FROM django-base
 
 WORKDIR /app
 
-RUN mkdir -p /app/shared_credentials
+# RUN mkdir -p /app/shared_credentials
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["gunicorn", "--reload", "--bind", "0.0.0.0:8000", "users.wsgi:application"]
