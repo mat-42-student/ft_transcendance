@@ -1,7 +1,7 @@
 import { navigator } from './nav.js';
 import { Client } from './apps/Client.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
-import { GameBase } from './GameBase.js';
+import { GameBase } from './apps/GameBase.js';
 import { Input } from './game3d/Input.js';
 import { Engine } from './game3d/Engine.js';
 import { Clock } from './Clock.js';
