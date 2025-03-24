@@ -22,6 +22,7 @@ export class Client {
             console.error(error);
             throw error;
         }
+        localStorage.setItem('cookieSet', true);
         this.renderProfileBtn();
         if (!this.state.mainSocket) {
             this.state.mainSocket = new MainSocket();
@@ -45,6 +46,7 @@ export class Client {
                 body: JSON.stringify({}),
             });
             if (!response.ok) throw new Error('Logout failed');
+            localStorage.removeItem('cookieSet');
             window.location.hash = '#home';
         } catch (error) {
             console.error('Error:', error);
@@ -73,6 +75,8 @@ export class Client {
     }
 
     async refreshSession(location = null) {
+        if (!localStorage.getItem('cookieSet'))
+            return;
         try {
             const response = await fetch('api/v1/auth/refresh/', {
                 method: 'POST',

@@ -25,7 +25,7 @@ state.clock = new Clock();
 state.engine.scene = new LevelIdle();
 
 state.client.setState(state);
-window.state = state; // Debugging purpose 
+window.state = state; // Debugging purpose
 
 document.addEventListener('DOMContentLoaded', initApp);
 
@@ -46,9 +46,6 @@ function setupEventListeners() {
 
     setupSearchInput();
 }
-
-if (localStorage.getItem('isCookie'))
-    await state.client.refreshSession('#profile');
 
 function addClickEvent(selector, callback) {
     const element = document.getElementById(selector) || document.querySelector(selector);
