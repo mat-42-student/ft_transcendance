@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import * as UTILS from '../../../utils.js';
-import { state } from '../../../main.js';
 import LevelBase from './LevelBase.js';
 import SceneOriginHelper from '../utils/SceneOriginHelper.js';
 

@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { state } from '../../../../main.js';
 import LevelBase from '../LevelBase.js';
 import DebugBall from './DebugBall.js';
 import DebugPaddle from './DebugPaddle.js';

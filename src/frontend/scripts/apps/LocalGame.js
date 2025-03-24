@@ -1,7 +1,7 @@
-import { state } from "./main.js";
-import * as UTILS from "./utils.js";
+import { state } from "../main.js";
+import * as UTILS from "../utils.js";
 import {MathUtils, Vector2} from 'three';
-import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
+import * as LEVELS from '../game3d/gameobjects/levels/_exports.js';
 import { GameBase } from "./GameBase.js";
 
 
