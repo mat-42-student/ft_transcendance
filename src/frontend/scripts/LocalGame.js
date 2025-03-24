@@ -53,10 +53,8 @@ export class LocalGame extends GameBase {
         this.level = new (LEVELS.pickRandomLevel())();  // randomly select class, then construct it
         state.engine.scene = this.level;
 
-        //TODO wait for level to finish loading before continuing
         this.pause();
         this.recenter();
-        this.cpuDecide();
     }
 
 	frame(delta, time) {
@@ -64,6 +62,11 @@ export class LocalGame extends GameBase {
 
         if (this.waitTime <= 0) {
             if (this.level)  this.level.unpause();
+
+            this.cpuDecideIn = Math.max(0, this.cpuDecideIn - delta);
+            if (this.cpuDecideIn === 0)
+                this.cpuDecide();
+
             this.movePaddles(delta);
             this.moveBall(delta);
         }
@@ -105,6 +108,7 @@ export class LocalGame extends GameBase {
         this.ballPosition = new Vector2(0, 0);
         this.ballDirection = new Vector2(this.roundStartSide ? -1 : 1, 1).normalize()
         this.paddlePositions[0] = this.paddlePositions[1] = 0;
+        this.cpuDecideIn = 0.1;
     }
 
 
@@ -116,23 +120,22 @@ export class LocalGame extends GameBase {
         this.ballSpeed *= STATS.ballAccelerateFactor;
         this.paddleSpeeds[1] = this.paddleSpeeds[0] *= STATS.padAccelerateFactor;
 
-        this.cpuDecide();
         this.pause();
     }
 
-    cpuDecide(flip = false) {
-        let isBallComingTowardsBot = this.ballDirection.x < 0;
-        if (flip) isBallComingTowardsBot = !isBallComingTowardsBot;
-        if (isBallComingTowardsBot)
+    cpuDecide() {
+        if (this.ballDirection.x < 0)
             this.cpuFindTarget();
         else
             this.cpuTarget = 0;
     }
 
     cpuFindTarget() {
-        // Basically a direct port of https://www.desmos.com/calculator/revv9si2to
-        let a = this.ballPosition;
+        // This function is a port of https://www.desmos.com/calculator/revv9si2to
+
+        let a = this.ballPosition.clone();
         let b = this.ballPosition.clone().add(this.ballDirection);
+
         let slope = (b.y - a.y) / (b.x - a.x)
         let offset = a.y - slope * a.x;
 
@@ -146,9 +149,8 @@ export class LocalGame extends GameBase {
         let squareWave = (x) => { return -Math.sign(mod(0.5 * slope * x + 0.5 * offset + 0.25, 1) - 0.5); };
         let triangleWave = (x) => { return sawWave(x) * squareWave(x); };
 
-        let wallX = this.level.boardSize.x / 2;
-        if (this.ballDirection.x < 0)
-            wallX *= -1;
+        // Assumes bot player is always player index 1
+        let wallX = -(this.level.boardSize.x / 2);
         this.cpuTarget = triangleWave(wallX);
     }
 
@@ -214,8 +216,7 @@ export class LocalGame extends GameBase {
                     break;
                 } else {
 
-                    // Flip argument because the ball direction has not been flipped yet
-                    this.cpuDecide(true);
+                    this.cpuDecideIn = 0.1;
 
                     const signedSide = collisionSide == 0 ? 1 : -1;
 
@@ -225,8 +226,10 @@ export class LocalGame extends GameBase {
                         -1,
                         1
                     );
-                    //TODO remove bounce accuracy log
-                    console.log(collisionSide ? 'Bot' : ' P1', 'Deviation from paddle center:', Math.round(hitPosition * 100), '%');
+
+                    const error = Math.round(Math.abs(hitPosition) * 100);
+                    if (this.isCPU && collisionSide == 1 && error > 50)
+                        console.warn('Bot accuracy low:', error, '% error.');
 
                     let angle = this.ballDirection.angle();
                     if (angle > UTILS.RAD180) {
