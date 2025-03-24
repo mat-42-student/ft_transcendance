@@ -26,6 +26,11 @@ const STATS = JSON.parse(`
 }
 `);
 
+// 0: perfect accuracy
+// 1: use the whole paddle (might miss)
+// >1: allow missing
+const __AI_MAX_ERROR = 0.5;
+
 
 export class LocalGame extends GameBase {
 
@@ -63,7 +68,8 @@ export class LocalGame extends GameBase {
         if (this.waitTime <= 0) {
             if (this.level)  this.level.unpause();
 
-            this.cpuDecideIn = Math.max(0, this.cpuDecideIn - delta);
+            if (this.cpuDecideIn != NaN)
+                this.cpuDecideIn = Math.max(0, this.cpuDecideIn - delta);
             if (this.cpuDecideIn === 0)
                 this.cpuDecide();
 
@@ -124,6 +130,7 @@ export class LocalGame extends GameBase {
     }
 
     cpuDecide() {
+        this.cpuDecideIn = NaN;
         if (this.ballDirection.x < 0)
             this.cpuFindTarget();
         else
@@ -152,6 +159,11 @@ export class LocalGame extends GameBase {
         // Assumes bot player is always player index 1
         let wallX = -(this.level.boardSize.x / 2);
         this.cpuTarget = triangleWave(wallX);
+
+        const randomizer = __AI_MAX_ERROR
+            * (this.paddleHeights[1] / 2)
+            * (Math.random() * 2 - 1);
+        this.cpuTarget += randomizer;
     }
 
     cpuSeekTarget() {
@@ -228,7 +240,7 @@ export class LocalGame extends GameBase {
                     );
 
                     const error = Math.round(Math.abs(hitPosition) * 100);
-                    if (this.isCPU && collisionSide == 1 && error > 50)
+                    if (this.isCPU && collisionSide == 1 && error > (__AI_MAX_ERROR*100 + 5))
                         console.warn('Bot accuracy low:', error, '% error.');
 
                     let angle = this.ballDirection.angle();
