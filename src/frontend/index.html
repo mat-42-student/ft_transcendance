@@ -93,7 +93,7 @@
                 <!-- Friend Requests Button -->
                 <div class="friend-requests">
                     <button class="btn-friend-requests" type="button">Friend Requests</button>
-                    <span class="request-count">0</span>
+                    <span id="pending-count" class="request-count"></span>
                     <!-- (JS) Dynamically change on pending requests for authentified User -->
                 </div>
                 <!-- Friends List -->
@@ -120,7 +120,7 @@
         <div class="overlay"></div>
         <div class="card">
             <button id="close-dynamic-card" class="close-btn">X</button>
-            <div id="dynamic-card-content"></div> <!-- Dynamic content goes here -->
+            <div id="dynamic-card-content"></div>
         </div>
     </div>
 

@@ -1,8 +1,4 @@
 /* Injected form styles */
-#dynamic-card-content form {
-    margin: 20px 0;
-}
-
 #dynamic-card-content input {
     width: calc(100% - 20px);
     padding: 10px;

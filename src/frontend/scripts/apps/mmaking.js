@@ -1,5 +1,5 @@
-import { state } from './main.js';
-import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
+import { state } from '../main.js';
+import { initDynamicCard, closeDynamicCard } from '../components/dynamic_card.js';
 import { WebGame } from './WebGame.js';
 
 export class Mmaking

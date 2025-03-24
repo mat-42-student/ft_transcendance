@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import LevelBase from './game3d/gameobjects/levels/LevelBase.js';
-import { state } from './main.js';
+import LevelBase from '../game3d/gameobjects/levels/LevelBase.js';
+import { state } from '../main.js';
 
 
 export class GameBase {

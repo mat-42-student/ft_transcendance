@@ -1,137 +1,68 @@
-import { setupHomePage, setupProfilePage } from "./pages.js";
-import { closeDynamicCard, initDynamicCard } from './components/dynamic_card.js';
-import { isAuthenticated } from './api/auth.js';
+import { state } from './main.js';
+import { initHomePage, initProfilePage } from "./pages.js";
 import { updateAuthForm } from "./components/auth_form.js";
-import { state } from "./main.js";
+import { closeDynamicCard, initDynamicCard } from './components/dynamic_card.js';
 
-export async function handleHashChange() {
-    const cardContainer = document.getElementById('dynamic-card-container');
-    const hash = window.location.hash;
-    const isAuth = await isAuthenticated();
-    
-    if (hash == '#register' || hash == '#signin') { // si hash pour auth, check si carte activée, si oui update formulaire, sinon init 
-        if (isAuth) // redirection vers profile si authentifié
-            return goProfile();
-        
-        if (cardContainer.classList == 'hidden')
-            initDynamicCard('auth');
-        return updateAuthForm(hash);
-    } // Ajouter les cas possibles connus
-    
-    if (cardContainer.classList != 'hidden') { // fermer carte si hash de page
-        closeDynamicCard();
-        if (hash == '#home')
-            return goHome();
-        if (hash == '#profile')
-            return goProfile();
-    }
-    return;
-}
-
-export function setupNavigation() {
-    window.addEventListener('popstate', (e) => {
-        e.preventDefault();
-        handleHashChange(); // handleHashChange() remplace navigateTo() pour une meilleure navigation via l'historique
-    });
-}
-
-// remplace navigateTo() pour la partie #home
-export async function goHome() {
-    const mainContent = document.querySelector('.main-content');
-
-    if (!mainContent) return;
-
-    try {
-        const response = await fetch('./partials/home.html');
-        const html = await response.text();
-        document.querySelector('.main-content').innerHTML = html;
-
-        window.history.replaceState({}, '', `#home`);
-        setupHomePage();
-    } catch (error) {
-        console.error('Error loading page:', error);
-        return;
-    }
-    return;
-}
-
-// remplace navigateTo() pour la partie #profile -> plus simple, gère auth & nouvel affichage #profile -> fonctionne avec ou sans argument
-export async function goProfile(userId) {
-    const mainContent = document.querySelector('.main-content');
-
-    if (!mainContent) return;
-    const isAuth = await isAuthenticated();
-
-    if (!isAuth) {
-        window.history.replaceState({}, '', `#signin`);
-        return initDynamicCard('auth');
+class Navigator {
+    constructor() {
+        this.mainContent = document.querySelector('.main-content');
+        this.cardContainer = document.getElementById('dynamic-card-container');
+        window.addEventListener('popstate', () => this.handleHashChange());
     }
 
-    try {
-        const response = await fetch('./partials/profile.html');
-        const html = await response.text();
-        document.querySelector('.main-content').innerHTML = html;
+    async goToPage(page, userId = null) {
+        if (!this.mainContent) return;
 
-        // Attendre que le DOM ait bien pris en compte les changements
-        requestAnimationFrame(() => state.client.loadUserProfile(userId));
-        setupProfilePage();
-        window.history.replaceState({}, '', `#profile`);
-    } catch (error) {
-        console.error('Error loading page:', error);
-        return;
+        const pageFiles = {
+            home: { url: './partials/home.html', setup: initHomePage },
+            profile: { url: './partials/profile.html', setup: initProfilePage }
+        };
+
+        if (!pageFiles[page]) return console.error('Page not found:', page);
+
+        if (page === 'profile' && !(await state.client.isAuthenticated())) {
+            window.history.replaceState({}, '', `#signin`);
+            return initDynamicCard('auth');
+        }
+
+        try {
+            const response = await fetch(pageFiles[page].url);
+            const html = await response.text();
+            this.mainContent.innerHTML = html;
+
+            requestAnimationFrame(() => {
+                pageFiles[page].setup(userId);
+            });
+
+            window.history.replaceState({}, '', `#${page}`);
+        } catch (error) {
+            console.error('Error loading page:', error);
+        }
     }
-    return;
+
+    async handleHashChange() {
+        const hash = window.location.hash;
+        const isAuth = await state.client.isAuthenticated();
+
+        const pageMap = {
+            '#home': () => this.goToPage('home'),
+            '#profile': () => this.goToPage('profile')
+        };
+
+        // Gestion des cas d'authentification
+        if (hash === '#register' || hash === '#signin') {
+            if (isAuth) return pageMap['#profile'];
+            if (this.cardContainer.classList.contains('hidden')) initDynamicCard('auth');
+            return updateAuthForm(hash);
+        }
+
+        // Fermer la carte dynamique si on change de page
+        if (!this.cardContainer.classList.contains('hidden')) {
+            closeDynamicCard();
+        }
+
+        return (pageMap[hash] || pageMap['#home'])();
+    }
 }
 
-// const routes = {
-//     '#home': './partials/home.html',
-//     '#profile': './partials/profile.html',
-// };
-
-// export async function navigateTo(hash) {
-//     const mainContent = document.querySelector('.main-content');
-//     let route = routes[hash];
-
-//     if (!mainContent) return;
-
-//     const isAuth = await isAuthenticated();
-
-//     if (hash == '#profile') {
-//         if (isAuth == false) {
-//             window.history.replaceState({}, '', `#signin`);
-//             return initDynamicCard('auth');
-//         }
-
-//         try {
-//             const response = await fetch(route);
-//             const html = await response.text();
-//             document.querySelector('.main-content').innerHTML = html;
-
-//             await state.client.fetchUserProfile(); // Maj infos utilisateur après chargement de la page
-//         } catch (error) {
-//             console.error('Error loading page:', error);
-//             return;
-//         }
-
-//         window.history.replaceState({}, '', hash);
-//         setupProfilePage();
-//         return;
-//     }
-        
-//     try {
-//         const response = await fetch(route);
-//         const html = await response.text();
-//         mainContent.innerHTML = html;
-
-//         if(state.mmakingApp)
-//             state.mmakingApp.refresh_eventlisteners();
-
-//         if (state.gameApp) // for testing purpose, DELETE on branch dev
-//             state.gameApp.addEventlistener(); // for testing purpose, DELETE on branch dev
-//     } catch (error) {
-//         console.error('Error loading page:', error);
-//         return;
-//     }
-//     window.history.replaceState({}, '', hash);
-//     setupHomePage();
-// }
+export const navigator = new Navigator();
