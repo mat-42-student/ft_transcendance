@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import global from 'global';
+import { state } from "../../../../main.js";
 import ScoreIndicator from '../../gameplay/ScoreIndicator.js';
 import Cross2DHelper from '../..//utils/Cross2DHelper.js';
 
@@ -41,7 +41,7 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 		const boxMax = new THREE.Vector3(
 			-boxMin.x,
 			-boxMin.y,
-			SIZE * global.game.maxScore - half,
+			SIZE * 5 - half,
 		);
 
 		this.#material = new THREE.LineBasicMaterial({
@@ -61,24 +61,34 @@ export default class DebugScoreIndicator extends ScoreIndicator {
 	onFrame(delta, time) {
 		super.onFrame(delta, time);
 
-		this.#colorFlashInterpolator = Math.max(0, this.#colorFlashInterpolator - delta / 3);
-		this.#material.color.lerpColors(
-			new THREE.Color(0x444444),
-			new THREE.Color(0x44ff44),
-			this.#colorFlashInterpolator
-		);
+		if (this.visible) {
+			this.#colorFlashInterpolator = Math.max(0, this.#colorFlashInterpolator - delta / 3);
+			this.#material.color.lerpColors(
+				new THREE.Color(0x444444),
+				new THREE.Color(0x44ff44),
+				this.#colorFlashInterpolator
+			);
 
-		this.position.set(
-			this.#playerMult * (global.game.boardSize.x / 2 - CORNER_DISTANCE),
-			-SIZE / 2,
-			-global.game.boardSize.y / 2 + CORNER_DISTANCE
-		);
+			this.position.set(
+				this.#playerMult * (state.gameApp.level.boardSize.x / 2 - CORNER_DISTANCE),
+				-SIZE / 2,
+				-state.gameApp.level.boardSize.y / 2 + CORNER_DISTANCE
+			);
+		}
 	}
 
 
 	scoreChanged(score) {
 		super.scoreChanged(score);
-		this.#addScorePoint();
+		let missing = score - this.#addedCount;
+		if (missing < 0) {
+			this.clear();  // eeeeeeh whatever
+			this.#addedCount = 0;
+			missing = score;
+		}
+		for (let i = 0; i < missing; i++) {
+			this.#addScorePoint();
+		}
 		this.#colorFlashInterpolator = 1;
 	}
 

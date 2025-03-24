@@ -23,6 +23,7 @@ export class Client{
             console.error(error);
             throw error;
         }
+        localStorage.setItem('isCookie', true);
         // this.renderProfileBtn();
 		if (this.state.mainSocket == null)
 		{
@@ -55,7 +56,7 @@ export class Client{
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Logout failed');
             }
-            
+
             localStorage.removeItem('isCookie');
     
             window.location.hash = '#home';
@@ -121,7 +122,6 @@ export class Client{
                 throw new Error("Could not refresh token");
             }
             const data = await response.json();
-            localStorage.setItem('isCookie', true);
             try {
                 await this.login(data.accessToken);
             }

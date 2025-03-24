@@ -7,35 +7,33 @@ from asyncio import run as arun, sleep as asleep, create_task
 import os
 from django.conf import settings
 from django.core.cache import cache
+from redis.asyncio import Redis
+import httpx
 
-def get_ccf_token():
+async def get_ccf_token():
     url = os.getenv('OAUTH2_CCF_TOKEN_URL')
     client_id = os.getenv('OAUTH2_CCF_CLIENT_ID')
     client_secret = os.getenv('OAUTH2_CCF_CLIENT_SECRET')
 
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-    data = {
-        'grant_type': 'client_credentials',
-        'client_id': client_id,
-        'client_secret': client_secret
-    }
-
-    try:
-        response = requests.post(url, headers=headers, data=data)
+    async with httpx.AsyncClient() as client:
+        data = {
+            "grant_type": "client_credentials",
+            "client_id": client_id,
+            "client_secret": client_secret
+        }
+        response = await client.post(url, data=data)
         response.raise_for_status()
         token_data = response.json()
         return token_data['access_token'], token_data.get('expires_in', 3600)
-    except requests.exceptions.RequestException as e:
-        print(f"Error in request : {e}")
 
-def get_ccf_token_cache():
-    token = cache.get('oauth_token')
+async def get_ccf_token_cache():
+    redis = Redis.from_url("redis://redis:6379", decode_responses=True)
+    token = await redis.get('oauth_token')
     if token:
         return token
     else:
-        # Fetch new token from auth service
-        new_token, expires_in = get_ccf_token()
-        cache.set('oauth_token', new_token, expires_in - 60)
+        new_token, expires_in = await get_ccf_token()
+        await redis.setex('oauth_token', expires_in - 60, new_token)
         return new_token
 
 class Command(BaseCommand):
@@ -90,7 +88,7 @@ class Command(BaseCommand):
         # print(f"getting {data['body']}")
         # if self.recipient_exists(data['body']['to']):
         try:
-            if self.is_muted(data['header']['id'], data['body']['to']):
+            if await self.is_muted(data['header']['id'], data['body']['to']):
                 data['body']['message'] += f"You were muted by {data['body']['to']}"
             else:
                 data['body']['from'] = data['header']['id']
@@ -103,32 +101,33 @@ class Command(BaseCommand):
         print(f"Sending back : {data}")
         await self.redis_client.publish(self.group_name, json.dumps(data))
 
-    def is_muted(self, exp, recipient) -> bool :
+    async def is_muted(self, exp, recipient) -> bool :
         """is exp muted by recipient ? Raises an UserNotFoundException if recipient doesnt exist"""
 
-        token = get_ccf_token_cache()
+        token = await get_ccf_token_cache()
+
         url = f"http://users:8000/api/v1/users/{recipient}/blocks/"
         headers = {
             "Authorization": f"Bearer {token}",
         }
 
-        response = requests.get(url, headers=headers)
-
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                if data.get('error'):
-                    raise ValueError("Recipient not found")
-                blocked_users = data.get('blocked_users')
-                if blocked_users and exp in blocked_users:
-                  return True
-            except requests.exceptions.RequestException as e:
-                print(f"Error in request : {e}")
-            except ValueError as e:
-                print("JSON conversion error :", e)
-        else:
-            print(f"Request failed (status {response.status_code})")
-        return False
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, headers=headers)
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    if data.get('error'):
+                        raise ValueError("Recipient not found")
+                    blocked_users = data.get('blocked_users')
+                    if blocked_users and exp in blocked_users:
+                        return True
+                except requests.exceptions.RequestException as e:
+                    print(f"Error in request : {e}")
+                except ValueError as e:
+                    print("JSON conversion error :", e)
+            else:
+                print(f"Request failed (status {response.status_code})")
+            return False
 
     # def recipient_exists(self, user):
     #     """Does user exist ?"""

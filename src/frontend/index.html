@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
+
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,9 +19,16 @@
     <link rel="stylesheet" href="./styles/salonInvite.css">
     <link rel="stylesheet" href="./styles/tournament.css">
     <link rel="stylesheet" href="./styles/engine.css">
-
     <title>Transcendance</title>
+
+    <script type="importmap">
+        { "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+        }}
+    </script>
 </head>
+
+
 <body>
     <header>
         <div class="container">
@@ -30,11 +39,10 @@
 
             <!-- Navbar -->
             <!-- <nav class="selection-bar"> -->
-                <button class="selection-item btn-solo" type="button">Solo</button>
-                <button class="selection-item btn-local-versus" type="button">Local Versus</button>
-                <button id="versus" class="selection-item btn-versus" type="button">Versus</button>
+                <button id="btn-local-bot" class="selection-item" type="button">Solo</button>
+                <button id="btn-local-versus" class="selection-item" type="button">Local Versus</button>
+                <button id="versus" class="selection-item" type="button">Versus</button>
                 <button class="selection-item btn-tournament" type="button">Tournament</button>
-                <button id="btn-test-game" class="selection-item btn-tournament" type="button" >Test Game</button>
             <!-- </nav> -->
 
             <!-- Searchbar -->
@@ -44,13 +52,6 @@
                 </form>
                 <!-- Conteneur pour les résultats -->
                 <ul id="searchResults" class="search-results"></ul>
-            </div>
-            
-            <div class="header-right">
-                <a id="btn-refresh">Refresh</a>
-            </div>
-            <div class="header-right">
-                <a id="btn-play">Play</a>
             </div>
 
             <!-- User Profile Button -->
@@ -100,12 +101,18 @@
                 </ul>
             </div>
         </aside>
+
+        <!-- 3d Canvas Background -->
+        <div id="engine">
+            <canvas id="engine-canvas"></canvas>
+        </div>
     </main>
 
     <footer>
         <div class="container">
         </div>
     </footer>
+
     <!-- Dynamic Card -->
     <div id="dynamic-card-container" class="hidden">
         <!-- Background Opacity Overlay -->
@@ -118,4 +125,6 @@
 
     <script type="module" src="./scripts/main.js"></script>
 </body>
+
+
 </html>

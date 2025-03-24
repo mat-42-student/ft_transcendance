@@ -1,6 +1,12 @@
 import { navigator } from './nav.js';
 import { Client } from './apps/Client.js';
 import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
+import { GameBase } from './GameBase.js';
+import { Input } from './game3d/Input.js';
+import { Engine } from './game3d/Engine.js';
+import { Clock } from './Clock.js';
+import LevelIdle from './game3d/gameobjects/levels/LevelIdle.js';
+import {WebGame} from './WebGame.js'
 
 export const state = {
     client: new Client(),
@@ -8,8 +14,16 @@ export const state = {
     chatApp: null,
     socialApp: null,
     mmakingApp: null,
-    gameApp: null
+    /** @type {GameBase} */ gameApp: null,
+    input: new Input(),
+    engine: new Engine(),
+    get isPlaying() { return this.gameApp != null && this.gameApp.isPlaying != null; },
+    /** @type {Clock} */ clock: null,
 };
+
+state.engine.init();
+state.clock = new Clock();
+state.engine.scene = new LevelIdle();
 
 state.client.setState(state);
 window.state = state; // Debugging purpose 
@@ -114,6 +128,15 @@ window.addEventListener('beforeunload', function() {
     state.gameApp?.socket?.close();
 });
 
+// window.addEventListener('beforeunload', function(event) {
+//     if (state.mainSocket && state.mainSocket.socket)
+//         state.mainSocket.close();
+//     if (state.gameApp)
+//         state.gameApp.close();
+// });
+
+
+// REVIEW 23/2/2025, commit 074a0d9e0981: This function appears unused. Delete? Move to utils.js?
 // wait for n sec
 export function delay(n) {
     return new Promise(resolve => setTimeout(resolve, n * 1000));

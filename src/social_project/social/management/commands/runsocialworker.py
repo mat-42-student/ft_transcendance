@@ -7,35 +7,34 @@ from asyncio import run as arun, sleep as asleep, create_task
 from django.conf import settings
 import os
 from django.core.cache import cache
+from redis.asyncio import Redis
+import httpx
+import logging
 
-def get_ccf_token():
+async def get_ccf_token():
     url = os.getenv('OAUTH2_CCF_TOKEN_URL')
     client_id = os.getenv('OAUTH2_CCF_CLIENT_ID')
     client_secret = os.getenv('OAUTH2_CCF_CLIENT_SECRET')
 
-    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-    data = {
-        'grant_type': 'client_credentials',
-        'client_id': client_id,
-        'client_secret': client_secret
-    }
-
-    try:
-        response = requests.post(url, headers=headers, data=data)
+    async with httpx.AsyncClient() as client:
+        data = {
+            "grant_type": "client_credentials",
+            "client_id": client_id,
+            "client_secret": client_secret
+        }
+        response = await client.post(url, data=data)
         response.raise_for_status()
         token_data = response.json()
         return token_data['access_token'], token_data.get('expires_in', 3600)
-    except requests.exceptions.RequestException as e:
-        print(f"Error in request : {e}")
 
-def get_ccf_token_cache():
-    token = cache.get('oauth_token')
+async def get_ccf_token_cache():
+    redis = Redis.from_url("redis://redis:6379", decode_responses=True)
+    token = await redis.get('oauth_token')
     if token:
         return token
     else:
-        # Fetch new token from auth service
-        new_token, expires_in = get_ccf_token()
-        cache.set('oauth_token', new_token, expires_in - 60)
+        new_token, expires_in = await get_ccf_token()
+        await redis.setex('oauth_token', expires_in - 60, new_token)
         return new_token
 
 class Command(BaseCommand):
@@ -99,24 +98,22 @@ class Command(BaseCommand):
     async def social_process(self, data):
         data['header']['dest'] = 'front' # data destination after deep processing
         user_id = data['header']['id']
-        friends_data = self.get_friend_list(user_id)
+        friends_data = await self.get_friend_list(user_id)
         if not friends_data:
-            # print(f"No friends found for user: {user_id}")
             await self.update_status(user_id, data['body']['status'])
             return
         friends = [item['id'] for item in friends_data]
         if data['body']['status'] == 'info': # User's first connection, get all friends status
             await self.send_me_my_friends_status(user_id, friends)
-        await self.update_status(user_id, data['body']['status'])
-        for friend in friends:
-            if self.user_status.get(friend, "offline") != 'offline':
-                await self.send_my_status(user_id, friend)
+        else:
+            await self.update_status(user_id, data['body']['status'])
+            for friend in friends:
+                if self.user_status.get(friend, "offline") != 'offline':
+                    await self.send_my_status(user_id, friend)
 
     async def update_status(self, user_id, status):
         """ Update self.user_status map.\n
         If user was pending and goes offline, we have to report this to mmaking container """
-        if status == 'info':
-            status = 'online' # user wanted infos but is online
         if status == "offline" and self.user_status.get(user_id) == "pending":
             await self.redis_client.publish(self.REDIS_GROUPS['info'], json.dumps({
                 "user_id": user_id,
@@ -130,7 +127,6 @@ class Command(BaseCommand):
         """ answers backend requests on channel 'info_social' """
         print(f"users_process: {data}")
         
-
     async def info_process(self, data):
         """ answers backend requests on channel 'info_social' """
         try:
@@ -144,27 +140,34 @@ class Command(BaseCommand):
         print(f"publish info : {key, status}")
         await self.redis_client.set(key, status, ex = 2)
 
-    def get_friend_list(self, user_id):
+    async def get_friend_list(self, user_id):
         """ Request friendlist from container 'users' """
 
-        token = get_ccf_token_cache()
-
-        url = f"http://users:8000/api/v1/users/{user_id}/friends/"
-        headers = {
-            "Authorization": f"Bearer {token}", # Ajoute le token d'authentification
-        }
-        
-        response = requests.get(url, headers=headers)
-
-        if response.status_code == 200:
-            try:
+        try:
+            token = await get_ccf_token_cache()
+            if not token:
+                logging.error("Failed to retrieve access token")
+                return None
+            
+            url = f"http://users:8000/api/v1/users/{user_id}/friends/"
+            headers = {"Authorization": f"Bearer {token}"}
+            
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(url, headers=headers)
+                response.raise_for_status()
                 data = response.json()
                 return data.get('friends')
-            except ValueError as e:
-                print("Erreur lors de la conversion en JSON :", e)
-        else:
-            print(f"Error {response.status_code}")
-            return None
+                
+        except httpx.HTTPStatusError as e:
+            logging.error(f"HTTP error {e.response.status_code} for user {user_id}: {str(e)}")
+        except httpx.RequestError as e:
+            logging.error(f"Network error for user {user_id}: {str(e)}")
+        except json.JSONDecodeError as e:
+            logging.error(f"Invalid JSON response for user {user_id}: {str(e)}")
+        except Exception as e:
+            logging.error(f"Unexpected error for user {user_id}: {str(e)}")
+            
+        return None
 
     async def send_me_my_friends_status(self, user_id, friends):
         """ publish status of all friends and adress them to 'user_id' """

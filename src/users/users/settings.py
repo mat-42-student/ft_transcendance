@@ -13,12 +13,7 @@ SECRET_KEY = 'django-insecure-uf14@2_-p3x8u%k1qw9d_$0meb9gv$8j^=idwdbvxm1%+3as_1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    '.42mulhouse.fr', # All subdomains of 42mulhouse.fr
-    'users',
-]
+ALLOWED_HOSTS = ['*']
 
 JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")
 JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")

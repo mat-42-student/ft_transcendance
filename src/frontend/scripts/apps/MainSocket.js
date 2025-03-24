@@ -1,6 +1,5 @@
 import { ChatApp } from './Chat.js';
 import { SocialApp } from './Social.js';
-import { WebGame } from './WebGame.js';
 import { Mmaking } from './mmaking.js';
 import { state } from '../main.js';
 
@@ -22,8 +21,6 @@ export class MainSocket {
 		await state.socialApp.getFriends();
 		state.socialApp.startPollingPendingCount();  // Lancement automatique du polling
 		state.mmakingApp = new Mmaking();
-
-		state.gameApp = new WebGame();
 
 		this.socket.onerror = async (e)=> {
 			console.error(e.message);

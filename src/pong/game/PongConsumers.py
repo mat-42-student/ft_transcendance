@@ -1,48 +1,80 @@
 import json
 import jwt
 import requests
+import time
 from asyncio import create_task, sleep as asleep
-from redis.asyncio import from_url
-from channels.generic.websocket import AsyncWebsocketConsumer
+from redis.asyncio import from_url #type: ignore
+from channels.generic.websocket import AsyncWebsocketConsumer #type: ignore
 from urllib.parse import parse_qs
 from .Game import Game
 from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT
+import time
+from collections import deque
 
 class PongConsumer(AsyncWebsocketConsumer):
+
+    # Anti-flood system
+    MESSAGE_LIMIT = 20 # each player input counts 2 (keydown and keyup)
+    TIME_WINDOW = 1 # seconds
+    UNMUTE_TIME = 5 # seconds
+    MAX_MESSAGE_SIZE = 50
+    WAITING_FOR_OPPONENT = 10 # seconds
 
     def init(self):
         self.player_id = None
         self.player_name = None
+        self.opponent_id = None
+        self.opponent_name = None
         self.game_id = None
         self.nb_players = 0
-        self.in_game = False
         self.master = False
         self.game = None
         self.side = None
-        self.game_mode = None
         self.room_group_name = None
+        self.mute = False
         self.public_key = None
         self.redis_client = None
         self.pubsub = None
         self.connected = False
+        self.message_timestamps = deque(maxlen=self.MESSAGE_LIMIT) # collecting message's timestamp
 
     async def connect(self):
         self.init()
         self.get_user_infos()
         if self.player_id is None:
-            print("User is not authenticated. Aborting")
-            await self.close(code=1002)
+            await self.kick(message="Unauthentified")
             return
         try:
             await self.join_redis_channels()
             await self.check_game_info()
             await self.accept()
-            await self.send_online_status('ingame')
             self.connected = True
             self.room_group_name = f"game_{self.game_id}"
             await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+            await self.wait_for_opponent()
+            # await self.send_online_status('ingame')
         except Exception as e:
             print(e)
+
+    async def wait_for_opponent(self):
+        try:
+            key = f"ping{self.game_id}"
+            await self.redis_client.incr(key)
+            await self.redis_client.expire(key, self.WAITING_FOR_OPPONENT)
+        except Exception as e:
+            # await self.send_score()            
+            await self.kick(message="Error while waiting for opponent")
+            return
+        start_time = time.time()
+        while time.time() - start_time < self.WAITING_FOR_OPPONENT:
+            try:
+                nb_players = await self.redis_client.get(key)
+            except Exception as e:
+                print(e)
+            if nb_players == '2':
+                return
+            await asleep(0.5)
+        await self.kick(message="No opponent found")
 
     def get_user_infos(self):
         try:
@@ -70,7 +102,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         except jwt.InvalidTokenError as e:
             print(e)
         return None
-    
+
     def get_public_key(self):
         try:
             response = requests.get(f"http://auth:8000/api/v1/auth/public-key/")
@@ -86,7 +118,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         try:
             self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
-            await self.pubsub.subscribe()  # Subscribe all channels
+            # await self.pubsub.subscribe()  # Subscribe all channels
         except Exception as e:
             raise Exception
 
@@ -101,58 +133,99 @@ class PongConsumer(AsyncWebsocketConsumer):
             attempts += 1
             expected_players = await self.redis_client.get(f"game_{self.game_id}_players")
             await asleep(0.5)
-        if expected_players is None:
-            print("No answer from mmaking")
-            # await self.close(code=1002) # activate when mmaking will answer 
-            return
         try:
             expected_players = json.loads(expected_players)
+            if not isinstance(expected_players, list):
+                await self.kick(close_code=1009, message="Bad answer from mmaking")
+                return
         except json.JSONDecodeError as e:
-            print("Invalid JSON:", e)
-            await self.close(code=1002)
+            await self.kick(close_code=1009, message="Invalid JSON")
             return
         if self.player_id not in expected_players:
-            print("Unexpected player")
-            await self.close(code=1002)        
+            await self.kick(message=f"{self.player_name}: Unexpected player")
+        # if self.player_id == expected_players[0]:
+        #     self.master = True
+        #     print(f"{GREEN}Player {self.player_name} is master{RESET}")
 
-    async def send_online_status(self, status):
-        """Send all friends our status"""
-        data = {
-            "header": {
-                "service": "social",
-                "dest": "back",
-                "id": self.player_id
-            },
-            "body":{
-                "status": status
-            }
-        }
-        # print(f"Sending data to deep_social: {data}")
-        await self.redis_client.publish("deep_social", json.dumps(data))
+    # async def send_online_status(self, status):
+    #     """Send all friends our status"""
+    #     data = {
+    #         "header": {
+    #             "service": "social",
+    #             "dest": "back",
+    #             "id": self.player_id
+    #         },
+    #         "body":{
+    #             "status": status
+    #         }
+    #     }
+    #     # print(f"Sending data to deep_social: {data}")
+    #     await self.redis_client.publish("deep_social", json.dumps(data))
+
+    # return True if user has sent more than MESSAGE_LIMIT in TIME_WINDOW seconds
+    async def user_flooding(self):
+        current_time = time.time()
+        self.message_timestamps.append(current_time)
+        if len(self.message_timestamps) >= self.MESSAGE_LIMIT:
+            if current_time - self.message_timestamps[0] <= self.TIME_WINDOW:
+                return True
+        return False
+
+    def unmute_if_expired(self):
+        if self.message_timestamps[0] + self.UNMUTE_TIME < time.time():
+            self.mute = False
 
     # Receive message from WebSocket: immediate publish into channels lobby
     async def receive(self, text_data=None, bytes_data=None):
-        # print(f"text_data: {text_data}")
-        data = self.load_valid_json(text_data)
+        if await self.user_flooding():
+            self.mute = True
+            return
+        if self.mute:
+            self.unmute_if_expired()
+            return
+        data = await self.load_valid_json(text_data)
         if not (data):
-            print("wrong data incoming")
             return
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "handle.message", "message": data}
         )
 
-    def load_valid_json(self, data):
+    async def kick(self, close_code=1008, message="Policy Violation"):
+        print(RED, self.player_name, message, RESET)
+        try:
+            # await self.redis_client.delete(f"game_{self.game_id}_players")
+            await self.send(text_data=json.dumps({"action": "disconnect"}))
+        except Exception as e:
+            # print(e)
+            pass
+        finally:
+            self.connected = False
+            # await self.send_online_status('online')
+            await self.close(code=close_code)
+
+    async def load_valid_json(self, data):
+        if len(data.encode("utf-8")) > self.MAX_MESSAGE_SIZE:
+            self.mute = True
+            return
         try:
             data = json.loads(data)
             if "action" not in data:
-                return None
+                raise Exception()
             data["side"] = self.side
             if data["action"] == "wannaplay!":
                 data["username"] = self.player_name
                 data["id"] = self.player_id
                 return data
+            if data["action"] == "move":
+                if "key" not in data or data["key"] not in [-1, 0, 1]:
+                    raise Exception()
+                return data
+            # If we get to this point, we received a packet that we don't know.
+            # Write a new if statement to properly validate it.
+            raise Exception()
         except:
-            return None
+            await self.kick(1003, "Invalid JSON")
+            return
 
     async def handle_message(self, data):
         data = data.get("message")
@@ -166,28 +239,26 @@ class PongConsumer(AsyncWebsocketConsumer):
         if data["action"] == "info":
             return await self.send(json.dumps(data))
         if data["action"] == "wannaplay!":
+            print("wannaplay: ", data)
             return await self.wannaplay(data.get("id"), data.get("username"))
 
-    async def wannaplay(self, user_id, user_name):
-        # if self.in_game:
-        #     await self.send(json.dumps({"error":"You already playin mofo"}))
-        #     return
-        # self.in_game = True
+    async def wannaplay(self, opponent_id, opponent_name):
+        # print(f"{GREEN}Player {self.player_id}({self.player_name}) wants to play with {opponent_id}({opponent_name}){RESET}")
         self.nb_players += 1
-        print(f"{self.player_id} wannaplay on channel {self.room_group_name}. Currently {self.nb_players} players in lobby")
-        if self.nb_players != 2:
+        if self.player_id < opponent_id:
+            self.master = True
+            self.opponent_id = opponent_id
+            self.opponent_name = opponent_name
+        if self.nb_players != 2 or not self.master:
             return
-        self.master = True
-        print(f"{YELLOW}Found two players. Master is {self.player_name}{RESET}")
-        self.game = Game(self.game_id, self.player_id, self.player_name, user_id, user_name, self)
+        self.game = Game(self.game_id, self.player_id, self.player_name, self.opponent_id, self.opponent_name, self)
         json_data = {
             "action" : "init",
-            "dir" : self.game.ball_spd,
+            "dir" : self.game.ball_speed,
             "lplayer": self.game.players[LEFT].name,
             "rplayer": self.game.players[RIGHT].name,
             "lpos":self.game.players[LEFT].pos,
             "rpos":self.game.players[RIGHT].pos,
-            "mode":self.game_mode,
         }
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "handle.message", "message": json_data}
@@ -203,62 +274,52 @@ class PongConsumer(AsyncWebsocketConsumer):
         if self.master:
             create_task(self.game.play())
 
-    def valid_move_message(self, message):
-        try:
-            player = int(message.get("from", "x"))
-            key = int(message.get("key", "x"))
-        except ValueError:
-            return False
-        if player not in [0, 1] or key not in [-1, 0, 1]:
-            return False
-        return True
-
     async def wait_a_bit(self, data):
         time = data.get('time', 1)
         await self.send(json.dumps({"action":"wait", "time":time}))
 
     async def moveplayer(self, message):
-        if not self.valid_move_message(message):
-            print("invalid move")
-            return
         if self.master: # transmit move to game engine
-            self.game.set_player_move(int(message["from"]), int(message["key"]))
-        # players handle their own moves client-side, we only transmit the moves to the opposing player
-        if message["from"] != str(self.side):
-            try:
-                await self.send(message)
-            except:
-                pass
+            self.game.players[message["side"]].move = message["key"]
 
     # client ws was closed, sending disconnection to other client
     async def disconnect(self, close_code):
+        print(f"{YELLOW}Player {self.player_id} disconnecting{RESET}")
         if not self.connected:
+            # await self.send_online_status('online')
             return
         who = "master" if self.master else "guest"
         print(f"{RED}Player {self.player_id}({who}) has left{RESET}")
-        if self.master and not self.game.over: # game is ending because master left
-            print(f"{RED}Game #{self.game.id} over (player {self.player_id} left){RESET}")        
+        if self.master and self.game and not self.game.over:
+            print(f"{RED}Game #{self.game.id} over (player {self.player_id} left){RESET}")
             await self.disconnect_endgame(self.player_id)
         if self.room_group_name:
             await self.channel_layer.group_send(
-                self.room_group_name, {"type": "disconnect.now", "from": self.player_id}
+                self.room_group_name, {"type": "disconnect.now", "side": self.player_id}
             )
-        await self.send_online_status('online')
+        # await self.send_online_status('online')
 
     async def disconnect_now(self, event):
     # If self.game.over, game was stopped beacuse maxscore has been reached
+    # If not, game was stopped because one player left
+        if not self.connected:
+            return
+        self.connected = False
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-        user = event["from"]
+        print(f"Disco_now event: {event}")
+        user = event.get("side")
         print(f"{YELLOW}Disconnect_now from {user}{RESET}")
+        if user is None:
+            await self.kick(message="Disconnect_now")
+            return
+        # print(f"{YELLOW}Disconnect_now from {user}{RESET}")
         if self.master and self.game.over: # game ended normally
-            print(f"{RED}Game #{self.game.id} over (maxscore reached){RESET}")        
+            print(f"{RED}Game #{self.game.id} over (maxscore reached){RESET}")
             await self.send_score()
         elif self.master and not self.game.over: # game is ending because one player left
-            print(f"{RED}Game #{self.game.id} over (player {user} left){RESET}")        
+            print(f"{RED}Game #{self.game.id} over (player {user} left){RESET}")
             await self.disconnect_endgame(user)
-        # if self.player_id != user:
-        await self.send(text_data=json.dumps({"action": "disconnect", "from": user}))
-        # await self.disconnect(0)
+        await self.send(text_data=json.dumps({"action": "disconnect"}))
 
     async def disconnect_endgame(self, user):
         self.game.players[0].score = 10 if self.player_id != user else 0
@@ -267,7 +328,11 @@ class PongConsumer(AsyncWebsocketConsumer):
         print(f"{RED}Player {user} left")
         await self.send_score()
         self.game = None
-        
+
     async def send_score(self):
         score = self.game.get_score()
         await self.redis_client.publish("info_mmaking", json.dumps(score))
+
+    # async def send_false_score(self, score1, score2):
+    #     score = self.game.get_score()
+    #     await self.redis_client.publish("info_mmaking", json.dumps(score))

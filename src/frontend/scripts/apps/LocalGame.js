@@ -1,287 +1,295 @@
+import { state } from "./main.js";
+import * as UTILS from "./utils.js";
 import {MathUtils, Vector2} from 'three';
-import engine from "engine";
-import global from "global";
-import input from "input";
-import * as LEVELS from '../game3d/gameobjects/levels/_exports.js';
-import LevelBase from '../game3d/gameobjects/levels/LevelBase.js';
+import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
+import { GameBase } from "./GameBase.js";
 
 
-//TODO AI: predict impact and go there, since shallow angles move faster than the paddle
-//TODO AI: margin choice: pick a redirection that tries to bring the angle within a range (not too direct, not too slow)
-//TODO AI: new logic for randomization is needed
-//TODO victory screen and transition to idle?
-//TODO CPU game should have a timer (highscore?)
-//TODO whole game speed should be scaled by 1 variable (faster game doesnt change ratio of ball speed to paddle speed unless they are explicitly scaled separately)
 //REVIEW Exceptions should be caught, and should terminate the game
 
 
-const gg = global.game;  // abbreviate because used a lot
+// Controls how the game runs.
+// Should be (manually) kept in sync with game/const.py
+const STATS = JSON.parse(`
+{
+    "initialPadSize": 0.2,
+    "initialPadSpeed": 0.12,
+    "padShrinkFactor": 0.9,
+    "padAccelerateFactor": 1.2,
 
-const __angleMax = MathUtils.degToRad(70);
+    "initialBallSpeed": 0.18,
+    "ballAccelerateFactor": 1.2,
+    "redirectionFactor": 1.5,
+    "maxAngleDeg": 70.0,
 
-// MARK: Variables
-// NOTE: All the values here are only an example of the data structures. (also helps intellisense)
-//       Actual default values are set in functions.
-//       Changing them here will do nothing.
-
-let __ballDirection = new Vector2(1.0, 1.0).normalize();
-let __ballSpeed = 1;
-let __isCPU = true;
-let __paddleSpeeds = [1, 1];
-/** @type {LevelBase} */  let __level;
-let __didOpponentLoseLastRound = 0;
-
-
-// MARK: Utils
-
-function generateRandomNick() {
-    const adjectives = ["Shadow", "Steady", "Mighty", "Funny", "Hidden", "Normal"];
-    const nouns = ["Ficus", "Pidgin", "Rock", "Pillow", "Curtains", "Hobo"];
-
-    const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-
-    return '[BOT] ' + randomAdj + randomNoun + Math.floor(Math.random() * 1000);
+    "maxScore": 5
 }
-
-/**
- * Used for 'folding' the ball's position along the board's edge.
- * https://www.desmos.com/calculator/a2vy4fey6u
- */
-function bounce1D(pos, mirror) {
-    return -(pos - mirror) + mirror;
-}
+`);
 
 
-// MARK: Game engine
+export class LocalGame extends GameBase {
 
-export async function startLocalGame(isCPU) {
-    if (global.isPlaying == true) throw Error("Already playing??");
-    __isCPU = isCPU;
-    global.isPlaying = true;
-    engine.loading = true;
+    constructor (isCPU = false) {
+        console.log('LocalGame instantiated');
+        super();
 
-    if (__level != null) {
-        __level.dispose();
-        __level = null;
+        this.isCPU = isCPU;
+        this.cpuTarget = 0;
+
+        // game simulation stats - might want to keep these numbers synced with web game
+        this.ballSpeed = STATS.initialBallSpeed;
+        this.paddleSpeeds = [STATS.initialPadSpeed, STATS.initialPadSpeed];
+        this.paddleHeights = [STATS.initialPadSize, STATS.initialPadSize];
+        this.maxScore = STATS.maxScore;
+
+        this.roundStartSide = Math.random() > 0.5 ? 1 : 0;
+
+        this.playerNames[0] = 'Player 1';
+        this.playerNames[1] = isCPU ? this.generateRandomNick() : 'Player 2';
+
+        this.side = isCPU ? 0 : 2;  // Neutral (2) if keyboard PVP
+
+        this.level = new (LEVELS.pickRandomLevel())();  // randomly select class, then construct it
+        state.engine.scene = this.level;
+
+        //TODO wait for level to finish loading before continuing
+        this.recenter();
+        this.cpuDecide();
     }
 
-    gg.maxScore = 5;
+	frame(delta, time) {
+        this.movePaddles(delta);
+        this.moveBall(delta);
 
-    __didOpponentLoseLastRound = Math.random() > 0.5 ? 1 : 0;
+        super.frame(delta, time);
+	}
 
-    __ballSpeed = 0.18;
-    __paddleSpeeds[0] = __paddleSpeeds[1] = 0.12;
-    gg.paddleHeights[0] = 0.2;
-    gg.paddleHeights[1] = gg.paddleHeights[0];
+    close(cancelled = true) {
+        this.endgame(cancelled);
 
-    __level = new (LEVELS.pickRandomLevel())();
-
-    gg.boardSize.x = 2.5;
-    gg.boardSize.y = 1;
-
-    gg.playerNames[1] = isCPU ? generateRandomNick() : 'Player 2';
-
-    gg.scores = [0, 0];
-    if (gg.focusedPlayerIndex === 'neutral') {
-        gg.focusedPlayerIndex = -1;
-    } else {
-        gg.focusedPlayerIndex = isCPU ? 0 : -1;
+        super.close();
     }
 
-    engine.loading = false;
-    newRound();
-    global.gameCancelFunction = () => {
-        endgame(true);
-    };
-    global.gameFrameFunction = (delta, time) => {
-        if (!global.isPlaying) {
-            console.warn('Game frame called while not playing');
-            return;
-        }
-        movePaddles(delta);
-        moveBall(delta);
-        if (__level == null) {
-            console.warn('Game frame called while level is missing');
-            return;
-        }
-        __level.onFrame(delta, time);
-    };
-}
 
-function newRound() {
-    gg.ballPosition = { x: 0, y: 0 };
-    __ballDirection.set(1, 0).rotateAround(
-        new Vector2(0, 0),
-        global._180 * __didOpponentLoseLastRound
-    );
-    gg.paddlePositions[0] = gg.paddlePositions[1] = 0;
+    // MARK: Utils
 
-    // Shrink
-    gg.paddleHeights[0] *= 0.9;
-    gg.paddleHeights[1] = gg.paddleHeights[0];
+    generateRandomNick() {
+        const adjectives = ["Shadow", "Steady", "Mighty", "Funny", "Hidden", "Normal"];
+        const nouns = ["Ficus", "Pidgin", "Rock", "Pillow", "Curtains", "Hobo"];
 
-    // Accelerate
-    __ballSpeed *= 1.2;
-    __paddleSpeeds[0] *= 1.2;
-    __paddleSpeeds[1] = __paddleSpeeds[0];
-}
+        const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
+        const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
 
-function cpuMove() {
-    // CPU tries to keep the ball in the center.
-    // This margin multiplies the size of the paddle.
-    const margin = 0.5;
-
-    // Abbreviate
-    const ball = gg.ballPosition.y;
-    const paddle = gg.paddlePositions[1];
-    const halfSize = gg.paddleHeights[1] / 2;
-
-    if (ball < paddle - halfSize * margin)
-        return -1;
-    if (ball > paddle + halfSize * margin)
-        return 1;
-    return 0;
-}
-
-function movePaddles(delta) {
-    let inputs = input.currentPaddleInputs;
-    if (__isCPU) inputs[1] = cpuMove();
-
-    const limit = gg.boardSize.y / 2;
-    for (let i = 0; i < 2; i++) {
-        gg.paddlePositions[i] += delta * __paddleSpeeds[i] * inputs[i];
-        gg.paddlePositions[i] = global.clamp(gg.paddlePositions[i],
-            -limit, limit);
+        return '[BOT] ' + randomAdj + randomNoun + Math.floor(Math.random() * 1000);
     }
-}
 
-function moveBall(delta) {
-    const gg = global.game;  // abbreviate because used a lot
+    /**
+     * Used for 'folding' the ball's position along the board's edge.
+     * https://www.desmos.com/calculator/a2vy4fey6u
+     */
+    bounce1D(pos, mirror) {
+        return -(pos - mirror) + mirror;
+    }
 
-    gg.ballPosition.x += delta * __ballDirection.x * __ballSpeed;
-    gg.ballPosition.y += delta * __ballDirection.y * __ballSpeed;
 
-    // At this point the ball's position has been linearly extrapolated forward
-    // for this point in time.
-    // Now, we check for collisions.
-    // If it collides, the ball's position (and direction) is 'folded' along the
-    // edge that it hit, until it no longer collides.
+    // MARK: Game simulation
 
-    let bounces = 0;
-    for (; true; bounces++) {
-        if (bounces > 100) {
-            throw Error(`Bounced ${bounces} times in a single frame, interrupting infinite loop.`);
+    recenter() {
+        this.ballPosition = new Vector2(0, 0);
+        this.ballDirection = new Vector2(this.roundStartSide ? -1 : 1, 1).normalize()
+        this.paddlePositions[0] = this.paddlePositions[1] = 0;
+    }
+
+
+    newRound() {
+        this.recenter();
+
+        this.paddleHeights[1] = this.paddleHeights[0] *= STATS.padShrinkFactor;
+
+        this.ballSpeed *= STATS.ballAccelerateFactor;
+        this.paddleSpeeds[1] = this.paddleSpeeds[0] *= STATS.padAccelerateFactor;
+
+        this.cpuDecide();
+    }
+
+    cpuDecide(flip = false) {
+        let isBallComingTowardsBot = this.ballDirection.x < 0;
+        if (flip) isBallComingTowardsBot = !isBallComingTowardsBot;
+        if (isBallComingTowardsBot)
+            this.cpuFindTarget();
+        else
+            this.cpuTarget = 0;
+    }
+
+    cpuFindTarget() {
+        // Basically a direct port of https://www.desmos.com/calculator/revv9si2to
+        let a = this.ballPosition;
+        let b = this.ballPosition.clone().add(this.ballDirection);
+        let slope = (b.y - a.y) / (b.x - a.x)
+        let offset = a.y - slope * a.x;
+
+        // Reimplementing a modulo function, because JS % is not the intended behaviour of modulo.
+        // This way, it matches my Desmos visualization.
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Remainder#description
+        let mod = (n, d) => { return ((n % d) + d) % d; }
+
+        let line = (x) => { return slope * x + offset; };
+        let sawWave = (x) => { return mod(line(x) + 0.5, 1) - 0.5; };
+        let squareWave = (x) => { return -Math.sign(mod(0.5 * slope * x + 0.5 * offset + 0.25, 1) - 0.5); };
+        let triangleWave = (x) => { return sawWave(x) * squareWave(x); };
+
+        let wallX = this.level.boardSize.x / 2;
+        if (this.ballDirection.x < 0)
+            wallX *= -1;
+        this.cpuTarget = triangleWave(wallX);
+    }
+
+    cpuSeekTarget() {
+        const error = this.cpuTarget - this.paddlePositions[1];
+        return error > 0 ? 1 : -1;
+    }
+
+    movePaddles(delta) {
+        let inputs = [
+            state.input.getPaddleInput(0),
+            this.isCPU ? this.cpuSeekTarget() : state.input.getPaddleInput(1)
+        ];
+
+        const limit = this.level.boardSize.y / 2;
+        for (let i = 0; i < 2; i++) {
+            this.paddlePositions[i] += delta * this.paddleSpeeds[i] * inputs[i];
+            this.paddlePositions[i] = MathUtils.clamp(this.paddlePositions[i],
+                -limit, limit);
         }
+    }
 
-        let collisionAxis = null;
-        {
-            // Negative numbers mean collisions.
-            let collisions = {
-                x: gg.boardSize.x / 2 - Math.abs(gg.ballPosition.x),
-                y: gg.boardSize.y / 2 - Math.abs(gg.ballPosition.y),
-            };
+    moveBall(delta) {
+        this.ballPosition.x += delta * this.ballDirection.x * this.ballSpeed;
+        this.ballPosition.y += delta * this.ballDirection.y * this.ballSpeed;
 
-            if (collisions.x < 0.0) {
-                collisionAxis = 'x';
-            } else if (collisions.y < 0.0 && collisions.y < collisions.x) {  // Pick the closest edge
-                collisionAxis = 'y';
+        // At this point the ball's position has been linearly extrapolated forward
+        // for this point in time.
+        // Now, we check for collisions.
+        // If it collides, the ball's position (and direction) is 'folded' along the
+        // edge that it hit, until it no longer collides.
+
+        let bounces = 0;
+        for (; true; bounces++) {
+            if (bounces > 2) {
+                console.error(`Bounced ${bounces} times in a single frame, game appears to be lagging.`);
             }
-        }
 
-        if (collisionAxis === null) {
-            break;
-        } else if (collisionAxis === 'x') {
-            const collisionSide = __ballDirection.x > 0.0 ? 0 : 1;
-            const pHeight = gg.paddleHeights[collisionSide] / 2;
-            const ballTooLow = gg.ballPosition.y < gg.paddlePositions[collisionSide] - pHeight;
-            const ballTooHigh = gg.ballPosition.y > gg.paddlePositions[collisionSide] + pHeight;
-            if (ballTooLow || ballTooHigh) {
-                scoreup(collisionSide === 1 ? 0 : 1);
+            let collisionAxis = null;
+            {
+                // Negative numbers mean collisions.
+                let collisions = {
+                    x: this.level.boardSize.x / 2 - Math.abs(this.ballPosition.x),
+                    y: this.level.boardSize.y / 2 - Math.abs(this.ballPosition.y),
+                };
+
+                if (collisions.x < 0.0) {
+                    collisionAxis = 'x';
+                } else if (collisions.y < 0.0 && collisions.y < collisions.x) {  // Pick the closest edge
+                    collisionAxis = 'y';
+                }
+            }
+
+            if (collisionAxis === null) {
                 break;
-            } else {
-                const signedSide = collisionSide == 0 ? 1 : -1;
+            } else if (collisionAxis === 'x') {
+                const collisionSide = this.ballDirection.x > 0.0 ? 0 : 1;
+                const pHeight = this.paddleHeights[collisionSide] / 2;
+                const ballTooLow = this.ballPosition.y < this.paddlePositions[collisionSide] - pHeight;
+                const ballTooHigh = this.ballPosition.y > this.paddlePositions[collisionSide] + pHeight;
+                if (ballTooLow || ballTooHigh) {
+                    this.scoreup(collisionSide === 1 ? 0 : 1);
+                    break;
+                } else {
 
-                const hitPosition = global.map(gg.ballPosition.y,
-                    gg.paddlePositions[collisionSide] - pHeight,
-                    gg.paddlePositions[collisionSide] + pHeight,
-                    -1,
-                    1
-                );
+                    // Flip argument because the ball direction has not been flipped yet
+                    this.cpuDecide(true);
 
-                let angle = __ballDirection.angle();
-                if (angle > global._180) {
-                    angle = -signedSide * ((collisionSide == 0 ? global._360 : global._180) - angle);
+                    const signedSide = collisionSide == 0 ? 1 : -1;
+
+                    const hitPosition = UTILS.map(this.ballPosition.y,
+                        this.paddlePositions[collisionSide] - pHeight,
+                        this.paddlePositions[collisionSide] + pHeight,
+                        -1,
+                        1
+                    );
+                    //TODO remove bounce accuracy log
+                    console.log(collisionSide ? 'Bot' : ' P1', 'Deviation from paddle center:', Math.round(hitPosition * 100), '%');
+
+                    let angle = this.ballDirection.angle();
+                    if (angle > UTILS.RAD180) {
+                        angle = -signedSide * ((collisionSide == 0 ? UTILS.RAD360 : UTILS.RAD180) - angle);
+                    }
+
+                    if (angle > UTILS.RAD90) {
+                        angle = UTILS.RAD90 - (angle - UTILS.RAD90);
+                    }
+
+                    const maxAngleRad = MathUtils.degToRad(STATS.maxAngleDeg);
+                    angle = MathUtils.clamp(angle, -maxAngleRad, maxAngleRad);
+
+                    const redirection = hitPosition * STATS.redirectionFactor;
+
+                    const newAngle = MathUtils.clamp(
+                        angle + redirection,
+                        -maxAngleRad,
+                        maxAngleRad
+                    );
+
+                    const newDirection = new Vector2(signedSide,0).rotateAround(new Vector2(), newAngle * signedSide);
+
+                    // console.log(
+                    //     `Ball Direction: (Before)`, this.ballDirection, `(After)`, newDirection,`
+                    //     Angle: ${MathUtils.RAD2DEG*angle}
+                    //     Redirect: ${MathUtils.RAD2DEG*redirection}
+                    //     New Angle: ${MathUtils.RAD2DEG*newAngle}`
+                    // );
+
+                    this.ballDirection.copy(newDirection);
                 }
-
-                if (angle > global._90) {
-                    angle = global._90 - (angle - global._90);
-                }
-
-                angle = global.clamp(angle, -__angleMax, __angleMax);
-
-                const redirection = hitPosition * 1.5;  // Arbitrary number, controls how strong redirection is
-
-                const newAngle = MathUtils.clamp(
-                    angle + redirection,
-                    -__angleMax,
-                    __angleMax
-                );
-
-                const newDirection = new Vector2(signedSide,0).rotateAround(new Vector2(), newAngle * signedSide);
-
-//                 console.log(
-// `Ball Direction: (Before)`, __ballDirection, `(After)`, newDirection,`
-// Angle: ${MathUtils.RAD2DEG*angle}
-// Redirect: ${MathUtils.RAD2DEG*redirection}
-// New Angle: ${MathUtils.RAD2DEG*newAngle}`
-//                 );
-
-                __ballDirection.copy(newDirection);
+            } else { // (collisionAxis === 'y')
             }
-        } else { // (collisionAxis === 'y')
+
+            // If execution reaches here, we have to perform a bounce.
+
+            // All of the [collision] stuff has properties named .x or .y .
+            // They're not even the same properties, but hey, JS is anarchy,
+            // and right here it happens to be convenient.
+            this.ballPosition[collisionAxis] = this.bounce1D(this.ballPosition[collisionAxis],
+                this.level.boardSize[collisionAxis] * (this.ballDirection[collisionAxis] > 0 ? 0.5 : -0.5)
+            );
+            this.ballDirection[collisionAxis] *= -1;
         }
 
-        // If execution reaches here, we have to perform a bounce.
-
-        // All of the [collision] stuff has properties named .x or .y .
-        // They're not even the same properties, but hey, JS is anarchy,
-        // and right here it happens to be convenient.
-        gg.ballPosition[collisionAxis] = bounce1D(gg.ballPosition[collisionAxis],
-            gg.boardSize[collisionAxis] * (__ballDirection[collisionAxis] > 0 ? 0.5 : -0.5)
-        );
-        __ballDirection[collisionAxis] *= -1;
+        if (bounces >= 2) {
+            console.warn(
+    `Ball bounced ${bounces} times in a single frame, which is unusual.
+    Did the game freeze long enough for the ball to travel to multiple borders?`
+            );
+        }
     }
 
-    if (bounces > 1) {
-        console.warn(
-`Ball bounced ${bounces} times in a single frame, which is unusual.
-Did the game freeze long enough for the ball to travel to multiple borders?
-Did the ball nearly exactly hit a corner of the board, and bounce twice?`
-        );
-    }
-}
+    scoreup(side) {
+        this.scores[side]++;
 
-function scoreup(side) {
-    gg.scores[side]++;
+        this.roundStartSide = side == 0 ? 1 : 0;
 
-    __didOpponentLoseLastRound = side == 0 ? 1 : 0;
-
-    if (gg.scores[side] >= gg.maxScore) {
-        endgame(false);
-        return;
-    }
-    newRound();
-}
-
-/** @param {boolean} isEndingBecauseCancelled */
-function endgame(isEndingBecauseCancelled) {
-    if (isEndingBecauseCancelled !== true) {
-        let winner = gg.scores[0] >= gg.maxScore ? 0 : 1;
-        alert(`GAME OVER\nLe gagnant est ${gg.playerNames[winner]}!`);
+        if (this.scores[side] >= this.maxScore) {
+            this.close(false);
+            return;
+        }
+        this.newRound();
     }
 
-    global.isPlaying = false;
-    global.gameFrameFunction = null;
-    global.gameCancelFunction = null;
+    /** @param {boolean} isEndingBecauseCancelled */
+    endgame(isEndingBecauseCancelled) {
+        if (isEndingBecauseCancelled !== true) {
+            let winner = this.scores[0] >= this.maxScore ? 0 : 1;
+            alert(`GAME OVER\nLe gagnant est ${this.playerNames[winner]}!`);
+        }
+    }
 }

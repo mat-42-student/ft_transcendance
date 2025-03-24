@@ -1,11 +1,6 @@
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    '.42mulhouse.fr', # All subdomains of 42mulhouse.fr
-    'chat',
-]
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -26,7 +21,7 @@ CACHES = {
     # Cache for OAuth2 client credentials tokens (DB 1)
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis:6379/1",
+        "LOCATION": "redis://redis:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },

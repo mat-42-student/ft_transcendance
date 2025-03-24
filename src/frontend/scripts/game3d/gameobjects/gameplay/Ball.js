@@ -1,12 +1,8 @@
 import * as THREE from 'three';
-import engine from 'engine';
-import global from 'global';
+import { state } from '../../../main.js';
 
 
 export default class Ball extends THREE.Group {
-
-	// Empty for now, we can just set the 3d position -
-	// but this will define a common interface eventually.
 
 	constructor() {
 		super();
@@ -16,7 +12,10 @@ export default class Ball extends THREE.Group {
 
 
 	onFrame(delta, time) {
-		this.position.x = global.game.ballPosition.x;
-		this.position.z = global.game.ballPosition.y;
+		this.visible = state.isPlaying;
+		if (this.visible) {
+			this.position.x = state.gameApp.ballPosition.x;
+			this.position.z = state.gameApp.ballPosition.y;
+		}
 	}
 }
