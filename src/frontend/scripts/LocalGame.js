@@ -35,7 +35,6 @@ const __AI_MAX_ERROR = 0.5;
 export class LocalGame extends GameBase {
 
     constructor (isCPU = false) {
-        console.log('LocalGame instantiated');
         super();
 
         this.isCPU = isCPU;

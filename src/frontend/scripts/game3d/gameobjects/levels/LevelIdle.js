@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import * as UTILS from '../../../utils.js';
 import { state } from '../../../main.js';
 import LevelBase from './LevelBase.js';
@@ -34,8 +33,7 @@ export default class LevelIdle extends LevelBase {
 		this.smoothCamera.fov = 120;
 		// this.smoothCamera.smoothSpeed = 1;
 
-		const gltfLoader = new GLTFLoader();
-		gltfLoader.load('/ressources/3d/test.glb', (gltf) => {
+		state.engine.gltfLoader.load('/ressources/3d/test.glb', (gltf) => {
 			state.engine.scene.funnycube = gltf.scene;
 			state.engine.scene.funnycube.scale.setScalar(0.2);
 			state.engine.scene.add(state.engine.scene.funnycube);

@@ -1,5 +1,6 @@
 import { state } from '../main.js';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import * as UTILS from '../utils.js';
 import LevelBase from './gameobjects/levels/LevelBase.js';
@@ -17,6 +18,8 @@ export class Engine {
 	get DEBUG_MODE() { return this.#DEBUG_MODE; }
 
 	get scene() { return this.#scene; }
+
+	get gltfLoader() { return this.#gltfLoader; }
 
 	borders = { top: 0, left: 0, right: 500, bottom: 500 };
 
@@ -149,6 +152,8 @@ export class Engine {
 
 	/** @type {THREE.WebGLRenderer} */
 	#renderer;
+
+	#gltfLoader = new GLTFLoader();
 
 	/** @type {ResizeObserver} */
 	#resizeObserver;
