@@ -7,7 +7,7 @@ import { Input } from './game3d/Input.js';
 import { Engine } from './game3d/Engine.js';
 import { Clock } from './Clock.js';
 import LevelIdle from './game3d/gameobjects/levels/LevelIdle.js';
-import {WebGame} from './WebGame.js'
+import { LocalGame } from './LocalGame.js';
 
 export const state = {
     client: new Client(),
@@ -205,5 +205,32 @@ window.addEventListener('beforeunload', function(event) {
 export function delay(n) {
     return new Promise(function(resolve) {
       setTimeout(resolve, n * 1000);
+    });
+}
+
+
+// Bind local game button (vs AI)
+{
+    const button = document.getElementById('btn-local-bot');
+    button.addEventListener('click', () => {
+        if (state.gameApp != null) {
+            console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
+            return;
+        }
+
+        state.gameApp = new LocalGame(true);
+    });
+}
+
+// Bind local game button (2 keyboard players)
+{
+    const button = document.getElementById('btn-local-versus');
+    button.addEventListener('click', () => {
+        if (state.gameApp != null) {
+            console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
+            return;
+        }
+
+        state.gameApp = new LocalGame(false);
     });
 }
