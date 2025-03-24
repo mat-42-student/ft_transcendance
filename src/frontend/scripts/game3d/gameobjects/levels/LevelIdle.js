@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import * as UTILS from '../../../utils.js';
 import LevelBase from './LevelBase.js';
 import SceneOriginHelper from '../utils/SceneOriginHelper.js';
+import { state } from '../../../main.js';
 
 
 export default class LevelIdle extends LevelBase {
