@@ -116,6 +116,8 @@ class Command(BaseCommand):
     async def update_status(self, user_id, status):
         """ Update self.user_status map.\n
         If user was pending and goes offline, we have to report this to mmaking container """
+        if status == "info":
+            return
         if status == "offline" and self.user_status.get(user_id) == "pending":
             await self.redis_client.publish(self.REDIS_GROUPS['info'], json.dumps({
                 "user_id": user_id,
@@ -190,7 +192,7 @@ class Command(BaseCommand):
     async def send_me_my_own_status(self, user_id):
         """ publish my status and adress them to me """
         data = self.build_social_data(user_id, user_id)
-        print(f"getting my own status : {data}")
+        print(f"{user_id} getting their own status : {data}")
         await self.redis_client.publish(self.REDIS_GROUPS['gateway'], json.dumps(data))
 
     async def send_my_status(self, user_id, friend):
