@@ -321,14 +321,15 @@ export class Mmaking
 		const btnTournament = document.getElementsByClassName('btn-tournament');
 		const btnRandom = document.getElementById('versus');
 		
+		if (this.bracket == true)
+		{
+			await this.bracketTournament();
+			await this.sleep(5000);
+			this.bracket = false;
+			closeDynamicCard();
+		}
 		if (this.game == true)
 			{
-				if (this.bracket == true)
-				{
-					await this.bracketTournament();
-					await this.sleep(5000);
-					this.bracket = false;
-				}
 				closeDynamicCard();
 				if (this.gameId != null)
 					state.gameApp = new WebGame('debug');
@@ -503,7 +504,8 @@ export class Mmaking
         });
     }
 
-    async sendMsg(message) {
+    async sendMsg(message) 
+	{
 
         const data = {
             'header': {  //Mandatory part
@@ -516,8 +518,7 @@ export class Mmaking
     	await state.mainSocket.send(JSON.stringify(data));
     }
 
-	async socketGameError()
-	{
+	async socketGameError() {
 		const data = {
 			'GameSocket': false,
 			'gameId': this.gameId
@@ -549,6 +550,11 @@ export class Mmaking
 			this.salonLoad = false;
 			this.SearchRandomGame = false;
 
+			if (this.gameId == null)
+			{
+				this.cancelState()
+			}
+
 			if (data.body.tournament == true)
 			{
 				this.bracket = true;
@@ -559,6 +565,7 @@ export class Mmaking
 				this.opponents = data.body.opponents;
 				console.log(this.opponents);
 			}
+
         }
 		else if (data.body.cancel == true)
 		{

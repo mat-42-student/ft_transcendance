@@ -840,19 +840,21 @@ class Command(BaseCommand):
     def getplayers(self, idgame):
         players = []
         game_database = None
+        tournament_id = None
         try:
             # idgame = int(idgame)
             game_database = Game.objects.get(id=idgame)
+            tournament_id = game_database.tournament.id
+            
         except Exception as e:
             print(f'Game does not exist -> {e}')
             return None
         for type_game in self.games:
             try:
-                if (type_game == 'tounament'):
-                    for tournament in self.games[type_game].values():
-                        salon = tournament[idgame]
-                        if (salon):                
-                            for player in salon.players.values():
+                if (type_game == 'tournament'):
+                    if (tournament_id in self.games['tournament']):
+                        if (game_database.id in self.games['tournament'][tournament_id]):           
+                            for player in self.games['tournament'][tournament_id][game_database.id].players.values():
                                 if (player.user_id == game_database.player1.id or player.user_id == game_database.player2.id):
                                     players.append(player.user_id)
                 else:
