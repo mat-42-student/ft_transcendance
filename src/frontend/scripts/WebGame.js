@@ -38,7 +38,7 @@ export class WebGame extends GameBase {
         if (!gameId) // debug
             gameId = 1; // effacer asap
 
-		state.client.refreshSession();
+		// state.client.refreshSession();
         let socketURL = "wss://" + window.location.hostname + ":3000/game/" + gameId + "/?t=" + state.client.accessToken;
 
         // websocat --insecure wss://nginx:3000/game/1234/?t=pouetpouet
@@ -46,6 +46,7 @@ export class WebGame extends GameBase {
         this.socket = new WebSocket(socketURL);
         this.socket.onerror = async function(e) {
             console.error('Game socket: onerror:', e);
+			await state.mmakingApp.socketGameError();
         };
 
         this.socket.onopen = async function(e) {
@@ -55,6 +56,8 @@ export class WebGame extends GameBase {
                 'action' :"wannaplay!",
                 })
             );
+
+			await state.mmakingApp.socketGameGood();
         };
 
         this.socket.onclose = async function(e) {

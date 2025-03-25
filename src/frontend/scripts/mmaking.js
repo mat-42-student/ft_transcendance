@@ -213,6 +213,14 @@ export class Mmaking
 			this.guests[friendId] = false;
 			this.invited_by[friendId] = false;
 		}
+
+		this.cancelState();
+		await this.sendMsg(data);
+		await this.renderMatchmaking();
+	}
+
+	cancelState()
+	{
 		this.salonInvite = false;
 		this.salonRandom = false;
 		this.salonTournament = false;
@@ -228,9 +236,6 @@ export class Mmaking
 
 		btnTournament[0].addEventListener('click', this.boundEventListenersClient.eventSearchTournament);
 		btnRandom.addEventListener('click', this.boundEventListenersClient.btnsearchRandomGame);
-
-		await this.sendMsg(data);
-		await this.renderMatchmaking();
 	}
 
 	async btnInviteDesactive(key)
@@ -510,6 +515,29 @@ export class Mmaking
         };
     	await state.mainSocket.send(JSON.stringify(data));
     }
+
+	async socketGameError()
+	{
+		const data = {
+			'GameSocket': false,
+			'gameId': this.gameId
+		};
+		
+		this.cancelState();
+		this.sendMsg(data);
+
+	}
+
+	async socketGameGood()
+	{
+		const data = {
+			'GameSocket': true,
+			'gameId': this.gameId
+		};
+
+		this.sendMsg(data);
+
+	}
 
     async incomingMsg(data)
     {

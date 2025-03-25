@@ -187,6 +187,10 @@ class Command(BaseCommand):
         header = data['header']
         body = data['body']
         
+        
+        if (body.get('GameSocket') == False or body.get('GameSocket') == True):
+            await self.checkSocketGame(body, header['id'])
+            return 
         # Check if player already exist
         player = await self.manage_player(header, body)
         if (not player):
@@ -211,6 +215,71 @@ class Command(BaseCommand):
          for key, player in salon.players.items():
             await self.start_toFront(key, player, idgame)
             await player.updateStatus(self.redis_client, self.channel_deepSocial, "ingame")
+            
+    async def checkSocketGame(self, data, id):
+        playerReady = 0
+        playerNotReady = 0
+        try:
+            print(f'Start CheckGameSocket')
+            gameId = data['gameId']
+            game = await sync_to_async(self.getGame)(gameId)
+            tournament = await sync_to_async(getattr)(game, 'tournament')
+            gameCache = None
+            if (tournament):
+                gameCache = self.getGameInCache(gameId, tournament.id)
+            else:
+                gameCache = self.getGameInCache(gameId, None)
+                
+            playerVerif = await sync_to_async(self.checkPlayerInGame)(id, game)
+            if (playerVerif == True):
+                player = gameCache.players[id]
+                if (gameCache is not None):
+                    print(f'GameCache is not None')
+                    if (data['GameSocket'] == True):
+                        player.cancel = False
+                    elif (data['GameSocket'] == False):
+                        player.cancel = True
+                
+                print(f'Test cancelGame ?')
+                for gamerId, gamer in gameCache.players.items():
+                    if (gamer.cancel == False):
+                        playerNotReady = playerNotReady + 1
+                    elif(gamer.cancel == True):
+                        playerReady = playerReady + 1
+                
+                if (playerNotReady + playerReady == 2):
+                    if (playerNotReady == 1):
+                        await self.cancelGameWithWinner(game, gameCache)
+
+        except Exception as e:
+            print(f'CheckSocketGame failed: {e}')
+            
+    def getGameInCache(self, gameId, tournamenId):
+        for type_game, allGames in self.games.items():
+            if (type_game == 'tournament'):
+                if (tournamenId != None):
+                    if (gameId in allGames[tournamenId]):
+                        return allGames[tournamenId][gameId]
+                else:
+                    return None
+            else:
+                if (gameId in allGames):
+                    return allGames[gameId]
+        return None
+    
+    async def cancelGameWithWinner(self, gameDatabase, gameCache):
+        data = {}
+        for playerId, player in gameCache.players.items():
+            if (player.cancel == False):
+                data.update({playerId: 1})
+            elif (player.cancel == True):
+                data.update({playerId: 0})
+        
+        data.update({'game_id': gameDatabase.id})
+        await self.updateScore(data)
+        
+            
+        
     #############      GENERAL     #############
             
 
@@ -981,6 +1050,13 @@ class Command(BaseCommand):
         except Exception as e:
             print(f'Someone not exist -> {e}')
             return False
+        
+    def deleteGameDatabase(self, game):
+        try:
+            game.delete()
+        except Exception as e:
+            print(f"Delete Game in Database failed: {e}")
+        
         
                   
 
