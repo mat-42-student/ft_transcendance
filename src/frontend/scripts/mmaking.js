@@ -534,7 +534,7 @@ export class Mmaking
 			'GameSocket': true,
 			'gameId': this.gameId
 		};
-
+		this.cancelState();
 		this.sendMsg(data);
 
 	}

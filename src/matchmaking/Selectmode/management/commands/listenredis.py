@@ -235,21 +235,26 @@ class Command(BaseCommand):
                 player = gameCache.players[id]
                 if (gameCache is not None):
                     print(f'GameCache is not None')
+                    print(f'State GameSocket: {data['GameSocket']}')
                     if (data['GameSocket'] == True):
                         player.cancel = False
                     elif (data['GameSocket'] == False):
                         player.cancel = True
+                print(f'player.cancel: {player.cancel}')
                 
                 print(f'Test cancelGame ?')
                 for gamerId, gamer in gameCache.players.items():
-                    if (gamer.cancel == False):
+                    if (gamer.cancel == True):
                         playerNotReady = playerNotReady + 1
-                    elif(gamer.cancel == True):
+                    elif(gamer.cancel == False):
                         playerReady = playerReady + 1
                 
+                print(f'playerNorReady: {playerNotReady}')
                 if (playerNotReady + playerReady == 2):
                     if (playerNotReady == 1):
                         await self.cancelGameWithWinner(game, gameCache)
+                    elif(playerNotReady == 2):
+                        await sync_to_async(self.deleteGameDatabase)(game)
 
         except Exception as e:
             print(f'CheckSocketGame failed: {e}')
