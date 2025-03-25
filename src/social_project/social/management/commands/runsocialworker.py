@@ -10,32 +10,34 @@ from django.core.cache import cache
 from redis.asyncio import Redis
 import httpx
 import logging
+import jwt
+from datetime import datetime, timedelta, timezone
 
-async def get_ccf_token():
-    url = os.getenv('OAUTH2_CCF_TOKEN_URL')
-    client_id = os.getenv('OAUTH2_CCF_CLIENT_ID')
-    client_secret = os.getenv('OAUTH2_CCF_CLIENT_SECRET')
+# async def get_ccf_token():
+#     url = os.getenv('OAUTH2_CCF_TOKEN_URL')
+#     client_id = os.getenv('OAUTH2_CCF_CLIENT_ID')
+#     client_secret = os.getenv('OAUTH2_CCF_CLIENT_SECRET')
 
-    async with httpx.AsyncClient() as client:
-        data = {
-            "grant_type": "client_credentials",
-            "client_id": client_id,
-            "client_secret": client_secret
-        }
-        response = await client.post(url, data=data)
-        response.raise_for_status()
-        token_data = response.json()
-        return token_data['access_token'], token_data.get('expires_in', 3600)
+#     async with httpx.AsyncClient() as client:
+#         data = {
+#             "grant_type": "client_credentials",
+#             "client_id": client_id,
+#             "client_secret": client_secret
+#         }
+#         response = await client.post(url, data=data)
+#         response.raise_for_status()
+#         token_data = response.json()
+#         return token_data['access_token'], token_data.get('expires_in', 3600)
 
-async def get_ccf_token_cache():
-    redis = Redis.from_url("redis://redis:6379", decode_responses=True)
-    token = await redis.get('oauth_token')
-    if token:
-        return token
-    else:
-        new_token, expires_in = await get_ccf_token()
-        await redis.setex('oauth_token', expires_in - 60, new_token)
-        return new_token
+# async def get_ccf_token_cache():
+#     redis = Redis.from_url("redis://redis:6379", decode_responses=True)
+#     token = await redis.get('oauth_token')
+#     if token:
+#         return token
+#     else:
+#         new_token, expires_in = await get_ccf_token()
+#         await redis.setex('oauth_token', expires_in - 60, new_token)
+#         return new_token
 
 class Command(BaseCommand):
     help = "Async pub/sub redis worker. Listens 'deep_social' channel"
@@ -142,15 +144,24 @@ class Command(BaseCommand):
 
     async def get_friend_list(self, user_id):
         """ Request friendlist from container 'users' """
-
         try:
-            token = await get_ccf_token_cache()
-            if not token:
-                logging.error("Failed to retrieve access token")
-                return None
+            # Generate the token
+            payload = {
+                "service": "social",
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+            }
             
+            token = jwt.encode(
+                payload,
+                settings.BACKEND_JWT["PRIVATE_KEY"],
+                algorithm=settings.BACKEND_JWT["ALGORITHM"],
+            )
+
             url = f"http://users:8000/api/v1/users/{user_id}/friends/"
-            headers = {"Authorization": f"Bearer {token}"}
+            headers = {"Authorization": f"Service {token}"}
+
+            # Make the request
+            # response = requests.get(url, headers=headers)
             
             async with httpx.AsyncClient(timeout=10) as client:
                 response = await client.get(url, headers=headers)

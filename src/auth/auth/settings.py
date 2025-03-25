@@ -15,10 +15,12 @@ ALLOWED_HOSTS = ['*']
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-
-JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")
-JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")
-JWT_ALGORITHM = 'RS256'
+FRONTEND_JWT = {
+    "PUBLIC_KEY": os.getenv("JWT_PUBLIC_KEY"),
+    "PRIVATE_KEY": os.getenv("JWT_PRIVATE_KEY"),
+    "ALGORITHM": "RS256",
+    "AUTH_HEADER_PREFIX": "Bearer",
+}
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -30,7 +32,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'authentication',
-    'oauth2_provider',
+    # 'oauth2_provider',
 ]
 
 MIDDLEWARE = [
@@ -46,7 +48,7 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        # 'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
         'authentication.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -55,14 +57,14 @@ REST_FRAMEWORK = {
 }
 
 # OAuth2 Provider settings
-OAUTH2_PROVIDER = {
-    'SCOPES_BACKEND_CLASS': 'oauth2_provider.scopes.SettingsScopes',
-    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
-    'SCOPES': {
-        'read': 'Read access',
-        'write': 'Write access',
-    },
-}
+# OAUTH2_PROVIDER = {
+#     'SCOPES_BACKEND_CLASS': 'oauth2_provider.scopes.SettingsScopes',
+#     'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
+#     'SCOPES': {
+#         'read': 'Read access',
+#         'write': 'Write access',
+#     },
+# }
 
 # OAuth 2.0 Authorization Code grant
 OAUTH2_ACF_REDIRECT_URI = 'https://localhost:3000/api/v1/auth/oauth/callback/'

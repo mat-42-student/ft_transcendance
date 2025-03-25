@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
+    'django.contrib.staticfiles',   
     'Selectmode'
 ]
 
@@ -39,6 +39,14 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+BACKEND_JWT = {
+    "PUBLIC_KEY": os.getenv("BACKEND_JWT_PUBLIC_KEY"),
+    "PRIVATE_KEY": os.getenv("BACKEND_JWT_PRIVATE_KEY"),
+    "ALGORITHM": "RS256",
+    "AUTH_HEADER_PREFIX": "Service",
+}
+
 
 ROOT_URLCONF = 'matchmaking.urls'
 
@@ -129,15 +137,15 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-CACHES = {
-    # Cache for OAuth2 client credentials tokens (DB 1)
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis:6379/0",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
-        "KEY_PREFIX": "oauth_tokens",
-    }
-}
+# CACHES = {
+#     # Cache for OAuth2 client credentials tokens (DB 1)
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": "redis://redis:6379/0",
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#         },
+#         "KEY_PREFIX": "oauth_tokens",
+#     }
+# }
 
