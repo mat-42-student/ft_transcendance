@@ -41,6 +41,7 @@ const cardInitializers = {
     'auth': () => {
         window.location.hash = '#signin';
         document.getElementById('oauth-submit')?.addEventListener('click', () => {
+            localStorage.setItem('cookieSet', true);
             window.location.href = 'https://localhost:3000/api/v1/auth/oauth/login/';
         });
         document.querySelectorAll('#auth-form a[data-action]').forEach(link => {
