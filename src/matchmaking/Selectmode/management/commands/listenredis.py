@@ -640,7 +640,7 @@ class Command(BaseCommand):
             if (notfound):
                 for playerId, player in game.players.items():
                     print(f'Send nextroundToclient has win the previous game')
-                    await player.updateStatus(self.redis_client, self.channel_deepSocial, 'pending')
+                    await player.updateStatus(self.redis_client, self.channel_deepSocial, 'ingame')
                     await self.nextRoundTournamentJSON(playerId, player, gameId, tournamentId)
                         
 
