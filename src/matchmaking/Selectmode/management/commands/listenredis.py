@@ -631,6 +631,7 @@ class Command(BaseCommand):
                     for playerId, player in game.players.items():
                         if (oldGame.winner.id != playerId and (oldGame.player1.id == playerId or oldGame.player2.id == playerId)):
                             print(f'Send nextroundToclient has loose the previous game')
+                            await player.updateStatus(self.redis_client, self.channel_deepSocial, 'online')
                             await self.nextRoundTournamentJSON(playerId, player, None, tournamentId)
                     notfound = False
                     break
@@ -639,6 +640,7 @@ class Command(BaseCommand):
             if (notfound):
                 for playerId, player in game.players.items():
                     print(f'Send nextroundToclient has win the previous game')
+                    await player.updateStatus(self.redis_client, self.channel_deepSocial, 'pending')
                     await self.nextRoundTournamentJSON(playerId, player, gameId, tournamentId)
                         
 
@@ -942,7 +944,7 @@ class Command(BaseCommand):
                 except Exception as e:
                     print(f'endgame failed: {e}')
         
-        for playerId in gameInCache.players:
+        for playerId, player in gameInCache.players.items():
             try:
                 data = {
                     'header':{
@@ -956,6 +958,7 @@ class Command(BaseCommand):
                         'tournament': True,
                     }
                 }
+                await player.updateStatus(self.redis_client, self.channel_deepSocial, 'online')
                 await self.redis_client.publish(self.channel_front, json.dumps(data))
             except Exception as e:
                 print(f'Send engame failed: {e}')
