@@ -58,8 +58,8 @@ export class WebGame extends GameBase {
         };
 
         this.socket.onclose = async function(e) {
-            this.socket = null;
-            this.isPlaying = false;
+            state.gameApp.socket = null;
+            state.gameApp.isPlaying = false;
         };
 
         this.socket.onmessage = async function(e) {
