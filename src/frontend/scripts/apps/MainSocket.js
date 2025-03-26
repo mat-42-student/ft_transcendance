@@ -55,7 +55,13 @@ export class MainSocket {
     };
 
 	send(data) {
-		this.socket.send(data);
+		// I added this check because it appears that sending without while still .CONNECTING
+		// breaks the socket permanently? Not sure about this...
+		if (this.socket.OPEN)
+			this.socket.send(data);
+		else
+			console.error('Tried to send data over the main socket, but it is not open.\n',
+				'Data that could not be sent:', data);
 	}
 
 	// Ajout verifs
