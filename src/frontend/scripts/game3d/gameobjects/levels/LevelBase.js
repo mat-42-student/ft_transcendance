@@ -41,6 +41,7 @@ export default class LevelBase extends THREE.Scene {
 		console.log('Level.dispose() called');  //TODO remove log 'Level.dispose() called'
 	}
 
+
 	pause(time) {
 		this.#isPaused = true;
 	}
@@ -51,6 +52,39 @@ export default class LevelBase extends THREE.Scene {
 			return true;
 		}
 		return false;
+	}
+
+
+	/** Override in each level. Should display the winner. */
+	endShowWinner(
+		scores = [NaN, NaN],
+		winner = NaN,
+		playerNames = ['?1', '?2'],
+	) {
+		console.log('LevelBase:', playerNames[winner], 'won.', scores);  //TODO remove log 'End:Winner'
+	}
+
+	/** Override in each level. Should say the game was forfeited. Only for web game. */
+	endShowWebQuit(
+		quitter = NaN,
+		playerNames = ['?1', '?2'],
+	) {
+		console.log('LevelBase:', playerNames[quitter], 'quit.');  //TODO remove log 'End:Quit'
+	}
+
+	/** Override in each level. Called when a local game is cancelled. */
+	endShowNothing() {
+		console.log('LevelBase: Game cancelled. (No display)');  //TODO remove log 'End:Nothing'
+	}
+
+	/**
+	 * After endShow*() was run, when the user switches to a different page,
+	 * this is automatically called.
+	 * That way any other page content won't have a background that is also text.
+	 * Override in each level.
+	 */
+	endHideResult() {
+		console.log('LevelBase: End result hidden.');  //TODO remove log 'End:Hide'
 	}
 
 
