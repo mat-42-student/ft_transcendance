@@ -27,9 +27,6 @@ export class GameBase {
 	}
 
 	close() {
-		if (this.level)
-			this.level.dispose();
-		state.engine.scene = null;
 		state.gameApp = null;
 		this.isPlaying = false;  // just in case this object lingers somehow?
 	}

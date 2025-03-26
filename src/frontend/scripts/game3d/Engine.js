@@ -121,8 +121,7 @@ export class Engine {
 
 	set scene(newScene) {
 		if (this.#scene && this.#scene.dispose) {
-			// this.#scene.dispose();
-			console.warn('Replaced engine.scene: make sure to dispose() the old scene manually.');
+			this.#scene.dispose();
 		}
 
 		// Hide or show canvas depending on if the engine will be able to render or not.
