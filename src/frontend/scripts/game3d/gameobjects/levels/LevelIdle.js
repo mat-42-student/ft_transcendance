@@ -53,6 +53,7 @@ export default class LevelIdle extends LevelBase {
 
 	dispose() {
 		super.dispose();
+		UTILS.disposeHierarchy(this.funnycube);
 	}
 
 }
