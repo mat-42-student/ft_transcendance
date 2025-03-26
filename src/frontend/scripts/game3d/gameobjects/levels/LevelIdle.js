@@ -31,7 +31,9 @@ export default class LevelIdle extends LevelBase {
 		this.smoothCamera.position.set(0, 1, 0);
 		this.smoothCamera.quaternion.copy(q1.multiply(q2));
 		this.smoothCamera.fov = 120;
-		// this.smoothCamera.smoothSpeed = 1;
+		this.smoothCamera.smoothSpeed = 1;
+		this.smoothCamera.mousePositionMultiplier.setScalar(0.02);
+		this.smoothCamera.mouseRotationMultiplier.setScalar(0.02);
 
 		state.engine.gltfLoader.load('/ressources/3d/test.glb', (gltf) => {
 			state.engine.scene.funnycube = gltf.scene;
@@ -45,8 +47,8 @@ export default class LevelIdle extends LevelBase {
 		super.onFrame(delta, time);
 
 		if (this.funnycube) {
-			this.funnycube.rotateY(delta * 2);
-			this.funnycube.rotateX(delta * 3)
+			this.funnycube.rotateY(delta * 0.2);
+			this.funnycube.rotateX(delta * 0.3)
 		}
 	}
 
