@@ -98,38 +98,40 @@ export class SocialApp{
             htmlFriendList.innerHTML = '<p>I\'m sorry you have no friends</p>';
             return;
         }
-        this.friendList.forEach((friend) => {
-            const friendItem = document.createElement('li');
-            friendItem.classList.add('friend-item');
-            friendItem.innerHTML = `
-                <img class="friend-avatar" src="/media/avatars/${friend.avatar}" alt="${friend.username}">
-                <div class="friend-info">
-                    <span class="friend-name">${friend.username}</span>
-                    <div class="friend-detail" data-user-id="${friend.id}">
-                        <span class="friend-status ${friend.status}"></span>
-                        <button class="btn-match"><img id=btn-match-picture-${friend.id} src="/ressources/vs.png"></button>
-                        <button class="btn-chat"><img src="/ressources/chat.png"></button>
-                    </div>
-                </div>
-            `;
-            htmlFriendList.appendChild(friendItem);
+        this.friendList.forEach((friend) => this.addFriendEntry(friend, htmlFriendList));
+    }
 
-            // add data-user-id="${friend.id}" to entire card (Adrien©)
-            friendItem.dataset.userid = friend.id;
-			friendItem.classList.add(`friend-item-${friend.id}`);
-    
-            const btnChat = friendItem.querySelector('.btn-chat');
-            const btnMatch = friendItem.querySelector('.btn-match');
-    
-            btnChat.dataset.friendId = friend.id;
-            btnMatch.dataset.friendId = friend.id;
-			
-			// add by Adrien
-            btnMatch.dataset.invite = 0;
-			btnMatch.classList.add(`btn-match-${friend.id}`);
-    
-            btnChat.addEventListener('click', this.handleChatClick);
-        });
+    addFriendEntry(friend, parent) {
+        const friendItem = document.createElement('li');
+        friendItem.classList.add('friend-item');
+        friendItem.innerHTML = `
+            <img class="friend-avatar" src="/media/avatars/${friend.avatar}" alt="${friend.username}">
+            <div class="friend-info">
+                <span class="friend-name">${friend.username}</span>
+                <div class="friend-detail" data-user-id="${friend.id}">
+                    <span class="friend-status ${friend.status}"></span>
+                    <button class="btn-match"><img id=btn-match-picture-${friend.id} src="/ressources/vs.png"></button>
+                    <button class="btn-chat"><img src="/ressources/chat.png"></button>
+                </div>
+            </div>
+        `;
+        parent.appendChild(friendItem);
+
+        // add data-user-id="${friend.id}" to entire card (Adrien©)
+        friendItem.dataset.userid = friend.id;
+        friendItem.classList.add(`friend-item-${friend.id}`);
+
+        const btnChat = friendItem.querySelector('.btn-chat');
+        const btnMatch = friendItem.querySelector('.btn-match');
+
+        btnChat.dataset.friendId = friend.id;
+        btnMatch.dataset.friendId = friend.id;
+        
+        // add by Adrien
+        btnMatch.dataset.invite = 0;
+        btnMatch.classList.add(`btn-match-${friend.id}`);
+
+        btnChat.addEventListener('click', this.handleChatClick);
     }
 
     handleChatClick(event) {

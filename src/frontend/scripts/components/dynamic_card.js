@@ -42,6 +42,8 @@ const cardInitializers = {
         window.location.hash = '#signin';
         document.getElementById('oauth-submit')?.addEventListener('click', () => {
             localStorage.setItem('cookieSet', true);
+            // comment on sait si le OAuth est refusé ? 
+            // Idealement dans ce cas on devrait localStorage.removeItem('cookieSet');
             window.location.href = 'https://localhost:3000/api/v1/auth/oauth/login/';
         });
         document.querySelectorAll('#auth-form a[data-action]').forEach(link => {

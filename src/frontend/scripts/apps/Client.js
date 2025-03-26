@@ -25,7 +25,6 @@ export class Client{
             throw error;
         }
         localStorage.setItem('cookieSet', true); // modfis ajoutées après merge
-        // this.renderProfileBtn();
 		if (this.state.mainSocket == null)
 		{
         	this.state.mainSocket = new MainSocket();
@@ -57,9 +56,7 @@ export class Client{
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Logout failed');
             }
-            
-            localStorage.removeItem('isCookie');
-    
+              
             localStorage.removeItem('cookieSet'); // modfis ajoutées après merge
             window.location.hash = '#home';
         } catch (error) {
@@ -126,7 +123,7 @@ export class Client{
                 throw new Error("Could not refresh token");
             }
             const data = await response.json();
-            localStorage.setItem('isCookie', true);
+            localStorage.setItem('cookieSet', true);
             try {
                 await this.login(data.accessToken);
             }
