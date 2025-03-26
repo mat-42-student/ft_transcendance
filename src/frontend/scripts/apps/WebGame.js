@@ -92,6 +92,7 @@ export class WebGame extends GameBase {
                 if (state.gameApp.level)  state.gameApp.level.pause(Number(data.time));
             }
             if (data.action == "disconnect") {
+                wg.level.endShowWebQuit(NaN, [...wg.playerNames]);
                 wg.close();
             }
         };

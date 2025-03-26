@@ -9,6 +9,8 @@ import SceneOriginHelper from '../../utils/SceneOriginHelper.js';
 import BoardAnchor from '../../utils/BoardAnchor.js';
 import TextMesh from '../../utils/TextMesh.js';
 import DebugPauseText from './DebugPauseText.js';
+import { state } from '../../../../main.js';
+import Cross2DHelper from '../../utils/Cross2DHelper.js';
 
 
 export default class LevelDebug extends LevelBase {
@@ -20,6 +22,9 @@ export default class LevelDebug extends LevelBase {
 
 		this.background = new THREE.Color('#112211');
 		this.fog = null;
+
+		this.gameplayObjects = new THREE.Group();
+		this.gameEndObjects = new THREE.Group();
 
 		{
 			this.views.position[2].set(0, 1.2, -0.8);
@@ -39,9 +44,12 @@ export default class LevelDebug extends LevelBase {
 	onAdded() {
 		super.onAdded();
 
-		this.add(new DebugBall());
-		this.add(new DebugPaddle(0));
-		this.add(new DebugPaddle(1));
+		this.add(this.gameplayObjects);
+		this.add(this.gameEndObjects);
+
+		this.gameplayObjects.add(new DebugBall());
+		this.gameplayObjects.add(new DebugPaddle(0));
+		this.gameplayObjects.add(new DebugPaddle(1));
 
 		this.add(new DebugBoard());
 		this.add(new SceneOriginHelper());
@@ -49,19 +57,19 @@ export default class LevelDebug extends LevelBase {
 		this.smoothCamera.diagonal = 40;
 		this.smoothCamera.mousePositionMultiplier.set(0.1, 0.1);
 		this.smoothCamera.mouseRotationMultiplier.set(0.1, 0.1);
-		this.smoothCamera.smoothSpeed = 15;
+		this.smoothCamera.smoothSpeed = 5;
 
 		{
 			const top = new BoardAnchor(-0.1, -0.1, 0.8, this);
 			const bottom = new BoardAnchor(-0.1, -0.1, -0.8, this);
 
-			this.add(top);
-			this.add(bottom);
+			this.gameplayObjects.add(top);
+			this.gameplayObjects.add(bottom);
 
 			top.left.add(new DebugScoreIndicator(0));
 			top.right.add(new DebugScoreIndicator(1));
 
-			this.textMaterial = new THREE.MeshBasicMaterial({color: '#334433'});
+			this.textMaterial = new THREE.MeshBasicMaterial({color: '#88ff88'});
 
 			this.nameTextMeshes = [
 				new TextMesh(this.textMaterial, '???'),
@@ -115,16 +123,67 @@ export default class LevelDebug extends LevelBase {
 		if (this.textMaterial) this.textMaterial.dispose();
 	}
 
-
 	pause(time) {
 		super.pause(time);
-		this.add(new DebugPauseText('Ready...', time));
+		this.gameplayObjects.add(new DebugPauseText('Ready...', time));
 	}
-
 
 	unpause() {
 		if (super.unpause()) {
-			this.add(new DebugPauseText('Go!', 0.5));
+			this.gameplayObjects.add(new DebugPauseText('Go!', 0.5));
+		}
+	}
+
+
+	endShowWinner(
+		scores = [NaN, NaN],
+		winner = NaN,
+		playerNames = ['?1', '?2'],
+	) {
+		this.endShowNothing();
+		const text = new TextMesh(this.textMaterial,
+			`${scores[0]} : ${scores[1]}\n\n${playerNames[winner]}\nwon!`);
+		text.rotateX(-UTILS.RAD90);
+		text.rotateZ(UTILS.RAD180);
+		this.gameEndObjects.add(text);
+	}
+
+	endShowWebQuit(
+		quitter = NaN,
+		playerNames = ['?1', '?2'],
+	) {
+		this.endShowNothing();
+		const text = new TextMesh(this.textMaterial, `${playerNames[quitter]}\nquit!`);
+		text.rotateX(-UTILS.RAD90);
+		text.rotateZ(UTILS.RAD180);
+		this.gameEndObjects.add(text);
+	}
+
+	endShowNothing() {
+		if (this.gameplayObjects) {
+			this.remove(this.gameplayObjects);
+			this.gameplayObjects = undefined;
+		}
+
+		this.views = null;
+		this.smoothCamera.position.set(0, 5, 0);
+		this.smoothCamera.quaternion.setFromAxisAngle(
+			new THREE.Vector3(1,0,0), -UTILS.RAD90);
+		this.smoothCamera.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(
+			new THREE.Vector3(0, 0,1), UTILS.RAD180));
+		this.smoothCamera.fov = 20;
+		this.smoothCamera.mouseRotationMultiplier.setScalar(0.02);
+		this.smoothCamera.mousePositionMultiplier.setScalar(0.02);
+
+		const x = new Cross2DHelper('#224422');
+		x.rotateY(UTILS.RAD90/2);
+		this.add(x);
+	}
+
+	endHideResult() {
+		if (this.gameEndObjects) {
+			this.remove(this.gameEndObjects);
+			this.gameEndObjects = undefined;
 		}
 	}
 

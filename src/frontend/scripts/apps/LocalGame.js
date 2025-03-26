@@ -3,6 +3,7 @@ import * as UTILS from "../utils.js";
 import {MathUtils, Vector2} from 'three';
 import * as LEVELS from '../game3d/gameobjects/levels/_exports.js';
 import { GameBase } from "./GameBase.js";
+import LevelBase from "../game3d/gameobjects/levels/LevelBase.js";
 
 
 //REVIEW Exceptions should be caught, and should terminate the game
@@ -54,6 +55,7 @@ export class LocalGame extends GameBase {
 
         this.side = isCPU ? 0 : 2;  // Neutral (2) if keyboard PVP
 
+        /** @type {LevelBase} */
         this.level = new (LEVELS.pickRandomLevel())();  // randomly select class, then construct it
         state.engine.scene = this.level;
 
@@ -316,9 +318,14 @@ export class LocalGame extends GameBase {
 
     /** @param {boolean} isEndingBecauseCancelled */
     endgame(isEndingBecauseCancelled) {
-        if (isEndingBecauseCancelled !== true) {
-            let winner = this.scores[0] >= this.maxScore ? 0 : 1;
-            alert(`GAME OVER\nLe gagnant est ${this.playerNames[winner]}!`);
+        if (isEndingBecauseCancelled) {
+            this.level.endShowNothing();
+        } else {
+            this.level.endShowWinner(
+                [...this.scores],
+                this.scores[0] >= this.maxScore ? 0 : 1,
+                [...this.playerNames]
+            );
         }
     }
 }
