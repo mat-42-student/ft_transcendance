@@ -121,7 +121,6 @@ export function disposeMaterial(mat)
     if (!(mat instanceof THREE.Material))
         return;
 
-    //REVIEW check in documentation that threeJS materials actually have these properties
     if (mat.map)              mat.map.dispose ();
     if (mat.lightMap)         mat.lightMap.dispose ();
     if (mat.bumpMap)          mat.bumpMap.dispose ();
