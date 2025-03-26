@@ -1,5 +1,6 @@
 import LevelDebug from './debug/LevelDebug.js';
 import { state } from '../../../main.js';
+import LevelBase from './LevelBase.js';
 
 
 export const LIST = {
@@ -7,6 +8,7 @@ export const LIST = {
 };
 
 
+/** @returns {LevelBase} */
 export function pickRandomLevel() {
 	if (state && state.engine && state.engine.DEBUG_MODE == true) {
 		return LevelDebug;
