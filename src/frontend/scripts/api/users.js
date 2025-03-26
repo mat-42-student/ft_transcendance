@@ -107,9 +107,14 @@ export async function performUserAction(userId, action) {
         return;
     }
 
+    if (action === "add-friend" || action === "remove-friend")
+        await state.socialApp.notifyUser(userId);
+
     try {
         const { url, method } = actions[action];
-        return await apiRequest(url, method);
+        await apiRequest(url, method);
+        await state.socialApp.render();
+        return
     } catch (error) {
         console.error(`Erreur lors de l'action ${action}:`, error);
     }

@@ -19,7 +19,7 @@ export class MainSocket {
 		state.chatApp = new ChatApp();
 		state.socialApp = new SocialApp();
 		await state.socialApp.getFriends();
-		state.socialApp.startPollingPendingCount();  // Lancement automatique du polling
+		// state.socialApp.startPollingPendingCount();  // Lancement automatique du polling
 		state.mmakingApp = new Mmaking();
 
 		this.socket.onerror = async (e)=> {
@@ -46,7 +46,11 @@ export class MainSocket {
 					break
 				case 'mmaking':
 					//if (await state.mmakingApp.waited_page)
-						state.mmakingApp.incomingMsg(data);
+					state.mmakingApp.incomingMsg(data);
+					break;
+				case 'notify':
+					console.log("mainSocket : incoming notify");
+					state.socialApp.incomingNotify();
 					break;
 				default:
 				console.warn('mainSocket : could not handle incoming JSON' + JSON.stringify(data, null, 2));

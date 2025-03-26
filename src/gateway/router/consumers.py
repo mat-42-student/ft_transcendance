@@ -148,13 +148,29 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             return False
         return True
 
+    def check_front_data(self, message):
+        try:
+            data = message.get('data')
+            if not data:
+                return None
+            data = loads(data)
+            if not isinstance(data, dict) or "header" not in data:
+                return None
+            header = data.get('header')
+            if not isinstance(header, dict) or header.get('dest') != 'front':
+                return None
+        except:
+            return None
+        return data
+
     async def listen_to_channels(self):
         """Listen redis to send data back to appropriate client
-        possible 'service' values are 'mmaking', 'chat', 'social' and 'notif' """
+        possible 'service' values are 'mmaking', 'chat', 'social' """
         async for message in self.pubsub.listen():
-            data = loads(message['data'])
-            # print(f"Listen Redis on consumer {self.consumer_id}: {data}")
-            if self.right_consumer(data['header']['id']) and data['header']['dest'] == 'front':
+            data = self.check_front_data(message)
+            if not data:
+                continue
+            if self.right_consumer(data['header']['id']):
                 try:
                     del data['header']['dest']
                     if data['header'].get('token'):

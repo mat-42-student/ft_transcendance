@@ -8,7 +8,7 @@ from django.conf import settings
 import os
 from django.core.cache import cache
 from redis.asyncio import Redis
-import httpx
+import httpx # type: ignore
 import logging
 import jwt
 from datetime import datetime, timedelta, timezone
@@ -86,6 +86,7 @@ class Command(BaseCommand):
                         continue
                     if self.valid_social_json(data):
                         await self.social_process(data)
+                        continue
                 except Exception as e:
                     print(e)
 
@@ -97,9 +98,23 @@ class Command(BaseCommand):
             return False
         return True
 
+    async def notifyUser(self, data):
+        body = data.get('body')
+        if not body:
+            return
+        user_id = body.get('id')
+        if not user_id:
+            print("No user_id in notifyUser")
+            return
+        print(f"User {user_id} is going to be notified")
+        data = self.build_notify_data(user_id)
+        await self.redis_client.publish(self.REDIS_GROUPS['gateway'], json.dumps(data))
+
     async def social_process(self, data):
-        data['header']['dest'] = 'front' # data destination after deep processing
         user_id = data['header']['id']
+        if data['body']['status'] == 'notify': # User's first connection, get all friends status
+           await self.notifyUser(data)
+           return
         friends_data = await self.get_friend_list(user_id)
         if not friends_data:
             await self.update_status(user_id, data['body']['status'])
@@ -212,6 +227,17 @@ class Command(BaseCommand):
             "body":{
                 "user_id": friend,
                 "status": self.user_status.get(friend, "offline")
+            }
+        }
+        return data
+
+    def build_notify_data(self, user_id):
+        """user_id will receive friend info"""
+        data = {
+            "header": {
+                "service": "notify",
+                "dest": "front",
+                "id": user_id
             }
         }
         return data
