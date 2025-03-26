@@ -132,6 +132,12 @@ class Game:
             await self.move_ball()
             last_frame_time = time()
         await self.wsh.channel_layer.group_send(
+            self.wsh.room_group_name, {
+                "type": "declare.winner",
+                "winner": 0 if self.players[0].score > self.players[1].score else 1,
+                "scores":  [self.players[0].score, self.players[1].score]
+        })
+        await self.wsh.channel_layer.group_send(
             self.wsh.room_group_name, {"type": "disconnect.now", "side": "server"}
         )
 
