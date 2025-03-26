@@ -2,14 +2,16 @@ import { state } from '../main.js';
 import { MainSocket } from './MainSocket.js';
 import { verifyToken } from '../api/auth.js';
 
-export class Client {
+export class Client{
+
     constructor() {
-        this.state = null;
         this.userId = null;
         this.userName = null;
         this.accessToken = null;
+        this.state = null;
     }
 
+    // Avoiding circular imports (main.js/Client.js)
     setState(state) {
         this.state = state;
     }
@@ -22,19 +24,22 @@ export class Client {
             console.error(error);
             throw error;
         }
-        localStorage.setItem('cookieSet', true);
-        this.renderProfileBtn();
-        if (!this.state.mainSocket) {
-            this.state.mainSocket = new MainSocket();
-            await this.state.mainSocket.init();
-        }
+        localStorage.setItem('cookieSet', true); // modfis ajoutées après merge
+        // this.renderProfileBtn();
+		if (this.state.mainSocket == null)
+		{
+        	this.state.mainSocket = new MainSocket();
+        	await this.state.mainSocket.init();
+		}
+        this.globalRender();
     }
 
     async logout() {
         this.userId = null;
         this.userName = null;
         this.accessToken = null;
-        if (this.state.mainSocket) this.state.mainSocket.close();
+        if (this.state.mainSocket)
+            this.state.mainSocket.close(); // handles sub-objects (social, chat, mmaking) closure
         this.state.mainSocket = null;
         this.renderProfileBtn();
 
@@ -42,11 +47,20 @@ export class Client {
             const response = await fetch('/api/v1/auth/logout/', {
                 method: 'POST',
                 credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({}),
             });
-            if (!response.ok) throw new Error('Logout failed');
-            localStorage.removeItem('cookieSet');
+    
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Logout failed');
+            }
+            
+            localStorage.removeItem('isCookie');
+    
+            localStorage.removeItem('cookieSet'); // modfis ajoutées après merge
             window.location.hash = '#home';
         } catch (error) {
             console.error('Error:', error);
@@ -56,36 +70,72 @@ export class Client {
     async globalRender() {
         this.renderProfileBtn();
         if (this.state.socialApp) {
-            await this.state.socialApp.getFriends();
-            this.state.socialApp.displayFriendList();
+            await this.state.socialApp.fetchFriends();
             await this.state.socialApp.getInfos();
         }
-        if (this.state.chatApp) this.state.chatApp.renderChat();
+        if (this.state.chatApp)
+            this.state.chatApp.renderChat();
+        if (this.state.mmakingApp)
+            await this.state.mmakingApp.renderMatchmaking();
     }
 
-    renderProfileBtn() {
-        document.getElementById('btn-profile').innerText = this.userName ? `${this.userName} (${this.userId})` : "Sign in";
+    renderProfileBtn(){
+        let label =  "Sign in";
+        if (this.state.client.userName)
+            label = this.state.client.userName + '(' + this.state.client.userId + ')';
+        document.getElementById('btn-profile').innerText = label;
     }
 
     fillUserDataFromJWT() {
-        if (!this.accessToken) throw new Error('Token not found');
-        const payload = JSON.parse(atob(this.accessToken.split('.')[1]));
-        this.userId = payload.id;
-        this.userName = payload.username;
+        if (this.state.client.accessToken == null) {
+            throw new Error('Token not found');
+        }
+        const parts = this.state.client.accessToken.split('.');
+        if (parts.length !== 3) {
+          throw new Error('Invalid JWT format');
+        }
+        const payload = parts[1];
+        const decodedPayload = atob(payload);
+        const parsedPayload = JSON.parse(decodedPayload);
+        this.state.client.userId = parsedPayload.id;
+        this.state.client.userName = parsedPayload.username;
     }
 
+    // async hasCookie() {
+    //     try {
+    //         const response = await fetch('api/v1/auth/refresh/', {
+    //             method: 'HEAD',
+    //             credentials: 'include'
+    //         });
+    //         return (response.status == 200)
+    //     } catch {
+    //         return false;
+    //     }
+    // }
+
     async refreshSession(location = null) {
-        if (!localStorage.getItem('cookieSet'))
-            return;
+        if (!localStorage.getItem('cookieSet')) // modfis ajoutées après merge
+            return;                             // modfis ajoutées après merge
         try {
             const response = await fetch('api/v1/auth/refresh/', {
                 method: 'POST',
                 credentials: 'include'
             });
-            if (!response.ok) throw new Error("Could not refresh token");
+            if (!response.ok) {
+                // console.log('request error!');
+                throw new Error("Could not refresh token");
+            }
             const data = await response.json();
-            await this.login(data.accessToken);
-            if (location) window.location.hash = location;
+            localStorage.setItem('isCookie', true);
+            try {
+                await this.login(data.accessToken);
+            }
+            catch (error) {
+                console.warn(error);
+            }
+            if (location)
+                window.location.hash = location;
+            // console.log("Session successfully restored");
         } catch (error) {
             // console.warn(error);
         }
@@ -109,8 +159,7 @@ export class Client {
 // import { state } from '../main.js';
 // import { MainSocket } from './MainSocket.js';
 
-// export class Client{
-
+// export class Client {
 //     constructor() {
 //         this.state = null;
 //         this.userId = null;
@@ -118,7 +167,6 @@ export class Client {
 //         this.accessToken = null;
 //     }
 
-//     // Avoiding circular imports (main.js/Client.js)
 //     setState(state) {
 //         this.state = state;
 //     }
@@ -131,20 +179,19 @@ export class Client {
 //             console.error(error);
 //             throw error;
 //         }
+//         localStorage.setItem('cookieSet', true);
 //         this.renderProfileBtn();
-// 		if (this.state.mainSocket == null)
-// 		{
-//         	this.state.mainSocket = new MainSocket();
-//         	await this.state.mainSocket.init();
-// 		}
+//         if (!this.state.mainSocket) {
+//             this.state.mainSocket = new MainSocket();
+//             await this.state.mainSocket.init();
+//         }
 //     }
 
 //     async logout() {
 //         this.userId = null;
 //         this.userName = null;
 //         this.accessToken = null;
-//         if (this.state.mainSocket)
-//             this.state.mainSocket.close(); // handles sub-objects (social, chat, mmaking) closure
+//         if (this.state.mainSocket) this.state.mainSocket.close();
 //         this.state.mainSocket = null;
 //         this.renderProfileBtn();
 
@@ -152,17 +199,11 @@ export class Client {
 //             const response = await fetch('/api/v1/auth/logout/', {
 //                 method: 'POST',
 //                 credentials: 'include',
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                 },
+//                 headers: { 'Content-Type': 'application/json' },
 //                 body: JSON.stringify({}),
 //             });
-    
-//             if (!response.ok) {
-//                 const errorData = await response.json();
-//                 throw new Error(errorData.message || 'Logout failed');
-//             }
-    
+//             if (!response.ok) throw new Error('Logout failed');
+//             localStorage.removeItem('cookieSet');
 //             window.location.hash = '#home';
 //         } catch (error) {
 //             console.error('Error:', error);
@@ -172,72 +213,36 @@ export class Client {
 //     async globalRender() {
 //         this.renderProfileBtn();
 //         if (this.state.socialApp) {
-//             await this.state.socialApp.fetchFriends();
-//             state.socialApp.displayFriendList(); // reloca hors de fetchFriends()
+//             await this.state.socialApp.getFriends();
+//             this.state.socialApp.displayFriendList();
 //             await this.state.socialApp.getInfos();
 //         }
-//         if (this.state.chatApp)
-//             this.state.chatApp.renderChat();
+//         if (this.state.chatApp) this.state.chatApp.renderChat();
 //     }
 
-//     renderProfileBtn(){
-//         let label =  "Sign in";
-//         if (this.state.client.userName)
-//             label = this.state.client.userName + '(' + this.state.client.userId + ')';
-//         document.getElementById('btn-profile').innerText = label;
+//     renderProfileBtn() {
+//         document.getElementById('btn-profile').innerText = this.userName ? `${this.userName} (${this.userId})` : "Sign in";
 //     }
 
 //     fillUserDataFromJWT() {
-//         if (this.state.client.accessToken == null) {
-//             throw new Error('Token not found');
-//         }
-//         const parts = this.state.client.accessToken.split('.');
-//         if (parts.length !== 3) {
-//           throw new Error('Invalid JWT format');
-//         }
-//         const payload = parts[1];
-//         const decodedPayload = atob(payload);
-//         const parsedPayload = JSON.parse(decodedPayload);
-//         this.state.client.userId = parsedPayload.id;
-//         this.state.client.userName = parsedPayload.username;
-//     }
-
-//     async hasCookie() {
-//         try {
-//             const response = await fetch('api/v1/auth/refresh/', {
-//                 method: 'HEAD',
-//                 credentials: 'include'
-//             });
-//             return (response.status == 200)
-//         } catch {
-//             return false;
-//         }
+//         if (!this.accessToken) throw new Error('Token not found');
+//         const payload = JSON.parse(atob(this.accessToken.split('.')[1]));
+//         this.userId = payload.id;
+//         this.userName = payload.username;
 //     }
 
 //     async refreshSession(location = null) {
-//         // const cookie = await this.hasCookie();
-//         // if (this.accessToken || !cookie) {
-//         //     return;
-//         // }
+//         if (!localStorage.getItem('cookieSet'))
+//             return;
 //         try {
 //             const response = await fetch('api/v1/auth/refresh/', {
 //                 method: 'POST',
 //                 credentials: 'include'
 //             });
-//             if (!response.ok) {
-//                 // console.log('request error!');
-//                 throw new Error("Could not refresh token");
-//             }
+//             if (!response.ok) throw new Error("Could not refresh token");
 //             const data = await response.json();
-//             try {
-//                 await this.login(data.accessToken);
-//             }
-//             catch (error) {
-//                 console.warn(error);
-//             }
-//             if (location)
-//                 window.location.hash = location;
-//             // console.log("Session successfully restored");
+//             await this.login(data.accessToken);
+//             if (location) window.location.hash = location;
 //         } catch (error) {
 //             // console.warn(error);
 //         }
