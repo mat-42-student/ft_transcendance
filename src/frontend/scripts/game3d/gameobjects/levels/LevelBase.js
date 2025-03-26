@@ -61,7 +61,7 @@ export default class LevelBase extends THREE.Scene {
 		winner = NaN,
 		playerNames = ['?1', '?2'],
 	) {
-		console.log('LevelBase:', playerNames[winner], 'won.', scores);  //TODO remove log 'End:Winner'
+		this.pendingEndHide = true;
 	}
 
 	/** Override in each level. Should say the game was forfeited. Only for web game. */
@@ -69,12 +69,12 @@ export default class LevelBase extends THREE.Scene {
 		quitter = NaN,
 		playerNames = ['?1', '?2'],
 	) {
-		console.log('LevelBase:', playerNames[quitter], 'quit.');  //TODO remove log 'End:Quit'
+		this.pendingEndHide = true;
 	}
 
 	/** Override in each level. Called when a local game is cancelled. */
 	endShowNothing() {
-		console.log('LevelBase: Game cancelled. (No display)');  //TODO remove log 'End:Nothing'
+		this.pendingEndHide = true;
 	}
 
 	/**
@@ -84,7 +84,7 @@ export default class LevelBase extends THREE.Scene {
 	 * Override in each level.
 	 */
 	endHideResult() {
-		console.log('LevelBase: End result hidden.');  //TODO remove log 'End:Hide'
+		this.pendingEndHide = undefined;
 	}
 
 

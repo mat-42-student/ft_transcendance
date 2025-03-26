@@ -140,7 +140,8 @@ export default class LevelDebug extends LevelBase {
 		winner = NaN,
 		playerNames = ['?1', '?2'],
 	) {
-		this.endShowNothing();
+		super.endShowWinner(scores, winner, playerNames);
+		this.#endClear();
 		const text = new TextMesh(this.textMaterial,
 			`${scores[0]} : ${scores[1]}\n\n${playerNames[winner]}\nwon!`);
 		text.rotateX(-UTILS.RAD90);
@@ -152,7 +153,8 @@ export default class LevelDebug extends LevelBase {
 		quitter = NaN,
 		playerNames = ['?1', '?2'],
 	) {
-		this.endShowNothing();
+		super.endShowWebQuit(quitter, playerNames);
+		this.#endClear();
 		const text = new TextMesh(this.textMaterial, `${playerNames[quitter]}\nquit!`);
 		text.rotateX(-UTILS.RAD90);
 		text.rotateZ(UTILS.RAD180);
@@ -160,6 +162,19 @@ export default class LevelDebug extends LevelBase {
 	}
 
 	endShowNothing() {
+		super.endShowNothing();
+		this.#endClear();
+	}
+
+	endHideResult() {
+		super.endHideResult();
+		if (this.gameEndObjects) {
+			this.remove(this.gameEndObjects);
+			this.gameEndObjects = undefined;
+		}
+	}
+
+	#endClear() {
 		if (this.gameplayObjects) {
 			this.remove(this.gameplayObjects);
 			this.gameplayObjects = undefined;
@@ -178,13 +193,6 @@ export default class LevelDebug extends LevelBase {
 		const x = new Cross2DHelper('#224422');
 		x.rotateY(UTILS.RAD90/2);
 		this.add(x);
-	}
-
-	endHideResult() {
-		if (this.gameEndObjects) {
-			this.remove(this.gameEndObjects);
-			this.gameEndObjects = undefined;
-		}
 	}
 
 }
