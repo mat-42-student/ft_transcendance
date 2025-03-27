@@ -41,12 +41,13 @@ class Game:
         self.id = game_id
         self.ball_speed = STATS['initialBallSpeed']
         self.pad_speed = STATS['initialPadSpeed']
+        self.round_start_mult = choice([1, -1])
         self.recenter()
         print(f"{GREEN}New game {game_id} launched opposing **{self.players[LEFT].name}({self.players[LEFT].id})** vs {self.players[RIGHT].name}({self.players[RIGHT].id}){RESET}")
 
     def recenter(self):
         self.ball_pos = [0, 0]
-        self.ball_direction = [0.7071067811865475 * choice([1, -1]), 0.7071067811865475]
+        self.ball_direction = [0.7071067811865475 * self.round_start_mult, 0.7071067811865475]
         self.players[0].pos = self.players[1].pos = 0
 
     async def new_round(self):
@@ -85,6 +86,7 @@ class Game:
 
         # did the ball miss the paddle? -> Score
         if is_ball_below_paddle or is_ball_above_paddle:
+            self.round_start_mult = -1 if side == 1 else 1
             if self.players[1 - side].score_up():
                 self.over = True
             await self.new_round()
