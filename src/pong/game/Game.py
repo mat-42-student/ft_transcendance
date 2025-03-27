@@ -51,6 +51,10 @@ class Game:
 
     async def new_round(self):
         time = 2
+        # Send "info" manually, so the client can display the new score without waiting the pause.
+        await self.wsh.channel_layer.group_send(
+            self.wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
+        )
         await self.wsh.channel_layer.group_send(
             self.wsh.room_group_name, {"type": "wait.a.bit", "time": time}
         )
