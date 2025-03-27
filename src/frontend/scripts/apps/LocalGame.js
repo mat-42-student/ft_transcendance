@@ -66,7 +66,7 @@ export class LocalGame extends GameBase {
 	frame(delta, time) {
         this.waitTime = Math.max(0, this.waitTime - delta);
 
-        if (this.waitTime <= 0) {
+        if (this.waitTime <= 0 && document.hasFocus()) {
             if (this.level)  this.level.unpause();
 
             if (this.cpuDecideIn != NaN)
