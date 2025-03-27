@@ -196,9 +196,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             # await self.redis_client.delete(f"game_{self.game_id}_players")
             await self.send(text_data=json.dumps({"action": "disconnect"}))
             if self.game != None:
-                await self.channel_layer.group_send(
-                    await self.declare_quit({"quitter": None})  #TODO function argument
-                )
+                await self.declare_quit({"quitter": None})  #TODO function argument
         except Exception as e:
             # print(e)
             pass
@@ -308,6 +306,8 @@ class PongConsumer(AsyncWebsocketConsumer):
     # If not, game was stopped because one player left
         if not self.connected:
             return
+        if event["side"] != "server":
+            await self.declare_quit({"quitter": 1 - self.side})
         self.connected = False
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
         print(f"Disco_now event: {event}")
@@ -330,9 +330,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.game.players[1].score = 1 - self.game.players[0].score
         self.game.over = True
         print(f"{RED}Player {user} left")
-        await self.channel_layer.group_send(
-            await self.declare_quit({"quitter": user})
-        )
+        # await self.declare_quit({"quitter": user})
         await self.send_score()
         self.game = None
 
