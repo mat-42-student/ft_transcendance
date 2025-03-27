@@ -8,6 +8,10 @@ export class WebGame extends GameBase {
     constructor(levelName) {
         super();
 
+        try {
+            document.getElementById("keyhint-versus").style.display = null;
+        } catch {}
+
         this.socket = null;
 
         this.side = 2;  // Set to neutral until server tells us
@@ -29,6 +33,10 @@ export class WebGame extends GameBase {
 
     close() {
         this.socket.close();
+
+        try {
+            document.getElementById("keyhint-versus").style.display = "none";
+        } catch {}
 
         super.close();
     }

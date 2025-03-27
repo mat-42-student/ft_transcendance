@@ -38,6 +38,11 @@ export class LocalGame extends GameBase {
     constructor (isCPU = false) {
         super();
 
+        try {
+            const id = isCPU ? "keyhint-versus" : "keyhint-local";
+            document.getElementById(id).style.display = null;
+        } catch {}
+
         this.isCPU = isCPU;
         this.cpuTarget = 0;
         this.waitTime = 0;
@@ -83,6 +88,11 @@ export class LocalGame extends GameBase {
 
     close(cancelled = true) {
         this.endgame(cancelled);
+
+        try {
+            const id = this.isCPU ? "keyhint-versus" : "keyhint-local";
+            document.getElementById(id).style.display = "none";
+        } catch {}
 
         super.close();
     }
@@ -309,10 +319,10 @@ export class LocalGame extends GameBase {
         this.newRound();
     }
 
-    pause() {
-        this.waitTime = 1;
+    pause(time = 1) {
+        this.waitTime = time;
         if (this.level) {
-            this.level.pause(this.waitTime);
+            this.level.pause(time);
         }
     }
 
