@@ -1,4 +1,4 @@
-import { state } from '../main.js';
+import { state, toggleHeaderButtons } from '../main.js';
 import { initDynamicCard, closeDynamicCard } from '../components/dynamic_card.js';
 import { WebGame } from './WebGame.js';
 
@@ -323,6 +323,7 @@ export class Mmaking
 				closeDynamicCard();
 				if (this.gameId != null)
 					state.gameApp = new WebGame('debug');
+					toggleHeaderButtons(true);
 					state.gameApp.launchGameSocket(this.gameId);
 				this.game = false;
 				btnTournament[0].removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);

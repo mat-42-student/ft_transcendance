@@ -140,28 +140,51 @@ export function delay(n) {
 }
 
 
-// Bind local game button (vs AI)
-{
-    const button = document.getElementById('btn-local-bot');
-    button.addEventListener('click', () => {
-        if (state.gameApp != null) {
-            console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
-            return;
-        }
+// --⬇️-- Header play buttons --⬇️--
 
-        state.gameApp = new LocalGame(true);
+const buttonQuit = document.getElementById('btn-quit-game');
+const buttonLocalBot = document.getElementById('btn-local-bot');
+const buttonLocalVersus = document.getElementById('btn-local-versus');
+const buttonVersus = document.getElementById('versus');
+const buttonTournament = document.getElementsByClassName('btn-tournament')[0];
+
+/** @param {boolean} showQuit Selects which elements become visible. */
+export function toggleHeaderButtons(showQuit) {
+    let show = [buttonLocalBot, buttonLocalVersus, buttonVersus, buttonTournament];
+    let hide = [buttonQuit];
+
+    if (showQuit)
+        [hide, show] = [show, hide];
+
+    hide.forEach((toHide) => {
+        toHide.style.display = "none";
+    });
+    show.forEach((toShow) => {
+        toShow.style.display = null;
     });
 }
+toggleHeaderButtons(false);  // hide quit button for the first time
+window.toggleHeaderButtons = toggleHeaderButtons;
+buttonLocalBot.addEventListener('click', () => {
+    if (state.gameApp != null)
+        return;
+    state.gameApp = new LocalGame(true);
+    toggleHeaderButtons(true);
+});
 
-// Bind local game button (2 keyboard players)
-{
-    const button = document.getElementById('btn-local-versus');
-    button.addEventListener('click', () => {
-        if (state.gameApp != null) {
-            console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
-            return;
-        }
+buttonLocalVersus.addEventListener('click', () => {
+    if (state.gameApp != null)
+        return;
+    state.gameApp = new LocalGame(false);
+    toggleHeaderButtons(true);
+});
 
-        state.gameApp = new LocalGame(false);
-    });
-}
+buttonQuit.addEventListener('click', () => {
+    if (state.gameApp == null)
+        return;
+    state.gameApp.close();
+    state.gameApp = null;
+    toggleHeaderButtons(false);
+});
+
+// --⬆️-- Header play buttons --⬆️--

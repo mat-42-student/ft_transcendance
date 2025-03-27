@@ -96,7 +96,7 @@
     min-height: 60px;
     width: 90%;
 }
-  
+
 /* Avatar */
 .request-item .avatar {
     width: 40px;
@@ -113,7 +113,7 @@
     font-weight: bold;
     color: #333;
 }
-  
+
 /* Boutons */
 .request-item .accept-btn,
 .request-item .reject-btn {
@@ -147,4 +147,13 @@
 #no-requests-message {
     font-size: 1rem;
     color: #666;
+}
+
+#btn-quit-game {
+    background-color: #aa2e2e;
+    color: #d0d0d0;
+}
+#btn-quit-game:hover {
+    background-color: #cb5050;
+    color: #ffffff;
 }
