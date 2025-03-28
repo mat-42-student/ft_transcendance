@@ -254,6 +254,8 @@ class Command(BaseCommand):
                     if (playerNotReady == 1):
                         await self.cancelGameWithWinner(game, gameCache)
                     elif(playerNotReady == 2):
+                        for gamer in gameCache.players.values():
+                            await gamer.updateStatus(self.redis_client, self.channel_deepSocial, 'online')
                         await sync_to_async(self.deleteGameDatabase)(game)
 
         except Exception as e:
