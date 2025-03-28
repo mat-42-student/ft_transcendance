@@ -5,7 +5,6 @@
 # COPY . .
 
 # RUN adduser -D appuser && \
-#     mkdir -p /app/shared_credentials && \
 #     chown -R appuser:appuser /app
 
 # RUN chmod +x /app/entrypoint.sh
