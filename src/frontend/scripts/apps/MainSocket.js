@@ -1,7 +1,7 @@
 import { ChatApp } from './Chat.js';
 import { SocialApp } from './Social.js';
 import { Mmaking } from './mmaking.js';
-import { state } from './main.js';
+import { state } from '../main.js';
 
 export class MainSocket {
 
@@ -18,7 +18,8 @@ export class MainSocket {
 		this.socket = new WebSocket(socketURL);
 		state.chatApp = new ChatApp();
 		state.socialApp = new SocialApp();
-		await state.socialApp.fetchFriends();
+		await state.socialApp.getFriends();
+		// state.socialApp.startPollingPendingCount();  // Lancement automatique du polling
 		state.mmakingApp = new Mmaking();
 
 		this.socket.onerror = async (e)=> {
@@ -45,7 +46,11 @@ export class MainSocket {
 					break
 				case 'mmaking':
 					//if (await state.mmakingApp.waited_page)
-						state.mmakingApp.incomingMsg(data);
+					state.mmakingApp.incomingMsg(data);
+					break;
+				case 'notify':
+					console.log("mainSocket : incoming notify");
+					state.socialApp.incomingNotify();
 					break;
 				default:
 				console.warn('mainSocket : could not handle incoming JSON' + JSON.stringify(data, null, 2));
@@ -57,14 +62,32 @@ export class MainSocket {
 		this.socket.send(data);
 	}
 
-    close() {
-        state.chatApp.close();
-        state.chatApp = null;
-        state.socialApp.close();
-		state.socialApp = null;
+	// Ajout verifs
+	close() {
+		if (this.socket) {
+			this.socket.close();
+			this.socket = null;
+		}
+		if (state.chatApp) {
+			state.chatApp.close();
+			state.chatApp = null;
+		}
+		if (state.socialApp) {
+			state.socialApp.close();
+			state.socialApp = null;
+		}
 		// state.mmakingApp.close();
 		// state.mmakingApp = null;
-        this.socket.close();
-        this.socket = null;
-    }
+	}
+
+    // close() {
+    //     state.chatApp.close();
+    //     state.chatApp = null;
+    //     state.socialApp.close();
+	// 	state.socialApp = null;
+	// 	// state.mmakingApp.close();
+	// 	// state.mmakingApp = null;
+    //     this.socket.close();
+    //     this.socket = null;
+    // }
 }

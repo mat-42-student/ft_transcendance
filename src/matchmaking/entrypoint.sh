@@ -1,19 +1,10 @@
 #!/usr/bin/env sh
+set -e  # Exit immediately if any command fails
 
-# Path to the shared .env file
-SHARED_ENV="/app/shared_credentials/.env"
-
-# Wait for the .env file to exist
-echo "Waiting for $SHARED_ENV..."
-while [ ! -f "$SHARED_ENV" ]; do
-  sleep 2
-done
-
-# Load environment variables
-echo "Loading environment variables from $SHARED_ENV"
-export $(grep -v '^#' "$SHARED_ENV" | xargs)
-
-python ./manage.py makemigrations Selectmode --no-input
+# Run Django setup commands
+python manage.py makemigrations Selectmode --no-input
+python manage.py migrate --noinput
 
 exec "$@"
+
     

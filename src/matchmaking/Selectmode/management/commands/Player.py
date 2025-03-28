@@ -4,8 +4,11 @@ import asyncio
 from django.core.cache import cache
 import os
 from django.conf import settings
-from .utils import get_ccf_token_cache
+# from .utils import get_ccf_token_cache
 #from .Guest import Guest
+import jwt
+from datetime import datetime, timedelta, timezone
+
 
 
 class Player ():
@@ -35,14 +38,24 @@ class Player ():
     
     def get_user(self):
         """Get information from API user and set this in instances"""
+        # token = get_ccf_token_cache()
 
-        token = get_ccf_token_cache()
-
-        url = f"http://users:8000/api/v1/users/{self.user_id}/"  # Remplace par ton URL réelle
-        headers = {
-            "Authorization": f"Bearer {token}",  # Ajoute le token d'authentification
+        # Generate the token
+        payload = {
+            "service": "matchmaking",
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
         }
+        
+        token = jwt.encode(
+            payload,
+            settings.BACKEND_JWT["PRIVATE_KEY"],
+            algorithm=settings.BACKEND_JWT["ALGORITHM"],
+        )
 
+        url = f"http://users:8000/api/v1/users/{self.user_id}/"
+        headers = {"Authorization": f"Service {token}"}
+
+        # Make the request
         response = requests.get(url, headers=headers)
 
         if response.status_code == 200:

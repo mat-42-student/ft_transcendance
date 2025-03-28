@@ -1,6 +1,6 @@
-import { state } from './main.js';
+import { state } from '../main.js';
 import { GameBase } from './GameBase.js';
-import * as LEVELS from './game3d/gameobjects/levels/_exports.js';
+import * as LEVELS from '../game3d/gameobjects/levels/_exports.js';
 
 
 export class WebGame extends GameBase {
@@ -88,8 +88,11 @@ export class WebGame extends GameBase {
                 wg.paddleHeights[1] = data.size[1];
                 wg.scores[0] = data.lscore;
                 wg.scores[1] = data.rscore;
+
+                if (state.gameApp.level)  state.gameApp.level.unpause();
             }
             if (data.action == "wait") {
+                if (state.gameApp.level)  state.gameApp.level.pause(Number(data.time));
             }
             if (data.action == "disconnect") {
                 wg.close();

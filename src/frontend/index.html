@@ -23,7 +23,8 @@
 
     <script type="importmap">
         { "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
         }}
     </script>
 </head>
@@ -48,7 +49,7 @@
             <!-- Searchbar -->
             <div class="header-center">
                 <form class="search-form" action="#" method="GET">
-                    <input type="text" id="searchInput" name="search" placeholder="Search..." aria-label="Recherche">
+                    <input type="text" id="searchInput" name="search" placeholder="Search..." aria-label="Recherche" autocomplete="off">
                 </form>
                 <!-- Conteneur pour les résultats -->
                 <ul id="searchResults" class="search-results"></ul>
@@ -92,7 +93,7 @@
                 <!-- Friend Requests Button -->
                 <div class="friend-requests">
                     <button class="btn-friend-requests" type="button">Friend Requests</button>
-                    <span class="request-count">0</span>
+                    <span id="pending-count" class="request-count"></span>
                     <!-- (JS) Dynamically change on pending requests for authentified User -->
                 </div>
                 <!-- Friends List -->
@@ -119,7 +120,7 @@
         <div class="overlay"></div>
         <div class="card">
             <button id="close-dynamic-card" class="close-btn">X</button>
-            <div id="dynamic-card-content"></div> <!-- Dynamic content goes here -->
+            <div id="dynamic-card-content"></div>
         </div>
     </div>
 

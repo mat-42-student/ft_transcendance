@@ -1,87 +1,95 @@
-import { initDynamicCard } from "./components/dynamic_card.js";
-import { isAuthenticated } from "./api/auth.js";
 import { state } from './main.js';
+import { initDynamicCard } from "./components/dynamic_card.js";
+import { fetchUserProfile } from "./api/users.js";
+import { performUserAction } from './api/users.js';
 
-export function setupHomePage() {
-    // document.querySelectorAll('.btn-versus').forEach(button => {
-    //     button.addEventListener('click', () => {
-    //         initDynamicCard('versus');
-    //     });
-    // });
+export function initHomePage() {}
+
+export async function initProfilePage(userId) {
+    userId = userId || state.client.userId;
+    const data = await fetchUserProfile(userId);
+    updateProfileUI(data);
+
+    // Une fois les données chargées, on met en place les événements
+    setupProfileEventListeners(userId);
 }
 
-// Nouvelle fonction pour gestion des actions depuis #profile (auth || tiers) -> fonctionelle mais incomplète
-// Logique trop compliquée ? changer pour initDynamicCard en fonction de l'action ?
-// Ajouter rechargement page ou changement de hash pour changements après une action ou faire ça dans appels fonctions tierses
-// à mettre dans un autre fichier (réagencement prévu)
-async function handleProfileAction(action, userId) {
-    const UserUrl = `api/v1/users/${userId}/${action}/`;
-    const RelationUrl = `api/v1/users/relationships/${userId}/${action}/`;
-    let method;
-    let apiUrl;
-
-    if (!action)
-        return;
-    else if ((action == "add-friend" || action == "remove-friend" || action == "block" || action == "unblock") && (!userId)) {
-        console.error("ID utilisateur manquant pour l'action:", action);
+// status perso -> state.socialapp.mystatus
+function updateProfileUI(data) {
+    if (!data) {
+        document.getElementById("profile-actions").innerHTML = "<p>Impossible de charger le profil.</p>";
         return;
     }
 
-    switch (action) {
-        case "logout":
-            state.client.logout();
-            return;
-        case "2fa":
-            initDynamicCard('2fa');
-            return;
-        case "update": // initDynamicCard(update); -> à coder
-            return;
-        case "match":
-            return;
-        case "chat":
-            return;
-        case "add-friend":
-            apiUrl = RelationUrl;
-            method = "POST";
-            break;
-        case "remove-friend":
-            apiUrl = RelationUrl;
-            method = "DELETE";
-            break;
-        case "block":
-            apiUrl = UserUrl;
-            method = "POST";
-            break;
-        case "unblock":
-            apiUrl = UserUrl;
-            method = "DELETE";
-            break;
-        default:
-        console.warn(`Action inconnue : ${action}`);
-        return;
-    }
+    document.getElementById("profile-username").textContent = data.username;
+    document.getElementById("profile-avatar").src = data.avatar;
 
-    try {
-        const response = await fetch(apiUrl, {
-            method: method,
-            headers: {
-                "Authorization": `Bearer ${state.client.accessToken}`,
-                "Content-Type": "application/json"
-            },
-        });
+    const actionsEl = document.getElementById("profile-actions");
+    actionsEl.innerHTML = generateProfileActions(data);
+}
 
-        if (!response.ok) {
-            throw new Error(`Erreur lors de l'exécution de l'action ${action}`);
-        }
-
-        console.log(`Action ${action} exécutée avec succès pour l'utilisateur ${userId}`);
-    } catch (error) {
-        console.error("Erreur API:", error);
+// Voir si gestion nécessaire quand user est bloqué && à bloqué
+function generateProfileActions(data) {
+    if (data.is_self) {
+        return `
+            <button data-action="2fa" data-user-id="${data.id}" title="Enable Two-Factor Authentication">
+                <img src="/ressources/2fa.svg" alt="Enable 2fa">
+            </button>
+            <button data-action="update" data-user-id="${data.id}" title="Update Profile">
+                <img src="/ressources/update.png" alt="Update Profile">
+            </button>
+            <button data-action="logout" data-user-id="${data.id}" title="Logout">
+                <img src="/ressources/logout.png" alt="Logout">
+            </button>
+        `;
+    } else if (data.has_blocked_user) {
+        return `<p>Vous avez été mis en sourdine par cet utilisateur.</p>
+                <button data-action="match" data-user-id="${data.id}" title="Match">
+                    <img src="/ressources/vs.png" alt="Match">
+                </button>
+                <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
+                    <img src="/ressources/remove-friend.png" alt="Remove Friend">
+                </button>
+        `;
+        
+    } else if (data.is_blocked_by_user) {
+        return `
+            <p>Vous avez mis en sourdine cet utilisateur.</p>
+            <button data-action="match" data-user-id="${data.id}" title="Match">
+                <img src="/ressources/vs.png" alt="Match">
+            </button>
+            <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
+                <img src="/ressources/remove-friend.png" alt="Remove Friend">
+            </button>
+            <button data-action="unblock" data-user-id="${data.id}" title="Unblock">
+                <img src="/ressources/unblock.png" alt="Unblock">
+            </button>
+        `;
+    } else if (data.is_friend) {
+        return `
+            <button data-action="match" data-user-id="${data.id}" title="Match">
+                <img src="/ressources/vs.png" alt="Match">
+            </button>
+            <button data-action="chat" data-user-id="${data.id}" title="Chat">
+                <img src="/ressources/chat.png" alt="Chat">
+            </button>
+            <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
+                <img src="/ressources/remove-friend.png" alt="Remove Friend">
+            </button>
+            <button data-action="block" data-user-id="${data.id}" title="Block">
+                <img src="/ressources/block.png" alt="Block">
+            </button>
+        `;
+    } else {
+        return `
+            <button data-action="add-friend" data-user-id="${data.id}" title="Add Friend">
+                <img src="/ressources/add-friend.png" alt="Add a Friend">
+            </button>
+        `;
     }
 }
 
-// Ajouter écouteurs d'événements sur les boutons dans le container des actions -> ?? À compléter avec html profile restant
-export function setupProfilePage() {
+function setupProfileEventListeners(userId) {
     const actionsEl = document.getElementById("profile-actions");
     if (!actionsEl) return;
 
@@ -89,48 +97,34 @@ export function setupProfilePage() {
         const button = event.target.closest("button");
         if (!button || !button.dataset.action) return;
 
-        const action = button.dataset.action;
-        const userId = button.dataset.userId; // Récupère l'ID de l'utilisateur cible
-
-        handleProfileAction(action, userId);
+        handleProfileAction(button.dataset.action, userId);
     });
 }
 
-// export function setupProfilePage() {
-//     const interval = setInterval(() => {
-//         const logoutContainer = document.getElementById('logout-container');
-//         const logoutButton = document.getElementById('btn-logout');
+// Ajouter rechargement page ou changement de hash pour changements après une action ou faire ça dans appels fonctions tierses
+async function handleProfileAction(action, userId) {
+    if (!action) return;
 
-//         if (logoutContainer && logoutButton) {
-//             clearInterval(interval); // Stop checking once the elements are found
-
-//             if (isAuthenticated()) {
-//                 logoutContainer.classList.remove('hidden');
-//             } else {
-//                 logoutContainer.classList.add('hidden');
-//             }
-
-//             logoutButton.addEventListener('click', () => {
-//                 state.client.logout();
-//             });
-
-//             document.querySelectorAll('.btn-block').forEach(button => {
-//                 button.addEventListener('click', () => {
-//                     initDynamicCard('block');
-//                 });
-//             });
-
-//             document.querySelectorAll('.btn-unblock').forEach(button => {
-//                 button.addEventListener('click', () => {
-//                     initDynamicCard('unblock');
-//                 });
-//             });
-
-//             document.querySelectorAll('.btn-2fa').forEach(button => {
-//                 button.addEventListener('click', () => {
-//                     initDynamicCard('2fa');
-//                 });
-//             });
-//         }
-//     }, 100); // Retry every 100ms until elements are available
-// }
+    switch (action) {
+        case "logout":
+            state.client.logout();
+            break;
+        case "2fa":
+            initDynamicCard('2fa');
+            break;
+        case "update":
+            initDynamicCard('update'); // À implémenter
+            break;
+        case "match":
+        case "chat":
+            console.log(`Action ${action} non encore implémentée.`);
+            break;
+        default:
+            if (!userId) {
+                console.error("ID utilisateur manquant pour l'action:", action);
+                return;
+            }
+            await performUserAction(userId, action);
+            break;
+    }
+}

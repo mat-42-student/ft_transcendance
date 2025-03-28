@@ -12,7 +12,10 @@ from asgiref.sync import sync_to_async, async_to_sync
 from datetime import datetime
 import os
 from django.core.cache import cache
-from .utils import get_ccf_token_cache
+# from .utils import get_ccf_token_cache
+import jwt
+from datetime import datetime, timedelta, timezone
+
 
 
 # Custom Class
@@ -196,7 +199,19 @@ class Command(BaseCommand):
         if (not player):
             return
         
-        token = await get_ccf_token_cache()
+        # token = await get_ccf_token_cache()
+
+        # Generate the token
+        payload = {
+            "service": "matchmaking",
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+        }
+        
+        token = jwt.encode(
+            payload,
+            settings.BACKEND_JWT["PRIVATE_KEY"],
+            algorithm=settings.BACKEND_JWT["ALGORITHM"],
+        )
 
         # Setup token to request endpoints api
         player.token = token

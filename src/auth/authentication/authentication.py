@@ -12,15 +12,22 @@ class JWTAuthentication(BaseAuthentication):
         """
         Custom authentication class for JWT-based authentication.
         """
-        auth_header = request.headers.get('Authorization')
+        auth_header = request.headers.get("Authorization", "")
+        auth_prefix = settings.FRONTEND_JWT["AUTH_HEADER_PREFIX"]
 
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return None
 
-        access_token = auth_header.split(' ')[1]
+        if not auth_header.startswith(auth_prefix):
+            return None  # Let other auth classes handle it
+
+        token = auth_header.split(" ")[-1]
 
         try:
-            payload = jwt.decode(access_token, settings.JWT_PUBLIC_KEY, algorithms=[settings.JWT_ALGORITHM])
+            payload = jwt.decode(
+                token,
+                settings.FRONTEND_JWT["PUBLIC_KEY"],
+                algorithms=[settings.FRONTEND_JWT["ALGORITHM"]],
+            )
+
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Access token expired!')
         except jwt.InvalidTokenError:

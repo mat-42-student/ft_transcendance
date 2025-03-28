@@ -4,8 +4,13 @@ import django.db.models as models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.conf import settings
-from .authentication import JWTAuthentication
-from .authentication import RemoteOAuth2Authentication
+from .authentication import (
+    JWTAuthentication,
+    BackendJWTAuthentication
+)
+from .permissions import IsAuthenticatedOrService
+# from .authentication import RemoteOAuth2Authentication
+from django.core.exceptions import PermissionDenied
 from rest_framework import viewsets, status
 from rest_framework import viewsets, status, filters
 from rest_framework.views import APIView
@@ -51,8 +56,8 @@ class UserRegisterView(APIView):
                 'iat': datetime.datetime.now(datetime.timezone.utc),
             }
 
-            access_token = jwt.encode(access_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
-            refresh_token = jwt.encode(refresh_payload, settings.JWT_PRIVATE_KEY, algorithm=settings.JWT_ALGORITHM)
+            access_token = jwt.encode(access_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
+            refresh_token = jwt.encode(refresh_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
 
             response = Response()
             response.set_cookie(
@@ -77,7 +82,7 @@ class UserViewSet(viewsets.ModelViewSet):
         """Définit les permissions pour chaque action."""
         if self.action in ['list', 'retrieve', 'contacts', 'friends', 'blocks']:
             return [AllowAny()]
-        return [IsAuthenticated()]  # Authentification requise pour toutes les autres actions
+        return [IsAuthenticatedOrService()]  # Authentification requise pour toutes les autres actions
 
     def get_serializer_class(self):
         """Définit le serializer selon l'action."""
@@ -101,29 +106,30 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         """Personnalise la récupération des détails d'un utilisateur."""
-        user = self.get_object()  # Récupère l'utilisateur ciblé par la requête
+        user = self.get_object()  # Get target user
 
-        # Vérifie si le client est authentifié
+        # Handle backend service authentication (string-based user)
+        if isinstance(request.user, str):
+            # Service client using BackendJWTAuthentication
+            serializer = UserDetailSerializer(user)
+            return Response(serializer.data)
+
+        # Handle human user authentication (User instance)
         if request.user.is_authenticated:
-            # Handle machine clients (oauth_client)
-            if request.user.username == 'oauth_client':
-                serializer = UserDetailSerializer(user)
-                return Response(serializer.data)
-
-            # Handle human clients (JWT):
-            if request.user in user.blocked_users.all() or user in request.user.blocked_users.all():  # L'utilisateur ciblé a bloqué le client
+            # Check blocking relationships
+            if request.user in user.blocked_users.all() or user in request.user.blocked_users.all():
                 serializer = UserBlockedSerializer(user, context={'request': request})
                 return Response(serializer.data)
-            
-            # Utilise le serializer privé pour l'utilisateur authentifié
+
+            # Choose serializer based on ownership
             if request.user == user:
                 serializer = UserPrivateDetailSerializer(user, context={'request': request})
-            else:    
+            else:
                 serializer = UserDetailSerializer(user)
 
             return Response(serializer.data)
-        
-        # Si le client n'est pas authentifié, utilise le serializer public
+
+        # Handle unauthenticated requests
         serializer = UserDetailSerializer(user)
         return Response(serializer.data)
 
@@ -150,7 +156,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated], url_path='block')
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticatedOrService], url_path='block')
     def block_user(self, request, pk=None):
         """Bloquer un utilisateur."""
         try:
@@ -161,15 +167,15 @@ class UserViewSet(viewsets.ModelViewSet):
             # Ajouter l'utilisateur à la liste des bloqués
             request.user.blocked_users.add(user_to_block)
 
-            # Supprimer les relations existantes
-            request.user.relationships_initiated.filter(to_user=user_to_block).delete()
-            request.user.relationships_received.filter(from_user=user_to_block).delete()
+            # # Supprimer les relations existantes
+            # request.user.relationships_initiated.filter(to_user=user_to_block).delete()
+            # request.user.relationships_received.filter(from_user=user_to_block).delete()
 
             return Response({"detail": "Utilisateur bloqué."}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"detail": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
 
-    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated], url_path='unblock')
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticatedOrService], url_path='unblock')
     def unblock_user(self, request, pk=None):
         """Débloquer un utilisateur."""
         try:
@@ -218,10 +224,10 @@ class UserViewSet(viewsets.ModelViewSet):
         """
         Endpoint pour récupérer la liste des amis d'un utilisateur donné.
         """
-        requested_user = self.get_object()  # Récupère l'utilisateur cible
+        requested_user = self.get_object()  # Get target user
 
-        # Handle machine clients
-        if request.user.username == 'oauth_client' and request.user.is_authenticated:
+        # Handle backend service authentication
+        if isinstance(request.user, str):
             try:
                 user = User.objects.get(pk=pk)
                 friends = User.objects.filter(
@@ -235,22 +241,27 @@ class UserViewSet(viewsets.ModelViewSet):
             except User.DoesNotExist:
                 return Response({'error': 'User not found'}, status=404)
 
-        # Vérification des permissions
-        if request.user != requested_user and not request.user.is_superuser:
-            raise PermissionDenied("Vous n'avez pas la permission d'accéder aux contacts de cet utilisateur.")
-        
-        try:
-            user = User.objects.get(pk=pk)
-            friends = User.objects.filter(
-                Q(relationships_initiated__to_user=user, relationships_initiated__status='friend') |
-                Q(relationships_received__from_user=user, relationships_received__status='friend')
-            ).distinct()
+        # Handle regular user authentication
+        else:
+            # Check permissions for human users
+            if not request.user.is_authenticated:
+                raise PermissionDenied("Authentication required")
 
-            serializer = UserMinimalSerializer(friends, many=True)
-            return Response({'friends': serializer.data}, status=200)
+            if request.user != requested_user and not request.user.is_superuser:
+                raise PermissionDenied("You don't have permission to access these contacts")
+            
+            try:
+                user = User.objects.get(pk=pk)
+                friends = User.objects.filter(
+                    Q(relationships_initiated__to_user=user, relationships_initiated__status='friend') |
+                    Q(relationships_received__from_user=user, relationships_received__status='friend')
+                ).distinct()
 
-        except User.DoesNotExist:
-            return Response({'error': 'User not found'}, status=404)
+                serializer = UserMinimalSerializer(friends, many=True)
+                return Response({'friends': serializer.data}, status=200)
+
+            except User.DoesNotExist:
+                return Response({'error': 'User not found'}, status=404)
         
     @action(detail=True, methods=['GET'], url_path='blocks')
     def get_user_blocks(self, request, pk=None):
@@ -334,27 +345,6 @@ class UserViewSet(viewsets.ModelViewSet):
 class RelationshipViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
-    @action(detail=False, methods=['get'], url_path='my-relationships')
-    def get_user_relationships(self, request):
-        """Récupérer les relations de l'utilisateur."""
-        user = request.user
-
-        # Récupération des relations
-        friends = Relationship.objects.filter(
-            (models.Q(from_user=user) | models.Q(to_user=user)),
-            status=Relationship.FRIEND
-        )
-        sent_requests = Relationship.objects.filter(from_user=user, status=Relationship.PENDING)
-        received_requests = Relationship.objects.filter(to_user=user, status=Relationship.PENDING)
-
-        # Sérialisation des relations
-        data = {
-            "friends": RelationshipSerializer(friends, many=True).data,
-            "sent_requests": RelationshipSerializer(sent_requests, many=True).data,
-            "received_requests": RelationshipSerializer(received_requests, many=True).data,
-        }
-        return Response(data, status=status.HTTP_200_OK)
-
     @action(detail=True, methods=['post'], url_path='add-friend')
     def add_friend(self, request, pk=None):
         """Envoyer une demande d'ami ou accepter automatiquement si l'autre utilisateur a déjà initié une demande."""
@@ -412,20 +402,88 @@ class RelationshipViewSet(viewsets.ViewSet):
 
     @action(detail=True, methods=['delete'], url_path='remove-friend')
     def remove_friend(self, request, pk=None):
-        """Supprimer un ami."""
-        friend = get_object_or_404(User, id=pk)
+        """Supprimer un ami ou rejeter une demande d'ami en attente."""
+        user = get_object_or_404(User, id=pk)
 
         try:
             # Trouver la relation existante quelle que soit la direction
             relation = Relationship.objects.get(
-                Q(from_user=request.user, to_user=friend) | 
-                Q(from_user=friend, to_user=request.user), 
-                status=Relationship.FRIEND
+                Q(from_user=request.user, to_user=user) | 
+                Q(from_user=user, to_user=request.user)
             )
         except Relationship.DoesNotExist:
-            return Response({"detail": "Cette relation n'existe pas."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Aucune relation trouvée."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Supprimer la relation
-        relation.status = Relationship.NONE
-        relation.save()
-        return Response({"detail": "Ami supprimé."}, status=status.HTTP_200_OK)
+        # Si la relation est une demande d'ami en attente, la supprimer
+        if relation.status == Relationship.PENDING:
+            relation.delete()
+            return Response({"detail": "Demande d'ami rejetée."}, status=status.HTTP_200_OK)
+
+        # Si c'est une relation d'amitié, la désactiver
+        if relation.status == Relationship.FRIEND:
+            relation.status = Relationship.NONE
+            relation.save()
+            return Response({"detail": "Ami supprimé."}, status=status.HTTP_200_OK)
+
+        # Si la relation est déjà "NONE", il n'y a rien à faire
+        return Response({"detail": "Aucune action nécessaire."}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], url_path='received-requests')
+    def get_friend_requests_received(self, request):
+        """Récupérer les demandes d'ami reçues par l'utilisateur."""
+        user = request.user
+
+        # Récupérer les utilisateurs qui ont envoyé une demande d'ami à l'utilisateur courant
+        received_requests = Relationship.objects.filter(
+            to_user=user,
+            status=Relationship.PENDING
+        ).values_list('from_user', flat=True)  # Récupère uniquement les IDs des utilisateurs
+
+        users = User.objects.filter(id__in=received_requests)
+        data = UserMinimalSerializer(users, many=True).data
+
+        return Response({"received_requests": data}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], url_path='sent-requests')
+    def get_friend_requests_sent(self, request):
+        """Récupérer les demandes d'ami envoyées par l'utilisateur."""
+        user = request.user
+
+        # Récupérer les utilisateurs à qui l'utilisateur courant a envoyé une demande d'ami
+        sent_requests = Relationship.objects.filter(
+            from_user=user,
+            status=Relationship.PENDING
+        ).values_list('to_user', flat=True)  # Récupère uniquement les IDs des utilisateurs
+
+        users = User.objects.filter(id__in=sent_requests)
+        data = UserMinimalSerializer(users, many=True).data
+
+        return Response({"sent_requests": data}, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'], url_path='pending-count')
+    def get_pending_requests_count(self, request):
+        """Récupérer le nombre de demandes d'ami en attente pour l'utilisateur."""
+        user = request.user
+        pending_count = Relationship.objects.filter(to_user=user, status=Relationship.PENDING).count()
+        return Response({"pending_count": pending_count}, status=status.HTTP_200_OK)
+    
+    # @action(detail=False, methods=['get'], url_path='my-relationships')
+    # def get_user_relationships(self, request):
+    #     """Récupérer les relations de l'utilisateur."""
+    #     user = request.user
+
+    #     # Récupération des relations
+    #     friends = Relationship.objects.filter(
+    #         (models.Q(from_user=user) | models.Q(to_user=user)),
+    #         status=Relationship.FRIEND
+    #     )
+    #     sent_requests = Relationship.objects.filter(from_user=user, status=Relationship.PENDING)
+    #     received_requests = Relationship.objects.filter(to_user=user, status=Relationship.PENDING)
+
+    #     # Sérialisation des relations
+    #     data = {
+    #         "friends": RelationshipSerializer(friends, many=True).data,
+    #         "sent_requests": RelationshipSerializer(sent_requests, many=True).data,
+    #         "received_requests": RelationshipSerializer(received_requests, many=True).data,
+    #     }
+    #     return Response(data, status=status.HTTP_200_OK)

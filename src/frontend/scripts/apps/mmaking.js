@@ -1,7 +1,6 @@
-import { state } from './main.js';
-import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js';
+import { state } from '../main.js';
+import { initDynamicCard, closeDynamicCard } from '../components/dynamic_card.js';
 import { WebGame } from './WebGame.js';
-import { LocalGame } from './LocalGame.js';
 
 export class Mmaking
 {
@@ -40,9 +39,6 @@ export class Mmaking
 		this.btnsearchRandomisActive = false;
 		this.btnSearchTournamentActive = false;
 		this.bracket = false;
-
-		this.bindLocal1v1Button();
-		this.bindLocalBotButton();
     }
 
 	async buildEventsbtnInvite(keyNumber)

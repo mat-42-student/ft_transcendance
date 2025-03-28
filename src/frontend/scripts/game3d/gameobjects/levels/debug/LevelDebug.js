@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { state } from '../../../../main.js';
 import LevelBase from '../LevelBase.js';
 import DebugBall from './DebugBall.js';
 import DebugPaddle from './DebugPaddle.js';
@@ -7,6 +6,9 @@ import DebugBoard from './DebugBoard.js';
 import * as UTILS from '../../../../utils.js';
 import DebugScoreIndicator from './DebugScoreIndicator.js';
 import SceneOriginHelper from '../../utils/SceneOriginHelper.js';
+import BoardAnchor from '../../utils/BoardAnchor.js';
+import TextMesh from '../../utils/TextMesh.js';
+import DebugPauseText from './DebugPauseText.js';
 
 
 export default class LevelDebug extends LevelBase {
@@ -19,7 +21,18 @@ export default class LevelDebug extends LevelBase {
 		this.background = new THREE.Color('#112211');
 		this.fog = null;
 
-		this.#setupViews();
+		{
+			this.views.position[2].set(0, 1.2, -0.8);
+			this.views.quaternion[2].copy(UTILS.makeLookDownQuaternion(180, 60));
+			this.views.fov[2] = 60;
+
+			this.views.position[0].set(1.4, 1.2, 0);
+			this.views.quaternion[0].copy(UTILS.makeLookDownQuaternion(90, 45));
+			this.views.fov[1] = this.views.fov[0] = 40;
+
+			this.views.position[1].copy(this.views.position[0]).x *= -1;
+			this.views.quaternion[1].copy(UTILS.makeLookDownQuaternion(-90, 45));
+		}
 	}
 
 
@@ -29,8 +42,7 @@ export default class LevelDebug extends LevelBase {
 		this.add(new DebugBall());
 		this.add(new DebugPaddle(0));
 		this.add(new DebugPaddle(1));
-		this.add(new DebugScoreIndicator(0));
-		this.add(new DebugScoreIndicator(1));
+
 		this.add(new DebugBoard());
 		this.add(new SceneOriginHelper());
 
@@ -38,25 +50,82 @@ export default class LevelDebug extends LevelBase {
 		this.smoothCamera.mousePositionMultiplier.set(0.1, 0.1);
 		this.smoothCamera.mouseRotationMultiplier.set(0.1, 0.1);
 		this.smoothCamera.smoothSpeed = 15;
+
+		{
+			const top = new BoardAnchor(-0.1, -0.1, 0.8, this);
+			const bottom = new BoardAnchor(-0.1, -0.1, -0.8, this);
+
+			this.add(top);
+			this.add(bottom);
+
+			top.left.add(new DebugScoreIndicator(0));
+			top.right.add(new DebugScoreIndicator(1));
+
+			this.textMaterial = new THREE.MeshBasicMaterial({color: '#334433'});
+
+			this.nameTextMeshes = [
+				new TextMesh(this.textMaterial, '???'),
+				new TextMesh(this.textMaterial, '???')
+			]
+			bottom.left.add(this.nameTextMeshes[0]);
+			bottom.right.add(this.nameTextMeshes[1]);
+			this.nameTextMeshes.forEach((nameTextMesh) => {
+				nameTextMesh.scale.setScalar(0.5);
+			})
+
+			const toRotate = [top.left, top.right, bottom.left, bottom.right];
+			toRotate.forEach(
+				(object3d) => {
+					object3d.rotateY(UTILS.RAD180);
+					object3d.rotateX(- UTILS.RAD90);
+				}
+			);
+
+			this.flipFunction = () => {
+				toRotate.forEach((object3d) => {
+					let facing = 0;
+					switch (this.viewIndex) {
+						case 0:
+							facing = UTILS.RAD90;
+						case 1:
+							facing = -UTILS.RAD90;
+					}
+					object3d.rotateZ(facing)
+				});
+			}
+		}
+	}
+
+
+	onFrame(delta, time) {
+		super.onFrame(delta, time);
+
+		if (this.gameInitialized != true && state.gameApp != null) {
+			this.gameInitialized = true;
+			this.nameTextMeshes[0].setText(state.gameApp.playerNames[0]);
+			this.nameTextMeshes[1].setText(state.gameApp.playerNames[1]);
+			this.flipFunction();
+		}
 	}
 
 
 	dispose() {
 		super.dispose();
+
+		if (this.textMaterial) this.textMaterial.dispose();
 	}
 
 
-	#setupViews() {
-		this.views.position[2].set(0, 1.2, -0.8);
-		this.views.quaternion[2].copy(UTILS.makeLookDownQuaternion(180, 60));
-		this.views.fov[2] = 60;
+	pause(time) {
+		super.pause(time);
+		this.add(new DebugPauseText('Ready...', time));
+	}
 
-		this.views.position[0].set(1.1, 0.8, 0);
-		this.views.quaternion[0].copy(UTILS.makeLookDownQuaternion(90, 45));
-		this.views.fov[1] = this.views.fov[0] = 55;
 
-		this.views.position[1].copy(this.views.position[0]).x *= -1;
-		this.views.quaternion[1].copy(UTILS.makeLookDownQuaternion(-90, 45));
+	unpause() {
+		if (super.unpause()) {
+			this.add(new DebugPauseText('Go!', 0.5));
+		}
 	}
 
 }

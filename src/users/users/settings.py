@@ -15,9 +15,19 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")
-JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")
-JWT_ALGORITHM = 'RS256'
+FRONTEND_JWT = {
+    "PUBLIC_KEY": os.getenv("JWT_PUBLIC_KEY"),
+    "PRIVATE_KEY": os.getenv("JWT_PRIVATE_KEY"),
+    "ALGORITHM": "RS256",
+    "AUTH_HEADER_PREFIX": "Bearer",
+}
+
+BACKEND_JWT = {
+    "PUBLIC_KEY": os.getenv("BACKEND_JWT_PUBLIC_KEY"),
+    "PRIVATE_KEY": os.getenv("BACKEND_JWT_PRIVATE_KEY"),
+    "ALGORITHM": "RS256",
+    "AUTH_HEADER_PREFIX": "Service",
+}
 
 # Application definition
 INSTALLED_APPS = [
@@ -30,7 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'accounts',
-    'oauth2_provider',
+    # 'oauth2_provider',
 ]
 
 MIDDLEWARE = [
@@ -46,8 +56,9 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'accounts.authentication.RemoteOAuth2Authentication',
+        # 'accounts.authentication.RemoteOAuth2Authentication',
         'accounts.authentication.JWTAuthentication',
+        'accounts.authentication.BackendJWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
@@ -55,10 +66,10 @@ REST_FRAMEWORK = {
 }
 
 # OAuth2 Provider settings
-OAUTH2_PROVIDER = {
-    'SCOPES_BACKEND_CLASS': 'oauth2_provider.scopes.SettingsScopes',
-    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
-}
+# OAUTH2_PROVIDER = {
+#     'SCOPES_BACKEND_CLASS': 'oauth2_provider.scopes.SettingsScopes',
+#     'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
+# }
 
 ROOT_URLCONF = 'users.urls'
 
