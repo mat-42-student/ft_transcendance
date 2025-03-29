@@ -1,4 +1,5 @@
 import { state } from '../main.js';
+import { ft_fetch } from '../main.js';
 
 const apiBase = '/api/v1/users';
 
@@ -8,7 +9,7 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
         return;
     }
     try {
-        const response = await fetch(endpoint, {
+        const response = await ft_fetch(endpoint, {
             method: method,
             headers: {
                 'Authorization': `Bearer ${state.client.accessToken}`,

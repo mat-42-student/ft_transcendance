@@ -1,6 +1,7 @@
 import { state } from '../main.js';
 import { MainSocket } from './MainSocket.js';
 import { verifyToken } from '../api/auth.js';
+import { ft_fetch } from '../main.js';
 
 export class Client{
 
@@ -43,7 +44,7 @@ export class Client{
         this.renderProfileBtn();
 
         try {
-            const response = await fetch('/api/v1/auth/logout/', {
+            const response = await ft_fetch('/api/v1/auth/logout/', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -100,7 +101,7 @@ export class Client{
 
     // async hasCookie() {
     //     try {
-    //         const response = await fetch('api/v1/auth/refresh/', {
+    //         const response = await ft_fetch('api/v1/auth/refresh/', {
     //             method: 'HEAD',
     //             credentials: 'include'
     //         });
@@ -193,7 +194,7 @@ export class Client{
 //         this.renderProfileBtn();
 
 //         try {
-//             const response = await fetch('/api/v1/auth/logout/', {
+//             const response = await ft_fetch('/api/v1/auth/logout/', {
 //                 method: 'POST',
 //                 credentials: 'include',
 //                 headers: { 'Content-Type': 'application/json' },
@@ -232,7 +233,7 @@ export class Client{
 //         if (!localStorage.getItem('cookieSet'))
 //             return;
 //         try {
-//             const response = await fetch('api/v1/auth/refresh/', {
+//             const response = await ft_fetch('api/v1/auth/refresh/', {
 //                 method: 'POST',
 //                 credentials: 'include'
 //             });

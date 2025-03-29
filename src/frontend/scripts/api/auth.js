@@ -1,6 +1,7 @@
 import { state } from '../main.js';
 import { cleanErrorMessage } from '../components/auth_form.js';
 import { closeDynamicCard } from '../components/dynamic_card.js';
+import { ft_fetch } from '../main.js';
 
 // Vérifie le token via l'API
 export async function verifyToken(token) {

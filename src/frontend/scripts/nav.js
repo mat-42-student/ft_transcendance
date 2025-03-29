@@ -2,6 +2,7 @@ import { state } from './main.js';
 import { initHomePage, initProfilePage } from "./pages.js";
 import { updateAuthForm } from "./components/auth_form.js";
 import { closeDynamicCard, initDynamicCard } from './components/dynamic_card.js';
+import { ft_fetch } from './main.js';
 
 class Navigator {
     constructor() {
@@ -26,7 +27,7 @@ class Navigator {
         }
 
         try {
-            const response = await fetch(pageFiles[page].url);
+            const response = await ft_fetch(pageFiles[page].url);
             const html = await response.text();
             this.mainContent.innerHTML = html;
 

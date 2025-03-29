@@ -1,6 +1,7 @@
 import { state } from '../main.js';
 import { updatePendingCountDisplay } from '../components/friend_requests.js';
 import { fetchFriends, fetchPendingCount, fetchReceivedRequests, fetchSentRequests, modifyRelationship } from '../api/users.js';
+import { ft_fetch } from '../main.js';
 
 export class SocialApp{
 
@@ -25,7 +26,7 @@ export class SocialApp{
             return;
         }
         try {
-            const response = await fetch('api/v1/users/' + state.client.userId + '/friends/', {
+            const response = await ft_fetch('api/v1/users/' + state.client.userId + '/friends/', {
                 headers: {
                     'Authorization': `Bearer ${state.client.accessToken}`,
                 },
