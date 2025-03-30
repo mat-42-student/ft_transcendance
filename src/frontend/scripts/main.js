@@ -163,27 +163,26 @@ export function toggleHeaderButtons(showQuit) {
         toShow.style.display = null;
     });
 }
+window.toggleHeaderButtons = toggleHeaderButtons;  //debug
 toggleHeaderButtons(false);  // hide quit button for the first time
-window.toggleHeaderButtons = toggleHeaderButtons;
+
 buttonLocalBot.addEventListener('click', () => {
-    if (state.gameApp != null)
-        return;
-    state.gameApp = new LocalGame(true);
+    if (state.gameApp == null)
+        state.gameApp = new LocalGame(true);
     toggleHeaderButtons(true);
 });
 
 buttonLocalVersus.addEventListener('click', () => {
-    if (state.gameApp != null)
-        return;
-    state.gameApp = new LocalGame(false);
+    if (state.gameApp == null)
+        state.gameApp = new LocalGame(false);
     toggleHeaderButtons(true);
 });
 
 buttonQuit.addEventListener('click', () => {
-    if (state.gameApp == null)
-        return;
-    state.gameApp.close();
-    state.gameApp = null;
+    if (state.gameApp != null) {
+        state.gameApp.close();
+        state.gameApp = null;
+    }
     toggleHeaderButtons(false);
 });
 

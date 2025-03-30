@@ -311,7 +311,7 @@ export class Mmaking
 	{
 		const btnTournament = document.getElementsByClassName('btn-tournament');
 		const btnRandom = document.getElementById('versus');
-		
+
 		if (this.game == true)
 			{
 				if (this.bracket == true)
@@ -321,13 +321,16 @@ export class Mmaking
 					this.bracket = false;
 				}
 				closeDynamicCard();
-				if (this.gameId != null)
+				if (this.gameId != null) {
+					if (state.gameApp != null)
+						state.gameApp.close();
 					state.gameApp = new WebGame('debug');
-					toggleHeaderButtons(true);
 					state.gameApp.launchGameSocket(this.gameId);
-				this.game = false;
-				btnTournament[0].removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);
-				btnRandom.removeEventListener('click', this.boundEventListenersClient.btnSearchRandomGame);
+					toggleHeaderButtons(true);
+					this.game = false;
+					btnTournament[0].removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);
+					btnRandom.removeEventListener('click', this.boundEventListenersClient.btnSearchRandomGame);
+				}
 			}
 	}
 
@@ -397,7 +400,7 @@ export class Mmaking
 		await initDynamicCard('tournament');
 		console.log('tournament bracket is setting');
 		const bracketContainer = document.getElementById('tournamentBracket');
-		
+
 		for (const [key, value] of Object.entries(this.opponents))
 		{
 			let firstPlayer = false;
@@ -439,7 +442,7 @@ export class Mmaking
 					team2Score.classList.add('score');
 					team2Score.textContent = player.score2 !== undefined ? player.score2 : '-';
 
-					teamContainer.appendChild(team2Element);        
+					teamContainer.appendChild(team2Element);
 					team2Element.appendChild(team2Score);
 
 				}
@@ -487,7 +490,7 @@ export class Mmaking
     async incomingMsg(data)
     {
         if (data.body.status == 'ingame')
-        { 
+        {
 			this.game = true;
 			this.gameId =  data.body.id_game;
 			this.salonInvite = false;
