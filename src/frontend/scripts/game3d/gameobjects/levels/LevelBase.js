@@ -38,7 +38,6 @@ export default class LevelBase extends THREE.Scene {
 	dispose() {
 		// do nothing, i just want the method to exist in case i need it later,
 		// because child classes call super.dispose()
-		console.log('Level.dispose() called');  //TODO remove log 'Level.dispose() called'
 	}
 
 
