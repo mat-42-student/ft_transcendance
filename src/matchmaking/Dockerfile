@@ -18,5 +18,5 @@ FROM django-base
 
 WORKDIR /app
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+# ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["python", "manage.py", "listenredis"]
