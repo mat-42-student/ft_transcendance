@@ -39,9 +39,7 @@ async function initApp() {
 
 function setupEventListeners() {
     addClickEvent('btn-home', () => navigator.goToPage('home'));
-    addClickEvent('btn-refresh', () => state.client.globalRender());
     addClickEvent('btn-profile', handleProfileClick);
-    addClickEvent('btn-play', () => state.gameApp?.launchGameSocket());
     addClickEvent('close-dynamic-card', closeDynamicCard);
     addClickEvent('.btn-friend-requests', () => initDynamicCard('requests'));
 

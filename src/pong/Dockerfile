@@ -9,10 +9,10 @@
 
 # USER appuser
 
-# ENTRYPOINT ["uvicorn", "pong.asgi:application", "--host", "0.0.0.0", "--port", "8006"]
+# CMD ["uvicorn", "pong.asgi:application", "--host", "0.0.0.0", "--port", "8006"]
 
 FROM django-base
 
 WORKDIR /app
 
-ENTRYPOINT ["uvicorn", "pong.asgi:application", "--host", "0.0.0.0", "--port", "8006", "--reload"]
+CMD ["uvicorn", "pong.asgi:application", "--host", "0.0.0.0", "--port", "8006", "--reload"]

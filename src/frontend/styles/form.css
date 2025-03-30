@@ -1,8 +1,26 @@
 /* Injected form styles */
+
+/* Ensure form and containers use same width */
+#auth-form, 
+#auth-form form, 
+#auth-form div {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Remove default spacing between form elements */
+#auth-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Uniform spacing */
+}
+
 #dynamic-card-content input {
-    width: calc(100% - 20px);
+    width: 100% !important;
+    margin: 0 !important;
     padding: 10px;
-    margin: 10px 0;
     border: 1px solid #ddd;
     border-radius: 5px;
     font-size: 1rem;
@@ -18,8 +36,8 @@
 #dynamic-card-content button {
     width: 100%;
     padding: 10px;
-    /* background-color: #007bff; */ /* by  Adrien */
-    color: white;
+    background-color: #007bff;
+    color: rgb(255, 255, 255);
     border: none;
     border-radius: 5px;
     font-size: 1rem;
@@ -29,7 +47,7 @@
 }
 
 #dynamic-card-content button:hover {
-    /* background-color: #0056b3; */ /* by adrien */
+    background-color: #11008f;
 }
 
 #dynamic-card-content button#oauth-submit {
