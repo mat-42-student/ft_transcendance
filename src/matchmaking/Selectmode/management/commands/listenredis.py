@@ -144,11 +144,11 @@ class Command(BaseCommand):
                         already_player = salon.players.get(header.get('id'))
                         
                     # Check if player want give up the search or is disconnect
-                    if (already_player or (body.get('cancel') == True or body.get('disconnect'))):
+                    if ((already_player and body.get('cancel') == True) or body.get('disconnect') or body.get('cancel') == True):
                         if (already_player):
                             await already_player.updateStatus(self.redis_client, self.channel_deepSocial, "online")
                         print(f'{salon}')
-                        if (already_player == False):
+                        if (already_player == False or len(salon.players) <= 1):
                             await self.deletePlayer(False, header['id'])
                         elif (already_player):
                             await self.deletePlayer(salon, already_player)
@@ -175,10 +175,12 @@ class Command(BaseCommand):
                         for guest in gamer.guests.values():
                             if (guest.user_id == player):
                                 guestStatus = await guest.checkStatus(self.redis_client, self.channel_social)
-                                if ( guestStatus == 'offline' or guestStatus is None ):
+                                if (guestStatus == 'offline' or guestStatus is None ):
                                     print(f'Cancel invitation to host')
                                     await self.cancelInvitation(gamer.user_id, guest.user_id, 'guest_id')
                                     break
+                            if (gamer.user_id == player):
+                                await self.cancelInvitation(guest.user_id, player, 'host_id')
                 return
 
             elif (salon.type_game == 'invite'):
