@@ -147,7 +147,7 @@ export async function ft_fetch(url, options = {}) {
     return response;
 }
 
-function isTokenExpiringSoon() {
+export function isTokenExpiringSoon() {
     if (!state.client.accessToken) {
         console.error("Token expired");
         return true;

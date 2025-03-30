@@ -167,6 +167,7 @@ services:
       - users
       - auth
       - matchmaking
+      - gateway
     volumes:
       - ./media:/media
       - ./frontend:/usr/share/nginx/frontend

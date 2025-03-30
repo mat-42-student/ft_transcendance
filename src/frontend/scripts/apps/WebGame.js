@@ -34,11 +34,9 @@ export class WebGame extends GameBase {
     }
 
 
-    launchGameSocket(gameId) {
-        if (!gameId) // debug
-            gameId = 1; // effacer asap
-
-		state.client.refreshSession();
+    async launchGameSocket(gameId) {
+        if (isTokenExpiringSoon())
+            await state.client.refreshSession();
         let socketURL = "wss://" + window.location.hostname + ":3000/game/" + gameId + "/?t=" + state.client.accessToken;
 
         // websocat --insecure wss://nginx:3000/game/1234/?t=pouetpouet
@@ -95,10 +93,6 @@ export class WebGame extends GameBase {
                 wg.close();
             }
         };
-    }
-
-    addEventlistener() {
-        document.getElementById("btn-test-game").addEventListener('click', this.launchGameSocket);
     }
 
 
