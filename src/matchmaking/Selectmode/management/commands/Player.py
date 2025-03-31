@@ -2,9 +2,7 @@ import json
 import requests
 import asyncio
 from django.core.cache import cache
-import os
 from django.conf import settings
-# from .utils import get_ccf_token_cache
 #from .Guest import Guest
 import jwt
 from datetime import datetime, timedelta, timezone
@@ -38,9 +36,7 @@ class Player ():
     
     def get_user(self):
         """Get information from API user and set this in instances"""
-        # token = get_ccf_token_cache()
 
-        # Generate the token
         payload = {
             "service": "matchmaking",
             "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
