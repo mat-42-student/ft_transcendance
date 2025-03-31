@@ -1,4 +1,4 @@
-import { state } from '../main.js';
+import { state, isTokenExpiringSoon } from '../main.js';
 import { GameBase } from './GameBase.js';
 import * as LEVELS from '../game3d/gameobjects/levels/_exports.js';
 

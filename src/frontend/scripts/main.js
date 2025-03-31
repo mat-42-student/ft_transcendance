@@ -153,7 +153,7 @@ export function isTokenExpiringSoon() {
         return true;
     }
     const payload = JSON.parse(atob(state.client.accessToken.split('.')[1]));
-    console.log("remaining time in token: ", (payload.exp * 1000 - Date.now()) / 60000, " min");
+    // console.log("remaining time in token: ", (payload.exp * 1000 - Date.now()) / 60000, " min");
     return (payload.exp * 1000 - Date.now()) < 60000;
 }
 
