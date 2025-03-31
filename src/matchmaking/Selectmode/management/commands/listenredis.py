@@ -1,22 +1,15 @@
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 import json
-import asyncio
-import time
 from asyncio import run as arun, sleep as asleep, create_task
 from signal import signal, SIGTERM, SIGINT
 from django.conf import settings
-import requests
 from .models import Game, Tournament, User
 from asgiref.sync import sync_to_async, async_to_sync
 from datetime import datetime
-import os
 from django.core.cache import cache
-# from .utils import get_ccf_token_cache
 import jwt
 from datetime import datetime, timedelta, timezone
-
-
 
 # Custom Class
 from .Player import Player
@@ -194,8 +187,6 @@ class Command(BaseCommand):
         player = await self.manage_player(header, body)
         if (not player):
             return
-        
-        # token = await get_ccf_token_cache()
 
         # Generate the token
         payload = {

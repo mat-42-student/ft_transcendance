@@ -28,6 +28,9 @@ services:
     volumes:
       - ./auth:/app
       - static_volume:/app/staticfiles
+      - ./certs/services/auth/auth.crt:/etc/ssl/auth.crt:ro
+      - ./certs/services/auth/auth.key:/etc/ssl/auth.key:ro
+      - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,6 +56,9 @@ services:
     volumes:
       - ./users:/app
       - ./media:/media
+      - ./certs/services/users/users.crt:/etc/ssl/users.crt:ro
+      - ./certs/services/users/users.key:/etc/ssl/users.key:ro
+      - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
     env_file:
       - .env
     networks:
@@ -84,6 +90,9 @@ services:
         condition: service_started 
     volumes:
       - ./chat/:/app
+      - ./certs/services/chat/chat.crt:/etc/ssl/chat.crt:ro
+      - ./certs/services/chat/chat.key:/etc/ssl/chat.key:ro
+      - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
     networks:
       - db-network
       - redis-network
@@ -99,6 +108,9 @@ services:
       - .env
     volumes:
       - ./social_project/:/app
+      - ./certs/services/social/social.crt:/etc/ssl/social.crt:ro
+      - ./certs/services/social/social.key:/etc/ssl/social.key:ro
+      - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
     depends_on:
       redis:
         condition: service_started 
@@ -139,6 +151,9 @@ services:
       - .env
     volumes:
       - ./matchmaking:/app
+      - ./certs/services/matchmaking/matchmaking.crt:/etc/ssl/matchmaking.crt:ro
+      - ./certs/services/matchmaking/matchmaking.key:/etc/ssl/matchmaking.key:ro
+      - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -162,7 +177,8 @@ services:
       context: nginx
       dockerfile: Dockerfile
     ports:
-      - "3000:443"
+      - "3000:443"    # Public port (frontend)
+      - "8443:8443"   # Internal port (backend services)
     depends_on:
       - users
       - auth
@@ -171,6 +187,7 @@ services:
       - ./media:/media
       - ./frontend:/usr/share/nginx/frontend
       - static_volume:/app/staticfiles
+      - ./certs/ca/ca.crt:/etc/nginx/ssl/ca.crt:ro
     networks:
       - nginx-network
     restart: on-failure

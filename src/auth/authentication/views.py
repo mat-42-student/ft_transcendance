@@ -26,14 +26,6 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.http import HttpResponse
 from django.core.cache import cache
-
-# class SecureAPIView(APIView):
-#     authentication_classes = [OAuth2Authentication]
-#     permission_classes = [TokenHasScope]
-#     required_scopes = ['read']
-
-#     def get(self, request):
-#         return Response({"message": "Authenticated via OAuth2 CCF"})
 class PublicKeyView(APIView):
     permission_classes = [AllowAny]
 
