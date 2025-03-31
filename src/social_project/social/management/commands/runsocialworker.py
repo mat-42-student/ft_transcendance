@@ -5,11 +5,8 @@ from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep, create_task
 from django.conf import settings
-import os
 from django.core.cache import cache
 from redis.asyncio import Redis
-import httpx # type: ignore
-import logging
 import jwt
 from datetime import datetime, timedelta, timezone
 class Command(BaseCommand):
@@ -88,7 +85,7 @@ class Command(BaseCommand):
         if data['body']['status'] == 'notify': # User's first connection, get all friends status
            await self.notifyUser(data)
            return
-        friends_data = await self.get_friend_list(user_id)
+        friends_data = self.get_friend_list(user_id)
         if not friends_data:
             await self.update_status(user_id, data['body']['status'])
             return
@@ -132,10 +129,9 @@ class Command(BaseCommand):
         print(f"publish info : {key, status}")
         await self.redis_client.set(key, status, ex = 2)
 
-    async def get_friend_list(self, user_id):
+    def get_friend_list(self, user_id):
         """ Request friendlist from container 'users' """
         try:
-            # Generate the token
             payload = {
                 "service": "social",
                 "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
@@ -149,23 +145,22 @@ class Command(BaseCommand):
 
             url = f"http://users:8000/api/v1/users/{user_id}/friends/"
             headers = {"Authorization": f"Service {token}"}
-            
-            async with httpx.AsyncClient(timeout=10) as client:
-                response = await client.get(url, headers=headers)
-                response.raise_for_status()
-                data = response.json()
-                return data.get('friends')
-                
-        except httpx.HTTPStatusError as e:
-            logging.error(f"HTTP error {e.response.status_code} for user {user_id}: {str(e)}")
-        except httpx.RequestError as e:
-            logging.error(f"Network error for user {user_id}: {str(e)}")
-        except json.JSONDecodeError as e:
-            logging.error(f"Invalid JSON response for user {user_id}: {str(e)}")
-        except Exception as e:
-            logging.error(f"Unexpected error for user {user_id}: {str(e)}")
-            
-        return None
+
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+            return data.get('friends')
+
+        except jwt.exceptions.PyJWTError as e:
+            print(f"JWT Error: {e}")
+            return None
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
+        except ValueError as e:
+            print(f"JSON decode error: {e}")
+            return None
 
     async def send_me_my_friends_status(self, user_id, friends):
         """ publish status of all friends and adress them to 'user_id' """

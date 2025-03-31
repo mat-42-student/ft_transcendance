@@ -8,7 +8,6 @@ import os
 from django.conf import settings
 from django.core.cache import cache
 from redis.asyncio import Redis
-import httpx
 import jwt
 from datetime import datetime, timedelta, timezone
 class Command(BaseCommand):
@@ -79,7 +78,6 @@ class Command(BaseCommand):
     async def is_muted(self, exp, recipient) -> bool :
         """is exp muted by recipient ? Raises an UserNotFoundException if recipient doesnt exist"""
         
-        # Generate the token
         payload = {
             "service": "chat",
             "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
@@ -94,23 +92,23 @@ class Command(BaseCommand):
         url = f"http://users:8000/api/v1/users/{recipient}/blocks/"
         headers = {"Authorization": f"Service {token}"}
 
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, headers=headers)
-            if response.status_code == 200:
-                try:
-                    data = response.json()
-                    if data.get('error'):
-                        raise ValueError("Recipient not found")
-                    blocked_users = data.get('blocked_users')
-                    if blocked_users and exp in blocked_users:
-                        return True
-                except requests.exceptions.RequestException as e:
-                    print(f"Error in request : {e}")
-                except ValueError as e:
-                    print("JSON conversion error :", e)
-            else:
-                print(f"Request failed (status {response.status_code})")
-            return False
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                if data.get('error'):
+                    raise ValueError("Recipient not found")
+                blocked_users = data.get('blocked_users')
+                if blocked_users and exp in blocked_users:
+                    return True
+            except requests.exceptions.RequestException as e:
+                print(f"Error in request : {e}")
+            except ValueError as e:
+                print("JSON conversion error :", e)
+        else:
+            print(f"Request failed (status {response.status_code})")
+        return False
 
     # def recipient_exists(self, user):
     #     """Does user exist ?"""

@@ -188,7 +188,6 @@ class Command(BaseCommand):
         if (not player):
             return
 
-        # Generate the token
         payload = {
             "service": "matchmaking",
             "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
