@@ -505,7 +505,7 @@ export class Mmaking
 			if (data.body.opponents)
 			{
 				this.opponents = data.body.opponents;
-				console.log(this.opponents);
+				console.log(this.opponents);  //TODO remove log?
 			}
         }
 		else if (data.body.cancel == true)
