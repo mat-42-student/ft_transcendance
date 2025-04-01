@@ -17,9 +17,16 @@ export class WebGame extends GameBase {
         this.side = 2;  // Set to neutral until server tells us
         this.level = new (LEVELS.LIST[levelName])();
         this.playerNames[0] = this.playerNames[1] = '-';
+        this.isLoading = true;
     }
 
     frame(delta, time) {
+        if (this.isLoading && state.engine.scene && this.socket && this.socket.readyState == this.socket.OPEN) {
+            this.isLoading = false;
+            this.#sendLoadReady();
+        }
+        console.log('Webgame frame');  //TODO remove log 'Webgame frame'
+
         try {
             if (this.isPlaying)
                 this.#sendInput();
@@ -31,7 +38,9 @@ export class WebGame extends GameBase {
     }
 
     close() {
-        this.socket.close();
+        try {
+            this.socket.close();
+        } catch {}
 
         try {
             document.getElementById("keyhint-versus").style.display = "none";
@@ -79,7 +88,7 @@ export class WebGame extends GameBase {
             if (data.action != 'info') { console.log('Game packet:', data.action, ', data = ', data); }
 
             if (data.action == 'init') {
-                wg.isPlaying = true;  //TODO this should be based on loading
+                wg.isPlaying = true;
                 state.gameApp.side = Number(data.side);
                 state.gameApp.isPlaying = true;
                 state.gameApp.playerNames[0] = data.lplayer;
@@ -127,6 +136,13 @@ export class WebGame extends GameBase {
             this.socket.send(input);
             this.previousInput = currentInput;
         }
+    }
+
+    #sendLoadReady() {
+        console.log("WebGame: telling server that i'm done loading!");
+        this.socket.send(JSON.stringify({
+            "action": "load_complete",
+        }));
     }
 
 }
