@@ -224,7 +224,7 @@ class PongConsumer(AsyncWebsocketConsumer):
                     raise Exception()
                 return data
             if data["action"] == "load_complete":
-                if data["side"] not in [0, 1]:  #FIXME data.side is self.side, which can be None
+                if data["side"] not in [0, 1]:
                     raise Exception()
                 return data
             # If we get to this point, we received a packet that we don't know.
@@ -243,7 +243,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         if data["action"] == "move":
             return await self.moveplayer(data)
         if data["action"] == "load_complete":
-            self.loaded[data['side']] = True  #FIXME data.side is self.side, which can be None
+            self.loaded[data['side']] = True
             if self.master and self.game:
                 self.game.loaded = self.loaded[0] and self.loaded[1]
             return

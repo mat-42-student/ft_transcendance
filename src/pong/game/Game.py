@@ -43,6 +43,7 @@ class Game:
         self.pad_speed = STATS['initialPadSpeed']
         self.round_start_mult = choice([1, -1])
         self.loaded = False
+        self.was_not_loaded = True
         self.recenter()
         print(f"{GREEN}New game {game_id} launched opposing **{self.players[LEFT].name}({self.players[LEFT].id})** vs {self.players[RIGHT].name}({self.players[RIGHT].id}){RESET}")
 
@@ -52,20 +53,16 @@ class Game:
         self.players[0].pos = self.players[1].pos = 0
 
     async def new_round(self):
-        time = 2
         # Send "info" manually, so the client can display the new score without waiting the pause.
         await self.wsh.channel_layer.group_send(
             self.wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
-        )
-        await self.wsh.channel_layer.group_send(
-            self.wsh.room_group_name, {"type": "wait.a.bit", "time": time}
         )
         self.recenter()
         self.ball_speed *= STATS['ballAccelerateFactor']
         self.pad_speed *= STATS['padAccelerateFactor']
         self.players[0].pad_size *= STATS['padShrinkFactor']
         self.players[1].pad_size = self.players[0].pad_size
-        await asleep(time)
+        await self.eepytime(1)
 
 
     async def move_ball(self):
@@ -125,6 +122,13 @@ class Game:
             "rscore": self.players[RIGHT].score,
         }
 
+    async def eepytime(self, time = 1):
+        await self.wsh.channel_layer.group_send(
+            self.wsh.room_group_name, {"type": "wait.a.bit", "time": time}
+        )
+        await asleep(time)
+
+
     async def play(self):
         last_frame_time = time()
         while not self.over:
@@ -133,6 +137,9 @@ class Game:
             if elapsed_time < DELTATIME:
                 await asleep(DELTATIME - elapsed_time)
             if self.loaded:
+                if self.was_not_loaded:
+                    self.was_not_loaded = False
+                    await self.eepytime(2)
                 await self.wsh.channel_layer.group_send(
                     self.wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
                 )
