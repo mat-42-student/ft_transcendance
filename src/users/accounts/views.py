@@ -18,8 +18,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.renderers import JSONRenderer
-from .models import User
-from .models import User, Relationship
+from .models import User, Relationship, Game, Tournament
 from .serializers import (
     UserListSerializer, 
     UserMinimalSerializer, 
@@ -28,6 +27,7 @@ from .serializers import (
     UserBlockedSerializer, 
     UserUpdateSerializer, 
     UserRegistrationSerializer,
+    GameSerializer,
     RelationshipSerializer
 )
 
@@ -289,7 +289,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=404)
-        
+
     @action(detail=True, methods=['GET'], url_path='profile')
     def get_user_profile(self, request, pk=None):
         """
@@ -309,17 +309,14 @@ class UserViewSet(viewsets.ModelViewSet):
             "has_blocked_user": False,
             "message": None,
             "2fa": False,
+            "last_games": [],
         }
 
-        # Vérifier si l'utilisateur est celui consulté et si 2fa activée
-        if (user == target_user):
-            response_data.update({
-                "is_self": True,
-            })
-            if (user.is_2fa_enabled == True):
-                response_data.update({
-                    "2fa": True,
-                })
+        # Vérifier si l'utilisateur est celui consulté et si 2FA activée
+        if user == target_user:
+            response_data.update({"is_self": True})
+            if user.is_2fa_enabled:
+                response_data.update({"2fa": True})
 
         # Vérifier les statuts de blocage
         if target_user in user.blocked_users.all():
@@ -332,7 +329,6 @@ class UserViewSet(viewsets.ModelViewSet):
                 "has_blocked_user": True,
                 "message": "Vous avez été bloqué par cet utilisateur.",
             })
-
         # Vérifier si l'utilisateur est ami avec la personne consultée
         elif Relationship.objects.filter(
             Q(from_user=user, to_user=target_user, status='friend') |
@@ -340,7 +336,66 @@ class UserViewSet(viewsets.ModelViewSet):
         ).exists():
             response_data["is_friend"] = True
 
+        # Récupérer les 10 dernières parties où l'utilisateur est impliqué
+        games = Game.objects.filter(
+            Q(player1=target_user) | Q(player2=target_user)
+        ).order_by('-date')[:10]
+        response_data["last_games"] = GameSerializer(games, many=True, context={'request': request}).data
+
         return Response(response_data, status=200)
+
+    # @action(detail=True, methods=['GET'], url_path='profile')
+    # def get_user_profile(self, request, pk=None):
+    #     """
+    #     Récupère les informations dynamiques d'un utilisateur en tenant compte des relations.
+    #     """
+    #     user = request.user  # Utilisateur authentifié
+    #     target_user = get_object_or_404(User, pk=pk)  # Utilisateur dont on veut voir le profil
+
+    #     # Initialisation des données de base du profil
+    #     response_data = {
+    #         "id": target_user.id,
+    #         "username": target_user.username,
+    #         "avatar": target_user.avatar.url,
+    #         "is_self": False,
+    #         "is_friend": False,
+    #         "is_blocked_by_user": False,
+    #         "has_blocked_user": False,
+    #         "message": None,
+    #         "2fa": False,
+    #     }
+
+    #     # Vérifier si l'utilisateur est celui consulté et si 2fa activée
+    #     if (user == target_user):
+    #         response_data.update({
+    #             "is_self": True,
+    #         })
+    #         if (user.is_2fa_enabled == True):
+    #             response_data.update({
+    #                 "2fa": True,
+    #             })
+
+    #     # Vérifier les statuts de blocage
+    #     if target_user in user.blocked_users.all():
+    #         response_data.update({
+    #             "is_blocked_by_user": True,
+    #             "message": "Vous avez bloqué cet utilisateur.",
+    #         })
+    #     elif target_user in user.blocked_by.all():
+    #         response_data.update({
+    #             "has_blocked_user": True,
+    #             "message": "Vous avez été bloqué par cet utilisateur.",
+    #         })
+
+    #     # Vérifier si l'utilisateur est ami avec la personne consultée
+    #     elif Relationship.objects.filter(
+    #         Q(from_user=user, to_user=target_user, status='friend') |
+    #         Q(from_user=target_user, to_user=user, status='friend')
+    #     ).exists():
+    #         response_data["is_friend"] = True
+
+    #     return Response(response_data, status=200)
+
 # Relationship ViewSet
 class RelationshipViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
