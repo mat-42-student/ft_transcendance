@@ -6,7 +6,6 @@ from django.conf import settings
 #from .Guest import Guest
 import jwt
 import logging
-import httpx # type: ignore
 
 from datetime import datetime, timedelta, timezone
 
@@ -107,10 +106,9 @@ class Player ():
         }
         await redis.publish(channel, json.dumps(data))
 
-    async def get_friend_list(self):
+    def get_friend_list(self):
         """ Request friendlist from container 'users' """
         try:
-            # Generate the token
             payload = {
                 "service": "social",
                 "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
@@ -125,23 +123,19 @@ class Player ():
             url = f"http://users:8000/api/v1/users/{self.user_id}/friends/"
             headers = {"Authorization": f"Service {token}"}
 
-            # Make the request
-            # response = requests.get(url, headers=headers)
-            
-            async with httpx.AsyncClient(timeout=10) as client:
-                response = await client.get(url, headers=headers)
-                response.raise_for_status()
-                data = response.json()
-                return data.get('friends')
-                
-        except httpx.HTTPStatusError as e:
-            logging.error(f"HTTP error {e.response.status_code} for user {self.user_id}: {str(e)}")
-        except httpx.RequestError as e:
-            logging.error(f"Network error for user {self.user_id}: {str(e)}")
-        except json.JSONDecodeError as e:
-            logging.error(f"Invalid JSON response for user {self.user_id}: {str(e)}")
-        except Exception as e:
-            logging.error(f"Unexpected error for user {self.user_id}: {str(e)}")
-            
-        return None
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+            return data.get('friends')
+
+        except jwt.exceptions.PyJWTError as e:
+            print(f"JWT Error: {e}")
+            return None
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
+        except ValueError as e:
+            print(f"JSON decode error: {e}")
+            return None
     
