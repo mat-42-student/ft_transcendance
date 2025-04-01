@@ -37,7 +37,6 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.pubsub = None
         self.connected = False
         self.message_timestamps = deque(maxlen=self.MESSAGE_LIMIT) # collecting message's timestamp
-        self.loaded = [False, False]
 
     async def connect(self):
         self.init()
@@ -240,13 +239,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         if data["action"] == "move":
             return await self.moveplayer(data)
         if data["action"] == "load_complete":
-            is_for_me = data["side"] == self.side
-            self.loaded[int(is_for_me)] = True
-            if self.game != None and self.loaded[0] and self.loaded[1]:
-                print("Load complete, consumer side: ", str(self.side))
-                self.game.did_both_clients_finish_loading = True
-            else:
-                print("Not loaded yet, consumer side: ", str(self.side), ", self.loaded: ", str(self.loaded))
+            print("load_complete received, TODO")  #TODO placeholder
             return
         if data["action"] == "init":
             return await self.launch_game(data)
