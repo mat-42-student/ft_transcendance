@@ -9,17 +9,24 @@ import SceneOriginHelper from '../../utils/SceneOriginHelper.js';
 import BoardAnchor from '../../utils/BoardAnchor.js';
 import TextMesh from '../../utils/TextMesh.js';
 import DebugPauseText from './DebugPauseText.js';
+import { state } from '../../../../main.js';
+import Cross2DHelper from '../../utils/Cross2DHelper.js';
 
 
 export default class LevelDebug extends LevelBase {
-	constructor() {
-		super();
+
+
+	onAdded() {
+		super.onAdded();
 
 		this.boardSize = new THREE.Vector2(1.5, 1);
 		this.name = 'Debug Level';
 
 		this.background = new THREE.Color('#112211');
 		this.fog = null;
+
+		this.gameplayObjects = new THREE.Group();
+		this.gameEndObjects = new THREE.Group();
 
 		{
 			this.views.position[2].set(0, 1.2, -0.8);
@@ -33,15 +40,13 @@ export default class LevelDebug extends LevelBase {
 			this.views.position[1].copy(this.views.position[0]).x *= -1;
 			this.views.quaternion[1].copy(UTILS.makeLookDownQuaternion(-90, 45));
 		}
-	}
 
+		this.add(this.gameplayObjects);
+		this.add(this.gameEndObjects);
 
-	onAdded() {
-		super.onAdded();
-
-		this.add(new DebugBall());
-		this.add(new DebugPaddle(0));
-		this.add(new DebugPaddle(1));
+		this.gameplayObjects.add(new DebugBall());
+		this.gameplayObjects.add(new DebugPaddle(0));
+		this.gameplayObjects.add(new DebugPaddle(1));
 
 		this.add(new DebugBoard());
 		this.add(new SceneOriginHelper());
@@ -49,19 +54,19 @@ export default class LevelDebug extends LevelBase {
 		this.smoothCamera.diagonal = 40;
 		this.smoothCamera.mousePositionMultiplier.set(0.1, 0.1);
 		this.smoothCamera.mouseRotationMultiplier.set(0.1, 0.1);
-		this.smoothCamera.smoothSpeed = 15;
+		this.smoothCamera.smoothSpeed = 5;
 
 		{
 			const top = new BoardAnchor(-0.1, -0.1, 0.8, this);
 			const bottom = new BoardAnchor(-0.1, -0.1, -0.8, this);
 
-			this.add(top);
-			this.add(bottom);
+			this.gameplayObjects.add(top);
+			this.gameplayObjects.add(bottom);
 
 			top.left.add(new DebugScoreIndicator(0));
 			top.right.add(new DebugScoreIndicator(1));
 
-			this.textMaterial = new THREE.MeshBasicMaterial({color: '#334433'});
+			this.textMaterial = new THREE.MeshBasicMaterial({color: '#88ff88'});
 
 			this.nameTextMeshes = [
 				new TextMesh(this.textMaterial, '???'),
@@ -94,6 +99,22 @@ export default class LevelDebug extends LevelBase {
 				});
 			}
 		}
+
+		// Debug level does not load any external resources, so it can mark itself as loaded immediately.
+		// state.engine.scene = this;  //TODO uncomment instant loading
+
+		//TODO comment out this fake loading time
+		const timeout = Math.random() * 2000;
+		const loadCompleteCallback = (() => {
+			console.log('LevelDebug.js: Fake loading complete:', Math.round(timeout / 100) / 10, 's');
+			if (state.gameApp && state.gameApp.level) {
+				state.engine.scene = state.gameApp.level;
+			} else {
+				console.warn('LevelDebug.js: Fake loading: Level was never added to engine, disposing.');
+				this.dispose();
+			}
+		}).bind(this);
+		setTimeout(loadCompleteCallback, timeout);
 	}
 
 
@@ -104,7 +125,8 @@ export default class LevelDebug extends LevelBase {
 			this.gameInitialized = true;
 			this.nameTextMeshes[0].setText(state.gameApp.playerNames[0]);
 			this.nameTextMeshes[1].setText(state.gameApp.playerNames[1]);
-			this.flipFunction();
+			if (this.flipFunction)
+				this.flipFunction();
 		}
 	}
 
@@ -115,17 +137,95 @@ export default class LevelDebug extends LevelBase {
 		if (this.textMaterial) this.textMaterial.dispose();
 	}
 
-
 	pause(time) {
 		super.pause(time);
-		this.add(new DebugPauseText('Ready...', time));
+		this.gameplayObjects.add(new DebugPauseText('Ready...', time));
 	}
-
 
 	unpause() {
 		if (super.unpause()) {
-			this.add(new DebugPauseText('Go!', 0.5));
+			this.gameplayObjects.add(new DebugPauseText('Go!', 0.5));
 		}
+	}
+
+
+	endShowWinner(
+		scores = [NaN, NaN],
+		winner = NaN,
+		playerNames = ['?1', '?2'],
+	) {
+		super.endShowWinner(scores, winner, playerNames);
+
+		if (!state.engine.scene)  // Game end before loading completed. Just give up
+			return;
+
+		this.#endClear();
+		const text = new TextMesh(this.textMaterial,
+			`${scores[0]} : ${scores[1]}\n\n${playerNames[winner]}\nwon!`);
+		text.rotateX(-UTILS.RAD90);
+		text.rotateZ(UTILS.RAD180);
+		this.gameEndObjects.add(text);
+	}
+
+	endShowWebQuit(
+		quitter = NaN,
+		playerNames = ['?1', '?2'],
+	) {
+		super.endShowWebQuit(quitter, playerNames);
+
+		if (!state.engine.scene)  // Game end before loading completed. Just give up
+			return;
+
+		this.#endClear();
+		const text = new TextMesh(this.textMaterial, `${playerNames[quitter]}\nquit!`);
+		text.rotateX(-UTILS.RAD90);
+		text.rotateZ(UTILS.RAD180);
+		this.gameEndObjects.add(text);
+	}
+
+	endShowNothing() {
+		super.endShowNothing();
+
+		if (!state.engine.scene)  // Game end before loading completed. Just give up
+			return;
+
+		this.#endClear();
+	}
+
+	endHideResult() {
+		super.endHideResult();
+
+		if (!state.engine.scene)  // Game end before loading completed. Just give up
+			return;
+
+		if (this.gameEndObjects) {
+			this.remove(this.gameEndObjects);
+			this.gameEndObjects = undefined;
+		}
+	}
+
+	#endClear() {
+		if (!state.engine.scene)  // Game end before loading completed. Just give up
+			return;
+
+		if (this.gameplayObjects) {
+			this.remove(this.gameplayObjects);
+			this.gameplayObjects = undefined;
+		}
+
+		this.views = null;
+		this.smoothCamera.position.set(0, 5, 0);
+		this.smoothCamera.quaternion.setFromAxisAngle(
+			new THREE.Vector3(1,0,0), -UTILS.RAD90);
+		this.smoothCamera.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(
+			new THREE.Vector3(0, 0,1), UTILS.RAD180));
+		this.smoothCamera.fov = 20;
+		this.smoothCamera.mouseRotationMultiplier.setScalar(0.02);
+		this.smoothCamera.mousePositionMultiplier.setScalar(0.02);
+
+		const x = new Cross2DHelper('#224422');
+		x.rotateY(UTILS.RAD90/2);
+		this.add(x);
 	}
 
 }

@@ -1,4 +1,4 @@
-import { state } from '../main.js';
+import { state, toggleHeaderButtons } from '../main.js';
 import { initDynamicCard, closeDynamicCard } from '../components/dynamic_card.js';
 import { WebGame } from './WebGame.js';
 
@@ -209,6 +209,14 @@ export class Mmaking
 			this.guests[friendId] = false;
 			this.invited_by[friendId] = false;
 		}
+
+		this.cancelState();
+		await this.sendMsg(data);
+		await this.renderMatchmaking();
+	}
+
+	cancelState()
+	{
 		this.salonInvite = false;
 		this.salonRandom = false;
 		this.salonTournament = false;
@@ -224,9 +232,6 @@ export class Mmaking
 
 		btnTournament[0].addEventListener('click', this.boundEventListenersClient.eventSearchTournament);
 		btnRandom.addEventListener('click', this.boundEventListenersClient.btnsearchRandomGame);
-
-		await this.sendMsg(data);
-		await this.renderMatchmaking();
 	}
 
 	async btnInviteDesactive(key)
@@ -311,22 +316,27 @@ export class Mmaking
 	{
 		const btnTournament = document.getElementsByClassName('btn-tournament');
 		const btnRandom = document.getElementById('versus');
-		
+
+		if (this.bracket == true)
+		{
+			await this.bracketTournament();
+			await this.sleep(5000);
+			this.bracket = false;
+			closeDynamicCard();
+		}
 		if (this.game == true)
 			{
-				if (this.bracket == true)
-				{
-					await this.bracketTournament();
-					await this.sleep(5000);
-					this.bracket = false;
-				}
 				closeDynamicCard();
-				if (this.gameId != null)
+				if (this.gameId != null) {
+					if (state.gameApp != null)
+						state.gameApp.close();
 					state.gameApp = new WebGame('debug');
 					state.gameApp.launchGameSocket(this.gameId);
-				this.game = false;
-				btnTournament[0].removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);
-				btnRandom.removeEventListener('click', this.boundEventListenersClient.btnSearchRandomGame);
+					toggleHeaderButtons(true);
+					this.game = false;
+					btnTournament[0].removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);
+					btnRandom.removeEventListener('click', this.boundEventListenersClient.btnSearchRandomGame);
+				}
 			}
 	}
 
@@ -396,7 +406,7 @@ export class Mmaking
 		await initDynamicCard('tournament');
 		console.log('tournament bracket is setting');
 		const bracketContainer = document.getElementById('tournamentBracket');
-		
+
 		for (const [key, value] of Object.entries(this.opponents))
 		{
 			let firstPlayer = false;
@@ -438,7 +448,7 @@ export class Mmaking
 					team2Score.classList.add('score');
 					team2Score.textContent = player.score2 !== undefined ? player.score2 : '-';
 
-					teamContainer.appendChild(team2Element);        
+					teamContainer.appendChild(team2Element);
 					team2Element.appendChild(team2Score);
 
 				}
@@ -470,7 +480,32 @@ export class Mmaking
 		await this.renderMatchmaking();
 	}
 
-    async sendMsg(message) {
+    bindLocalBotButton() {
+        const button = document.getElementById('btn-local-bot');
+        button.addEventListener('click', () => {
+            if (state.gameApp != null) {
+                console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
+                return;
+            }
+
+            state.gameApp = new LocalGame(true);
+        });
+    }
+
+    bindLocal1v1Button() {
+        const button = document.getElementById('btn-local-versus');
+        button.addEventListener('click', () => {
+            if (state.gameApp != null) {
+                console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
+                return;
+            }
+
+            state.gameApp = new LocalGame(false);
+        });
+    }
+
+    async sendMsg(message)
+	{
 
         const data = {
             'header': {  //Mandatory part
@@ -483,15 +518,42 @@ export class Mmaking
     	await state.mainSocket.send(JSON.stringify(data));
     }
 
+	async socketGameError() {
+		const data = {
+			'GameSocket': false,
+			'gameId': this.gameId
+		};
+
+		this.cancelState();
+		this.sendMsg(data);
+
+	}
+
+	async socketGameGood()
+	{
+		const data = {
+			'GameSocket': true,
+			'gameId': this.gameId
+		};
+		this.cancelState();
+		this.sendMsg(data);
+
+	}
+
     async incomingMsg(data)
     {
         if (data.body.status == 'ingame')
-        { 
+        {
 			this.game = true;
 			this.gameId =  data.body.id_game;
 			this.salonInvite = false;
 			this.salonLoad = false;
 			this.SearchRandomGame = false;
+
+			if (this.gameId == null)
+			{
+				this.cancelState()
+			}
 
 			if (data.body.tournament == true)
 			{
@@ -501,8 +563,9 @@ export class Mmaking
 			if (data.body.opponents)
 			{
 				this.opponents = data.body.opponents;
-				console.log(this.opponents);
+				console.log(this.opponents);  //TODO remove log?
 			}
+
         }
 		else if (data.body.cancel == true)
 		{
