@@ -251,6 +251,8 @@ class PongConsumer(AsyncWebsocketConsumer):
             return await self.launch_game(data)
         if data["action"] == "info":
             return await self.send(json.dumps(data))
+        if data["action"] == "ready":
+            return await self.send(json.dumps(data))
         if data["action"] == "wannaplay!":
             print("wannaplay: ", data)
             return await self.wannaplay(data.get("id"), data.get("username"))
@@ -284,6 +286,9 @@ class PongConsumer(AsyncWebsocketConsumer):
             await self.send(json.dumps(data))
         except:
             pass
+        await self.channel_layer.group_send(
+            self.room_group_name, {"type": "handle.message", "message": {"action": "ready"}}
+        )
         if self.master:
             create_task(self.game.play())
 

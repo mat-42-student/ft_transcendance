@@ -17,13 +17,11 @@ export class WebGame extends GameBase {
         this.side = 2;  // Set to neutral until server tells us
         this.level = new (LEVELS.LIST[levelName])();
         this.playerNames[0] = this.playerNames[1] = '-';
-        this.isLoading = true;
     }
 
     frame(delta, time) {
-        if (this.isLoading && state.engine.scene && this.socket && this.socket.readyState == this.socket.OPEN) {
-            this.isLoading = false;
-            this.#sendLoadReady();
+        if (this.needToReportLoaded && state.engine.scene) {
+            this.sendLoadReady();
         }
 
         try {
@@ -116,6 +114,14 @@ export class WebGame extends GameBase {
             if (data.action == "disconnect") {
                 wg.close();
             }
+            if (data.action == "ready") {
+                // Did we load before the server was ready? Then report it now.
+                if (state.engine.scene != null) {
+                    wg.sendLoadReady();
+                } else {
+                    wg.needToReportLoaded = true;
+                }
+            }
             if (data.action == "game_cancelled") {
                 wg.level.endShowWebQuit(data.quitter, [...wg.playerNames]);
             }
@@ -131,7 +137,7 @@ export class WebGame extends GameBase {
 
 
     #sendInput() {
-        if (!state.isPlaying || this.socket.readyState != this.socket.OPEN)
+        if (!this.isReady || !state.isPlaying || this.socket.readyState != this.socket.OPEN)
             return;
 
         let currentInput = state.input.getPaddleInput(this.side);
@@ -145,7 +151,12 @@ export class WebGame extends GameBase {
         }
     }
 
-    #sendLoadReady() {
+    sendLoadReady() {
+        if (this.isReady)
+            return;
+        this.isReady = true;
+
+        this.needToReportLoaded = false;
         this.socket.send(JSON.stringify({
             "action": "load_complete",
         }));

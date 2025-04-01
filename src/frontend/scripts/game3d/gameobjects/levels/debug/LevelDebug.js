@@ -106,7 +106,7 @@ export default class LevelDebug extends LevelBase {
 		//TODO comment out this fake loading time
 		const timeout = Math.random() * 2000;
 		const loadCompleteCallback = (() => {
-			console.log('LevelDebug.js: Fake loading complete:', Math.round(timeout / 100) / 10, 's', this);
+			console.log('LevelDebug.js: Fake loading complete:', Math.round(timeout / 100) / 10, 's');
 			if (state.gameApp && state.gameApp.level) {
 				state.engine.scene = state.gameApp.level;
 			} else {
