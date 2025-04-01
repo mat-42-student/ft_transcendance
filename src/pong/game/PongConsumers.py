@@ -1,11 +1,11 @@
 import json
-import jwt
-import requests
+# import jwt
+# import requests
 import time
 from asyncio import create_task, sleep as asleep
 from redis.asyncio import from_url #type: ignore
 from channels.generic.websocket import AsyncWebsocketConsumer #type: ignore
-from urllib.parse import parse_qs
+# from urllib.parse import parse_qs
 from .Game import Game
 from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT
 import time
@@ -18,6 +18,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     TIME_WINDOW = 1 # seconds
     UNMUTE_TIME = 5 # seconds
     MAX_MESSAGE_SIZE = 50
+
     WAITING_FOR_OPPONENT = 10 # seconds
 
     def init(self):
@@ -36,23 +37,29 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.redis_client = None
         self.pubsub = None
         self.connected = False
-        self.message_timestamps = deque(maxlen=self.MESSAGE_LIMIT) # collecting message's timestamp
+        self.message_timestamps = deque(maxlen=self.MESSAGE_LIMIT)
 
     async def connect(self):
         self.init()
+        if not self.scope["payload"]:
+            print("1")
+            await self.kick(message="Unauthentified")
+            return
         self.get_user_infos()
         if self.player_id is None:
+            print("2")
             await self.kick(message="Unauthentified")
             return
         try:
             await self.join_redis_channels()
-            await self.check_game_info()
+            if not await self.check_game_info():
+                await self.close()
+                return
             await self.accept()
             self.connected = True
             self.room_group_name = f"game_{self.game_id}"
             await self.channel_layer.group_add(self.room_group_name, self.channel_name)
             await self.wait_for_opponent()
-            # await self.send_online_status('ingame')
         except Exception as e:
             print(e)
 
@@ -62,7 +69,6 @@ class PongConsumer(AsyncWebsocketConsumer):
             await self.redis_client.incr(key)
             await self.redis_client.expire(key, self.WAITING_FOR_OPPONENT)
         except Exception as e:
-            # await self.send_score()
             await self.kick(message="Error while waiting for opponent")
             return
         start_time = time.time()
@@ -78,7 +84,7 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     def get_user_infos(self):
         try:
-            data = self.checkAuth()
+            data = self.scope["payload"]
             if data:
                 self.player_id =  data.get('id')
                 self.player_name = data.get('username')
@@ -87,32 +93,32 @@ class PongConsumer(AsyncWebsocketConsumer):
             print(e)
             return
 
-    def checkAuth(self):
-        try:
-            self.get_public_key()
-        except RuntimeError as e:
-            raise e
-        params = parse_qs(self.scope['query_string'].decode())
-        self.token = params.get('t', [None])[0]
-        try:
-            payload = jwt.decode(self.token, self.public_key, algorithms=['RS256'])
-            return payload
-        except jwt.ExpiredSignatureError as e:
-            print(e)
-        except jwt.InvalidTokenError as e:
-            print(e)
-        return None
+    # def checkAuth(self):
+    #     try:
+    #         self.get_public_key()
+    #     except RuntimeError as e:
+    #         raise e
+    #     params = parse_qs(self.scope['query_string'].decode())
+    #     self.token = params.get('t', [None])[0]
+    #     try:
+    #         payload = jwt.decode(self.token, self.public_key, algorithms=['RS256'])
+    #         return payload
+    #     except jwt.ExpiredSignatureError as e:
+    #         print(e)
+    #     except jwt.InvalidTokenError as e:
+    #         print(e)
+    #     return None
 
-    def get_public_key(self):
-        try:
-            response = requests.get(f"http://auth:8000/api/v1/auth/public-key/")
-            if response.status_code == 200:
-                self.public_key = response.json().get("public_key")
-            else:
-                raise RuntimeError("Impossible de récupérer la clé publique JWT")
-        except RuntimeError as e:
-            print(e)
-            raise(e)
+    # def get_public_key(self):
+    #     try:
+    #         response = requests.get(f"http://auth:8000/api/v1/auth/public-key/")
+    #         if response.status_code == 200:
+    #             self.public_key = response.json().get("public_key")
+    #         else:
+    #             raise RuntimeError("Impossible de récupérer la clé publique JWT")
+    #     except RuntimeError as e:
+    #         print(e)
+    #         raise(e)
 
     async def join_redis_channels(self):
         try:
@@ -133,6 +139,9 @@ class PongConsumer(AsyncWebsocketConsumer):
             attempts += 1
             expected_players = await self.redis_client.get(f"game_{self.game_id}_players")
             await asleep(0.5)
+        if expected_players is None:
+            await self.kick(close_code=1011, message="Internal error")
+            return
         try:
             expected_players = json.loads(expected_players)
             if not isinstance(expected_players, list):
@@ -143,24 +152,8 @@ class PongConsumer(AsyncWebsocketConsumer):
             return
         if self.player_id not in expected_players:
             await self.kick(message=f"{self.player_name}: Unexpected player")
-        # if self.player_id == expected_players[0]:
-        #     self.master = True
-        #     print(f"{GREEN}Player {self.player_name} is master{RESET}")
-
-    # async def send_online_status(self, status):
-    #     """Send all friends our status"""
-    #     data = {
-    #         "header": {
-    #             "service": "social",
-    #             "dest": "back",
-    #             "id": self.player_id
-    #         },
-    #         "body":{
-    #             "status": status
-    #         }
-    #     }
-    #     # print(f"Sending data to deep_social: {data}")
-    #     await self.redis_client.publish("deep_social", json.dumps(data))
+            return
+        return True
 
     # return True if user has sent more than MESSAGE_LIMIT in TIME_WINDOW seconds
     async def user_flooding(self):
@@ -177,11 +170,11 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     # Receive message from WebSocket: immediate publish into channels lobby
     async def receive(self, text_data=None, bytes_data=None):
-        if await self.user_flooding():
-            self.mute = True
-            return
         if self.mute:
             self.unmute_if_expired()
+            return
+        if await self.user_flooding():
+            self.mute = True
             return
         data = await self.load_valid_json(text_data)
         if not (data):
@@ -312,14 +305,16 @@ class PongConsumer(AsyncWebsocketConsumer):
         if user is None:
             await self.kick(message="Disconnect_now")
             return
-        # print(f"{YELLOW}Disconnect_now from {user}{RESET}")
         if self.master and self.game.over: # game ended normally
             print(f"{RED}Game #{self.game.id} over (maxscore reached){RESET}")
             await self.send_score()
         elif self.master and not self.game.over: # game is ending because one player left
             print(f"{RED}Game #{self.game.id} over (player {user} left){RESET}")
             await self.disconnect_endgame(user)
-        await self.send(text_data=json.dumps({"action": "disconnect"}))
+        try:
+            await self.send(text_data=json.dumps({"action": "disconnect"}))
+        except Exception as e:
+            print(e)
 
     async def disconnect_endgame(self, user):
         self.game.players[0].score = 1 if self.player_id != user else 0

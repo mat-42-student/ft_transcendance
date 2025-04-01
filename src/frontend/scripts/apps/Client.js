@@ -99,21 +99,9 @@ export class Client{
         this.state.client.userName = parsedPayload.username;
     }
 
-    // async hasCookie() {
-    //     try {
-    //         const response = await ft_fetch('api/v1/auth/refresh/', {
-    //             method: 'HEAD',
-    //             credentials: 'include'
-    //         });
-    //         return (response.status == 200)
-    //     } catch {
-    //         return false;
-    //     }
-    // }
-
     async refreshSession(location = null) {
         if (!localStorage.getItem('cookieSet')) // modfis ajoutées après merge
-            return;                             // modfis ajoutées après merge
+            return;                              // modfis ajoutées après merge
         try {
             const response = await fetch('api/v1/auth/refresh/', {
                 method: 'POST',

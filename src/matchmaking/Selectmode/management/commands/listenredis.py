@@ -292,7 +292,6 @@ class Command(BaseCommand):
                             else:
                                 # Setup Guest
                                 guest = host.guests[guestid]
-                                guest.token = player.token
                                 guest.get_user()
                                 guest.type_game = 'invite'
                                 salon.players.update({guestid: guest })
