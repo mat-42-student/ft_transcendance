@@ -42,6 +42,7 @@ class Game:
         self.ball_speed = STATS['initialBallSpeed']
         self.pad_speed = STATS['initialPadSpeed']
         self.round_start_mult = choice([1, -1])
+        self.loaded = False
         self.recenter()
         print(f"{GREEN}New game {game_id} launched opposing **{self.players[LEFT].name}({self.players[LEFT].id})** vs {self.players[RIGHT].name}({self.players[RIGHT].id}){RESET}")
 
@@ -131,11 +132,12 @@ class Game:
             elapsed_time = current_time - last_frame_time
             if elapsed_time < DELTATIME:
                 await asleep(DELTATIME - elapsed_time)
-            await self.wsh.channel_layer.group_send(
-                self.wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
-            )
-            self.move_players()
-            await self.move_ball()
+            if self.loaded:
+                await self.wsh.channel_layer.group_send(
+                    self.wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
+                )
+                self.move_players()
+                await self.move_ball()
             last_frame_time = time()
         await self.wsh.channel_layer.group_send(
             self.wsh.room_group_name, {

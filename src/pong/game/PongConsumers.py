@@ -36,6 +36,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.redis_client = None
         self.pubsub = None
         self.connected = False
+        self.loaded = [False, False]
         self.message_timestamps = deque(maxlen=self.MESSAGE_LIMIT) # collecting message's timestamp
 
     async def connect(self):
@@ -223,11 +224,14 @@ class PongConsumer(AsyncWebsocketConsumer):
                     raise Exception()
                 return data
             if data["action"] == "load_complete":
+                if data["side"] not in [0, 1]:  #FIXME data.side is self.side, which can be None
+                    raise Exception()
                 return data
             # If we get to this point, we received a packet that we don't know.
             # Write a new if statement to properly validate it.
             raise Exception()
         except:
+            print(RED, "Bad JSON: " + str(data) + RESET)
             await self.kick(1003, "Invalid JSON")
             return
 
@@ -239,7 +243,9 @@ class PongConsumer(AsyncWebsocketConsumer):
         if data["action"] == "move":
             return await self.moveplayer(data)
         if data["action"] == "load_complete":
-            print("load_complete received, TODO")  #TODO placeholder
+            self.loaded[data['side']] = True  #FIXME data.side is self.side, which can be None
+            if self.master and self.game:
+                self.game.loaded = self.loaded[0] and self.loaded[1]
             return
         if data["action"] == "init":
             return await self.launch_game(data)

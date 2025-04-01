@@ -8,8 +8,8 @@ export class GameBase {
 	constructor() {
 		this.side = 2;
 		/**
-		 * Reference to the gameplay scene , if one has been instantiated.
-		 * This is a duplicate of engine.scene most of the time, except for while it's loading.
+		 * Duplicate reference of state.engine.scene most of the time,
+		 * except while this.level is loading (in which case, state.engine.scene is null).
 		 * @type {LevelBase} */
 		this.level = null;
 		this.ballPosition = new THREE.Vector2(0, 0);
@@ -17,8 +17,6 @@ export class GameBase {
 		this.paddlePositions = [0, 0];
 		this.paddleHeights = [0, 0];
 		this.playerNames = ['Uninitialized', 'Uninitialized'];
-		/** Set to true when done loading. Should correspond to when the game scene is shown on screen. */
-		this.isPlaying = false;
 		state.engine.scene = null;
 	}
 
@@ -28,9 +26,9 @@ export class GameBase {
 	}
 
 	close() {
-		state.gameApp = null;
+		if (state.gameApp == this)  { state.gameApp = null; }
 		toggleHeaderButtons(false);
-		this.isPlaying = false;  // just in case this object lingers somehow?
+		if (state.engine.scene == this)  { state.engine.scene = null; }
 	}
 
 }

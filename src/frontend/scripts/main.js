@@ -17,7 +17,7 @@ export const state = {
     /** @type {GameBase} */ gameApp: null,
     input: new Input(),
     engine: new Engine(),
-    get isPlaying() { return this.gameApp != null && this.gameApp.isPlaying != null; },
+    get isPlaying() { return this.gameApp != null && this.engine != null && this.engine.scene != null; },
     /** @type {Clock} */ clock: null,
 };
 

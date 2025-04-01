@@ -25,11 +25,9 @@ export class WebGame extends GameBase {
             this.isLoading = false;
             this.#sendLoadReady();
         }
-        console.log('Webgame frame');  //TODO remove log 'Webgame frame'
 
         try {
-            if (this.isPlaying)
-                this.#sendInput();
+            this.#sendInput();
         } catch (error) {
             console.error('Failed to send input', error);
         }
@@ -40,6 +38,7 @@ export class WebGame extends GameBase {
     close() {
         try {
             this.socket.close();
+            this.socket = null;
         } catch {}
 
         try {
@@ -74,25 +73,30 @@ export class WebGame extends GameBase {
         };
 
         this.socket.onclose = async function(e) {
-            if (state.gameApp) {
-                state.gameApp.socket = null;
-                state.gameApp.isPlaying = false;
+            if (state.gameApp instanceof WebGame) {
+                state.gameApp.close();
             }
         };
 
         this.socket.onmessage = async function(e) {
-            const wg = state.gameApp;
             let data = JSON.parse(e.data);
+            const wg = state.gameApp;
+            if (!(wg instanceof WebGame)) {
+                console.error("WebGame.js: Received message on socket, but the active game app is not a WebGame.\n",
+                    "Is an instance of WebGame, and its game socket, still reachable somewhere?\n",
+                    "Data:", data,
+                    "Socket:", self,
+                );
+                return;
+            }
 
             // Debug with less spam from constant 'info' packets.
             if (data.action != 'info') { console.log('Game packet:', data.action, ', data = ', data); }
 
             if (data.action == 'init') {
-                wg.isPlaying = true;
-                state.gameApp.side = Number(data.side);
-                state.gameApp.isPlaying = true;
-                state.gameApp.playerNames[0] = data.lplayer;
-                state.gameApp.playerNames[1] = data.rplayer;
+                wg.side = Number(data.side);
+                wg.playerNames[0] = data.lplayer;
+                wg.playerNames[1] = data.rplayer;
             }
             if (data.action == "info") {
                 wg.ballPosition.x = data.ball[0];
@@ -104,10 +108,10 @@ export class WebGame extends GameBase {
                 wg.scores[0] = data.lscore;
                 wg.scores[1] = data.rscore;
 
-                if (state.gameApp.level)  state.gameApp.level.unpause();
+                if (wg.level)  wg.level.unpause();
             }
             if (data.action == "wait") {
-                if (state.gameApp.level)  state.gameApp.level.pause(Number(data.time));
+                if (wg.level)  wg.level.pause(Number(data.time));
             }
             if (data.action == "disconnect") {
                 wg.close();
@@ -127,6 +131,9 @@ export class WebGame extends GameBase {
 
 
     #sendInput() {
+        if (!state.isPlaying || this.socket.readyState != this.socket.OPEN)
+            return;
+
         let currentInput = state.input.getPaddleInput(this.side);
         if (this.previousInput != currentInput) {
             let input = JSON.stringify({
@@ -139,7 +146,6 @@ export class WebGame extends GameBase {
     }
 
     #sendLoadReady() {
-        console.log("WebGame: telling server that i'm done loading!");
         this.socket.send(JSON.stringify({
             "action": "load_complete",
         }));

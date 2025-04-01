@@ -17,6 +17,9 @@ export class Engine {
 	 * but is switched on/off based on this. */
 	get DEBUG_MODE() { return this.#DEBUG_MODE; }
 
+	/** Null check this property to know if the scene is loaded and ready to play.
+	 * See also {@link state.isPlaying}
+	 */
 	get scene() { return this.#scene; }
 
 	get gltfLoader() { return this.#gltfLoader; }
@@ -112,7 +115,7 @@ export class Engine {
 			this.paramsForAddDuringRender = null;
 		}
 
-		// if (state.gameApp && state.gameApp.isPlaying)
+		// if (state.gameApp && this.scene)
 			this.renderer.render(this.scene, this.scene.smoothCamera.camera);
 
 		this.isProcessingFrame = false;
