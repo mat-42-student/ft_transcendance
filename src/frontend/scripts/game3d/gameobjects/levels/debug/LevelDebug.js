@@ -101,7 +101,13 @@ export default class LevelDebug extends LevelBase {
 		}
 
 		// Debug level does not load any external resources, so it can mark itself as loaded immediately.
-		state.engine.scene = this;
+		// state.engine.scene = this;  //TODO uncomment
+		//TODO delete this timeout
+		const timeout = Math.random() * 2000;
+		setTimeout(() => {
+			state.engine.scene = state.gameApp.level;
+			console.log('Fake loading complete', timeout, 'ms');
+		}, timeout);
 	}
 
 
