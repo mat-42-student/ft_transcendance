@@ -209,6 +209,14 @@ export class Mmaking
 			this.guests[friendId] = false;
 			this.invited_by[friendId] = false;
 		}
+
+		this.cancelState();
+		await this.sendMsg(data);
+		await this.renderMatchmaking();
+	}
+
+	cancelState()
+	{
 		this.salonInvite = false;
 		this.salonRandom = false;
 		this.salonTournament = false;
@@ -224,9 +232,6 @@ export class Mmaking
 
 		btnTournament[0].addEventListener('click', this.boundEventListenersClient.eventSearchTournament);
 		btnRandom.addEventListener('click', this.boundEventListenersClient.btnsearchRandomGame);
-
-		await this.sendMsg(data);
-		await this.renderMatchmaking();
 	}
 
 	async btnInviteDesactive(key)
@@ -312,14 +317,15 @@ export class Mmaking
 		const btnTournament = document.getElementsByClassName('btn-tournament');
 		const btnRandom = document.getElementById('versus');
 
+		if (this.bracket == true)
+		{
+			await this.bracketTournament();
+			await this.sleep(5000);
+			this.bracket = false;
+			closeDynamicCard();
+		}
 		if (this.game == true)
 			{
-				if (this.bracket == true)
-				{
-					await this.bracketTournament();
-					await this.sleep(5000);
-					this.bracket = false;
-				}
 				closeDynamicCard();
 				if (this.gameId != null) {
 					if (state.gameApp != null)
@@ -474,7 +480,32 @@ export class Mmaking
 		await this.renderMatchmaking();
 	}
 
-    async sendMsg(message) {
+    bindLocalBotButton() {
+        const button = document.getElementById('btn-local-bot');
+        button.addEventListener('click', () => {
+            if (state.gameApp != null) {
+                console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
+                return;
+            }
+
+            state.gameApp = new LocalGame(true);
+        });
+    }
+
+    bindLocal1v1Button() {
+        const button = document.getElementById('btn-local-versus');
+        button.addEventListener('click', () => {
+            if (state.gameApp != null) {
+                console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
+                return;
+            }
+
+            state.gameApp = new LocalGame(false);
+        });
+    }
+
+    async sendMsg(message)
+	{
 
         const data = {
             'header': {  //Mandatory part
@@ -487,6 +518,28 @@ export class Mmaking
     	await state.mainSocket.send(JSON.stringify(data));
     }
 
+	async socketGameError() {
+		const data = {
+			'GameSocket': false,
+			'gameId': this.gameId
+		};
+
+		this.cancelState();
+		this.sendMsg(data);
+
+	}
+
+	async socketGameGood()
+	{
+		const data = {
+			'GameSocket': true,
+			'gameId': this.gameId
+		};
+		this.cancelState();
+		this.sendMsg(data);
+
+	}
+
     async incomingMsg(data)
     {
         if (data.body.status == 'ingame')
@@ -496,6 +549,11 @@ export class Mmaking
 			this.salonInvite = false;
 			this.salonLoad = false;
 			this.SearchRandomGame = false;
+
+			if (this.gameId == null)
+			{
+				this.cancelState()
+			}
 
 			if (data.body.tournament == true)
 			{
@@ -507,6 +565,7 @@ export class Mmaking
 				this.opponents = data.body.opponents;
 				console.log(this.opponents);  //TODO remove log?
 			}
+
         }
 		else if (data.body.cancel == true)
 		{
