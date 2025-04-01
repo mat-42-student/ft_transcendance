@@ -62,7 +62,6 @@ export class LocalGame extends GameBase {
 
         /** @type {LevelBase} */
         this.level = new (LEVELS.pickRandomLevel())();  // randomly select class, then construct it
-        state.engine.scene = this.level;
 
         this.pause();
         this.recenter();

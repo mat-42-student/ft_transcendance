@@ -14,8 +14,10 @@ import Cross2DHelper from '../../utils/Cross2DHelper.js';
 
 
 export default class LevelDebug extends LevelBase {
-	constructor() {
-		super();
+
+
+	onAdded() {
+		super.onAdded();
 
 		this.boardSize = new THREE.Vector2(1.5, 1);
 		this.name = 'Debug Level';
@@ -38,11 +40,6 @@ export default class LevelDebug extends LevelBase {
 			this.views.position[1].copy(this.views.position[0]).x *= -1;
 			this.views.quaternion[1].copy(UTILS.makeLookDownQuaternion(-90, 45));
 		}
-	}
-
-
-	onAdded() {
-		super.onAdded();
 
 		this.add(this.gameplayObjects);
 		this.add(this.gameEndObjects);
@@ -102,6 +99,9 @@ export default class LevelDebug extends LevelBase {
 				});
 			}
 		}
+
+		// Debug level does not load any external resources, so it can mark itself as loaded immediately.
+		state.engine.scene = this;  //TODO uncomment
 	}
 
 

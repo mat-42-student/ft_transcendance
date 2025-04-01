@@ -17,11 +17,21 @@ export default class LevelBase extends THREE.Scene {
 		fov: [NaN, NaN, NaN],
 	};
 
+	smoothCamera = new SmoothCamera();
+
 	get viewIndex() { return state.isPlaying ? state.gameApp.side : 2; }
 
 
+	constructor() {
+		super();
+
+		const fakeEvent = { child: this };
+		__onObjectAddedToScene(fakeEvent);
+
+	}
+
+
 	onAdded() {
-		this.smoothCamera = new SmoothCamera();
 		this.add(this.smoothCamera);
 	}
 
@@ -89,4 +99,48 @@ export default class LevelBase extends THREE.Scene {
 
 	#isPaused = false;
 
+}
+
+
+// MARK: Injected functions
+
+function __onObjectAddedToScene(e) {
+	/** @type {THREE.Object3D} */
+	const obj = e.child;
+
+	obj.addEventListener('childadded', __onObjectAddedToScene);
+	obj.addEventListener('removed', __onObjectRemoved);
+
+	const statics = obj.__proto__.constructor;
+	if (statics.isLoaded === false) {
+		throw Error("Adding an object that requires to be loaded, but isn't.");
+	}
+
+	if ('onAdded' in obj) {
+		obj.onAdded();
+	}
+
+	// this.frame() will never call onFrame during the frame that something has been added in.
+	// So we call it manually here, to avoid the first frame not having an update.
+	// (That could be visible)
+	// Yes, this means the first frame has inconsistent execution order,
+	// compared to the next ones where the order is dictated by THREE.Object3D.traverse().
+	// (which i assume depends on the tree structure of Object3D's in the scene)
+	const params = state.engine.paramsForAddDuringRender;
+	if (params != null && 'onFrame' in obj) {
+		obj.onFrame(params.delta, params.time);
+	}
+}
+
+
+function __onObjectRemoved(e) {
+	/** @type {THREE.Object3D} */
+	const obj = e.target;
+
+	obj.clear();
+
+	// you can opt out of auto dispose, if you need to 'reuse' your object3D.
+	if ('dispose' in obj && obj.noAutoDispose !== true) {
+		obj.dispose();
+	}
 }

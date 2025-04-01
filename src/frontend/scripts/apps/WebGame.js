@@ -16,7 +16,6 @@ export class WebGame extends GameBase {
 
         this.side = 2;  // Set to neutral until server tells us
         this.level = new (LEVELS.LIST[levelName])();
-        state.engine.scene = this.level;
         this.playerNames[0] = this.playerNames[1] = '-';
     }
 

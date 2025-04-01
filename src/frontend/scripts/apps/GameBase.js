@@ -19,6 +19,7 @@ export class GameBase {
 		this.playerNames = ['Uninitialized', 'Uninitialized'];
 		/** Set to true when done loading. Should correspond to when the game scene is shown on screen. */
 		this.isPlaying = false;
+		state.engine.scene = null;
 	}
 
 	frame(delta, time) {

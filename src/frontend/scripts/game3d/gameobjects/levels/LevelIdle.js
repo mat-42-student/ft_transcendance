@@ -7,8 +7,8 @@ import { state } from '../../../main.js';
 
 export default class LevelIdle extends LevelBase {
 
-	constructor() {
-		super();
+	onAdded() {
+		super.onAdded();
 
 		this.boardSize = null;
 		this.name = 'Idle Level';
@@ -16,11 +16,6 @@ export default class LevelIdle extends LevelBase {
 		this.background = new THREE.Color("#606060");
 
 		this.views = null;
-	}
-
-
-	onAdded() {
-		super.onAdded();
 
 		this.add(new SceneOriginHelper());
 		this.add(new THREE.AmbientLight( 0xffffff, 0.8 ));
@@ -36,6 +31,8 @@ export default class LevelIdle extends LevelBase {
 		this.smoothCamera.mouseRotationMultiplier.setScalar(0.02);
 
 		state.engine.gltfLoader.load('/ressources/3d/test.glb', (gltf) => {
+			state.engine.scene = window.idleLevel;
+			window.idleLevel = undefined;
 			state.engine.scene.funnycube = gltf.scene;
 			state.engine.scene.funnycube.scale.setScalar(0.2);
 			state.engine.scene.add(state.engine.scene.funnycube);

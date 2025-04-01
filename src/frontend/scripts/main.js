@@ -23,7 +23,8 @@ export const state = {
 
 state.engine.init();
 state.clock = new Clock();
-state.engine.scene = new LevelIdle();
+// Temporary variable. This is deleted by LevelIdle itself after it is done loading.
+window.idleLevel = new LevelIdle();
 
 state.client.setState(state);
 window.state = state; // Debugging purpose
