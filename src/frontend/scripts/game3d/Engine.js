@@ -39,7 +39,7 @@ export class Engine {
 				this.#html_container.classList.add('debug-mode');
 			}
 			this.#html_canvas = document.getElementById("engine-canvas");
-			this.#html_canvas.style.display = 'none';  // Hide by default, shows up again when a scene exists.
+			this.#html_container.style.display = 'none';  // Hide by default, shows up again when a scene exists.
 
 			this.#html_mainContent = document.getElementsByClassName('main-content')[0];
 		}
@@ -126,9 +126,9 @@ export class Engine {
 
 		// Hide or show canvas depending on if the engine will be able to render or not.
 		if (this.#scene && !newScene) {
-			this.#html_canvas.style.display = 'none';
+			this.#html_container.style.display = 'none';
 		} else if (!this.scene && newScene) {
-			this.#html_canvas.style.display = null;
+			this.#html_container.style.display = null;
 		}
 
 		this.#scene = newScene;
