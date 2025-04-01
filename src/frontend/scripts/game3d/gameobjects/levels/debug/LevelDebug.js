@@ -101,7 +101,7 @@ export default class LevelDebug extends LevelBase {
 		}
 
 		// Debug level does not load any external resources, so it can mark itself as loaded immediately.
-		state.engine.scene = this;  //TODO uncomment
+		state.engine.scene = this;
 	}
 
 
