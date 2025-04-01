@@ -131,6 +131,7 @@ class Command(BaseCommand):
     
     # Create Player if he didn't already exist somewhere
     async def manage_player(self, header, body):
+        print(f'Body in manage to player: {body}')
         player = Player()
         already_player = False
         try:
@@ -164,25 +165,51 @@ class Command(BaseCommand):
             return (player)
         except Exception as e:
             print(f'Manage player failed: {e}')
+            
+    
+    # Cancel invitaiton if i receive just "cancel" (offline)
+    async def cancelInvitationOfflinePlayer(self, player):
+        for salon in self.salons['invite']:
+            for gamer in salon.players.values():
+                for guest in gamer.guests.values():
+                    if (guest.user_id == player):
+                        guestStatus = await guest.checkStatus(self.redis_client, self.channel_social)
+                        if (guestStatus == 'offline' or guestStatus is None ):
+                            print(f'Cancel invitation to host')
+                            await self.cancelInvitation(gamer.user_id, guest.user_id, 'guest_id')
+                            break
+                    if (gamer.user_id == player):
+                        await self.cancelInvitation(guest.user_id, player, 'host_id')
+    
+    async def cancelTournamentOfflinePlayer(self, playerId):
+        print(f"Disconnection by {playerId} in tournament")
+        for tournament in self.games['tournament']:
+            for gameId, game in self.games['tournament'][tournament].items():
+                if (playerId in game.players):
+                    for gamerId in game.players:
+                        if (gamerId == playerId):
+                            game.players[gamerId].cancel = True
+                        else:
+                            game.players[gamerId].cancel = False
+                    gameDatabase = sync_to_async(self.getGame)(gameId)
+                    if (gameDatabase is not None):
+                        await self.cancelGameWithWinner(gameDatabase, game)
+                        return 
+                    
+                    
+    
     
     # Delete player somewhere
-    async def deletePlayer(self, salon ,player):
+    async def deletePlayer(self, salon, player):
         copy_salon = salon
         try:
+            # Cancel offline or ingame
             if (isinstance(salon, bool)):
-                for salon in self.salons['invite']:
-                    for gamer in salon.players.values():
-                        for guest in gamer.guests.values():
-                            if (guest.user_id == player):
-                                guestStatus = await guest.checkStatus(self.redis_client, self.channel_social)
-                                if (guestStatus == 'offline' or guestStatus is None ):
-                                    print(f'Cancel invitation to host')
-                                    await self.cancelInvitation(gamer.user_id, guest.user_id, 'guest_id')
-                                    break
-                            if (gamer.user_id == player):
-                                await self.cancelInvitation(guest.user_id, player, 'host_id')
+                await self.cancelInvitationOfflinePlayer(player)
+                await self.cancelTournamentOfflinePlayer(player)
                 return
 
+            # Cancel invitation if guest and host are in the salon (pending)
             elif (salon.type_game == 'invite'):
                 print("Send all Guest the invitation is unvalible and destroy the salon and player")
                 for key, value in salon.players.items():
@@ -194,10 +221,14 @@ class Command(BaseCommand):
                         await self.cancelInvitation(key, player.user_id, 'host_id')
                     await value.updateStatus(self.redis_client, self.channel_deepSocial, 'online' )
                 self.salons[salon.type_game].remove(salon)
+            # Cancel research random game in salon (pending)
             elif (salon.type_game == '1vs1R'):
                 print("Just destroy the player")
+                
+            # Cancel research tournament in salon (pending)
             elif (salon.type_game == 'tournament'):
                 print(f'delete {player} of tournament')
+                
             del salon.players[player.user_id]
             print(f'salon.type_game with player to deleted : {salon.type_game}')
 
@@ -654,15 +685,18 @@ class Command(BaseCommand):
         return (mainSalon)
     
     async def create_game(self, type_game, salon, tournament_id, round=1):
+        print(f'Create game')
         # Create game in database with an id and send start game clients and set status
         players_id = []
         for player_id in salon.players:
             players_id.append(player_id)
         game = await self.create_game_sync(tournament_id, players_id[0], players_id[1], 'ranked', round)
-        if (game is None):
+        if (not game):
+            print(f'game is not create')
             return None
         if (tournament_id is None):
             self.games[type_game].update({game.id: salon})
+        print(f"game.id: {game.id}")
         return game.id
     
     def setScoreSalonsCacheTournament(self, tournament_id, FinishGames):
@@ -895,9 +929,10 @@ class Command(BaseCommand):
         game_database = None
         tournament_id = None
         try:
-            # idgame = int(idgame)
+            idgame = int(idgame)
             game_database = Game.objects.get(id=idgame)
-            tournament_id = game_database.tournament.id
+            if (game_database.tournament is not None):
+                tournament_id = game_database.tournament.id
             
         except Exception as e:
             print(f'Game does not exist -> {e}')
@@ -1143,7 +1178,7 @@ class Command(BaseCommand):
             round=nbRound,
             game_type=game_type
         )
-        await game.asave()
+        print(f'asave : {await game.asave()}')
         return game
     #############       Database     #############
     
