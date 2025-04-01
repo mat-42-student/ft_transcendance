@@ -22,7 +22,7 @@ export class GameBase {
 	}
 
 	frame(delta, time) {
-		if (this.level)
+		if (this.level && state.engine.scene)
 			this.level.onFrame(delta, time);
 	}
 

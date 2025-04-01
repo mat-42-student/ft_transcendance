@@ -82,6 +82,9 @@ export function shouldPowersave() {
  */
 export function disposeHierarchy(obj)
 {
+    if (obj == null || obj.children == null)
+        return;
+
     obj.children.forEach((child) => {
         disposeHierarchy(child);
     });

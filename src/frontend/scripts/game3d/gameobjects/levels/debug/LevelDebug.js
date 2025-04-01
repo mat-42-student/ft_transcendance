@@ -112,7 +112,8 @@ export default class LevelDebug extends LevelBase {
 			this.gameInitialized = true;
 			this.nameTextMeshes[0].setText(state.gameApp.playerNames[0]);
 			this.nameTextMeshes[1].setText(state.gameApp.playerNames[1]);
-			this.flipFunction();
+			if (this.flipFunction)
+				this.flipFunction();
 		}
 	}
 
@@ -141,6 +142,10 @@ export default class LevelDebug extends LevelBase {
 		playerNames = ['?1', '?2'],
 	) {
 		super.endShowWinner(scores, winner, playerNames);
+
+		if (!state.engine.scene)  // Game end before loading completed. Just give up
+			return;
+
 		this.#endClear();
 		const text = new TextMesh(this.textMaterial,
 			`${scores[0]} : ${scores[1]}\n\n${playerNames[winner]}\nwon!`);
@@ -154,6 +159,10 @@ export default class LevelDebug extends LevelBase {
 		playerNames = ['?1', '?2'],
 	) {
 		super.endShowWebQuit(quitter, playerNames);
+
+		if (!state.engine.scene)  // Game end before loading completed. Just give up
+			return;
+
 		this.#endClear();
 		const text = new TextMesh(this.textMaterial, `${playerNames[quitter]}\nquit!`);
 		text.rotateX(-UTILS.RAD90);
@@ -163,11 +172,19 @@ export default class LevelDebug extends LevelBase {
 
 	endShowNothing() {
 		super.endShowNothing();
+
+		if (!state.engine.scene)  // Game end before loading completed. Just give up
+			return;
+
 		this.#endClear();
 	}
 
 	endHideResult() {
 		super.endHideResult();
+
+		if (!state.engine.scene)  // Game end before loading completed. Just give up
+			return;
+
 		if (this.gameEndObjects) {
 			this.remove(this.gameEndObjects);
 			this.gameEndObjects = undefined;
@@ -175,6 +192,9 @@ export default class LevelDebug extends LevelBase {
 	}
 
 	#endClear() {
+		if (!state.engine.scene)  // Game end before loading completed. Just give up
+			return;
+
 		if (this.gameplayObjects) {
 			this.remove(this.gameplayObjects);
 			this.gameplayObjects = undefined;
