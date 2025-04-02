@@ -75,7 +75,13 @@ export class Engine {
 		window.pause = () => { window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS = true; };
 	}
 
+
 	animationLoop() {
+		if (window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS) {
+			window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS = undefined;
+			debugger;
+		}
+
 		try {
 			const delta = this.#clock.getDelta();
 			const time = this.#clock.elapsedTime;
@@ -97,11 +103,6 @@ export class Engine {
 	 * @param {DOMHighResTimeStamp} time requestAnimationFrame() can give this value.
 	 */
 	render(delta, time) {
-		if (window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS) {
-			window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS = undefined;
-			debugger;
-		}
-
 		if (this.scene == null) {
 			return;
 		}
