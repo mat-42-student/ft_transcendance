@@ -50,14 +50,19 @@ class Player ():
             algorithm=settings.BACKEND_JWT["ALGORITHM"],
         )
 
-        url = f"http://users:8000/api/v1/users/{self.user_id}/"
+        url = f"https://nginx:8443/api/v1/users/{self.user_id}/"
         headers = {"Authorization": f"Service {token}"}
 
-        # Make the request
-        response = requests.get(url, headers=headers)
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=10,
+            cert=("/etc/ssl/matchmaking.crt", "/etc/ssl/matchmaking.key"),
+            verify="/etc/ssl/ca.crt"
+        )
 
         if response.status_code == 200:
-            data = response.json() # Renvoie les données au format JSON
+            data = response.json()
             print(data)
             self.username = data.get('username')
             self.picture = data.get('avatar')
@@ -120,10 +125,17 @@ class Player ():
                 algorithm=settings.BACKEND_JWT["ALGORITHM"],
             )
 
-            url = f"http://users:8000/api/v1/users/{self.user_id}/friends/"
+            url = f"https://nginx:8443/api/v1/users/{self.user_id}/friends/"
             headers = {"Authorization": f"Service {token}"}
 
-            response = requests.get(url, headers=headers, timeout=10)
+            response = requests.get(
+                url,
+                headers=headers,
+                timeout=10,
+                cert=("/etc/ssl/matchmaking.crt", "/etc/ssl/matchmaking.key"),
+                verify="/etc/ssl/ca.crt"
+            )
+
             response.raise_for_status()
             data = response.json()
 

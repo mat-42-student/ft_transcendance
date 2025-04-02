@@ -54,8 +54,8 @@ export class WebGame extends GameBase {
 		// state.client.refreshSession();
         let socketURL = "wss://" + window.location.hostname + ":3000/game/" + gameId + "/?t=" + state.client.accessToken;
 
-        // websocat --insecure wss://nginx:3000/game/1234/?t=pouetpouet
-        // websocat ws://pong:8006/game/1234/?t
+        // websocat --insecure wss://nginx:3000/game/1234/?t=<state.client.accessToken>
+        // websocat ws://pong:8006/game/1234/?t=<state.client.accessToken>
         this.socket = new WebSocket(socketURL);
         this.socket.onerror = async function(e) {
             console.error('Game socket: onerror:', e);

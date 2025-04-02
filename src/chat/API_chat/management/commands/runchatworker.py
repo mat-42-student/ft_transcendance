@@ -89,10 +89,16 @@ class Command(BaseCommand):
             algorithm=settings.BACKEND_JWT["ALGORITHM"],
         )
 
-        url = f"http://users:8000/api/v1/users/{recipient}/blocks/"
+        url = f"https://nginx:8443/api/v1/users/{recipient}/blocks/"
         headers = {"Authorization": f"Service {token}"}
 
-        response = requests.get(url, headers=headers)
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=10,
+            cert=("/etc/ssl/chat.crt", "/etc/ssl/chat.key"),
+            verify="/etc/ssl/ca.crt"
+        )
 
         if response.status_code == 200:
             try:

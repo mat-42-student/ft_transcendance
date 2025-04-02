@@ -307,7 +307,7 @@ class OAuthCallbackView(APIView):
             'redirect_uri': settings.OAUTH2_ACF_REDIRECT_URI,
         }
         token_url = 'https://api.intra.42.fr/oauth/token'
-        token_response = requests.post(token_url, data=token_data)
+        token_response = requests.post(token_url, data=token_data, timeout=10)
 
         if token_response.status_code != 200:
             return Response({"error": "Failed token exchange"}, status=status.HTTP_400_BAD_REQUEST)
@@ -318,7 +318,7 @@ class OAuthCallbackView(APIView):
 
         me_url = 'https://api.intra.42.fr/v2/me'
         headers = {"Authorization": f"Bearer {access_token}"}
-        profile_resp = requests.get(me_url, headers=headers)
+        profile_resp = requests.get(me_url, headers=headers, timeout=10)
         if profile_resp.status_code != 200:
             return Response({"error": "Could not fetch 42 user info"}, status=status.HTTP_400_BAD_REQUEST)
         
