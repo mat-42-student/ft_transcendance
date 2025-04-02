@@ -44,7 +44,7 @@ export class Client{
         this.renderProfileBtn();
 
         try {
-            const response = await ft_fetch('/api/v1/auth/logout/', {
+            const response = await fetch('/api/v1/auth/logout/', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
