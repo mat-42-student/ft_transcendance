@@ -17,13 +17,14 @@ export const state = {
     /** @type {GameBase} */ gameApp: null,
     input: new Input(),
     engine: new Engine(),
-    get isPlaying() { return this.gameApp != null && this.gameApp.isPlaying != null; },
+    get isPlaying() { return this.gameApp != null && this.engine != null && this.engine.scene != null; },
     /** @type {Clock} */ clock: null,
 };
 
 state.engine.init();
 state.clock = new Clock();
-state.engine.scene = new LevelIdle();
+// Temporary variable. This is deleted by LevelIdle itself after it is done loading.
+window.idleLevel = new LevelIdle();
 
 state.client.setState(state);
 window.state = state; // Debugging purpose
@@ -164,28 +165,50 @@ export function delay(n) {
 }
 
 
-// Bind local game button (vs AI)
-{
-    const button = document.getElementById('btn-local-bot');
-    button.addEventListener('click', () => {
-        if (state.gameApp != null) {
-            console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
-            return;
-        }
+// --⬇️-- Header play buttons --⬇️--
 
+const buttonQuit = document.getElementById('btn-quit-game');
+const buttonLocalBot = document.getElementById('btn-local-bot');
+const buttonLocalVersus = document.getElementById('btn-local-versus');
+const buttonVersus = document.getElementById('versus');
+const buttonTournament = document.getElementsByClassName('btn-tournament')[0];
+
+/** @param {boolean} showQuit Selects which elements become visible. */
+export function toggleHeaderButtons(showQuit) {
+    let show = [buttonLocalBot, buttonLocalVersus, buttonVersus, buttonTournament];
+    let hide = [buttonQuit];
+
+    if (showQuit)
+        [hide, show] = [show, hide];
+
+    hide.forEach((toHide) => {
+        toHide.style.display = "none";
+    });
+    show.forEach((toShow) => {
+        toShow.style.display = null;
+    });
+}
+window.toggleHeaderButtons = toggleHeaderButtons;  //debug
+toggleHeaderButtons(false);  // hide quit button for the first time
+
+buttonLocalBot.addEventListener('click', () => {
+    if (state.gameApp == null)
         state.gameApp = new LocalGame(true);
-    });
-}
+    toggleHeaderButtons(true);
+});
 
-// Bind local game button (2 keyboard players)
-{
-    const button = document.getElementById('btn-local-versus');
-    button.addEventListener('click', () => {
-        if (state.gameApp != null) {
-            console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
-            return;
-        }
-
+buttonLocalVersus.addEventListener('click', () => {
+    if (state.gameApp == null)
         state.gameApp = new LocalGame(false);
-    });
-}
+    toggleHeaderButtons(true);
+});
+
+buttonQuit.addEventListener('click', () => {
+    if (state.gameApp != null) {
+        state.gameApp.close();
+        state.gameApp = null;
+    }
+    toggleHeaderButtons(false);
+});
+
+// --⬆️-- Header play buttons --⬆️--

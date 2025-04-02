@@ -26,6 +26,10 @@ export default class SmoothCamera extends THREE.Object3D {
 
 	get camera() { return this.#CAMERA; }
 
+	name = 'Smooth Camera';
+
+	mousePos = new THREE.Vector2();
+
 
 	#smooth = {
 		position: this.position.clone(),
@@ -34,14 +38,6 @@ export default class SmoothCamera extends THREE.Object3D {
 		diagonal: this.diagonal,
 	}
 	#CAMERA = new THREE.PerspectiveCamera();
-
-
-	constructor() {
-		super();
-		this.name = 'Smooth Camera';
-
-		this.mousePos = new THREE.Vector2();
-	}
 
 
 	onAdded() {
@@ -129,7 +125,8 @@ export default class SmoothCamera extends THREE.Object3D {
 			);
 			this.camera.updateProjectionMatrix();
 
-			this.vis3d.update(result.vAspectRatio);
+			if (this.vis3d)
+				this.vis3d.update(result.vAspectRatio);
 		} catch (error) {
 			// Fallback: just render fullscreen.
 			console.warn('CameraTarget: Error during margin avoidance calculations:', error,

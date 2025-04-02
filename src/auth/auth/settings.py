@@ -32,7 +32,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'authentication',
-    # 'oauth2_provider',
 ]
 
 MIDDLEWARE = [
@@ -55,16 +54,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
 }
-
-# OAuth2 Provider settings
-# OAUTH2_PROVIDER = {
-#     'SCOPES_BACKEND_CLASS': 'oauth2_provider.scopes.SettingsScopes',
-#     'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
-#     'SCOPES': {
-#         'read': 'Read access',
-#         'write': 'Write access',
-#     },
-# }
 
 # OAuth 2.0 Authorization Code grant
 OAUTH2_ACF_REDIRECT_URI = 'https://localhost:3000/api/v1/auth/oauth/callback/'

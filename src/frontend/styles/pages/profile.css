@@ -111,28 +111,57 @@
     width: 100%;
     margin-top: 20px;
     text-align: center;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
 }
 
 .history-table {
-    width: 100%;
+    width: 80%;
+    margin: 0 auto; /* Centrer le tableau */
     border-collapse: collapse;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ombre pour le relief */
+    align-self: center;
 }
 
 .history-table th, .history-table td {
     border: 1px solid #ddd;
-    padding: 10px;
+    padding: 12px; /* Espacement plus grand */
     text-align: center;
 }
 
+.history-table tr:nth-child(even) {
+    background-color: #f2f2f2; /* Alternance de couleur de ligne */
+}
+
+.history-table tr:hover {
+    background-color: #e6e6e6; /* Couleur au survol */
+}
+
 .history-table tr.win {
-    background-color: #71b3f5; /* Vert clair pour victoire */
+    background-color: #c8e6c9; /* Vert clair pour victoire */
 }
 
 .history-table tr.loss {
-    background-color: #ffa5a5; /* Rouge clair pour défaite */
+    background-color: #ffcdd2; /* Rouge clair pour défaite */
 }
 
 .history-table th {
-    background-color: #534c32; /* Jaune pour l'en-tête */
-    color: #2B2D42; /* Texte foncé */
+    background-color: #534c32;
+    color: #ffffff; /* Texte blanc */
+    font-weight: bold;
+    padding: 15px;
+}
+
+.history-table td {
+    font-size: 16px;
+}
+
+.history-table caption {
+    margin: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #2B2D42;
 }

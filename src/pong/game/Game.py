@@ -41,25 +41,28 @@ class Game:
         self.id = game_id
         self.ball_speed = STATS['initialBallSpeed']
         self.pad_speed = STATS['initialPadSpeed']
+        self.round_start_mult = choice([1, -1])
+        self.loaded = False
+        self.was_not_loaded = True
         self.recenter()
         print(f"{GREEN}New game {game_id} launched opposing **{self.players[LEFT].name}({self.players[LEFT].id})** vs {self.players[RIGHT].name}({self.players[RIGHT].id}){RESET}")
 
     def recenter(self):
         self.ball_pos = [0, 0]
-        self.ball_direction = [0.7071067811865475 * choice([1, -1]), 0.7071067811865475]
+        self.ball_direction = [0.7071067811865475 * self.round_start_mult, 0.7071067811865475]
         self.players[0].pos = self.players[1].pos = 0
 
     async def new_round(self):
-        time = 2
+        # Send "info" manually, so the client can display the new score without waiting the pause.
         await self.wsh.channel_layer.group_send(
-            self.wsh.room_group_name, {"type": "wait.a.bit", "time": time}
+            self.wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
         )
         self.recenter()
         self.ball_speed *= STATS['ballAccelerateFactor']
         self.pad_speed *= STATS['padAccelerateFactor']
         self.players[0].pad_size *= STATS['padShrinkFactor']
         self.players[1].pad_size = self.players[0].pad_size
-        await asleep(time)
+        await self.eepytime(1)
 
 
     async def move_ball(self):
@@ -81,6 +84,7 @@ class Game:
 
         # did the ball miss the paddle? -> Score
         if is_ball_below_paddle or is_ball_above_paddle:
+            self.round_start_mult = -1 if side == 1 else 1
             if self.players[1 - side].score_up():
                 self.over = True
             await self.new_round()
@@ -118,6 +122,13 @@ class Game:
             "rscore": self.players[RIGHT].score,
         }
 
+    async def eepytime(self, time = 1):
+        await self.wsh.channel_layer.group_send(
+            self.wsh.room_group_name, {"type": "wait.a.bit", "time": time}
+        )
+        await asleep(time)
+
+
     async def play(self):
         last_frame_time = time()
         while not self.over:
@@ -125,12 +136,22 @@ class Game:
             elapsed_time = current_time - last_frame_time
             if elapsed_time < DELTATIME:
                 await asleep(DELTATIME - elapsed_time)
-            await self.wsh.channel_layer.group_send(
-                self.wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
-            )
-            self.move_players()
-            await self.move_ball()
+            if self.loaded:
+                if self.was_not_loaded:
+                    self.was_not_loaded = False
+                    await self.eepytime(2)
+                await self.wsh.channel_layer.group_send(
+                    self.wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
+                )
+                self.move_players()
+                await self.move_ball()
             last_frame_time = time()
+        await self.wsh.channel_layer.group_send(
+            self.wsh.room_group_name, {
+                "type": "declare.winner",
+                "winner": 0 if self.players[0].score > self.players[1].score else 1,
+                "scores":  [self.players[0].score, self.players[1].score]
+        })
         await self.wsh.channel_layer.group_send(
             self.wsh.room_group_name, {"type": "disconnect.now", "side": "server"}
         )

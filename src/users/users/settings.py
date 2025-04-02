@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'accounts',
-    # 'oauth2_provider',
 ]
 
 MIDDLEWARE = [
@@ -56,7 +55,6 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        # 'accounts.authentication.RemoteOAuth2Authentication',
         'accounts.authentication.JWTAuthentication',
         'accounts.authentication.BackendJWTAuthentication',
     ],
@@ -64,12 +62,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
 }
-
-# OAuth2 Provider settings
-# OAUTH2_PROVIDER = {
-#     'SCOPES_BACKEND_CLASS': 'oauth2_provider.scopes.SettingsScopes',
-#     'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
-# }
 
 ROOT_URLCONF = 'users.urls'
 

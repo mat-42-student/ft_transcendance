@@ -14,6 +14,10 @@ class Navigator {
     async goToPage(page, userId = null) {
         if (!this.mainContent) return;
 
+        if (state && state.engine && state.engine.scene && state.engine.scene.pendingEndHide) {
+            state.engine.scene.endHideResult();
+        }
+
         const pageFiles = {
             home: { url: './partials/home.html', setup: initHomePage },
             profile: { url: './partials/profile.html', setup: initProfilePage }

@@ -1,9 +1,11 @@
+import { state, ft_fetch } from '../main.js';
 import { enroll2fa } from '../api/auth.js';
 import { verify2fa } from '../api/auth.js';
 import { initAuthFormListeners } from './auth_form.js';
 import { createRequestItem } from './friend_requests.js';
 import { navigator as appNavigator } from '../nav.js';
-import { ft_fetch } from '../main.js';
+import { updateProfile } from '../api/users.js';
+import { initProfilePage } from '../pages.js';
 
 const dynamicCardRoutes = {
     'auth': './partials/cards/auth.html',
@@ -17,6 +19,7 @@ const dynamicCardRoutes = {
 	'salonGuest': './partials/cards/salonGuest.html',
 	'load': './partials/cards/salonLoad.html',
 	'tournament': './partials/cards/tournament.html',
+    'update': './partials/cards/update_profile.html',
 };
 
 const closeDynamicCardHidden = [
@@ -26,14 +29,6 @@ const closeDynamicCardHidden = [
     'versus'
 ]
 
-
-/*
-    Piste d'exemple pour changement logique de init -> rendre logique spécifique à chaques cards modulaire dans init via un objet
-    cardInitializers stock les logiques propores à chaque routes en liste et le renvoie en fonction de la route dans initDynamicCard
-    - plus lisible
-    - modulaire
-    - pas de if/else massif
-*/
 const cardInitializers = {
     '2fa': () => {
         document.getElementById('btn-enroll-2fa')?.addEventListener('click', enroll2fa);
@@ -83,7 +78,40 @@ const cardInitializers = {
         } catch (error) {
             console.error("Erreur lors du chargement des requêtes d'amis :", error);
         }
-    }
+    },
+    'update': async () => {
+        const updateForm = document.getElementById('update-profile-form');
+
+        if (!updateForm) {
+            console.error("Formulaire de mise à jour non trouvé.");
+            return;
+        }
+
+        updateForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(updateForm);
+
+            // Supprimer les champs vides du FormData
+            for (const [key, value] of formData.entries())
+                if (!value)
+                    formData.delete(key);
+
+            try {
+                const response = await updateProfile(formData, state.client.userId);
+
+                if (response) {
+                    alert("Profil mis à jour avec succès !");
+                    closeDynamicCard();
+                    initProfilePage(state.client.userId);
+                } else {
+                    alert("Mise à jour échouée.");
+                }
+            } catch (error) {
+                alert("Une erreur est survenue lors de la mise à jour.");
+                console.error("Erreur lors de la mise à jour du profil :", error);
+            }
+        });
+    },
     // Ajoute d'autres initialisations spécifiques ici
 };
 

@@ -7,8 +7,8 @@ import { state } from '../../../main.js';
 
 export default class LevelIdle extends LevelBase {
 
-	constructor() {
-		super();
+	onAdded() {
+		super.onAdded();
 
 		this.boardSize = null;
 		this.name = 'Idle Level';
@@ -16,11 +16,6 @@ export default class LevelIdle extends LevelBase {
 		this.background = new THREE.Color("#606060");
 
 		this.views = null;
-	}
-
-
-	onAdded() {
-		super.onAdded();
 
 		this.add(new SceneOriginHelper());
 		this.add(new THREE.AmbientLight( 0xffffff, 0.8 ));
@@ -31,9 +26,13 @@ export default class LevelIdle extends LevelBase {
 		this.smoothCamera.position.set(0, 1, 0);
 		this.smoothCamera.quaternion.copy(q1.multiply(q2));
 		this.smoothCamera.fov = 120;
-		// this.smoothCamera.smoothSpeed = 1;
+		this.smoothCamera.smoothSpeed = 1;
+		this.smoothCamera.mousePositionMultiplier.setScalar(0.02);
+		this.smoothCamera.mouseRotationMultiplier.setScalar(0.02);
 
 		state.engine.gltfLoader.load('/ressources/3d/test.glb', (gltf) => {
+			state.engine.scene = window.idleLevel;
+			window.idleLevel = undefined;
 			state.engine.scene.funnycube = gltf.scene;
 			state.engine.scene.funnycube.scale.setScalar(0.2);
 			state.engine.scene.add(state.engine.scene.funnycube);
@@ -45,14 +44,15 @@ export default class LevelIdle extends LevelBase {
 		super.onFrame(delta, time);
 
 		if (this.funnycube) {
-			this.funnycube.rotateY(delta * 2);
-			this.funnycube.rotateX(delta * 3)
+			this.funnycube.rotateY(delta * 0.2);
+			this.funnycube.rotateX(delta * 0.3)
 		}
 	}
 
 
 	dispose() {
 		super.dispose();
+		UTILS.disposeHierarchy(this.funnycube);
 	}
 
 }

@@ -73,3 +73,70 @@ export function makeLookDownQuaternion(yawDegrees, pitchDegrees) {
 export function shouldPowersave() {
     return state.isPlaying == false && document.hasFocus() == false;
 }
+
+
+/**
+ * Fully dispose a hierarchy of meshes. Intended for GLTF imported models.
+ * Recursively disposes child objects.
+ * @param {THREE.Object3D} obj
+ */
+export function disposeHierarchy(obj)
+{
+    if (obj == null || obj.children == null)
+        return;
+
+    obj.children.forEach((child) => {
+        disposeHierarchy(child);
+    });
+    disposeMesh(obj);
+}
+
+
+/**
+ * Fully dispose a Mesh object, and any materials and textures it uses.
+ * Assumes that the mesh owns all of those.
+ * Does NOT recursively dispose child Object3D's.
+ * If there is nothing to dispose, the function will silently skip.
+ * @param {THREE.Mesh} obj
+ */
+export function disposeMesh(obj)
+{
+    if (!(obj instanceof THREE.Mesh))
+        return;
+
+    if (obj.geometry) obj.geometry.dispose();
+
+    if (obj.material && obj.material instanceof Array)
+        obj.material.forEach((mat) => { disposeMaterial(mat); });
+    else if (obj.material)
+        disposeMaterial(obj.material);
+}
+
+
+/**
+ * Fully dispose a material and any textures it uses.
+ * Assumes that the material owns those textures.
+ * If there is nothing to dispose, the function will silently skip.
+ * @param {THREE.Material} mat
+ */
+export function disposeMaterial(mat)
+{
+    if (!(mat instanceof THREE.Material))
+        return;
+
+    if (mat.map)              mat.map.dispose ();
+    if (mat.lightMap)         mat.lightMap.dispose ();
+    if (mat.bumpMap)          mat.bumpMap.dispose ();
+    if (mat.normalMap)        mat.normalMap.dispose ();
+    if (mat.specularMap)      mat.specularMap.dispose ();
+    if (mat.envMap)           mat.envMap.dispose ();
+    if (mat.alphaMap)         mat.alphaMap.dispose();
+    if (mat.aoMap)            mat.aoMap.dispose();
+    if (mat.displacementMap)  mat.displacementMap.dispose();
+    if (mat.emissiveMap)      mat.emissiveMap.dispose();
+    if (mat.gradientMap)      mat.gradientMap.dispose();
+    if (mat.metalnessMap)     mat.metalnessMap.dispose();
+    if (mat.roughnessMap)     mat.roughnessMap.dispose();
+
+    mat.dispose();
+}

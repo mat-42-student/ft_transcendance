@@ -26,6 +26,56 @@ function updateProfileUI(data) {
 
     const actionsEl = document.getElementById("profile-actions");
     actionsEl.innerHTML = generateProfileActions(data);
+
+    // Mettre à jour l'historique des parties
+    updateGamesHistory(data.last_games);
+}
+
+// Fonction pour mettre à jour l'historique des parties
+function updateGamesHistory(games) {
+    const gamesList = document.getElementById("games-history-list");
+    gamesList.innerHTML = "";
+
+    if (!games || games.length === 0) {
+        gamesList.innerHTML = "<tr><td colspan='5'>Aucune partie récente.</td></tr>";
+        return;
+    }
+
+    games.forEach((game) => {
+        const row = createGameRow(game);
+        gamesList.appendChild(row);
+    });
+}
+
+// Fonction pour créer une ligne de tableau pour chaque partie
+function createGameRow(game) {
+    const row = document.createElement("tr");
+
+    const resultCell = document.createElement("td");
+    resultCell.textContent = game.result === "win" ? "Victoire" : "Défaite";
+    row.appendChild(resultCell);
+
+    const playersCell = document.createElement("td");
+    playersCell.textContent = game.players.join(" - ");
+    row.appendChild(playersCell);
+
+    const scoresCell = document.createElement("td");
+    scoresCell.textContent = game.scores.join(" - ");
+    row.appendChild(scoresCell);
+
+    const dateCell = document.createElement("td");
+    dateCell.textContent = new Date(game.date).toLocaleDateString();
+    row.appendChild(dateCell);
+
+    const tournamentCell = document.createElement("td");
+    if (game.tournament) {
+        tournamentCell.textContent = `Tournoi : ${game.tournament.organizer}`;
+    } else {
+        tournamentCell.textContent = "Partie normale";
+    }
+    row.appendChild(tournamentCell);
+
+    return row;
 }
 
 // Voir si gestion nécessaire quand user est bloqué && à bloqué
