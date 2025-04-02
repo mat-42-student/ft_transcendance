@@ -5,6 +5,8 @@ from django.core.cache import cache
 from django.conf import settings
 #from .Guest import Guest
 import jwt
+import logging
+
 from datetime import datetime, timedelta, timezone
 
 
@@ -16,7 +18,7 @@ class Player ():
         self.username = None
         self.type_game = None
         self.guests = {}
-        self.cancel = False
+        self.cancel = None
     
     def get_id(self):
         return (self.user_id)
@@ -103,4 +105,37 @@ class Player ():
             }
         }
         await redis.publish(channel, json.dumps(data))
+
+    def get_friend_list(self):
+        """ Request friendlist from container 'users' """
+        try:
+            payload = {
+                "service": "social",
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+            }
+            
+            token = jwt.encode(
+                payload,
+                settings.BACKEND_JWT["PRIVATE_KEY"],
+                algorithm=settings.BACKEND_JWT["ALGORITHM"],
+            )
+
+            url = f"http://users:8000/api/v1/users/{self.user_id}/friends/"
+            headers = {"Authorization": f"Service {token}"}
+
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+            return data.get('friends')
+
+        except jwt.exceptions.PyJWTError as e:
+            print(f"JWT Error: {e}")
+            return None
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
+        except ValueError as e:
+            print(f"JSON decode error: {e}")
+            return None
     

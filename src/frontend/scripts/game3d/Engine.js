@@ -17,6 +17,9 @@ export class Engine {
 	 * but is switched on/off based on this. */
 	get DEBUG_MODE() { return this.#DEBUG_MODE; }
 
+	/** Null check this property to know if the scene is loaded and ready to play.
+	 * See also {@link state.isPlaying}
+	 */
 	get scene() { return this.#scene; }
 
 	get gltfLoader() { return this.#gltfLoader; }
@@ -112,7 +115,7 @@ export class Engine {
 			this.paramsForAddDuringRender = null;
 		}
 
-		// if (state.gameApp && state.gameApp.isPlaying)
+		// if (state.gameApp && this.scene)
 			this.renderer.render(this.scene, this.scene.smoothCamera.camera);
 
 		this.isProcessingFrame = false;
@@ -121,8 +124,7 @@ export class Engine {
 
 	set scene(newScene) {
 		if (this.#scene && this.#scene.dispose) {
-			// this.#scene.dispose();
-			console.warn('Replaced engine.scene: make sure to dispose() the old scene manually.');
+			this.#scene.dispose();
 		}
 
 		// Hide or show canvas depending on if the engine will be able to render or not.
@@ -133,22 +135,12 @@ export class Engine {
 		}
 
 		this.#scene = newScene;
-
-		if (this.#scene) {
-			try {
-				const fakeEvent = { child: this.#scene };
-				__onObjectAddedToScene(fakeEvent);
-			} catch (error) {
-				console.error('Engine.scene could not be set. Is the new one valid?');
-				this.#scene = null;
-			}
-		}
 	}
 
 
 	// MARK: Private
 
-	#DEBUG_MODE = true;
+	#DEBUG_MODE = false;
 
 	/** @type {THREE.WebGLRenderer} */
 	#renderer;
@@ -194,46 +186,3 @@ export class Engine {
 	}
 
 };
-
-
-
-function __onObjectAddedToScene(e) {
-	/** @type {THREE.Object3D} */
-	const obj = e.child;
-
-	obj.addEventListener('childadded', __onObjectAddedToScene);
-	obj.addEventListener('removed', __onObjectRemoved);
-
-	const statics = obj.__proto__.constructor;
-	if (statics.isLoaded === false) {
-		throw Error("Adding an object that requires to be loaded, but isn't.");
-	}
-
-	if ('onAdded' in obj) {
-		obj.onAdded();
-	}
-
-	// this.frame() will never call onFrame during the frame that something has been added in.
-	// So we call it manually here, to avoid the first frame not having an update.
-	// (That could be visible)
-	// Yes, this means the first frame has inconsistent execution order,
-	// compared to the next ones where the order is dictated by THREE.Object3D.traverse().
-	// (which i assume depends on the tree structure of Object3D's in the scene)
-	const params = state.engine.paramsForAddDuringRender;
-	if (params != null && 'onFrame' in obj) {
-		obj.onFrame(params.delta, params.time);
-	}
-}
-
-
-function __onObjectRemoved(e) {
-	/** @type {THREE.Object3D} */
-	const obj = e.target;
-
-	obj.clear();
-
-	// you can opt out of auto dispose, if you need to 'reuse' your object3D.
-	if ('dispose' in obj && obj.noAutoDispose !== true) {
-		obj.dispose();
-	}
-}

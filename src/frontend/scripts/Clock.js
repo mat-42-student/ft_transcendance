@@ -20,7 +20,7 @@ export class Clock {
 		try {
 			const delta = this.#clock.getDelta();
 
-			if (state) {
+			if (state && state.engine.scene) {
 				if (state.gameApp) {
 					state.gameApp.frame(delta, time)
 				}

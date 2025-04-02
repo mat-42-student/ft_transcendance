@@ -34,6 +34,11 @@ export class Input {
 			this.#pressed.clear();
 		});
 
+		window.addEventListener('blur', (e) => {
+			this.#isMouseInWindow = false;
+			this.#pressed.clear();
+		})
+
 		document.body.addEventListener('mouseenter', (e) => {
 			this.#isMouseInWindow = true;
 		});

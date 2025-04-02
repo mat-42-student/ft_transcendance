@@ -3,6 +3,7 @@ import * as UTILS from "../utils.js";
 import {MathUtils, Vector2} from 'three';
 import * as LEVELS from '../game3d/gameobjects/levels/_exports.js';
 import { GameBase } from "./GameBase.js";
+import LevelBase from "../game3d/gameobjects/levels/LevelBase.js";
 
 
 //REVIEW Exceptions should be caught, and should terminate the game
@@ -13,14 +14,14 @@ import { GameBase } from "./GameBase.js";
 const STATS = JSON.parse(`
 {
     "initialPadSize": 0.2,
-    "initialPadSpeed": 0.12,
-    "padShrinkFactor": 0.9,
-    "padAccelerateFactor": 1.2,
+    "initialPadSpeed": 0.2,
+    "padShrinkFactor": 0.95,
+    "padAccelerateFactor": 1.1,
 
-    "initialBallSpeed": 0.18,
-    "ballAccelerateFactor": 1.2,
+    "initialBallSpeed": 0.4,
+    "ballAccelerateFactor": 1.1,
     "redirectionFactor": 1.5,
-    "maxAngleDeg": 70.0,
+    "maxAngleDeg": 45.0,
 
     "maxScore": 5
 }
@@ -36,6 +37,11 @@ export class LocalGame extends GameBase {
 
     constructor (isCPU = false) {
         super();
+
+        try {
+            const id = isCPU ? "keyhint-versus" : "keyhint-local";
+            document.getElementById(id).style.display = null;
+        } catch {}
 
         this.isCPU = isCPU;
         this.cpuTarget = 0;
@@ -54,8 +60,8 @@ export class LocalGame extends GameBase {
 
         this.side = isCPU ? 0 : 2;  // Neutral (2) if keyboard PVP
 
+        /** @type {LevelBase} */
         this.level = new (LEVELS.pickRandomLevel())();  // randomly select class, then construct it
-        state.engine.scene = this.level;
 
         this.pause();
         this.recenter();
@@ -64,7 +70,7 @@ export class LocalGame extends GameBase {
 	frame(delta, time) {
         this.waitTime = Math.max(0, this.waitTime - delta);
 
-        if (this.waitTime <= 0) {
+        if (this.waitTime <= 0 && document.hasFocus()) {
             if (this.level)  this.level.unpause();
 
             if (this.cpuDecideIn != NaN)
@@ -81,6 +87,11 @@ export class LocalGame extends GameBase {
 
     close(cancelled = true) {
         this.endgame(cancelled);
+
+        try {
+            const id = this.isCPU ? "keyhint-versus" : "keyhint-local";
+            document.getElementById(id).style.display = "none";
+        } catch {}
 
         super.close();
     }
@@ -307,18 +318,23 @@ export class LocalGame extends GameBase {
         this.newRound();
     }
 
-    pause() {
-        this.waitTime = 1;
+    pause(time = 1) {
+        this.waitTime = time;
         if (this.level) {
-            this.level.pause(this.waitTime);
+            this.level.pause(time);
         }
     }
 
     /** @param {boolean} isEndingBecauseCancelled */
     endgame(isEndingBecauseCancelled) {
-        if (isEndingBecauseCancelled !== true) {
-            let winner = this.scores[0] >= this.maxScore ? 0 : 1;
-            alert(`GAME OVER\nLe gagnant est ${this.playerNames[winner]}!`);
+        if (isEndingBecauseCancelled) {
+            this.level.endShowNothing();
+        } else {
+            this.level.endShowWinner(
+                [...this.scores],
+                this.scores[0] >= this.maxScore ? 0 : 1,
+                [...this.playerNames]
+            );
         }
     }
 }
