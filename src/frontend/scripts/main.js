@@ -4,7 +4,6 @@ import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js'
 import { GameBase } from './apps/GameBase.js';
 import { Input } from './game3d/Input.js';
 import { Engine } from './game3d/Engine.js';
-import { Clock } from './Clock.js';
 import LevelIdle from './game3d/gameobjects/levels/LevelIdle.js';
 import { LocalGame } from './apps/LocalGame.js';
 
@@ -18,11 +17,9 @@ export const state = {
     input: new Input(),
     engine: new Engine(),
     get isPlaying() { return this.gameApp != null && this.engine != null && this.engine.scene != null; },
-    /** @type {Clock} */ clock: null,
 };
 
 state.engine.init();
-state.clock = new Clock();
 // Temporary variable. This is deleted by LevelIdle itself after it is done loading.
 window.idleLevel = new LevelIdle();
 

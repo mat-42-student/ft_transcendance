@@ -53,6 +53,7 @@ export class Engine {
 				antialias: true,
 				powerPreference: "high-performance",
 			});
+			this.renderer.setAnimationLoop(this.animationLoop.bind(this))
 			this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
 			this.renderer.toneMappingExposure = 1;
 
@@ -72,6 +73,22 @@ export class Engine {
 
 		// Debugging tool
 		window.pause = () => { window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS = true; };
+	}
+
+	animationLoop() {
+		try {
+			const delta = this.#clock.getDelta();
+			const time = this.#clock.elapsedTime;
+
+			if (this.scene) {
+				if (state && state.gameApp) {
+					state.gameApp.frame(delta, time)
+				}
+				this.render(delta, time);
+			}
+		} catch (error) {
+			console.error('ThreeJS Animation Loop: Error:', error);
+		}
 	}
 
 
@@ -161,6 +178,8 @@ export class Engine {
 
 	/** @type {HTMLElement} */
 	#html_mainContent;
+
+	#clock = new THREE.Clock(true);
 
 
 	#onResize() {
