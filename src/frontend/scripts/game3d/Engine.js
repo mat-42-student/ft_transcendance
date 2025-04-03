@@ -113,8 +113,6 @@ export class Engine {
 
 		this.#updateAutoResolution(delta);
 
-		this.isProcessingFrame = true;
-
 		{  // Game logic update
 			this.paramsForAddDuringRender = {delta: delta, time: time};
 
@@ -135,8 +133,6 @@ export class Engine {
 
 		// if (state.gameApp && this.scene)
 			this.renderer.render(this.scene, this.scene.smoothCamera.camera);
-
-		this.isProcessingFrame = false;
 	}
 
 
