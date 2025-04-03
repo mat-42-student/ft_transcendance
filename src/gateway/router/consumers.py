@@ -22,10 +22,16 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         self.connected = False
         self.consumer_id = None
         self.consumer_name = None
+
+        if not self.scope["payload"]:
+            await self.kick(message="Unauthentified")
+            return
+
         self.get_user_infos()
         if self.consumer_id is None:
             await self.kick(message="Unauthentified")
             return
+
         try:
             await self.accept()
             self.connected = True
@@ -36,7 +42,6 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             await self.connect_to_redis()
         except Exception as e:
             print(f"Connexion to redis error : {e}")
-        # await self.get_friends_status()
         await self.send_online_status('online')
 
     async def connect_to_redis(self):
@@ -71,29 +76,29 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         self.listen_task.cancel()
 
     def get_user_infos(self):
-        data = self.checkAuth()
+        data = self.scope["payload"]
         if data:
             self.consumer_id =  data.get('id')
             self.consumer_name = data.get('username')
         else:
             return None
 
-    def checkAuth(self):
-        try:
-            self.get_public_key()
-        except Exception as e:
-            print(e)
-            return
-        params = parse_qs(self.scope['query_string'].decode())
-        self.token = params.get('t', [None])[0]
-        try:
-            payload = jwt.decode(self.token, self.public_key, algorithms=['RS256'])
-            return payload
-        except jwt.ExpiredSignatureError as e:
-            print(e)
-        except jwt.InvalidTokenError as e:
-            print(e)
-        return None
+    # def checkAuth(self):
+    #     try:
+    #         self.get_public_key()
+    #     except Exception as e:
+    #         print(e)
+    #         return
+    #     params = parse_qs(self.scope['query_string'].decode())
+    #     self.token = params.get('t', [None])[0]
+    #     try:
+    #         payload = jwt.decode(self.token, self.public_key, algorithms=['RS256'])
+    #         return payload
+    #     except jwt.ExpiredSignatureError as e:
+    #         print(e)
+    #     except jwt.InvalidTokenError as e:
+    #         print(e)
+    #     return None
 
     def get_public_key(self):
         try:
@@ -112,6 +117,16 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 raise RuntimeError("Impossible de récupérer la clé publique JWT")
         except RuntimeError as e:
             raise(e)
+        
+    # def get_public_key(self):
+    #     try:
+    #         response = requests.get(f"http://auth:8000/api/v1/auth/public-key/")
+    #         if response.status_code == 200:
+    #             self.public_key = response.json().get("public_key") # Ou response.json() si c'est un JSON
+    #         else:
+    #             raise RuntimeError("Impossible de récupérer la clé publique JWT")
+    #     except RuntimeError as e:
+    #         raise(e)
 
     async def receive_json(self, data):
         """Data incoming from client ws => publish to concerned redis group.\n
@@ -124,7 +139,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         if group:
             data['header']['dest'] = 'back'
             data['header']['id'] = self.consumer_id
-            data['header']['token'] = self.token
+            # data['header']['token'] = self.token
             data['body']['timestamp'] = datetime.now(timezone.utc).isoformat()
             await self.forward_with_redis(data, group)
             return

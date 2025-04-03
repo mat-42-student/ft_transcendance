@@ -1,4 +1,4 @@
-import { state } from '../main.js';
+import { state, ft_fetch } from '../main.js';
 import { enroll2fa } from '../api/auth.js';
 import { verify2fa } from '../api/auth.js';
 import { initAuthFormListeners } from './auth_form.js';
@@ -125,7 +125,7 @@ export async function initDynamicCard(routeKey) {
     }
 
     try {
-        const response = await fetch(dynamicCardRoutes[routeKey]);
+        const response = await ft_fetch(dynamicCardRoutes[routeKey]);
         if (!response.ok) throw new Error(`Impossible de charger : ${dynamicCardRoutes[routeKey]}`);
 
         cardContent.innerHTML = await response.text();
@@ -162,7 +162,7 @@ export function closeDynamicCard() {
 //         if (!dynamicCardRoutes[routeKey])
 //             throw new Error(`Route inconnue : ${routeKey}`);
         
-//         const response = await fetch(dynamicCardRoutes[routeKey]);
+//         const response = await ft_fetch(dynamicCardRoutes[routeKey]);
 //         if (!response.ok)
 //             throw new Error(`Erreur de chargement : ${response.status} ${response.statusText}`);
         

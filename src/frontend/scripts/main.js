@@ -84,7 +84,7 @@ function setupSearchInput() {
         }
 
         try {
-            const response = await fetch(`/api/v1/users/?search=${query}`);
+            const response = await ft_fetch(`/api/v1/users/?search=${query}`);
             const users = await response.json();
 
             searchResults.innerHTML = "";
@@ -131,6 +131,32 @@ window.addEventListener('beforeunload', function() {
 //         state.gameApp.close();
 // });
 
+export async function ft_fetch(url, options = {}) {
+    // console.log("ft_fetch: ", url, options);
+    if (isTokenExpiringSoon())
+        await state.client.refreshSession();
+    options.headers = {
+        ...options.headers,
+        Authorization: `Bearer ${state.client.accessToken}`,
+    };
+    let response = await fetch(url, options);
+    if (response.status === 403) {
+        await state.client.refreshSession();
+        options.headers.Authorization = `Bearer ${state.client.accessToken}`;
+        response = await fetch(url, options);
+    }
+    return response;
+}
+
+export function isTokenExpiringSoon() {
+    if (!state.client.accessToken) {
+        // console.error("Token expired");
+        return true;
+    }
+    const payload = JSON.parse(atob(state.client.accessToken.split('.')[1]));
+    // console.log("remaining time in token: ", (payload.exp * 1000 - Date.now()) / 60000, " min");
+    return (payload.exp * 1000 - Date.now()) < 30000;
+}
 
 // REVIEW 23/2/2025, commit 074a0d9e0981: This function appears unused. Delete? Move to utils.js?
 // wait for n sec

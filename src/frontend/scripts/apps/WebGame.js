@@ -1,4 +1,4 @@
-import { state } from '../main.js';
+import { state, isTokenExpiringSoon } from '../main.js';
 import { GameBase } from './GameBase.js';
 import * as LEVELS from '../game3d/gameobjects/levels/_exports.js';
 
@@ -47,16 +47,22 @@ export class WebGame extends GameBase {
     }
 
 
-    launchGameSocket(gameId) {
-        if (!gameId) // debug
-            gameId = 1; // effacer asap
-
-		// state.client.refreshSession();
+    async launchGameSocket(gameId) {
+        await state.client.refreshSession();
         let socketURL = "wss://" + window.location.hostname + ":3000/game/" + gameId + "/?t=" + state.client.accessToken;
+        // websocat ws://pong:8006/game/1234/?t=
+
+        try {
+            this.socket = new WebSocket(socketURL);
+        }
+        catch (error) {
+            console.error('Failed to create WebSocket:', error);
+            return;
+        }
 
         // websocat --insecure wss://nginx:3000/game/1234/?t=<state.client.accessToken>
         // websocat ws://pong:8006/game/1234/?t=<state.client.accessToken>
-        this.socket = new WebSocket(socketURL);
+
         this.socket.onerror = async function(e) {
             console.error('Game socket: onerror:', e);
 			await state.mmakingApp.socketGameError();
@@ -132,10 +138,6 @@ export class WebGame extends GameBase {
                 wg.level.endShowWinner(data.scores, data.winner, [...wg.playerNames]);
             }
         };
-    }
-
-    addEventlistener() {
-        document.getElementById("btn-test-game").addEventListener('click', this.launchGameSocket);
     }
 
 

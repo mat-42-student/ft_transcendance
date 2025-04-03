@@ -1,4 +1,5 @@
 import { state } from '../main.js';
+import { ft_fetch } from '../main.js';
 
 const apiBase = '/api/v1/users';
 
@@ -17,7 +18,7 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
             headers['Content-Type'] = 'application/json';
         }
 
-        const response = await fetch(endpoint, {
+        const response = await ft_fetch(endpoint, {
             method: method,
             headers: headers,
             body: body instanceof FormData ? body : (body ? (typeof body === 'string' ? body : JSON.stringify(body)) : null),

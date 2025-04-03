@@ -14,7 +14,6 @@ from datetime import datetime, timedelta, timezone
 class Player ():
     def __init__(self):
         self.user_id = None
-        self.token = None
         self.username = None
         self.type_game = None
         self.guests = {}
