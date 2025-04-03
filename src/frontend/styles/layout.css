@@ -9,7 +9,7 @@ html, body {
     display: none;
 }
 
-header, footer {
+header {
     flex-shrink: 0;
 }
 
@@ -152,25 +152,6 @@ header .container {
 
 .search-results li:hover {
     background: #f0f0f0;
-}
-
-
-
-/* FOOTER */
-footer {
-    height: 5%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    color: #fff;
-    background: #333;
-    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-}
-
-footer .container {
-    width: 90%;
-    text-align: center;
 }
 
 
