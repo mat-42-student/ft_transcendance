@@ -60,13 +60,15 @@ export class Engine {
 			this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
 			this.renderer.toneMappingExposure = 1;
 
-			this.#effectComposer = new EffectComposer(this.renderer);
-			this.#effectComposer.addPass(this.#renderPass);
+			{  // Post processing
+				this.#effectComposer = new EffectComposer(this.renderer);
+				this.#effectComposer.renderTarget1.samples = 8;  // Turn on antialiasing.
 
-			// Turn on antialiasing.
-			this.#effectComposer.renderTarget1.samples = 8;
+				this.#renderPass = new RenderPass(null, null);
+				this.#effectComposer.addPass(this.#renderPass);
 
-			this.#effectComposer.addPass(new OutputPass());
+				this.#effectComposer.addPass(new OutputPass());
+			}  // Post processing
 
 			this.fontLoader = new FontLoader();
 			this.fontLoader.load(
@@ -175,7 +177,8 @@ export class Engine {
 	/** @type {EffectComposer} */
 	#effectComposer;
 
-	#renderPass = new RenderPass(null, null);
+	/** @type {RenderPass} */
+	#renderPass;
 
 	#gltfLoader = new GLTFLoader();
 
