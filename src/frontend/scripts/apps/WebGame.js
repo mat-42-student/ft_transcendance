@@ -1,6 +1,6 @@
 import { state, isTokenExpiringSoon } from '../main.js';
 import { GameBase } from './GameBase.js';
-import * as LEVELS from '../game3d/gameobjects/levels/_exports.js';
+import * as LEVELS from '../game3d/gameobjects/levels/levels.js';
 
 
 export class WebGame extends GameBase {
