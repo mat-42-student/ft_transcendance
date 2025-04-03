@@ -53,7 +53,7 @@ export class Engine {
 		{  // Setup ThreeJS
 			this.#renderer = new THREE.WebGLRenderer({
 				canvas: this.#html_canvas,
-				antialias: true,
+				antialias: false,  // AA is turned on in EffectComposer's render target.
 				powerPreference: "high-performance",
 			});
 			this.renderer.setAnimationLoop(this.animationLoop.bind(this))
@@ -62,6 +62,9 @@ export class Engine {
 
 			this.#effectComposer = new EffectComposer(this.renderer);
 			this.#effectComposer.addPass(this.#renderPass);
+
+			// Turn on antialiasing.
+			this.#effectComposer.renderTarget1.samples = 8;
 
 			this.#effectComposer.addPass(new OutputPass());
 
@@ -79,8 +82,9 @@ export class Engine {
 		this.#resizeObserver.observe(this.#html_mainContent);
 		window.addEventListener('resize', resizeCallback);
 
-		// Debugging tool
+		// Debugging tools
 		window.pause = () => { window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS = true; };
+		window.THREE = THREE;
 	}
 
 
