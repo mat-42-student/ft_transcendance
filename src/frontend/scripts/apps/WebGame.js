@@ -162,7 +162,7 @@ export class WebGame extends GameBase {
 
     sendLoadReady() {
         if (!this.receivedInit) {
-            console.error('Refused to send load_complete')  //TODO delete log?
+            console.error('Refused to send load_complete');
             return;
         }
 

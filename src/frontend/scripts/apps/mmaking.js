@@ -480,30 +480,6 @@ export class Mmaking
 		await this.renderMatchmaking();
 	}
 
-    bindLocalBotButton() {
-        const button = document.getElementById('btn-local-bot');
-        button.addEventListener('click', () => {
-            if (state.gameApp != null) {
-                console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
-                return;
-            }
-
-            state.gameApp = new LocalGame(true);
-        });
-    }
-
-    bindLocal1v1Button() {
-        const button = document.getElementById('btn-local-versus');
-        button.addEventListener('click', () => {
-            if (state.gameApp != null) {
-                console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
-                return;
-            }
-
-            state.gameApp = new LocalGame(false);
-        });
-    }
-
     async sendMsg(message)
 	{
 

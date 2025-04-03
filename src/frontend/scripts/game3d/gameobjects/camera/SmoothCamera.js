@@ -4,9 +4,6 @@ import * as UTILS from '../../../utils.js';
 import { SmoothCameraVisualizer } from './SmoothCameraVisualizer.js';
 
 
-//REVIEW When nothing is continuously updating the border, resizing the window is broken. Either check that this never happens, or add some failsafe.
-
-
 export default class SmoothCamera extends THREE.Object3D {
 
 	/* Target values */
