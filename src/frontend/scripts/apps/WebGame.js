@@ -49,7 +49,7 @@ export class WebGame extends GameBase {
 
     launchGameSocket(gameId) {
         if (!gameId) // debug
-            gameId = 1; // effacer asap
+            gameId = 1; // TODO effacer asap
 
 		// state.client.refreshSession();
         let socketURL = "wss://" + window.location.hostname + ":3000/game/" + gameId + "/?t=" + state.client.accessToken;
@@ -95,9 +95,16 @@ export class WebGame extends GameBase {
             if (data.action != 'info') { console.log('Game packet:', data.action, ', data = ', data); }
 
             if (data.action == 'init') {
+                wg.receivedInit = true;
                 wg.side = Number(data.side);
                 wg.playerNames[0] = data.lplayer;
                 wg.playerNames[1] = data.rplayer;
+                // Did we load before the server was ready? Then report it now.
+                if (state.engine.scene != null) {
+                    wg.sendLoadReady();
+                } else {
+                    wg.needToReportLoaded = true;
+                }
             }
             if (data.action == "info") {
                 wg.ballPosition.x = data.ball[0];
@@ -117,14 +124,6 @@ export class WebGame extends GameBase {
             if (data.action == "disconnect") {
                 wg.close();
             }
-            if (data.action == "ready") {
-                // Did we load before the server was ready? Then report it now.
-                if (state.engine.scene != null) {
-                    wg.sendLoadReady();
-                } else {
-                    wg.needToReportLoaded = true;
-                }
-            }
             if (data.action == "game_cancelled") {
                 wg.level.endShowWebQuit(data.quitter, [...wg.playerNames]);
             }
@@ -140,7 +139,7 @@ export class WebGame extends GameBase {
 
 
     #sendInput() {
-        if (!this.isReady || !state.isPlaying || this.socket.readyState != this.socket.OPEN)
+        if (!this.receivedInit || !state.isPlaying || this.socket.readyState != this.socket.OPEN)
             return;
 
         let currentInput = state.input.getPaddleInput(this.side);
@@ -155,9 +154,10 @@ export class WebGame extends GameBase {
     }
 
     sendLoadReady() {
-        if (this.isReady)
+        if (!this.receivedInit) {
+            console.error('Refused to send load_complete')  //TODO delete log?
             return;
-        this.isReady = true;
+        }
 
         this.needToReportLoaded = false;
         this.socket.send(JSON.stringify({
