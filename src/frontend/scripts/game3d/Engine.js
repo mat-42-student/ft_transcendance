@@ -7,6 +7,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import * as UTILS from '../utils.js';
 import LevelBase from './gameobjects/levels/LevelBase.js';
+import LevelError from './gameobjects/levels/LevelError.js';
 
 
 export class Engine {
@@ -164,6 +165,17 @@ export class Engine {
 		}
 
 		this.#scene = newScene;
+	}
+
+
+	showLoadingErrorScene() {
+		if (this.scene != null || this.errorScene) {
+			console.warn('This function was called improperly.');
+			return;
+		}
+
+		console.log('Scene loading was interrupted. Now showing error scene.');
+		this.errorScene = new LevelError();
 	}
 
 

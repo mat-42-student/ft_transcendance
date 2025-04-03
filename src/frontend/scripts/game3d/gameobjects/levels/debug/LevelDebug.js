@@ -110,7 +110,7 @@ export default class LevelDebug extends LevelBase {
 			if (state.gameApp && state.gameApp.level) {
 				state.engine.scene = state.gameApp.level;
 			} else {
-				console.warn('LevelDebug.js: Fake loading: Level was never added to engine, disposing.');
+				state.engine.showLoadingErrorScene();
 				this.dispose();
 			}
 		}).bind(this);
