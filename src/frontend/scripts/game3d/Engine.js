@@ -2,6 +2,9 @@ import { state } from '../main.js';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import * as UTILS from '../utils.js';
 import LevelBase from './gameobjects/levels/LevelBase.js';
 
@@ -56,6 +59,11 @@ export class Engine {
 			this.renderer.setAnimationLoop(this.animationLoop.bind(this))
 			this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
 			this.renderer.toneMappingExposure = 1;
+
+			this.#effectComposer = new EffectComposer(this.renderer);
+			this.#effectComposer.addPass(this.#renderPass);
+
+			this.#effectComposer.addPass(new OutputPass());
 
 			this.fontLoader = new FontLoader();
 			this.fontLoader.load(
@@ -131,8 +139,9 @@ export class Engine {
 			this.paramsForAddDuringRender = null;
 		}
 
-		// if (state.gameApp && this.scene)
-			this.renderer.render(this.scene, this.scene.smoothCamera.camera);
+		this.#renderPass.scene = this.scene;
+		this.#renderPass.camera = this.scene.smoothCamera.camera;
+		this.#effectComposer.render();
 	}
 
 
@@ -159,6 +168,11 @@ export class Engine {
 	/** @type {THREE.WebGLRenderer} */
 	#renderer;
 
+	/** @type {EffectComposer} */
+	#effectComposer;
+
+	#renderPass = new RenderPass(null, null);
+
 	#gltfLoader = new GLTFLoader();
 
 	/** @type {ResizeObserver} */
@@ -183,6 +197,7 @@ export class Engine {
 		const rect = this.#html_container.getBoundingClientRect();
 		this.#updateAutoResolution();
 		this.renderer.setSize(rect.width, rect.height);
+		this.#effectComposer.setSize(rect.width, rect.height);
 		if (this.scene && this.scene.smoothCamera) {
 			this.scene.smoothCamera.aspect = rect.width / rect.height;
 		}
@@ -196,9 +211,9 @@ export class Engine {
 
 
 	#updateAutoResolution() {
-		const fullres = window.devicePixelRatio;
-		const lowres = fullres / 2;
-		this.renderer.setPixelRatio(UTILS.shouldPowersave() ? lowres : fullres);
+		const res = UTILS.shouldPowersave() ? window.devicePixelRatio / 2 : window.devicePixelRatio;
+		this.renderer.setPixelRatio(res);
+		this.#effectComposer.setPixelRatio(res);
 	}
 
 };
