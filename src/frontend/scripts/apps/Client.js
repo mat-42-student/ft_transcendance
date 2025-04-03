@@ -1,6 +1,7 @@
 import { state } from '../main.js';
 import { MainSocket } from './MainSocket.js';
 import { verifyToken } from '../api/auth.js';
+import { ft_fetch } from '../main.js';
 
 export class Client{
 
@@ -98,21 +99,9 @@ export class Client{
         this.state.client.userName = parsedPayload.username;
     }
 
-    // async hasCookie() {
-    //     try {
-    //         const response = await fetch('api/v1/auth/refresh/', {
-    //             method: 'HEAD',
-    //             credentials: 'include'
-    //         });
-    //         return (response.status == 200)
-    //     } catch {
-    //         return false;
-    //     }
-    // }
-
     async refreshSession(location = null) {
         if (!localStorage.getItem('cookieSet')) // modfis ajoutées après merge
-            return;                             // modfis ajoutées après merge
+            return;                              // modfis ajoutées après merge
         try {
             const response = await fetch('api/v1/auth/refresh/', {
                 method: 'POST',
@@ -120,6 +109,7 @@ export class Client{
             });
             if (!response.ok) {
                 // console.log('request error!');
+                // localStorage.removeItem('cookieSet'); // modfis ajoutées après merge
                 throw new Error("Could not refresh token");
             }
             const data = await response.json();
@@ -193,7 +183,7 @@ export class Client{
 //         this.renderProfileBtn();
 
 //         try {
-//             const response = await fetch('/api/v1/auth/logout/', {
+//             const response = await ft_fetch('/api/v1/auth/logout/', {
 //                 method: 'POST',
 //                 credentials: 'include',
 //                 headers: { 'Content-Type': 'application/json' },
@@ -232,7 +222,7 @@ export class Client{
 //         if (!localStorage.getItem('cookieSet'))
 //             return;
 //         try {
-//             const response = await fetch('api/v1/auth/refresh/', {
+//             const response = await ft_fetch('api/v1/auth/refresh/', {
 //                 method: 'POST',
 //                 credentials: 'include'
 //             });
