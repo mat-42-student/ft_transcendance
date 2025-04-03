@@ -329,7 +329,7 @@ export class Mmaking
 				closeDynamicCard();
 				if (this.gameId != null) {
 					if (state.gameApp != null)
-						state.gameApp.close();
+						state.gameApp.close(true);
 					state.gameApp = new WebGame('debug');
 					state.gameApp.launchGameSocket(this.gameId);
 					selectVisibleHeader(true);

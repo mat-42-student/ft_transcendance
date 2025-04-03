@@ -25,7 +25,7 @@ export class GameBase {
 			this.level.onFrame(delta, time);
 	}
 
-	close() {
+	close(youCancelled) {
 		if (state.gameApp == this)  { state.gameApp = null; }
 		selectVisibleHeader(false);
 		if (state.engine.scene == this)  { state.engine.scene = null; }

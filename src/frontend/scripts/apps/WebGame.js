@@ -33,7 +33,7 @@ export class WebGame extends GameBase {
         super.frame(delta, time);
     }
 
-    close() {
+    close(youCancelled) {
         try {
             this.socket.close();
             this.socket = null;
@@ -43,7 +43,13 @@ export class WebGame extends GameBase {
             document.getElementById("keyhint-versus").style.display = "none";
         } catch {}
 
-        super.close();
+        try {
+            if (youCancelled) {
+                this.level.endShowYouRagequit();
+            }
+        } catch {}
+
+        super.close(youCancelled);
     }
 
 
@@ -75,7 +81,7 @@ export class WebGame extends GameBase {
 
         this.socket.onclose = async function(e) {
             if (state.gameApp instanceof WebGame) {
-                state.gameApp.close();
+                state.gameApp.close(false);
             }
         };
 
@@ -122,10 +128,12 @@ export class WebGame extends GameBase {
                 if (wg.level)  wg.level.pause(Number(data.time));
             }
             if (data.action == "disconnect") {
-                wg.close();
+                wg.close(false);
             }
             if (data.action == "game_cancelled") {
-                wg.level.endShowWebQuit(data.quitter, [...wg.playerNames]);
+                let opponentName = 'a Javascript exception';
+                try { opponentName = wg.playerNames[data.quitter]; } catch {}
+                wg.level.endShowWebOpponentQuit(opponentName);
             }
             if (data.action == "game_won") {
                 wg.level.endShowWinner(data.scores, data.winner, [...wg.playerNames]);

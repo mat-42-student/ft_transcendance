@@ -85,15 +85,15 @@ export class LocalGame extends GameBase {
         super.frame(delta, time);
 	}
 
-    close(cancelled = true) {
-        this.endgame(cancelled);
+    close(youCancelled) {
+        this.endgame(youCancelled);
 
         try {
             const id = this.isCPU ? "keyhint-versus" : "keyhint-local";
             document.getElementById(id).style.display = "none";
         } catch {}
 
-        super.close();
+        super.close(youCancelled);
     }
 
 

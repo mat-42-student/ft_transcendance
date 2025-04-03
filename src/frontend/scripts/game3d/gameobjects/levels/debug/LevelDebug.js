@@ -167,17 +167,32 @@ export default class LevelDebug extends LevelBase {
 		this.gameEndObjects.add(text);
 	}
 
-	endShowWebQuit(
-		quitter = NaN,
-		playerNames = ['?1', '?2'],
-	) {
-		super.endShowWebQuit(quitter, playerNames);
+	endShowWebOpponentQuit(opponentName) {
+		super.endShowWebOpponentQuit(opponentName);
 
 		if (!state.engine.scene)  // Game end before loading completed. Just give up
 			return;
 
 		this.#endClear();
-		const text = new TextMesh(this.textMaterial, `${playerNames[quitter]}\nquit!`);
+		const text = new TextMesh(this.textMaterial,
+			`Your opponent\n${opponentName}\nquit!\n`
+			+ "This match will show\nas a win on your\nprofile.\n"
+		);
+		text.rotateX(-UTILS.RAD90);
+		text.rotateZ(UTILS.RAD180);
+		this.gameEndObjects.add(text);
+	}
+
+	endShowYouRagequit() {
+		super.endShowYouRagequit();
+
+		if (!state.engine.scene)  // Game end before loading completed. Just give up
+			return;
+
+		this.#endClear();
+		const text = new TextMesh(this.textMaterial,
+			`don't ragequit!\nThis match will show\nas a loss on your\nprofile.`
+		);
 		text.rotateX(-UTILS.RAD90);
 		text.rotateZ(UTILS.RAD180);
 		this.gameEndObjects.add(text);

@@ -172,7 +172,7 @@ buttonLocalVersus.addEventListener('click', () => {
 
 buttonQuit.addEventListener('click', () => {
     if (state.gameApp != null) {
-        state.gameApp.close();
+        state.gameApp.close(true);
         state.gameApp = null;
     }
     selectVisibleHeader(false);
