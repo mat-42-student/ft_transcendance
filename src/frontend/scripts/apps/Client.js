@@ -109,6 +109,7 @@ export class Client{
             });
             if (!response.ok) {
                 // console.log('request error!');
+                // localStorage.removeItem('cookieSet'); // modfis ajoutées après merge
                 throw new Error("Could not refresh token");
             }
             const data = await response.json();

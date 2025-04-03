@@ -155,7 +155,7 @@ export function isTokenExpiringSoon() {
     }
     const payload = JSON.parse(atob(state.client.accessToken.split('.')[1]));
     // console.log("remaining time in token: ", (payload.exp * 1000 - Date.now()) / 60000, " min");
-    return (payload.exp * 1000 - Date.now()) < 10000;
+    return (payload.exp * 1000 - Date.now()) < 30000;
 }
 
 // REVIEW 23/2/2025, commit 074a0d9e0981: This function appears unused. Delete? Move to utils.js?
