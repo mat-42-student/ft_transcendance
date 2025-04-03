@@ -40,6 +40,7 @@ header {
     position: relative;
     color: #fff;
     background: #333;
+    height: 40px;
 }
 
 header .container {

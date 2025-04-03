@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import LevelBase from '../game3d/gameobjects/levels/LevelBase.js';
-import { state, toggleHeaderButtons } from '../main.js';
+import { state, selectVisibleHeader } from '../main.js';
 
 
 export class GameBase {
@@ -27,7 +27,7 @@ export class GameBase {
 
 	close() {
 		if (state.gameApp == this)  { state.gameApp = null; }
-		toggleHeaderButtons(false);
+		selectVisibleHeader(false);
 		if (state.engine.scene == this)  { state.engine.scene = null; }
 	}
 

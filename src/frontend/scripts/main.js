@@ -144,34 +144,30 @@ const buttonLocalVersus = document.getElementById('btn-local-versus');
 const buttonVersus = document.getElementById('versus');
 const buttonTournament = document.getElementsByClassName('btn-tournament')[0];
 
-/** @param {boolean} showQuit Selects which elements become visible. */
-export function toggleHeaderButtons(showQuit) {
-    let show = [buttonLocalBot, buttonLocalVersus, buttonVersus, buttonTournament];
-    let hide = [buttonQuit];
+/** @param {boolean} isInGame Selects which header become visible. */
+export function selectVisibleHeader(isInGame = false) {
+    let show = document.getElementById("header-notplaying");
+    let hide = document.getElementById("header-ingame");
 
-    if (showQuit)
+    if (isInGame)
         [hide, show] = [show, hide];
 
-    hide.forEach((toHide) => {
-        toHide.style.display = "none";
-    });
-    show.forEach((toShow) => {
-        toShow.style.display = null;
-    });
+    hide.style.display = "none";
+    show.style.display = null;
 }
-window.toggleHeaderButtons = toggleHeaderButtons;  //debug
-toggleHeaderButtons(false);  // hide quit button for the first time
+window.toggleHeaderButtons = selectVisibleHeader;  //debug
+selectVisibleHeader(false);  // hide quit button for the first time
 
 buttonLocalBot.addEventListener('click', () => {
     if (state.gameApp == null)
         state.gameApp = new LocalGame(true);
-    toggleHeaderButtons(true);
+    selectVisibleHeader(true);
 });
 
 buttonLocalVersus.addEventListener('click', () => {
     if (state.gameApp == null)
         state.gameApp = new LocalGame(false);
-    toggleHeaderButtons(true);
+    selectVisibleHeader(true);
 });
 
 buttonQuit.addEventListener('click', () => {
@@ -179,7 +175,7 @@ buttonQuit.addEventListener('click', () => {
         state.gameApp.close();
         state.gameApp = null;
     }
-    toggleHeaderButtons(false);
+    selectVisibleHeader(false);
 });
 
 // --⬆️-- Header play buttons --⬆️--
