@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 import json
+import asyncio
 from asyncio import run as arun, sleep as asleep, create_task
 from signal import signal, SIGTERM, SIGINT
 from django.conf import settings
