@@ -1,4 +1,5 @@
 import { state } from '../main.js';
+import { ft_fetch } from '../main.js';
 
 const apiBase = '/api/v1/users';
 
@@ -8,22 +9,52 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
         return;
     }
     try {
-        const response = await fetch(endpoint, {
+        const headers = {
+            'Authorization': `Bearer ${state.client.accessToken}`,
+        };
+
+        // Ajouter l'en-tête Content-Type uniquement si ce n'est pas un FormData
+        if (!(body instanceof FormData)) {
+            headers['Content-Type'] = 'application/json';
+        }
+
+        const response = await ft_fetch(endpoint, {
             method: method,
-            headers: {
-                'Authorization': `Bearer ${state.client.accessToken}`,
-                'Content-Type': 'application/json',
-            },
-            body: body ? JSON.stringify(body) : null,
+            headers: headers,
+            body: body instanceof FormData ? body : (body ? (typeof body === 'string' ? body : JSON.stringify(body)) : null),
         });
-        
+
         if (!response.ok) {
             throw new Error(`API Error (${response.status}): ${await response.text()}`);
         }
-        
+
         return await response.json();
+        // const response = await fetch(endpoint, {
+        //     method: method,
+        //     headers: {
+        //         'Authorization': `Bearer ${state.client.accessToken}`,
+        //         'Content-Type': 'application/json',
+        //     },
+        //     body: body ? JSON.stringify(body) : null,
+        // });
+        
+        // if (!response.ok) {
+        //     throw new Error(`API Error (${response.status}): ${await response.text()}`);
+        // }
+        
+        // return await response.json();
     } catch (error) {
         console.error("Fetch error:", error);
+    }
+}
+
+export async function updateProfile(formData, userId) {
+    try {
+        const response = await apiRequest(`${apiBase}/${userId}/`, 'PATCH', formData);
+        return response;
+    } catch (error) {
+        console.error("Erreur lors de la mise à jour du profil:", error);
+        return null;
     }
 }
 

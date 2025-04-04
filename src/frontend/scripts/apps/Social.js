@@ -1,6 +1,8 @@
 import { state } from '../main.js';
+import { navigator } from '../nav.js';
 import { updatePendingCountDisplay } from '../components/friend_requests.js';
 import { fetchFriends, fetchPendingCount, fetchReceivedRequests, fetchSentRequests, modifyRelationship } from '../api/users.js';
+import { ft_fetch } from '../main.js';
 
 export class SocialApp{
 
@@ -25,7 +27,7 @@ export class SocialApp{
             return;
         }
         try {
-            const response = await fetch('api/v1/users/' + state.client.userId + '/friends/', {
+            const response = await ft_fetch('api/v1/users/' + state.client.userId + '/friends/', {
                 headers: {
                     'Authorization': `Bearer ${state.client.accessToken}`,
                 },
@@ -101,8 +103,10 @@ export class SocialApp{
         htmlFriendList.querySelectorAll('.friend-item').forEach(friendItem => {
             const btnChat = friendItem.querySelector('.btn-chat');
             const btnMatch = friendItem.querySelector('.btn-match');
+            const username = friendItem.querySelector('.friend-name');
             btnChat.removeEventListener('click', this.handleChatClick);
             btnMatch.removeEventListener('click', this.handleMatchClick);
+            username.removeEventListener('click', this.handleUsernameClick);
         });
         htmlFriendList.innerHTML = '';
         if (this.friendList == null || this.friendList.size == 0) {
@@ -134,6 +138,7 @@ export class SocialApp{
 
         const btnChat = friendItem.querySelector('.btn-chat');
         const btnMatch = friendItem.querySelector('.btn-match');
+        const username = friendItem.querySelector('.friend-name');
 
         btnChat.dataset.friendId = friend.id;
         btnMatch.dataset.friendId = friend.id;
@@ -143,6 +148,7 @@ export class SocialApp{
         btnMatch.classList.add(`btn-match-${friend.id}`);
 
         btnChat.addEventListener('click', this.handleChatClick);
+        username.addEventListener('click', () => this.handleUsernameClick(friend.id));
     }
 
     handleChatClick(event) {
@@ -154,13 +160,20 @@ export class SocialApp{
         state.mmakingApp.btnInviteDesactive(friendId);
     }
 
+    handleUsernameClick(friendId) {
+        navigator.goToPage('profile', friendId);
+    }
+
     removeAllFriendListeners() {
         document.querySelectorAll('.friend-item').forEach(friendItem => {
             const btnChat = friendItem.querySelector('.btn-chat');
             const btnMatch = friendItem.querySelector('.btn-match');
+            const username = friendItem.querySelector('.friend-name');
+            const newUsername = username.cloneNode(true);
     
             btnChat.removeEventListener('click', this.handleChatClick);
             btnMatch.removeEventListener('click', this.handleMatchClick);
+            username.parentNode.replaceChild(newUsername, username);
         });
     }
 

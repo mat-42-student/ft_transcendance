@@ -9,7 +9,6 @@ from django.core.cache import cache
 from redis.asyncio import Redis
 import jwt
 from datetime import datetime, timedelta, timezone
-
 class Command(BaseCommand):
     help = "Async pub/sub redis worker. Listens 'deep_social' channel"
 
@@ -144,10 +143,17 @@ class Command(BaseCommand):
                 algorithm=settings.BACKEND_JWT["ALGORITHM"],
             )
 
-            url = f"http://users:8000/api/v1/users/{user_id}/friends/"
+            url = f"https://nginx:8443/api/v1/users/{user_id}/friends/"
             headers = {"Authorization": f"Service {token}"}
 
-            response = requests.get(url, headers=headers, timeout=10)
+            response = requests.get(
+                url,
+                headers=headers,
+                timeout=10,
+                cert=("/etc/ssl/social.crt", "/etc/ssl/social.key"),
+                verify="/etc/ssl/ca.crt"
+            )
+            
             response.raise_for_status()
             data = response.json()
 

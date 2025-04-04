@@ -1,4 +1,4 @@
-import { state } from '../main.js';
+import { state, toggleHeaderButtons } from '../main.js';
 import { initDynamicCard, closeDynamicCard } from '../components/dynamic_card.js';
 import { WebGame } from './WebGame.js';
 
@@ -316,7 +316,7 @@ export class Mmaking
 	{
 		const btnTournament = document.getElementsByClassName('btn-tournament');
 		const btnRandom = document.getElementById('versus');
-		
+
 		if (this.bracket == true)
 		{
 			await this.bracketTournament();
@@ -327,12 +327,16 @@ export class Mmaking
 		if (this.game == true)
 			{
 				closeDynamicCard();
-				if (this.gameId != null)
+				if (this.gameId != null) {
+					if (state.gameApp != null)
+						state.gameApp.close();
 					state.gameApp = new WebGame('debug');
 					state.gameApp.launchGameSocket(this.gameId);
-				this.game = false;
-				btnTournament[0].removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);
-				btnRandom.removeEventListener('click', this.boundEventListenersClient.btnSearchRandomGame);
+					toggleHeaderButtons(true);
+					this.game = false;
+					btnTournament[0].removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);
+					btnRandom.removeEventListener('click', this.boundEventListenersClient.btnSearchRandomGame);
+				}
 			}
 	}
 
@@ -402,7 +406,7 @@ export class Mmaking
 		await initDynamicCard('tournament');
 		console.log('tournament bracket is setting');
 		const bracketContainer = document.getElementById('tournamentBracket');
-		
+
 		for (const [key, value] of Object.entries(this.opponents))
 		{
 			let firstPlayer = false;
@@ -444,7 +448,7 @@ export class Mmaking
 					team2Score.classList.add('score');
 					team2Score.textContent = player.score2 !== undefined ? player.score2 : '-';
 
-					teamContainer.appendChild(team2Element);        
+					teamContainer.appendChild(team2Element);
 					team2Element.appendChild(team2Score);
 
 				}
@@ -500,7 +504,7 @@ export class Mmaking
         });
     }
 
-    async sendMsg(message) 
+    async sendMsg(message)
 	{
 
         const data = {
@@ -519,7 +523,7 @@ export class Mmaking
 			'GameSocket': false,
 			'gameId': this.gameId
 		};
-		
+
 		this.cancelState();
 		this.sendMsg(data);
 
@@ -539,7 +543,7 @@ export class Mmaking
     async incomingMsg(data)
     {
         if (data.body.status == 'ingame')
-        { 
+        {
 			this.game = true;
 			this.gameId =  data.body.id_game;
 			this.salonInvite = false;
@@ -559,7 +563,7 @@ export class Mmaking
 			if (data.body.opponents)
 			{
 				this.opponents = data.body.opponents;
-				console.log(this.opponents);
+				console.log(this.opponents);  //TODO remove log?
 			}
 
         }

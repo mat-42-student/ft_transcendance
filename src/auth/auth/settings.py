@@ -47,7 +47,6 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        # 'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
         'authentication.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [

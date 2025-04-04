@@ -4,9 +4,13 @@ import * as THREE from 'three';
 
 export default class DebugBoard extends THREE.Box3Helper {
 
+	box = new THREE.Box3();
+
+	name = 'Debug Board';
+
+
 	constructor() {
 		super(null, new THREE.Color('#ffffff'));
-		this.box = new THREE.Box3();
 	}
 
 

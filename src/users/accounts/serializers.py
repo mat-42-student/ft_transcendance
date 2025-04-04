@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 
 from PIL import Image
 
-from .models import User, Relationship
+from .models import User, Relationship, Game, Tournament
 
 
 # User 'list' serializer
@@ -78,7 +78,7 @@ class UserBlockedSerializer(serializers.ModelSerializer):
 
 # User 'update' & 'partial_update' serializer
 class UserUpdateSerializer(serializers.ModelSerializer):
-    confirm_password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = User
@@ -110,18 +110,16 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"username": "Ce nom d'utilisateur est déjà pris. Veuillez en choisir un autre."})
 
         # Vérification du mot de passe actuel et du nouveau mot de passe
-        password = data.get('confirm_password')
-        new_password = data.get('password')
-        if password and not new_password:
-            raise serializers.ValidationError({"password": "Veuillez spécifier un nouveau mot de passe pour le mettre à jour."})
-        if new_password and not password:
-            raise serializers.ValidationError({"confirm_password": "Le mot de passe actuel est obligatoire pour effectuer des modifications."})
+        password = data.get('confirm_password', None)
+        new_password = data.get('password', None)
+
+        # Si l'un des deux champs est présent sans l'autre
+        if (password and not new_password) or (new_password and not password):
+            raise serializers.ValidationError({"password": "Veuillez fournir à la fois le mot de passe actuel et le nouveau mot de passe pour la mise à jour."})
+
+        # Vérifier que le mot de passe actuel est correct si fourni
         if password and not user.check_password(password):
             raise serializers.ValidationError({"confirm_password": "Le mot de passe actuel est incorrect."})
-        
-        # Vérification de l'avatar si fourni
-        if 'avatar' in data:
-            data['avatar'] = self.validate_avatar(data['avatar'])
 
         return data
 
@@ -232,3 +230,41 @@ class UserRelationshipsSerializer(serializers.Serializer):
     friends = RelationshipSerializer(many=True)
     sent_requests = RelationshipSerializer(many=True)
     received_requests = RelationshipSerializer(many=True)
+
+
+class GameSerializer(serializers.ModelSerializer):
+    result = serializers.SerializerMethodField()
+    player1 = serializers.CharField(source='player1.username')
+    player2 = serializers.CharField(source='player2.username')
+    tournament = serializers.SerializerMethodField()
+    tournament_organizer = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Game
+        fields = ['id', 'result', 'player1', 'player2', 'score_player1', 'score_player2', 'date', 'tournament', 'tournament_organizer']
+
+    def get_result(self, obj):
+        """
+        Détermine si l'utilisateur ciblé par la requête a gagné ou perdu la partie.
+        """
+        request = self.context.get('request')
+        user = request.user
+        if user == obj.player1:
+            return "Victory" if obj.score_player1 > obj.score_player2 else "Defeat"
+        elif user == obj.player2:
+            return "Victory" if obj.score_player2 > obj.score_player1 else "Defeat"
+        return "Not Involved"
+
+    def get_tournament(self, obj):
+        """
+        Vérifie si la partie est liée à un tournoi.
+        """
+        return obj.tournament is not None
+
+    def get_tournament_organizer(self, obj):
+        """
+        Récupère l'organisateur du tournoi si applicable.
+        """
+        if obj.tournament:
+            return obj.tournament.organizer.username
+        return None

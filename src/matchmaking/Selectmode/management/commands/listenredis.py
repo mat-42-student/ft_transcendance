@@ -1,21 +1,15 @@
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
 import json
-import asyncio
-import time
 from asyncio import run as arun, sleep as asleep, create_task
 from signal import signal, SIGTERM, SIGINT
 from django.conf import settings
-import requests
 from .models import Game, Tournament, User
 from asgiref.sync import sync_to_async, async_to_sync
 from datetime import datetime
-import os
 from django.core.cache import cache
 import jwt
 from datetime import datetime, timedelta, timezone
-
-
 
 # Custom Class
 from .Player import Player
@@ -327,7 +321,7 @@ class Command(BaseCommand):
         player = await self.manage_player(header, body)
         if (not player):
             return
-        
+
         payload = {
             "service": "matchmaking",
             "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
@@ -502,7 +496,6 @@ class Command(BaseCommand):
                             else:
                                 # Setup Guest
                                 guest = host.guests[guestid]
-                                guest.token = player.token
                                 guest.get_user()
                                 guest.type_game = 'invite'
                                 salon.players.update({guestid: guest })
