@@ -34,7 +34,7 @@ class Player ():
         return (player)
         
     def __str__(self):
-        return (f'Player {self.user_id} type_game: {self.type_game}')
+        return (f'Player {self.user_id}')
     
     def get_user(self):
         """Get information from API user and set this in instances"""
@@ -64,13 +64,13 @@ class Player ():
         else:
             print("error: User not found")
     
-    async def checkStatus(self, redis, channel):
+    async def getStatus(self, redis, channel):
         test = 5
         data = {
             'user_id': self.user_id
         }
-        print(data)
         status = None
+        print(data)
         await redis.publish(channel, json.dumps(data))
         while (status is None and test >= 0):
             try:
@@ -80,8 +80,10 @@ class Player ():
                     return (status)
             except asyncio.TimeoutError:
                 print("Timeout atteint lors de l'attente de Redis.")
+                return None
             await asyncio.sleep(0.5)
             test -= 1
+        return None
     
     def invitation(self, message):
         invite = message['body']['invite']
@@ -94,6 +96,7 @@ class Player ():
             print(f'{invite}')
             
     async def updateStatus(self, redis, channel, status):
+        print(f'Now player {self.user_id} is {status}')
         data = {
             'header':{
                 'service': 'social',
