@@ -6,7 +6,6 @@ from redis.asyncio import from_url
 from asyncio import run as arun, sleep as asleep, create_task
 from django.conf import settings
 from django.core.cache import cache
-from redis.asyncio import Redis
 import jwt
 from datetime import datetime, timedelta, timezone
 class Command(BaseCommand):

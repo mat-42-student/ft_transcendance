@@ -91,7 +91,7 @@ class LoginView(APIView):
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user"
@@ -160,7 +160,7 @@ class RefreshTokenView(APIView):
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user"
