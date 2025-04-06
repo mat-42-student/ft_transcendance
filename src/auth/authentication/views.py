@@ -30,30 +30,10 @@ import json
 from redis import Redis
 import time
 
-# async def getStatus(user_id, channel="auth_social"):
-#     redis = await from_url("redis://redis:6379", decode_responses=True)
-
-#     test = 10
-#     data = {
-#         'user_id': user_id
-#     }
-#     status = None
-#     print(data) #debug
-#     await redis.publish(channel, json.dumps(data))
-#     while (status is None and test >= 0):
-#         try:
-#             status = await redis.get(f'is_{user_id}_logged')
-#             print(f'GET status = {status}') #debug
-#             if (status is not None):
-#                 return (status)
-#         except asyncio.TimeoutError:
-#             print("Timeout reached while waiting for Redis.")
-#             return None
-#         await asyncio.sleep(0.1)
-#         test -= 1
-#     return None
-
 def getStatus(user_id, channel="auth_social"):
+    """
+    Evaluate if a user is already logged in.
+    """
     redis = Redis.from_url("redis://redis:6379", decode_responses=True)
 
     test = 10
@@ -63,27 +43,22 @@ def getStatus(user_id, channel="auth_social"):
     status = None
     print(data)  # debug
     
-    # Synchronous publish
     redis.publish(channel, json.dumps(data))
     
     while status is None and test >= 0:
         try:
-            # Synchronous get
             status = redis.get(f'is_{user_id}_logged')
             print(f'GET status = {status}')  # debug
             if status is not None:
                 return status
-        except Exception as e:  # General exception instead of asyncio.TimeoutError
+        except Exception as e:
             print(f"Error occurred: {str(e)}")
             return None
         
-        # Synchronous sleep
         time.sleep(0.1)
         test -= 1
     
     return None
-
-
 class PublicKeyView(APIView):
     permission_classes = [AllowAny]
 
@@ -342,8 +317,15 @@ class Disable2FAView(APIView):
 class OAuthLoginView(APIView):
     permission_classes = [AllowAny]
 
-    
     def get(self, request):
+        username = request.data.get("username")
+        user = User.objects.filter(username=username).first()
+
+        user_status = getStatus(user.id)
+
+        if user_status != "offline":
+            return Response({"success": False, "error": "User already logged in"}, status=400)
+        
         state = generate_state()
         request.session['oauth_state'] = state
         params = {
