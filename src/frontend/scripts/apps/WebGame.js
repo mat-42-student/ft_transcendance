@@ -1,4 +1,4 @@
-import { state, isTokenExpiringSoon } from '../main.js';
+import { state, delay } from '../main.js';
 import { GameBase } from './GameBase.js';
 import * as LEVELS from '../game3d/gameobjects/levels/_exports.js';
 
@@ -69,14 +69,17 @@ export class WebGame extends GameBase {
         };
 
         this.socket.onopen = async function(e) {
+            this.openTime = Date.now();
             console.log('onopen', this)
             this.send(JSON.stringify({
-                // 'from': state.client.userName,
                 'action' :"wannaplay!",
                 })
             );
 
 			await state.mmakingApp.socketGameGood();
+            await delay(10);
+            if (! this.isReady)
+                this.close()
         };
 
         this.socket.onclose = async function(e) {

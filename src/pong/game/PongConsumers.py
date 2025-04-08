@@ -297,7 +297,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             await self.send(json.dumps(data))
         except:
             pass
-        await self.channel_layer.group_send(
+        await self.channel_layer.group_send( # really useful ? Would be better to send rather than group_send
             self.room_group_name, {"type": "handle.message", "message": {"action": "ready"}}
         )
         if self.master:
@@ -331,7 +331,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def disconnect_now(self, event):
     # If self.game.over, game was stopped beacuse maxscore has been reached
     # If not, game was stopped because one player left
-        if not self.connected:
+        if not self.connected or not self.side:
             return
         if event["side"] != "server":
             await self.declare_quit({"quitter": 1 - self.side})

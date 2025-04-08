@@ -146,7 +146,7 @@ export class SocialApp{
         // add by Adrien
         btnMatch.dataset.invite = 0;
         btnMatch.classList.add(`btn-match-${friend.id}`);
-
+        btnMatch.addEventListener('click', this.handleMatchClick);
         btnChat.addEventListener('click', this.handleChatClick);
         username.addEventListener('click', () => this.handleUsernameClick(friend.id));
     }
