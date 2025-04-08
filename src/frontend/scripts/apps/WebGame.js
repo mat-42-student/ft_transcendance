@@ -75,7 +75,6 @@ export class WebGame extends GameBase {
         };
 
         this.socket.onopen = async function(e) {
-            this.openTime = Date.now();
             console.log('onopen', this)
             this.send(JSON.stringify({
                 'action' :"wannaplay!",
