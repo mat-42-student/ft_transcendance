@@ -41,8 +41,6 @@ class User(AbstractBaseUser):
     )
     email = models.EmailField(
         max_length=254,
-        blank=True,
-        null=True,
         unique=True,
     )
     avatar = models.ImageField(

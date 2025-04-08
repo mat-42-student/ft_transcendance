@@ -2,7 +2,7 @@ import { state, ft_fetch } from '../main.js';
 import { cleanErrorMessage } from '../components/auth_form.js';
 import { closeDynamicCard } from '../components/dynamic_card.js';
 
-// Vérifie le token via l'API
+// Verify token via API
 export async function verifyToken(token) {
     const response = await fetch('/api/v1/auth/verify/', {
         method: 'POST',
@@ -16,7 +16,7 @@ export async function verifyToken(token) {
     if (response.ok) {
         return response;
     } else {
-        state.client.accessToken = null; // Invalider le token en cas d'échec
+        state.client.accessToken = null; // Invalidate token if verification fails
         return response;
     }
 }
@@ -58,7 +58,6 @@ export function verify2fa() {
     const qrSection = document.getElementById('qr-section');
     const verificationSection = document.getElementById('verification-section');
 
-
     fetch('api/v1/auth/2fa/verify/', {
         method: 'POST',
         headers: {
@@ -70,7 +69,7 @@ export function verify2fa() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log("2fa has been enabled!")
+            console.log("2FA has been enabled!");
             successPage.style.display = 'block';
             qrSection.style.display = 'none';
             verificationSection.style.display = 'none';
@@ -81,14 +80,14 @@ export function verify2fa() {
     .catch(error => console.error('Error:', error));
 }
 
-// Fonction d'envoi des requêtes API pour la connexion ou l'enregistrement
+// Handle API requests for login/registration
 export async function handleAuthSubmit(event) {
     event.preventDefault();
     cleanErrorMessage();
 
     const { username, email, password, confirm_password, hash } = getAuthFormData();
 
-    // Validation du mot de passe pour l'inscription
+    // Password validation for registration
     if (hash === '#register' && password !== confirm_password) {
         displayErrorMessage("Passwords don't match");
         return;
@@ -97,7 +96,7 @@ export async function handleAuthSubmit(event) {
     const { apiUrl, payload } = getApiUrlAndPayload(hash, username, email, password, confirm_password);
 
     if (!apiUrl) {
-        console.error('Action inconnue pour le formulaire d\'authentification.');
+        console.error('Unknown action for authentication form.');
         return;
     }
 
@@ -110,11 +109,11 @@ export async function handleAuthSubmit(event) {
             await handleAuthError(response);
         }
     } catch (error) {
-        console.error('Erreur lors de la requête API :', error);
+        console.error('API request error:', error);
     }
 }
 
-// Récupère les données du formulaire d'authentification
+// Get authentication form data
 function getAuthFormData() {
     const username = document.getElementById('auth-username').value.trim();
     const email = document.getElementById('auth-email').value.trim();
@@ -124,7 +123,7 @@ function getAuthFormData() {
     return { username, email, password, confirm_password, hash };
 }
 
-// Récupère l'URL de l'API et la charge utile en fonction du mode d'authentification
+// Get API URL and payload based on auth mode
 function getApiUrlAndPayload(hash, username, email, password, confirm_password) {
     let apiUrl = '';
     let payload = {};
@@ -140,7 +139,7 @@ function getApiUrlAndPayload(hash, username, email, password, confirm_password) 
     return { apiUrl, payload };
 }
 
-// Envoie la requête d'authentification à l'API
+// Send authentication request to API
 async function sendAuthRequest(apiUrl, payload) {
     return await fetch(apiUrl, {
         method: 'POST',
@@ -149,30 +148,35 @@ async function sendAuthRequest(apiUrl, payload) {
     });
 }
 
-// Traite la réponse d'authentification (connexion ou inscription réussie)
+// Process authentication response (successful login/registration)
 async function handleAuthResponse(data) {
     try {
         await state.client.login(data.accessToken);
         window.location.hash = '#profile';
         closeDynamicCard();
     } catch (error) {
-        console.error('Erreur lors de la gestion de la réponse d\'authentification :', error);
+        console.error('Error processing authentication response:', error);
     }
 }
 
-// Gère les erreurs d'authentification (par exemple, 2FA ou erreur utilisateur)
+// Handle authentication errors (2FA/user errors)
 async function handleAuthError(response) {
     const errorData = await response.json();
-    if (errorData.error === '2fa_required!') {
+    
+    if (errorData.error === '2fa_required') {
         handle2FA(response);
-    } else if (errorData.detail === 'User not found!' || errorData.detail === 'Incorrect password!') {
-        displayErrorMessage("Incorrect username or password");
+    } else if (errorData.detail === 'User not found' || errorData.detail === 'Incorrect password') {
+        displayErrorMessage("Incorrect username or password.");
     } else {
-        console.error('Erreur API:', errorData);
+        if (errorData.username || errorData.email) {
+            displayErrorMessage("Username or email already taken.");
+        } else {
+            console.error('API Error:', errorData);
+        }
     }
 }
 
-// Gère l'activation de la 2FA si nécessaire
+// Handle 2FA activation if required
 function handle2FA(response) {
     const totpContainer = document.getElementById('totp-container');
     totpContainer.classList.remove('hidden');
@@ -186,10 +190,10 @@ function handle2FA(response) {
     sendAuthRequest('/api/v1/auth/login/', payload)
         .then(response => response.json())
         .then(data => handleAuthResponse(data))
-        .catch(error => console.error('Erreur lors de la 2FA:', error));
+        .catch(error => console.error('Error during 2FA:', error));
 }
 
-// Affiche un message d'erreur générique dans le formulaire
+// Display generic error message in form
 function displayErrorMessage(message) {
     const loginErrorContainer = document.getElementById('auth-error');
     loginErrorContainer.textContent = message;
