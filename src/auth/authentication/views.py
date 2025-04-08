@@ -318,13 +318,13 @@ class OAuthLoginView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        username = request.data.get("username")
-        user = User.objects.filter(username=username).first()
+        # username = request.data.get("username")
+        # user = User.objects.filter(username=username).first()
 
-        user_status = getStatus(user.id)
-
-        if user_status != "offline":
-            return Response({"success": False, "error": "User already logged in"}, status=400)
+        # if user != None:
+        #     user_status = getStatus(user.id)
+        #     if user_status != "offline":
+        #         return Response({"success": False, "error": "User already logged in"}, status=400)
         
         state = generate_state()
         request.session['oauth_state'] = state
