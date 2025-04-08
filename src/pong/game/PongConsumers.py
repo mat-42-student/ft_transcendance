@@ -262,8 +262,6 @@ class PongConsumer(AsyncWebsocketConsumer):
             return await self.launch_game(data)
         if data["action"] == "info":
             return await self.send(json.dumps(data))
-        if data["action"] == "ready":
-            return await self.send(json.dumps(data))
         if data["action"] == "wannaplay!":
             print("wannaplay: ", data)
             return await self.wannaplay(data.get("id"), data.get("username"))

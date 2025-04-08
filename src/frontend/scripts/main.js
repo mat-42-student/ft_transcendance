@@ -4,7 +4,6 @@ import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js'
 import { GameBase } from './apps/GameBase.js';
 import { Input } from './game3d/Input.js';
 import { Engine } from './game3d/Engine.js';
-import { Clock } from './Clock.js';
 import LevelIdle from './game3d/gameobjects/levels/LevelIdle.js';
 import { LocalGame } from './apps/LocalGame.js';
 
@@ -18,11 +17,9 @@ export const state = {
     input: new Input(),
     engine: new Engine(),
     get isPlaying() { return this.gameApp != null && this.engine != null && this.engine.scene != null; },
-    /** @type {Clock} */ clock: null,
 };
 
 state.engine.init();
-state.clock = new Clock();
 // Temporary variable. This is deleted by LevelIdle itself after it is done loading.
 window.idleLevel = new LevelIdle();
 
@@ -173,42 +170,38 @@ const buttonLocalVersus = document.getElementById('btn-local-versus');
 const buttonVersus = document.getElementById('versus');
 const buttonTournament = document.getElementsByClassName('btn-tournament')[0];
 
-/** @param {boolean} showQuit Selects which elements become visible. */
-export function toggleHeaderButtons(showQuit) {
-    let show = [buttonLocalBot, buttonLocalVersus, buttonVersus, buttonTournament];
-    let hide = [buttonQuit];
+/** @param {boolean} isInGame Selects which header become visible. */
+export function selectVisibleHeader(isInGame = false) {
+    let show = document.getElementById("header-notplaying");
+    let hide = document.getElementById("header-ingame");
 
-    if (showQuit)
+    if (isInGame)
         [hide, show] = [show, hide];
 
-    hide.forEach((toHide) => {
-        toHide.style.display = "none";
-    });
-    show.forEach((toShow) => {
-        toShow.style.display = null;
-    });
+    hide.style.display = "none";
+    show.style.display = null;
 }
-window.toggleHeaderButtons = toggleHeaderButtons;  //debug
-toggleHeaderButtons(false);  // hide quit button for the first time
+window.toggleHeaderButtons = selectVisibleHeader;  //debug
+selectVisibleHeader(false);  // hide quit button for the first time
 
 buttonLocalBot.addEventListener('click', () => {
     if (state.gameApp == null)
         state.gameApp = new LocalGame(true);
-    toggleHeaderButtons(true);
+    selectVisibleHeader(true);
 });
 
 buttonLocalVersus.addEventListener('click', () => {
     if (state.gameApp == null)
         state.gameApp = new LocalGame(false);
-    toggleHeaderButtons(true);
+    selectVisibleHeader(true);
 });
 
 buttonQuit.addEventListener('click', () => {
     if (state.gameApp != null) {
-        state.gameApp.close();
+        state.gameApp.close(true);
         state.gameApp = null;
     }
-    toggleHeaderButtons(false);
+    selectVisibleHeader(false);
 });
 
 // --⬆️-- Header play buttons --⬆️--
