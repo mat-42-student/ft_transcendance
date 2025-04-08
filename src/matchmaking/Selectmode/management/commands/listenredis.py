@@ -125,6 +125,7 @@ class Command(BaseCommand):
     
     # Update and verif if the new status is set
     async def checkStatus(self, player, status):
+        print(f'Checkstatus Start')
         statusSetBySocial = None
         numberTry = 5
         
@@ -172,9 +173,12 @@ class Command(BaseCommand):
                     break
                         
             # Check if player want give up the search or is disconnect
-            if ((player and body.get('cancel') == True) or body.get('disconnect') or body.get('cancel') == True):
+            if ((player and body.get('cancel') == True) or body.get('disconnect')):
                 player.user_id = header['id']
-                status = await player.getStatus(self.redis_client, self.channel_social)
+                if (body.get('disconnect') is None):
+                    status = await player.getStatus(self.redis_client, self.channel_social)
+                else:
+                    status = 'offline'
                 
                 if (status == 'ingame' or status == 'online' or status == 'offline'):
                     salonOfPlayer = None

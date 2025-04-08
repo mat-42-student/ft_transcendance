@@ -253,7 +253,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 "id": self.consumer_id
             },
             "body":{
-                "cancel": True
+                "disconnect": True
             }
         }
         # print(f"Sending data to {REDIS_GROUPS.get("mmaking")}: {data}")
