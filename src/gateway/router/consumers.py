@@ -21,9 +21,12 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         self.message_timestamps = deque(maxlen=self.MESSAGE_LIMIT) # collecting message's timestamp
         self.connected = False
         self.consumer_id = None
+        self.consumer_name = None
+
         if not self.scope["payload"]:
             await self.kick(message="Unauthentified")
             return
+
         self.get_user_infos()
         if self.consumer_id is None:
             await self.kick(message="Unauthentified")
@@ -97,6 +100,24 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
     #         print(e)
     #     return None
 
+    def get_public_key(self):
+        try:
+            url = "https://nginx:8443/api/v1/auth/public-key/"
+
+            response = requests.get(
+                url,
+                timeout=10,
+                cert=("/etc/ssl/gateway.crt", "/etc/ssl/gateway.key"),
+                verify="/etc/ssl/ca.crt"
+            )
+
+            if response.status_code == 200:
+                self.public_key = response.json().get("public_key") # Ou response.json() si c'est un JSON
+            else:
+                raise RuntimeError("Impossible de récupérer la clé publique JWT")
+        except RuntimeError as e:
+            raise(e)
+        
     # def get_public_key(self):
     #     try:
     #         response = requests.get(f"http://auth:8000/api/v1/auth/public-key/")
@@ -125,7 +146,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         await self.kick()
 
     async def kick(self, close_code=1008, message="kick"):
-        print(self.player_name, message)
+        print(self.consumer_name, message)
         try:
             await self.send(text_data=dumps({"action": "disconnect"}))
         except:

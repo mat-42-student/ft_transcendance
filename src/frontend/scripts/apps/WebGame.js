@@ -1,4 +1,4 @@
-import { state, isTokenExpiringSoon } from '../main.js';
+import { state, delay } from '../main.js';
 import { GameBase } from './GameBase.js';
 import * as LEVELS from '../game3d/gameobjects/levels/levels.js';
 
@@ -66,20 +66,26 @@ export class WebGame extends GameBase {
             return;
         }
 
+        // websocat --insecure wss://nginx:3000/game/1234/?t=<state.client.accessToken>
+        // websocat ws://pong:8006/game/1234/?t=<state.client.accessToken>
+
         this.socket.onerror = async function(e) {
             console.error('Game socket: onerror:', e);
 			await state.mmakingApp.socketGameError();
         };
 
         this.socket.onopen = async function(e) {
+            this.openTime = Date.now();
             console.log('onopen', this)
             this.send(JSON.stringify({
-                // 'from': state.client.userName,
                 'action' :"wannaplay!",
                 })
             );
 
 			await state.mmakingApp.socketGameGood();
+            await delay(10);
+            if (! this.isReady)
+                this.close()
         };
 
         this.socket.onclose = async function(e) {

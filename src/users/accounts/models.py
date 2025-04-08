@@ -47,8 +47,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     email = models.EmailField(
         max_length=254,
-        blank=True,
-        null=True,
         unique=True,
     )
     avatar = models.ImageField(

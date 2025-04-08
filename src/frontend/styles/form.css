@@ -1,8 +1,10 @@
 /* Injected form styles */
 
-/* Ensure form and containers use same width */
-#auth-form, 
-#auth-form form, 
+
+#two-factor-card,
+#two-factor-card div,
+#auth-form,
+#auth-form form,
 #auth-form div {
     width: 100%;
     margin: 0;
@@ -10,11 +12,10 @@
     box-sizing: border-box;
 }
 
-/* Remove default spacing between form elements */
 #auth-form form {
     display: flex;
     flex-direction: column;
-    gap: 10px; /* Uniform spacing */
+    gap: 10px;
 }
 
 #dynamic-card-content input {

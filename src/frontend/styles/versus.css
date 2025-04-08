@@ -1,6 +1,9 @@
 /* Game menu styles */
 #game-menu {
-    text-align: center;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 #game-menu h2 {

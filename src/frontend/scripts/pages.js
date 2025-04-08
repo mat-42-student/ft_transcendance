@@ -28,7 +28,7 @@ function updateProfileUI(data) {
     actionsEl.innerHTML = generateProfileActions(data);
 
     // Mettre à jour l'historique des parties
-    updateGamesHistory(data.last_games);
+    // updateGamesHistory(data.last_games);
 }
 
 // Fonction pour mettre à jour l'historique des parties

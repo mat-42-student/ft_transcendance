@@ -26,14 +26,39 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.http import HttpResponse
 from django.core.cache import cache
+import json
+from redis import Redis
+import time
 
-# class SecureAPIView(APIView):
-#     authentication_classes = [OAuth2Authentication]
-#     permission_classes = [TokenHasScope]
-#     required_scopes = ['read']
+def getStatus(user_id, channel="auth_social"):
+    """
+    Evaluate if a user is already logged in.
+    """
+    redis = Redis.from_url("redis://redis:6379", decode_responses=True)
 
-#     def get(self, request):
-#         return Response({"message": "Authenticated via OAuth2 CCF"})
+    test = 10
+    data = {
+        'user_id': user_id
+    }
+    status = None
+    print(data)  # debug
+    
+    redis.publish(channel, json.dumps(data))
+    
+    while status is None and test >= 0:
+        try:
+            status = redis.get(f'is_{user_id}_logged')
+            print(f'GET status = {status}')  # debug
+            if status is not None:
+                return status
+        except Exception as e:
+            print(f"Error occurred: {str(e)}")
+            return None
+        
+        time.sleep(0.1)
+        test -= 1
+    
+    return None
 class PublicKeyView(APIView):
     permission_classes = [AllowAny]
 
@@ -82,6 +107,11 @@ class LoginView(APIView):
 
         user = User.objects.filter(email=email).first()
 
+        user_status = getStatus(user.id)
+
+        if user_status != "offline":
+            return Response({"success": False, "error": "User already logged in"}, status=400)
+
         if user is None:
             raise AuthenticationFailed('User not found!')
         
@@ -99,7 +129,7 @@ class LoginView(APIView):
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user"
@@ -168,7 +198,7 @@ class RefreshTokenView(APIView):
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=1),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user"
@@ -288,6 +318,14 @@ class OAuthLoginView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
+        # username = request.data.get("username")
+        # user = User.objects.filter(username=username).first()
+
+        # if user != None:
+        #     user_status = getStatus(user.id)
+        #     if user_status != "offline":
+        #         return Response({"success": False, "error": "User already logged in"}, status=400)
+        
         state = generate_state()
         request.session['oauth_state'] = state
         params = {
@@ -315,7 +353,7 @@ class OAuthCallbackView(APIView):
             'redirect_uri': settings.OAUTH2_ACF_REDIRECT_URI,
         }
         token_url = 'https://api.intra.42.fr/oauth/token'
-        token_response = requests.post(token_url, data=token_data)
+        token_response = requests.post(token_url, data=token_data, timeout=10)
 
         if token_response.status_code != 200:
             return Response({"error": "Failed token exchange"}, status=status.HTTP_400_BAD_REQUEST)
@@ -326,7 +364,7 @@ class OAuthCallbackView(APIView):
 
         me_url = 'https://api.intra.42.fr/v2/me'
         headers = {"Authorization": f"Bearer {access_token}"}
-        profile_resp = requests.get(me_url, headers=headers)
+        profile_resp = requests.get(me_url, headers=headers, timeout=10)
         if profile_resp.status_code != 200:
             return Response({"error": "Could not fetch 42 user info"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -374,7 +412,7 @@ class OAuthCallbackView(APIView):
                 </head>
                 <body>
                     <script>
-                        window.location.href = "/";
+                        window.location.href = "/#profile";
                     </script>
                     <p>Redirecting to profile...</p>
                 </body>

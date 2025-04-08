@@ -1,11 +1,5 @@
 networks:
-  nginx-network:
-    driver: bridge
-  db-network:
-    driver: bridge
-  redis-network:
-    driver: bridge
-  deep-network:
+  dev-network:
     driver: bridge
 
 volumes:
@@ -28,6 +22,9 @@ services:
     volumes:
       - ./auth:/app
       - static_volume:/app/staticfiles
+      - ./certs/services/auth/auth.crt:/etc/ssl/auth.crt:ro
+      - ./certs/services/auth/auth.key:/etc/ssl/auth.key:ro
+      - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -37,10 +34,7 @@ services:
       - .env
     restart: on-failure
     networks:
-      - nginx-network
-      - db-network
-      - redis-network
-      - deep-network
+      - dev-network
 
   users:
     container_name: users
@@ -53,12 +47,13 @@ services:
     volumes:
       - ./users:/app
       - ./media:/media
+      - ./certs/services/users/users.crt:/etc/ssl/users.crt:ro
+      - ./certs/services/users/users.key:/etc/ssl/users.key:ro
+      - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
     env_file:
       - .env
     networks:
-      - db-network
-      - nginx-network
-      - deep-network
+      - dev-network
     restart: on-failure
     # healthcheck:
     #   test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
@@ -84,10 +79,11 @@ services:
         condition: service_started 
     volumes:
       - ./chat/:/app
+      - ./certs/services/chat/chat.crt:/etc/ssl/chat.crt:ro
+      - ./certs/services/chat/chat.key:/etc/ssl/chat.key:ro
+      - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
     networks:
-      - db-network
-      - redis-network
-      - deep-network
+      - dev-network
     restart: on-failure
 
   social:
@@ -99,14 +95,16 @@ services:
       - .env
     volumes:
       - ./social_project/:/app
+      - ./certs/services/social/social.crt:/etc/ssl/social.crt:ro
+      - ./certs/services/social/social.key:/etc/ssl/social.key:ro
+      - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
     depends_on:
       redis:
         condition: service_started 
       auth:
         condition: service_started 
     networks:
-      - redis-network
-      - deep-network
+      - dev-network
     restart: on-failure
 
   gateway:
@@ -118,16 +116,16 @@ services:
       - .env
     volumes:
       - ./gateway/:/app
+      - ./certs/services/gateway/gateway.crt:/etc/ssl/gateway.crt:ro
+      - ./certs/services/gateway/gateway.key:/etc/ssl/gateway.key:ro
+      - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
     depends_on:
       matchmaking:
         condition: service_started
     expose:
       - "8057"
     networks:
-      - nginx-network
-      - db-network
-      - redis-network
-      - deep-network
+      - dev-network
     restart: on-failure
 
   matchmaking:
@@ -139,6 +137,9 @@ services:
       - .env
     volumes:
       - ./matchmaking:/app
+      - ./certs/services/matchmaking/matchmaking.crt:/etc/ssl/matchmaking.crt:ro
+      - ./certs/services/matchmaking/matchmaking.key:/etc/ssl/matchmaking.key:ro
+      - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -149,20 +150,18 @@ services:
     expose:
       - "8000"
     networks:
-      - db-network
-      - redis-network
-      - deep-network
-      - nginx-network
+      - dev-network
     restart: on-failure
 
   nginx:
     container_name: nginx
     image: nginx
     build:
-      context: nginx
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: nginx/Dockerfile
     ports:
-      - "3000:443"
+      - "3000:443"    # Public port (frontend)
+      - "8443:8443"   # Internal port (backend services)
     depends_on:
       - users
       - auth
@@ -172,8 +171,9 @@ services:
       - ./media:/media
       - ./frontend:/usr/share/nginx/frontend
       - static_volume:/app/staticfiles
+      - ./certs/ca/ca.crt:/etc/nginx/ssl/ca.crt:ro
     networks:
-      - nginx-network
+      - dev-network
     restart: on-failure
 
   pong:
@@ -185,14 +185,15 @@ services:
       - .env
     volumes:
       - ./pong/:/app
+      - ./certs/services/pong/pong.crt:/etc/ssl/pong.crt:ro
+      - ./certs/services/pong/pong.key:/etc/ssl/pong.key:ro
+      - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
     depends_on:
       - redis
     expose:
       - "8006"
     networks:
-      - nginx-network
-      - db-network
-      - redis-network
+      - dev-network
     restart: on-failure
 
   cli:
@@ -200,7 +201,7 @@ services:
     image: alpine
     command: sh -c "apk add --no-cache websocat bash && trap 'exit 0' TERM; sleep infinity & wait"
     networks:
-      - nginx-network
+      - dev-network
 
   postgres:
     container_name: postgres
@@ -212,7 +213,7 @@ services:
     env_file:
       - .env
     networks:
-      - db-network
+      - dev-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d transcendance -U toto"]
       interval: 1s
@@ -226,6 +227,6 @@ services:
     expose:
       - "6379"
     networks:
-      - redis-network
+      - dev-network
     restart: on-failure
 

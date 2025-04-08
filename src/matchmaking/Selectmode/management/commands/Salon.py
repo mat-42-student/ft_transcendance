@@ -8,7 +8,7 @@ class Salon():
         
     def __str__(self):
         for value in self.players.values():
-            return(f'Salon : {value} type_game: {self.type_game}')
+            return(f'Players : {value} type_game: {self.type_game}')
 
     def getDictPlayers(self):
         players = {}

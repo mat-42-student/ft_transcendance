@@ -1,6 +1,6 @@
 import json
 # import jwt
-# import requests
+import requests
 import time
 from asyncio import create_task, sleep as asleep
 from redis.asyncio import from_url #type: ignore
@@ -109,6 +109,24 @@ class PongConsumer(AsyncWebsocketConsumer):
     #     except jwt.InvalidTokenError as e:
     #         print(e)
     #     return None
+
+    def get_public_key(self):
+        try:
+            url = "https://nginx:8443/api/v1/auth/public-key/"
+            response = requests.get(
+                url,
+                timeout=10,
+                cert=("/etc/ssl/pong.crt", "/etc/ssl/pong.key"),
+                verify="/etc/ssl/ca.crt"
+            )
+
+            if response.status_code == 200:
+                self.public_key = response.json().get("public_key")
+            else:
+                raise RuntimeError("Impossible de récupérer la clé publique JWT")
+        except RuntimeError as e:
+            print(e)
+            raise(e)
 
     # def get_public_key(self):
     #     try:
@@ -277,6 +295,9 @@ class PongConsumer(AsyncWebsocketConsumer):
             await self.send(json.dumps(data))
         except:
             pass
+        await self.channel_layer.group_send( # really useful ? Would be better to send rather than group_send
+            self.room_group_name, {"type": "handle.message", "message": {"action": "ready"}}
+        )
         if self.master:
             create_task(self.game.play())
 
@@ -308,7 +329,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def disconnect_now(self, event):
     # If self.game.over, game was stopped beacuse maxscore has been reached
     # If not, game was stopped because one player left
-        if not self.connected:
+        if not self.connected or not self.side:
             return
         if event["side"] != "server":
             await self.declare_quit({"quitter": 1 - self.side})

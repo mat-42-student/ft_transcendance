@@ -49,7 +49,7 @@ export class MainSocket {
 					state.mmakingApp.incomingMsg(data);
 					break;
 				case 'notify':
-					console.log("mainSocket : incoming notify");
+					// console.log("mainSocket : incoming notify");
 					state.socialApp.incomingNotify();
 					break;
 				default:

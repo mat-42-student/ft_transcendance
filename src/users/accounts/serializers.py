@@ -175,12 +175,18 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'username': {
                 'min_length': 2, 
                 'max_length': 50,
-                'label': 'Username'
+                'label': 'Username',
+                'error_messages': {
+                    'unique': 'Username is already taken.'
+                }
             },
             'email': {
                 'min_length': 5, 
                 'max_length': 100,
-                'label': 'Email'
+                'label': 'Email',
+                'error_messages': {
+                    'unique': 'Email is already registered.'
+                }
             },
             'password': {
                 'write_only': True,
@@ -241,7 +247,7 @@ class GameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Game
-        fields = ['id', 'result', 'player1', 'player2', 'score1', 'score2', 'date', 'tournament', 'tournament_organizer']
+        fields = ['id', 'result', 'player1', 'player2', 'score_player1', 'score_player2', 'date', 'tournament', 'tournament_organizer']
 
     def get_result(self, obj):
         """
@@ -250,9 +256,9 @@ class GameSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         user = request.user
         if user == obj.player1:
-            return "Victory" if obj.score1 > obj.score2 else "Defeat"
+            return "Victory" if obj.score_player1 > obj.score_player2 else "Defeat"
         elif user == obj.player2:
-            return "Victory" if obj.score2 > obj.score1 else "Defeat"
+            return "Victory" if obj.score_player2 > obj.score_player1 else "Defeat"
         return "Not Involved"
 
     def get_tournament(self, obj):

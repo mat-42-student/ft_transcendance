@@ -1,7 +1,7 @@
 import { state } from '../main.js';
 import { MainSocket } from './MainSocket.js';
 import { verifyToken } from '../api/auth.js';
-import { ft_fetch } from '../main.js';
+import { resetPendingCountDisplay } from '../components/friend_requests.js';
 
 export class Client{
 
@@ -35,6 +35,7 @@ export class Client{
     }
 
     async logout() {
+        resetPendingCountDisplay();
         this.userId = null;
         this.userName = null;
         this.accessToken = null;
@@ -70,6 +71,7 @@ export class Client{
         if (this.state.socialApp) {
             await this.state.socialApp.fetchFriends();
             await this.state.socialApp.getInfos();
+            await this.state.socialApp.getPendingCount();
         }
         if (this.state.chatApp)
             this.state.chatApp.renderChat();
