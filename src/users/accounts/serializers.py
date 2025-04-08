@@ -175,12 +175,18 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'username': {
                 'min_length': 2, 
                 'max_length': 50,
-                'label': 'Username'
+                'label': 'Username',
+                'error_messages': {
+                    'unique': 'Username is already taken.'
+                }
             },
             'email': {
                 'min_length': 5, 
                 'max_length': 100,
-                'label': 'Email'
+                'label': 'Email',
+                'error_messages': {
+                    'unique': 'Email is already registered.'
+                }
             },
             'password': {
                 'write_only': True,

@@ -34,7 +34,8 @@ class Command(BaseCommand):
         self.REDIS_GROUPS = {
             "gateway": "deep_social",
             "info": "info_social",
-            "users": "users_social",
+            # "users": "users_social",
+            "auth": "auth_social",
         }
         print(f"Subscribing to channels: {', '.join(self.REDIS_GROUPS.values())}")
         await self.pubsub.subscribe(*self.REDIS_GROUPS.values())
@@ -50,8 +51,8 @@ class Command(BaseCommand):
                     if channel == self.REDIS_GROUPS['info']:
                         await self.info_process(data)
                         continue
-                    if channel == self.REDIS_GROUPS['users']:
-                        await self.users_process(data)
+                    if channel == self.REDIS_GROUPS['auth']:
+                        await self.auth_process(data)
                         continue
                     if self.valid_social_json(data):
                         await self.social_process(data)
@@ -126,6 +127,20 @@ class Command(BaseCommand):
             status = self.user_status.get(user_id, "offline")
         key = f"user_{user_id}_status"
         print(f"publish info : {key, status}")
+        await self.redis_client.set(key, status, ex = 2)
+
+        
+    async def auth_process(self, data):
+        """ answers backend requests on channel 'auth_social' """
+        try:
+            user_id = int(data.get('user_id', 'x'))
+        except Exception as e:
+            print(e)
+            return
+        if user_id:
+            status = self.user_status.get(user_id, "offline")
+        key = f"is_{user_id}_logged"
+        print(f"publish info : {key, status}") #debug
         await self.redis_client.set(key, status, ex = 2)
 
     def get_friend_list(self, user_id):
