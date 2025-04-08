@@ -366,7 +366,7 @@ class OAuthCallbackView(APIView):
                 </head>
                 <body>
                     <script>
-                        window.location.href = "/";
+                        window.location.href = "/#profile";
                     </script>
                     <p>Redirecting to profile...</p>
                 </body>
