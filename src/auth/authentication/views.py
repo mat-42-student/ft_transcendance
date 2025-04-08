@@ -317,15 +317,7 @@ class Disable2FAView(APIView):
 class OAuthLoginView(APIView):
     permission_classes = [AllowAny]
 
-    def get(self, request):
-        # username = request.data.get("username")
-        # user = User.objects.filter(username=username).first()
-
-        # if user != None:
-        #     user_status = getStatus(user.id)
-        #     if user_status != "offline":
-        #         return Response({"success": False, "error": "User already logged in"}, status=400)
-        
+    def get(self, request):        
         state = generate_state()
         request.session['oauth_state'] = state
         params = {
@@ -373,6 +365,12 @@ class OAuthCallbackView(APIView):
         ft_email = profile_data.get("email", "")
         ft_login = profile_data.get("login", "")
 
+        # user = User.objects.filter(email=ft_email).first()
+        # if user != None:
+        #     user_status = getStatus(user.id)
+        #     if user_status != "offline":
+        #         return Response({"success": False, "error": "User already logged in"}, status=400)  
+
         try:
             ft_profile = Ft42Profile.objects.get(ft_id=ft_id)
             user = ft_profile.user
@@ -385,6 +383,14 @@ class OAuthCallbackView(APIView):
             ft_profile = Ft42Profile.objects.create(
                 user=user,
                 ft_id=ft_id
+            )
+
+        # Check if user is allowed to log in
+        user_status = getStatus(user.id)
+        if user_status != "offline":
+            return Response(
+                {"error": "User already logged in"}, 
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         ft_profile.access_token = access_token
