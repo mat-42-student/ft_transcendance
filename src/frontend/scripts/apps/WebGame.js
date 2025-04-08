@@ -1,4 +1,4 @@
-import { state, delay } from '../main.js';
+import { state } from '../main.js';
 import { GameBase } from './GameBase.js';
 import * as LEVELS from '../game3d/gameobjects/levels/levels.js';
 
@@ -83,9 +83,6 @@ export class WebGame extends GameBase {
             );
 
 			await state.mmakingApp.socketGameGood();
-            await delay(10);
-            if (! this.isReady)
-                this.close()
         };
 
         this.socket.onclose = async function(e) {

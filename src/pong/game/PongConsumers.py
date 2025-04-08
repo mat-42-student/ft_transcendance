@@ -329,7 +329,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def disconnect_now(self, event):
     # If self.game.over, game was stopped beacuse maxscore has been reached
     # If not, game was stopped because one player left
-        if not self.connected or not self.side:
+        if not self.connected:
             return
         if event["side"] != "server":
             await self.send(json.dumps({"action": "game_cancelled"}))
