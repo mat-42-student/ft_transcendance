@@ -1,6 +1,6 @@
-import { state, isTokenExpiringSoon } from '../main.js';
+import { state, delay } from '../main.js';
 import { GameBase } from './GameBase.js';
-import * as LEVELS from '../game3d/gameobjects/levels/_exports.js';
+import * as LEVELS from '../game3d/gameobjects/levels/levels.js';
 
 
 export class WebGame extends GameBase {
@@ -33,7 +33,7 @@ export class WebGame extends GameBase {
         super.frame(delta, time);
     }
 
-    close() {
+    close(youCancelled) {
         try {
             this.socket.close();
             this.socket = null;
@@ -43,7 +43,13 @@ export class WebGame extends GameBase {
             document.getElementById("keyhint-versus").style.display = "none";
         } catch {}
 
-        super.close();
+        try {
+            if (youCancelled) {
+                this.level.endShowYouRagequit();
+            }
+        } catch {}
+
+        super.close(youCancelled);
     }
 
 
@@ -69,19 +75,22 @@ export class WebGame extends GameBase {
         };
 
         this.socket.onopen = async function(e) {
+            this.openTime = Date.now();
             console.log('onopen', this)
             this.send(JSON.stringify({
-                // 'from': state.client.userName,
                 'action' :"wannaplay!",
                 })
             );
 
 			await state.mmakingApp.socketGameGood();
+            await delay(10);
+            if (! this.isReady)
+                this.close()
         };
 
         this.socket.onclose = async function(e) {
             if (state.gameApp instanceof WebGame) {
-                state.gameApp.close();
+                state.gameApp.close(false);
             }
         };
 
@@ -101,9 +110,16 @@ export class WebGame extends GameBase {
             if (data.action != 'info') { console.log('Game packet:', data.action, ', data = ', data); }
 
             if (data.action == 'init') {
+                wg.receivedInit = true;
                 wg.side = Number(data.side);
                 wg.playerNames[0] = data.lplayer;
                 wg.playerNames[1] = data.rplayer;
+                // Did we load before the server was ready? Then report it now.
+                if (state.engine.scene != null) {
+                    wg.sendLoadReady();
+                } else {
+                    wg.needToReportLoaded = true;
+                }
             }
             if (data.action == "info") {
                 wg.ballPosition.x = data.ball[0];
@@ -121,18 +137,11 @@ export class WebGame extends GameBase {
                 if (wg.level)  wg.level.pause(Number(data.time));
             }
             if (data.action == "disconnect") {
-                wg.close();
-            }
-            if (data.action == "ready") {
-                // Did we load before the server was ready? Then report it now.
-                if (state.engine.scene != null) {
-                    wg.sendLoadReady();
-                } else {
-                    wg.needToReportLoaded = true;
-                }
+                wg.close(false);
             }
             if (data.action == "game_cancelled") {
-                wg.level.endShowWebQuit(data.quitter, [...wg.playerNames]);
+                const opponentName = state.gameApp.playerNames[1 - state.gameApp.side];
+                wg.level.endShowWebOpponentQuit(opponentName);
             }
             if (data.action == "game_won") {
                 wg.level.endShowWinner(data.scores, data.winner, [...wg.playerNames]);
@@ -142,7 +151,7 @@ export class WebGame extends GameBase {
 
 
     #sendInput() {
-        if (!this.isReady || !state.isPlaying || this.socket.readyState != this.socket.OPEN)
+        if (!this.receivedInit || !state.isPlaying || this.socket.readyState != this.socket.OPEN)
             return;
 
         let currentInput = state.input.getPaddleInput(this.side);
@@ -157,9 +166,10 @@ export class WebGame extends GameBase {
     }
 
     sendLoadReady() {
-        if (this.isReady)
+        if (!this.receivedInit) {
+            console.error('Refused to send load_complete');
             return;
-        this.isReady = true;
+        }
 
         this.needToReportLoaded = false;
         this.socket.send(JSON.stringify({

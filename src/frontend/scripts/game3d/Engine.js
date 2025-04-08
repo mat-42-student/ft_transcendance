@@ -2,8 +2,12 @@ import { state } from '../main.js';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import * as UTILS from '../utils.js';
 import LevelBase from './gameobjects/levels/LevelBase.js';
+import LevelError from './gameobjects/levels/LevelError.js';
 
 
 export class Engine {
@@ -50,11 +54,22 @@ export class Engine {
 		{  // Setup ThreeJS
 			this.#renderer = new THREE.WebGLRenderer({
 				canvas: this.#html_canvas,
-				antialias: true,
+				antialias: false,  // AA is turned on in EffectComposer's render target.
 				powerPreference: "high-performance",
 			});
+			this.renderer.setAnimationLoop(this.animationLoop.bind(this))
 			this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
 			this.renderer.toneMappingExposure = 1;
+
+			{  // Post processing
+				this.#effectComposer = new EffectComposer(this.renderer);
+				this.#effectComposer.renderTarget1.samples = 8;  // Turn on antialiasing.
+
+				this.#renderPass = new RenderPass(null, null);
+				this.#effectComposer.addPass(this.#renderPass);
+
+				this.#effectComposer.addPass(new OutputPass());
+			}  // Post processing
 
 			this.fontLoader = new FontLoader();
 			this.fontLoader.load(
@@ -70,8 +85,31 @@ export class Engine {
 		this.#resizeObserver.observe(this.#html_mainContent);
 		window.addEventListener('resize', resizeCallback);
 
-		// Debugging tool
+		// Debugging tools
 		window.pause = () => { window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS = true; };
+		window.THREE = THREE;
+	}
+
+
+	animationLoop() {
+		if (window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS) {
+			window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS = undefined;
+			debugger;
+		}
+
+		try {
+			const delta = this.#clock.getDelta();
+			const time = this.#clock.elapsedTime;
+
+			if (this.scene) {
+				if (state && state.gameApp) {
+					state.gameApp.frame(delta, time)
+				}
+				this.render(delta, time);
+			}
+		} catch (error) {
+			console.error('ThreeJS Animation Loop: Error:', error);
+		}
 	}
 
 
@@ -80,11 +118,6 @@ export class Engine {
 	 * @param {DOMHighResTimeStamp} time requestAnimationFrame() can give this value.
 	 */
 	render(delta, time) {
-		if (window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS) {
-			window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS = undefined;
-			debugger;
-		}
-
 		if (this.scene == null) {
 			return;
 		}
@@ -94,8 +127,6 @@ export class Engine {
 		}
 
 		this.#updateAutoResolution(delta);
-
-		this.isProcessingFrame = true;
 
 		{  // Game logic update
 			this.paramsForAddDuringRender = {delta: delta, time: time};
@@ -115,10 +146,9 @@ export class Engine {
 			this.paramsForAddDuringRender = null;
 		}
 
-		// if (state.gameApp && this.scene)
-			this.renderer.render(this.scene, this.scene.smoothCamera.camera);
-
-		this.isProcessingFrame = false;
+		this.#renderPass.scene = this.scene;
+		this.#renderPass.camera = this.scene.smoothCamera.camera;
+		this.#effectComposer.render();
 	}
 
 
@@ -138,12 +168,29 @@ export class Engine {
 	}
 
 
+	showLoadingErrorScene() {
+		if (this.scene != null || this.errorScene) {
+			console.warn('This function was called improperly.');
+			return;
+		}
+
+		console.log('Scene loading was interrupted. Now showing error scene.');
+		this.errorScene = new LevelError();
+	}
+
+
 	// MARK: Private
 
 	#DEBUG_MODE = false;
 
 	/** @type {THREE.WebGLRenderer} */
 	#renderer;
+
+	/** @type {EffectComposer} */
+	#effectComposer;
+
+	/** @type {RenderPass} */
+	#renderPass;
 
 	#gltfLoader = new GLTFLoader();
 
@@ -162,11 +209,14 @@ export class Engine {
 	/** @type {HTMLElement} */
 	#html_mainContent;
 
+	#clock = new THREE.Clock(true);
+
 
 	#onResize() {
 		const rect = this.#html_container.getBoundingClientRect();
 		this.#updateAutoResolution();
 		this.renderer.setSize(rect.width, rect.height);
+		this.#effectComposer.setSize(rect.width, rect.height);
 		if (this.scene && this.scene.smoothCamera) {
 			this.scene.smoothCamera.aspect = rect.width / rect.height;
 		}
@@ -180,9 +230,9 @@ export class Engine {
 
 
 	#updateAutoResolution() {
-		const fullres = window.devicePixelRatio;
-		const lowres = fullres / 2;
-		this.renderer.setPixelRatio(UTILS.shouldPowersave() ? lowres : fullres);
+		const res = UTILS.shouldPowersave() ? window.devicePixelRatio / 2 : window.devicePixelRatio;
+		this.renderer.setPixelRatio(res);
+		this.#effectComposer.setPixelRatio(res);
 	}
 
 };

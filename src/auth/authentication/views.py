@@ -26,6 +26,39 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.http import HttpResponse
 from django.core.cache import cache
+import json
+from redis import Redis
+import time
+
+def getStatus(user_id, channel="auth_social"):
+    """
+    Evaluate if a user is already logged in.
+    """
+    redis = Redis.from_url("redis://redis:6379", decode_responses=True)
+
+    test = 10
+    data = {
+        'user_id': user_id
+    }
+    status = None
+    print(data)  # debug
+    
+    redis.publish(channel, json.dumps(data))
+    
+    while status is None and test >= 0:
+        try:
+            status = redis.get(f'is_{user_id}_logged')
+            print(f'GET status = {status}')  # debug
+            if status is not None:
+                return status
+        except Exception as e:
+            print(f"Error occurred: {str(e)}")
+            return None
+        
+        time.sleep(0.1)
+        test -= 1
+    
+    return None
 class PublicKeyView(APIView):
     permission_classes = [AllowAny]
 
@@ -73,6 +106,11 @@ class LoginView(APIView):
         code = request.data.get('totp')
 
         user = User.objects.filter(email=email).first()
+
+        user_status = getStatus(user.id)
+
+        if user_status != "offline":
+            return Response({"success": False, "error": "User already logged in"}, status=400)
 
         if user is None:
             raise AuthenticationFailed('User not found!')
@@ -279,7 +317,7 @@ class Disable2FAView(APIView):
 class OAuthLoginView(APIView):
     permission_classes = [AllowAny]
 
-    def get(self, request):
+    def get(self, request):        
         state = generate_state()
         request.session['oauth_state'] = state
         params = {
@@ -327,6 +365,12 @@ class OAuthCallbackView(APIView):
         ft_email = profile_data.get("email", "")
         ft_login = profile_data.get("login", "")
 
+        # user = User.objects.filter(email=ft_email).first()
+        # if user != None:
+        #     user_status = getStatus(user.id)
+        #     if user_status != "offline":
+        #         return Response({"success": False, "error": "User already logged in"}, status=400)  
+
         try:
             ft_profile = Ft42Profile.objects.get(ft_id=ft_id)
             user = ft_profile.user
@@ -339,6 +383,14 @@ class OAuthCallbackView(APIView):
             ft_profile = Ft42Profile.objects.create(
                 user=user,
                 ft_id=ft_id
+            )
+
+        # Check if user is allowed to log in
+        user_status = getStatus(user.id)
+        if user_status != "offline":
+            return Response(
+                {"error": "User already logged in"}, 
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         ft_profile.access_token = access_token

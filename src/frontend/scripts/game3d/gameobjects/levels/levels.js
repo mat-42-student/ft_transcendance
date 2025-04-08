@@ -1,6 +1,6 @@
-import LevelDebug from './debug/LevelDebug.js';
 import { state } from '../../../main.js';
 import LevelBase from './LevelBase.js';
+import LevelDebug from './debug/LevelDebug.js';
 
 
 export const LIST = {
