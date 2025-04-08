@@ -140,8 +140,7 @@ export class WebGame extends GameBase {
                 wg.close(false);
             }
             if (data.action == "game_cancelled") {
-                let opponentName = 'a Javascript exception';
-                try { opponentName = wg.playerNames[data.quitter]; } catch {}
+                const opponentName = state.gameApp.playerNames[1 - state.gameApp.side];
                 wg.level.endShowWebOpponentQuit(opponentName);
             }
             if (data.action == "game_won") {
