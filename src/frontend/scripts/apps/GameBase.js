@@ -16,7 +16,7 @@ export class GameBase {
 		this.scores = [0, 0];
 		this.paddlePositions = [0, 0];
 		this.paddleHeights = [0, 0];
-		this.playerNames = ['Uninitialized', 'Uninitialized'];
+        this.playerNames = ['-', '-'];
 		state.engine.scene = null;
 	}
 
