@@ -8,6 +8,14 @@ export function updatePendingCountDisplay() {
     }
 }
 
+export function resetPendingCountDisplay() {
+    const pendingBadge = document.getElementById('pending-count');
+    if (pendingBadge) {
+        pendingBadge.textContent = "";
+        // pendingBadge.style.display = state.socialApp.pendingCount > 0 ? 'inline' : 'none';
+    }
+}
+
 // Création de l'élément <li> pour chaque utilisateur
 export async function createRequestItem(user) {
     const listItem = createElement('li', 'request-item');

@@ -146,14 +146,14 @@ export class SocialApp{
         // add by Adrien
         btnMatch.dataset.invite = 0;
         btnMatch.classList.add(`btn-match-${friend.id}`);
-
+        btnMatch.addEventListener('click', this.handleMatchClick);
         btnChat.addEventListener('click', this.handleChatClick);
         username.addEventListener('click', () => this.handleUsernameClick(friend.id));
     }
 
-    handleChatClick(event) {
+    async handleChatClick(event) {
         const friendId = event.currentTarget.dataset.friendId;
-        state.chatApp.changeChatUser(friendId);
+        await state.chatApp.changeChatUser(friendId);
     }
 
     handleMatchClick(friendId) {

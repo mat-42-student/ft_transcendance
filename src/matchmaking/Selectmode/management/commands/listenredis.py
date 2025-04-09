@@ -125,6 +125,7 @@ class Command(BaseCommand):
     
     # Update and verif if the new status is set
     async def checkStatus(self, player, status):
+        print(f'Checkstatus Start')
         statusSetBySocial = None
         numberTry = 5
         
@@ -168,25 +169,22 @@ class Command(BaseCommand):
                         break 
                 if (already_player):
                     print(f'Player find in salon: {already_player}')
+                    player = already_player
                     break
                         
             # Check if player want give up the search or is disconnect
-            if ((already_player and body.get('cancel') == True) or body.get('disconnect') or body.get('cancel') == True):
-                if (already_player):
-                    status = await already_player.getStatus(self.redis_client, self.channel_social)
-
+            if ((player and body.get('cancel') == True) or body.get('disconnect')):
+                player.user_id = header['id']
+                if (body.get('disconnect') is None):
+                    status = await player.getStatus(self.redis_client, self.channel_social)
                 else:
-                    player.user_id = header['id']
-                    if (await self.checkStatus(player, "online") == False):
-                        return False
-                    status = None
-
+                    status = 'offline'
                 
-                if (already_player == False or status == 'ingame' or status == 'online' or status == 'offline'):
+                if (status == 'ingame' or status == 'online' or status == 'offline'):
                     salonOfPlayer = None
-                    checkDelete = await self.deletePlayer(salonOfPlayer, header['id'])
-                elif (already_player and status == 'pending'):
-                    checkDelete = await self.deletePlayer(salonOfPlayer, already_player)
+                    checkDelete = await self.deletePlayer(salonOfPlayer, player)
+                elif (status == 'pending'):
+                    checkDelete = await self.deletePlayer(salonOfPlayer, player)
                 if (checkDelete == False):
                     print(f"player is not delete")
                 if (salonOfPlayer is not None and len(salonOfPlayer.players) < 1):
@@ -198,27 +196,45 @@ class Command(BaseCommand):
 
             if (already_player):
                 return already_player
-    
+
             player.user_id = header['id']
             player.type_game = body['type_game']
             return (player)
         except Exception as e:
             print(f'Manage player failed: {e}')
-            
     
     # Cancel invitaiton if i receive just "cancel" (offline)
-    async def cancelInvitationOfflinePlayer(self, player):
-        print(f'CancelInvitationOfllinePlayer for player: {player}')
+    async def cancelInvitationOfflinePlayer(self, playerId):
+        print(f'CancelInvitationOfllinePlayer for player: {playerId}')
+        
+        salonTodelete = []
+        
         for salon in self.salons['invite']:
             for gamer in salon.players.values():
-                for guest in gamer.guests.values():
-                    if (guest.user_id == player):
-                        print(f'Cancel invitation to host')
-                        await self.cancelInvitation(gamer.user_id, guest.user_id, 'guest_id')
-                    if (gamer.user_id == player):
-                        await self.cancelInvitation(guest.user_id, player, 'host_id')
+                if (not isinstance(gamer, Guest)):
+                    if (gamer.user_id == playerId):
+                        salonTodelete.append(salon)
+                    try:
+                        for guest in gamer.guests.values():
+                            if (guest.user_id == playerId):
+                                print(f'Cancel invitation to host')
+                                await self.cancelInvitation(gamer.user_id, guest.user_id, 'guest_id')
+                                if (await self.checkStatus(gamer, 'online') == False):
+                                    print(f'Checkstatus {gamer} is failed')
+                            if (gamer.user_id == playerId):
+                                await self.cancelInvitation(guest.user_id, playerId, 'host_id')
+                                if (await self.checkStatus(guest, 'online') == False):
+                                    print(f'Checkstatus {guest} is failed')
+                    except Exception as e:
+                        print(f'gamer iteration failed: {e}')
+                elif(isinstance(gamer, Guest)):
+                    salonTodelete.append(salon)
+                    
+        for salon in salonTodelete:
+            self.deleteSalon(salon)
+                    
     
-    async def cancelTournamentOfflinePlayer(self, playerId):
+    async def cancelTournamentGamesPlayerTurnOffline(self, playerId):
         print(f"CancelTournamentOfflinePlayer by {playerId} in tournament")
         for tournament in self.games['tournament']:
             for gameId, game in self.games['tournament'][tournament].items():
@@ -244,10 +260,10 @@ class Command(BaseCommand):
         try:
             # Cancel offline or ingame
             if (salon is None):
-                await self.cancelInvitationOfflinePlayer(player)
-                if (await self.cancelTournamentOfflinePlayer(player) == False):
+                await self.cancelInvitationOfflinePlayer(player.user_id)
+                if (await self.cancelTournamentGamesPlayerTurnOffline(player.user_id) == False):
                     print(f'Player {player} not found in tournament game')
-                    return False
+                    
                 return True
 
             # Cancel invitation if guest and host are in the salon (pending)
@@ -446,6 +462,7 @@ class Command(BaseCommand):
         # Check status player
         
         if (obj_invite.get('startgame')):
+            print("star Game with mode Invite")
             if (await self.launchInviteGame(player)):
                 return 
         status = await player.getStatus(self.redis_client, self.channel_social)
@@ -502,14 +519,16 @@ class Command(BaseCommand):
                                 salon.players.update({guestid: guest })
                                 
                                 # update status Guest
-                                if (await self.checkStatus(guest, 'pending') == False):
+                                guest_status = await guest.getStatus(self.redis_client, self.channel_social)
+                                if ( guest_status == 'online' and await self.checkStatus(guest, 'pending') == False):
                                     print('invitation -> checkstatus failed')
                                 await self.invitationGameToGuest(guest, host, True)
 
 
                                 
                         # Host
-                        if (await self.checkStatus(host, 'pending') == False):
+                        host_status = await host.getStatus(self.redis_client, self.channel_social)
+                        if (host_status == 'online' and await self.checkStatus(host, 'pending') == False):
                             print('invitation -> checkstatus failed')
                         await self.invitationGameToHost(host, player, True)
 

@@ -15,6 +15,12 @@
     flex-shrink: 0;
 }
 
+.chat-header img{
+    width: 1.5rem;
+    height: 1.5rem;
+    transition: transform 0.2s;
+}
+
 .chat-body {
     flex-grow: 1;
     padding: 0.5rem;

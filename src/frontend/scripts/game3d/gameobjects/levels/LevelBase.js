@@ -73,11 +73,13 @@ export default class LevelBase extends THREE.Scene {
 		this.pendingEndHide = true;
 	}
 
-	/** Override in each level. Should say the game was forfeited. Only for web game. */
-	endShowWebQuit(
-		quitter = NaN,
-		playerNames = ['?1', '?2'],
-	) {
+	/** Override in each level. Only for web game, when the other player has forfeited. */
+	endShowWebOpponentQuit(opponentName) {
+		this.pendingEndHide = true;
+	}
+
+	/** Override in each level. Only for web game, when you have forfeited. */
+	endShowYouRagequit() {
 		this.pendingEndHide = true;
 	}
 

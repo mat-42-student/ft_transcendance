@@ -1,4 +1,4 @@
-import { state, toggleHeaderButtons } from '../main.js';
+import { state, selectVisibleHeader } from '../main.js';
 import { initDynamicCard, closeDynamicCard } from '../components/dynamic_card.js';
 import { WebGame } from './WebGame.js';
 
@@ -329,10 +329,10 @@ export class Mmaking
 				closeDynamicCard();
 				if (this.gameId != null) {
 					if (state.gameApp != null)
-						state.gameApp.close();
+						state.gameApp.close(true);
 					state.gameApp = new WebGame('debug');
 					state.gameApp.launchGameSocket(this.gameId);
-					toggleHeaderButtons(true);
+					selectVisibleHeader(true);
 					this.game = false;
 					btnTournament[0].removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);
 					btnRandom.removeEventListener('click', this.boundEventListenersClient.btnSearchRandomGame);
@@ -479,30 +479,6 @@ export class Mmaking
 
 		await this.renderMatchmaking();
 	}
-
-    bindLocalBotButton() {
-        const button = document.getElementById('btn-local-bot');
-        button.addEventListener('click', () => {
-            if (state.gameApp != null) {
-                console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
-                return;
-            }
-
-            state.gameApp = new LocalGame(true);
-        });
-    }
-
-    bindLocal1v1Button() {
-        const button = document.getElementById('btn-local-versus');
-        button.addEventListener('click', () => {
-            if (state.gameApp != null) {
-                console.warn('Already playing, ignoring');  //TODO do this more nicely maybe
-                return;
-            }
-
-            state.gameApp = new LocalGame(false);
-        });
-    }
 
     async sendMsg(message)
 	{

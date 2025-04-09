@@ -1,10 +1,12 @@
 import { state } from '../main.js';
+import { apiRequest } from '../api/users.js';
 
 export class ChatApp{
 
     constructor(){
         this.doDOMThings();
         this.storedMessages = new Map(); // map to store messages with keys = userid and value = array of messages
+        this.mutedUsers = new Set(); // set to store muted users
         this.activeChatUserId = null; // Change value by calling loadHistory 
     }
 
@@ -13,20 +15,50 @@ export class ChatApp{
         this.chatInput = document.getElementById('chat-input');
         this.chatUser = document.getElementById('chat-user');
         this.chatBody = document.getElementById('chat-body');
+        this.chatMute = document.getElementById('chat-mute');
         this.chatForm.addEventListener('submit', this.chatFormListener.bind(this));
+        this.chatMute.addEventListener('click', this.chatMuteListener.bind(this));
+    }
+
+    async isChatUserMuted() {
+        const muted = await apiRequest(`/api/v1/users/${this.activeChatUserId}/muted/`);
+        if (muted == null)
+            return false;
+        return muted;
+    }
+
+    async chatMuteListener(event) {
+        if (this.activeChatUserId == null)
+            return;
+        const muted = await this.isChatUserMuted();
+        if (!muted)
+            await apiRequest(`/api/v1/users/${this.activeChatUserId}/block/`, "POST");
+        else
+            await apiRequest(`/api/v1/users/${this.activeChatUserId}/unblock/`, "DELETE");
+        await this.renderMute();
+    }
+
+    async renderMute() {
+        if (this.activeChatUserId == null)
+            return;
+        const muted = await this.isChatUserMuted();
+        if (muted)
+            this.chatMute.src = "/ressources/unmute.png";
+        else
+            this.chatMute.src = "/ressources/mute.png";
     }
 
     chatFormListener(event) {
-    // Triggered when I send a message to my friend
-        event.preventDefault(); // don't send the form
-        let message = this.chatInput.value.trim() || '';
-        if (this.activeChatUserId && message !== '') {
-            this.storeMyMessage(message);
-            this.postMyMessage(message);
-            this.sendMsg(this.activeChatUserId, message);
-            this.chatInput.value = '';
-        }
-    }
+        // Triggered when I send a message to my friend
+            event.preventDefault(); // don't send the form
+            let message = this.chatInput.value.trim() || '';
+            if (this.activeChatUserId && message !== '') {
+                this.storeMyMessage(message);
+                this.postMyMessage(message);
+                this.sendMsg(this.activeChatUserId, message);
+                this.chatInput.value = '';
+            }
+        }    
 
     incomingMsg(data) {
         const friend = data.body.from;
@@ -86,14 +118,14 @@ export class ChatApp{
         this.chatBody.appendChild(myDiv);
     }
 
-    changeChatUser(friendId){
+    async changeChatUser(friendId){
         friendId = Number(friendId);
         if(friendId === this.activeChatUserId)
             return;
         if (!this.storedMessages.has(friendId))
             this.storedMessages.set(friendId, []);
         this.activeChatUserId = Number(friendId);
-        this.renderChat();
+        await this.renderChat();
     }
 
     loadHistory() {
@@ -119,7 +151,7 @@ export class ChatApp{
         this.chatBody = null;
     }
 
-    renderChat() {
+    async renderChat() {
         this.chatBody.replaceChildren();
         const friend = state.socialApp.getFriend(this.activeChatUserId);
         if (!friend)
@@ -128,6 +160,7 @@ export class ChatApp{
         this.noUnreadMessage();
         this.loadHistory();
         this.chatInput.disabled = false;
+        await this.renderMute();
     }
 
     hasUnreadMessage(friend) {

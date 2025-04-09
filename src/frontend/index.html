@@ -32,7 +32,7 @@
 
 <body>
     <header>
-        <div class="container">
+        <div id="header-notplaying" class="container">
             <!-- Homepage Button -->
             <div class="header-left">
                 <a id="btn-home">Home</a>
@@ -40,7 +40,6 @@
 
             <!-- Navbar -->
             <!-- <nav class="selection-bar"> -->
-                <button id="btn-quit-game" class="selection-item" type="button" style="display: none;">Quit Match</button>
                 <button id="btn-local-bot" class="selection-item" type="button">Solo</button>
                 <button id="btn-local-versus" class="selection-item" type="button">Local Versus</button>
                 <button id="versus" class="selection-item" type="button">Versus</button>
@@ -61,6 +60,9 @@
                 <a id="btn-profile">Sign in</a>
             </div>
         </div>
+        <div id="header-ingame" class="container" style="display: none;">
+            <button id="btn-quit-game" class="selection-item" type="button">Quit Match</button>
+        </div>
     </header>
 
     <main>
@@ -71,6 +73,7 @@
                 <!-- Contact Username -->
                 <div class="chat-header">
                     <span class="friend-name" id="chat-user" userId="0">Chat</span>
+                    <img src="/ressources/mute.png" alt="mute" id="chat-mute">
                 </div>
                 <!-- Messages -->
                 <div class="chat-body" id="chat-body">
@@ -110,11 +113,6 @@
         </div>
         <div id="engine-loading">Loading...</div>
     </main>
-
-    <footer>
-        <div class="container">
-        </div>
-    </footer>
 
     <!-- Dynamic Card -->
     <div id="dynamic-card-container" class="hidden">

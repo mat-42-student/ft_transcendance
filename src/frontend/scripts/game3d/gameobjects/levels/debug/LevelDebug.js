@@ -91,9 +91,11 @@ export default class LevelDebug extends LevelBase {
 					let facing = 0;
 					switch (this.viewIndex) {
 						case 0:
-							facing = UTILS.RAD90;
-						case 1:
 							facing = -UTILS.RAD90;
+							break;
+						case 1:
+							facing = UTILS.RAD90;
+							break;
 					}
 					object3d.rotateZ(facing)
 				});
@@ -110,7 +112,7 @@ export default class LevelDebug extends LevelBase {
 			if (state.gameApp && state.gameApp.level) {
 				state.engine.scene = state.gameApp.level;
 			} else {
-				console.warn('LevelDebug.js: Fake loading: Level was never added to engine, disposing.');
+				state.engine.showLoadingErrorScene();
 				this.dispose();
 			}
 		}).bind(this);
@@ -121,7 +123,9 @@ export default class LevelDebug extends LevelBase {
 	onFrame(delta, time) {
 		super.onFrame(delta, time);
 
-		if (this.gameInitialized != true && state.gameApp != null) {
+		if (this.gameInitialized != true && state.gameApp != null
+			&& state.gameApp.playerNames[0] != '-'
+		) {
 			this.gameInitialized = true;
 			this.nameTextMeshes[0].setText(state.gameApp.playerNames[0]);
 			this.nameTextMeshes[1].setText(state.gameApp.playerNames[1]);
@@ -167,17 +171,32 @@ export default class LevelDebug extends LevelBase {
 		this.gameEndObjects.add(text);
 	}
 
-	endShowWebQuit(
-		quitter = NaN,
-		playerNames = ['?1', '?2'],
-	) {
-		super.endShowWebQuit(quitter, playerNames);
+	endShowWebOpponentQuit(opponentName) {
+		super.endShowWebOpponentQuit(opponentName);
 
 		if (!state.engine.scene)  // Game end before loading completed. Just give up
 			return;
 
 		this.#endClear();
-		const text = new TextMesh(this.textMaterial, `${playerNames[quitter]}\nquit!`);
+		const text = new TextMesh(this.textMaterial,
+			`Your opponent\n${opponentName}\nquit!\n`
+			+ "This match will show\nas a win on your\nprofile.\n"
+		);
+		text.rotateX(-UTILS.RAD90);
+		text.rotateZ(UTILS.RAD180);
+		this.gameEndObjects.add(text);
+	}
+
+	endShowYouRagequit() {
+		super.endShowYouRagequit();
+
+		if (!state.engine.scene)  // Game end before loading completed. Just give up
+			return;
+
+		this.#endClear();
+		const text = new TextMesh(this.textMaterial,
+			`don't ragequit!\nThis match will show\nas a loss on your\nprofile.`
+		);
 		text.rotateX(-UTILS.RAD90);
 		text.rotateZ(UTILS.RAD180);
 		this.gameEndObjects.add(text);
