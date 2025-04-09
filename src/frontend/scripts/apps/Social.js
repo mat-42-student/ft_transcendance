@@ -151,9 +151,9 @@ export class SocialApp{
         username.addEventListener('click', () => this.handleUsernameClick(friend.id));
     }
 
-    handleChatClick(event) {
+    async handleChatClick(event) {
         const friendId = event.currentTarget.dataset.friendId;
-        state.chatApp.changeChatUser(friendId);
+        await state.chatApp.changeChatUser(friendId);
     }
 
     handleMatchClick(friendId) {

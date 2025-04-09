@@ -3,7 +3,7 @@ import { ft_fetch } from '../main.js';
 
 const apiBase = '/api/v1/users';
 
-async function apiRequest(endpoint, method = 'GET', body = null) {
+export async function apiRequest(endpoint, method = 'GET', body = null) {
     if (!state.client.accessToken) {
         console.error("User is not connected");
         return;
