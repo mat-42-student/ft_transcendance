@@ -23,6 +23,7 @@ function updateProfileUI(data) {
 
     document.getElementById("profile-username").textContent = data.username;
     document.getElementById("profile-avatar").src = data.avatar;
+    // document.getElementById("profile").classList.add(data.status);
 
     const actionsEl = document.getElementById("profile-actions");
     actionsEl.innerHTML = generateProfileActions(data);
