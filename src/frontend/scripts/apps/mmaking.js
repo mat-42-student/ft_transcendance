@@ -41,6 +41,25 @@ export class Mmaking
 		this.bracket = false;
     }
 
+	update_friendList()
+	{
+
+		for (let [key, value] of state.socialApp.friendList)
+			{
+				const keyNumber = Number(key);
+				if (keyNumber != NaN)
+				{
+					console.log(keyNumber)
+					if (!this.invited_by[keyNumber] && !this.guests[keyNumber])
+					{
+						this.invited_by[keyNumber] = false;
+						this.guests[keyNumber] = false;
+						this.buildEventsbtnInvite(keyNumber);
+					}
+				}
+			}
+	}
+
 	async buildEventsbtnInvite(keyNumber)
 	{
 		const btnmatch = document.querySelector(`.btn-match-${keyNumber}`);

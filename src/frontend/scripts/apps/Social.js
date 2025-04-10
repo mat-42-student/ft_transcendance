@@ -19,7 +19,7 @@ export class SocialApp{
         await this.fetchFriends();
         this.getPendingCount();
         await this.getInfos();
-		await state.mmakingApp.renderMatchmaking();
+		await state.mmakingApp.update_friendList();
     }
 
     async fetchFriends() {
