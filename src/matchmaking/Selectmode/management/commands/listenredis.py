@@ -208,6 +208,7 @@ class Command(BaseCommand):
         print(f'CancelInvitationOfllinePlayer for player: {playerId}')
         
         salonTodelete = []
+        status = 'offline'
         
         for salon in self.salons['invite']:
             for gamer in salon.players.values():
@@ -219,11 +220,11 @@ class Command(BaseCommand):
                             if (guest.user_id == playerId):
                                 print(f'Cancel invitation to host')
                                 await self.cancelInvitation(gamer.user_id, guest.user_id, 'guest_id')
-                                if (await self.checkStatus(gamer, 'online') == False):
+                                if (status != await gamer.getStatus(self.redis_client, self.channel_social) and await self.checkStatus(gamer, 'online') == False):
                                     print(f'Checkstatus {gamer} is failed')
                             if (gamer.user_id == playerId):
                                 await self.cancelInvitation(guest.user_id, playerId, 'host_id')
-                                if (await self.checkStatus(guest, 'online') == False):
+                                if (status != await guest.getStatus(self.redis_client, self.channel_social) and await self.checkStatus(guest, 'online') == False):
                                     print(f'Checkstatus {guest} is failed')
                     except Exception as e:
                         print(f'gamer iteration failed: {e}')
@@ -454,6 +455,20 @@ class Command(BaseCommand):
         
     #############      INVITE     #############
     
+    
+    async def while_status_is_different_to_offline(self, player):
+        try_out = 10
+        status = await player.getStatus(self.redis_client, self.channel_social)
+        while(status != 'offline' and try_out >= 0):
+            status = await player.getStatus(self.redis_client, self.channel_social)
+            
+            try_out -= 1
+        
+        if (try_out < 0):
+            return True
+        return False
+    
+    
     # Process to invite
     async def invitation(self, player, obj_invite):
 
@@ -496,41 +511,58 @@ class Command(BaseCommand):
                 
                 # Need this variable to delete salon if Guets has already invited friend
 
-
                 # Research salon of the host
                 for salon in self.salons['invite']:
                     host = salon.players.get(host_id)
                     if (host):
-                        # Delete everywhere we find guests and host
-                        await self.deleteEverywhereGuestAndHost(player, host_id=host_id)
-                        # Guest
-                        for guestid in list(host.guests):
-                            # Cancel invitation of other guests of host
-                            if (guestid != player.user_id):
-                                await self.cancelInvitation(guestid, host.user_id, 'host_id')
-                                await self.cancelInvitation(host_id, guestid, 'guest_id')
-                                del host.guests[guestid]
-                            # Add guest to salon by Host
-                            else:
-                                # Setup Guest
-                                guest = host.guests[guestid]
-                                guest.get_user()
-                                guest.type_game = 'invite'
-                                salon.players.update({guestid: guest })
-                                
-                                # update status Guest
-                                guest_status = await guest.getStatus(self.redis_client, self.channel_social)
-                                if ( guest_status == 'online' and await self.checkStatus(guest, 'pending') == False):
-                                    print('invitation -> checkstatus failed')
-                                await self.invitationGameToGuest(guest, host, True)
+                        try:
+                            check_status = asyncio.create_task(self.while_status_is_different_to_offline(host))
+
+                            # Delete everywhere we find guests and host
+                            await self.deleteEverywhereGuestAndHost(player, host_id=host_id)
+                            # Guest
+                            for guestid in list(host.guests):
+                                # Cancel invitation of other guests of host
+                                if (guestid != player.user_id):
+                                    await self.cancelInvitation(guestid, host.user_id, 'host_id')
+                                    await self.cancelInvitation(host_id, guestid, 'guest_id')
+                                    del host.guests[guestid]
+                                # Add guest to salon by Host
+                                else:
+                                    # Setup Guest
+                                    guest = host.guests[guestid]
+                                    guest.get_user()
+                                    guest.type_game = 'invite'
+                                    salon.players.update({guestid: guest })
+                                    
+                                    # update status Guest
+                                    guest_status = await guest.getStatus(self.redis_client, self.channel_social)
+                                    if ( guest_status == 'online' and await self.checkStatus(guest, 'pending') == False):
+                                        print('invitation -> checkstatus failed')
+                                    await self.invitationGameToGuest(guest, host, True)
 
 
-                                
-                        # Host
-                        host_status = await host.getStatus(self.redis_client, self.channel_social)
-                        if (host_status == 'online' and await self.checkStatus(host, 'pending') == False):
-                            print('invitation -> checkstatus failed')
-                        await self.invitationGameToHost(host, player, True)
+                                    
+                            # Host
+                            host_status = await host.getStatus(self.redis_client, self.channel_social)
+                            if (not await check_status):
+                                await self.invitationGameToGuest(player, host, False)
+                                await self.invitationGameToHost(host, player, False)
+                                print("Host is was offline while the execution")
+                                return
+                            
+                            if (await self.checkStatus(host, 'pending') != False):
+                                await self.invitationGameToHost(host, player, True)
+                        finally:
+                            print(f'STAAAAAAAATUUUUUSSSSSSS {check_status.done()}')
+                            if not check_status.done():
+                                check_status.cancel()
+                                try:
+                                    await check_status
+                                except asyncio.CancelledError:
+                                    print("La tâche asynchrone a été annulée.")
+
+                            
 
 
                         

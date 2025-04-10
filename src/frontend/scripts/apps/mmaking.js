@@ -69,6 +69,8 @@ export class Mmaking
 
 	async renderMatchmaking()
 	{
+		if (this.cancel == true)
+			this.cancelState();
 		await this.renderHost();
 		await this.renderGuest();
 		await this.renderRandom();
@@ -232,7 +234,9 @@ export class Mmaking
 
 		btnTournament[0].addEventListener('click', this.boundEventListenersClient.eventSearchTournament);
 		btnRandom.addEventListener('click', this.boundEventListenersClient.btnsearchRandomGame);
-	}
+
+		this.cancel = false
+	} 
 
 	async btnInviteDesactive(key)
 	{
@@ -558,7 +562,6 @@ export class Mmaking
 				{
 					this.guests[invite.guest_id] = false;
 					this.salonHost = false;
-
 				}
 
 			}
@@ -567,6 +570,7 @@ export class Mmaking
 				this.btnSearchTournamentActive = false;
 				this.btnsearchRandomisActive = false;
 			}
+			this.cancel = true;
 		}
 		// Routing to communication mode Invite
         else if (data.body.invite)
@@ -591,13 +595,13 @@ export class Mmaking
 			}
 			else if (invite.guest_id)
 			{
-				if (invite.accept == true)
+				if (invite.accept == true && this.guests[invite.guest_id] == null)
 				{
 					this.guests[invite.guest_id] = true;
 					this.salonHost = true;
 
 				}
-				else if (invite.accept == false)
+				else if (invite.accept == false && this.guests[invite.guest_id] == null)
 				{
 					this.guests[invite.guest_id] = false;
 				}
