@@ -92,42 +92,10 @@ function generateProfileActions(data) {
                 <img src="/ressources/logout.png" alt="Logout">
             </button>
         `;
-    } else if (data.has_blocked_user) {
-        return `<p>Vous avez été mis en sourdine par cet utilisateur.</p>
-                <button data-action="match" data-user-id="${data.id}" title="Match">
-                    <img src="/ressources/vs.png" alt="Match">
-                </button>
-                <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
-                    <img src="/ressources/remove-friend.png" alt="Remove Friend">
-                </button>
-        `;
-        
-    } else if (data.is_blocked_by_user) {
-        return `
-            <p>Vous avez mis en sourdine cet utilisateur.</p>
-            <button data-action="match" data-user-id="${data.id}" title="Match">
-                <img src="/ressources/vs.png" alt="Match">
-            </button>
-            <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
-                <img src="/ressources/remove-friend.png" alt="Remove Friend">
-            </button>
-            <button data-action="unblock" data-user-id="${data.id}" title="Unblock">
-                <img src="/ressources/unblock.png" alt="Unblock">
-            </button>
-        `;
     } else if (data.is_friend) {
         return `
-            <button data-action="match" data-user-id="${data.id}" title="Match">
-                <img src="/ressources/vs.png" alt="Match">
-            </button>
-            <button data-action="chat" data-user-id="${data.id}" title="Chat">
-                <img src="/ressources/chat.png" alt="Chat">
-            </button>
             <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
                 <img src="/ressources/remove-friend.png" alt="Remove Friend">
-            </button>
-            <button data-action="block" data-user-id="${data.id}" title="Block">
-                <img src="/ressources/block.png" alt="Block">
             </button>
         `;
     } else {
@@ -165,10 +133,10 @@ async function handleProfileAction(action, userId) {
         case "update":
             initDynamicCard('update'); // À implémenter
             break;
-        case "match":
-        case "chat":
-            console.log(`Action ${action} non encore implémentée.`);
-            break;
+        // case "match":
+        // case "chat":
+        //     console.log(`Action ${action} non encore implémentée.`);
+        //     break;
         default:
             if (!userId) {
                 console.error("ID utilisateur manquant pour l'action:", action);
@@ -178,3 +146,63 @@ async function handleProfileAction(action, userId) {
             break;
     }
 }
+
+// function generateProfileActions(data) {
+//     if (data.is_self) {
+//         return `
+//             <button data-action="2fa" data-user-id="${data.id}" title="Enable Two-Factor Authentication">
+//                 <img src="/ressources/2fa.svg" alt="Enable 2fa">
+//             </button>
+//             <button data-action="update" data-user-id="${data.id}" title="Update Profile">
+//                 <img src="/ressources/update.png" alt="Update Profile">
+//             </button>
+//             <button data-action="logout" data-user-id="${data.id}" title="Logout">
+//                 <img src="/ressources/logout.png" alt="Logout">
+//             </button>
+//         `;
+//     } else if (data.has_blocked_user) {
+//         return `<p>Vous avez été mis en sourdine par cet utilisateur.</p>
+//                 <button data-action="match" data-user-id="${data.id}" title="Match">
+//                     <img src="/ressources/vs.png" alt="Match">
+//                 </button>
+//                 <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
+//                     <img src="/ressources/remove-friend.png" alt="Remove Friend">
+//                 </button>
+//         `;
+        
+//     } else if (data.is_blocked_by_user) {
+//         return `
+//             <p>Vous avez mis en sourdine cet utilisateur.</p>
+//             <button data-action="match" data-user-id="${data.id}" title="Match">
+//                 <img src="/ressources/vs.png" alt="Match">
+//             </button>
+//             <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
+//                 <img src="/ressources/remove-friend.png" alt="Remove Friend">
+//             </button>
+//             <button data-action="unblock" data-user-id="${data.id}" title="Unblock">
+//                 <img src="/ressources/unblock.png" alt="Unblock">
+//             </button>
+//         `;
+//     } else if (data.is_friend) {
+//         return `
+//             <button data-action="match" data-user-id="${data.id}" title="Match">
+//                 <img src="/ressources/vs.png" alt="Match">
+//             </button>
+//             <button data-action="chat" data-user-id="${data.id}" title="Chat">
+//                 <img src="/ressources/chat.png" alt="Chat">
+//             </button>
+//             <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
+//                 <img src="/ressources/remove-friend.png" alt="Remove Friend">
+//             </button>
+//             <button data-action="block" data-user-id="${data.id}" title="Block">
+//                 <img src="/ressources/block.png" alt="Block">
+//             </button>
+//         `;
+//     } else {
+//         return `
+//             <button data-action="add-friend" data-user-id="${data.id}" title="Add Friend">
+//                 <img src="/ressources/add-friend.png" alt="Add a Friend">
+//             </button>
+//         `;
+//     }
+// }

@@ -38,8 +38,8 @@ const cardInitializers = {
         window.location.hash = '#signin';
         document.getElementById('oauth-submit')?.addEventListener('click', () => {
             localStorage.setItem('cookieSet', true);
-            // comment on sait si le OAuth est refusé ? 
-            // Idealement dans ce cas on devrait localStorage.removeItem('cookieSet');
+            // How do we know if OAuth is denied?
+            // Ideally in that case we should localStorage.removeItem('cookieSet');
             window.location.href = 'https://localhost:3000/api/v1/auth/oauth/login/';
         });
         document.querySelectorAll('#auth-form a[data-action]').forEach(link => {
@@ -58,7 +58,7 @@ const cardInitializers = {
 
         try {
             if (!state.socialApp) {
-                console.error("state.socialApp n'est pas initialisé");
+                console.error("state.socialApp is not initialized");
                 return;
             }
 
@@ -68,7 +68,7 @@ const cardInitializers = {
             const requestsArray = Array.from(state.socialApp.friendReceivedRequests.values());
 
             if (requestsArray.length === 0) {
-                requestList.innerHTML = '<li class="no-requests">Aucune demande en attente.</li>';
+                requestList.innerHTML = '<li class="no-requests">No pending requests.</li>';
             } else {
                 for (const user of requestsArray) {
                     const listItem = await createRequestItem(user);
@@ -76,14 +76,14 @@ const cardInitializers = {
                 }
             }
         } catch (error) {
-            console.error("Erreur lors du chargement des requêtes d'amis :", error);
+            console.error("Error loading friend requests:", error);
         }
     },
     'update': async () => {
         const updateForm = document.getElementById('update-profile-form');
 
         if (!updateForm) {
-            console.error("Formulaire de mise à jour non trouvé.");
+            console.error("Update form not found.");
             return;
         }
 
@@ -91,7 +91,7 @@ const cardInitializers = {
             event.preventDefault();
             const formData = new FormData(updateForm);
 
-            // Supprimer les champs vides du FormData
+            // Remove empty fields from FormData
             for (const [key, value] of formData.entries())
                 if (!value)
                     formData.delete(key);
@@ -100,21 +100,20 @@ const cardInitializers = {
                 const response = await updateProfile(formData, state.client.userId);
 
                 if (response) {
-                    alert("Profil mis à jour avec succès !");
-                    closeDynamicCard();
+                    displaySuccessMessage("Successfuly updated data.")
+                    // closeDynamicCard();
                     initProfilePage(state.client.userId);
                 } else {
-                    alert("Mise à jour échouée.");
+                    displayErrorMessage("Update failed.")
                 }
             } catch (error) {
-                alert("Une erreur est survenue lors de la mise à jour.");
-                console.error("Erreur lors de la mise à jour du profil :", error);
+                displayErrorMessage("An error occurred during the update.")
+                console.error("Error updating profile:", error);
             }
         });
     },
-    // Ajoute d'autres initialisations spécifiques ici
+    // Add other specific initializations here
 };
-
 export async function initDynamicCard(routeKey) {
     const cardContainer = document.getElementById('dynamic-card-container');
     const cardContent = document.getElementById('dynamic-card-content');
@@ -144,6 +143,18 @@ export function closeDynamicCard() {
     if (cardContainer)
         cardContainer.classList.add('hidden');
     window.history.replaceState({}, '', `#home`);
+}
+
+function displayErrorMessage(message) {
+    const updateProfileErrorContainer = document.getElementById('update-profile-error');
+    updateProfileErrorContainer.textContent = message;
+    updateProfileErrorContainer.classList.remove('hidden');
+}
+
+function displaySuccessMessage(message) {
+    const updateProfileSuccessContainer = document.getElementById('update-profile-success');
+    updateProfileSuccessContainer.textContent = message;
+    updateProfileSuccessContainer.classList.remove('hidden');
 }
 
 /*

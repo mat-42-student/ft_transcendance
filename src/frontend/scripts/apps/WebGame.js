@@ -16,7 +16,6 @@ export class WebGame extends GameBase {
 
         this.side = 2;  // Set to neutral until server tells us
         this.level = new (LEVELS.LIST[levelName])();
-        this.playerNames[0] = this.playerNames[1] = '-';
     }
 
     frame(delta, time) {
@@ -75,7 +74,6 @@ export class WebGame extends GameBase {
         };
 
         this.socket.onopen = async function(e) {
-            this.openTime = Date.now();
             console.log('onopen', this)
             this.send(JSON.stringify({
                 'action' :"wannaplay!",

@@ -91,9 +91,11 @@ export default class LevelDebug extends LevelBase {
 					let facing = 0;
 					switch (this.viewIndex) {
 						case 0:
-							facing = UTILS.RAD90;
-						case 1:
 							facing = -UTILS.RAD90;
+							break;
+						case 1:
+							facing = UTILS.RAD90;
+							break;
 					}
 					object3d.rotateZ(facing)
 				});
@@ -121,7 +123,9 @@ export default class LevelDebug extends LevelBase {
 	onFrame(delta, time) {
 		super.onFrame(delta, time);
 
-		if (this.gameInitialized != true && state.gameApp != null) {
+		if (this.gameInitialized != true && state.gameApp != null
+			&& state.gameApp.playerNames[0] != '-'
+		) {
 			this.gameInitialized = true;
 			this.nameTextMeshes[0].setText(state.gameApp.playerNames[0]);
 			this.nameTextMeshes[1].setText(state.gameApp.playerNames[1]);
