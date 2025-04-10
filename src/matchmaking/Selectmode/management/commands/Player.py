@@ -86,7 +86,7 @@ class Player ():
             except asyncio.TimeoutError:
                 print("Timeout atteint lors de l'attente de Redis.")
                 return None
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.2)
             test -= 1
         return None
     
