@@ -140,6 +140,10 @@ export async function performUserAction(userId, action) {
 
     if (action === "add-friend" || action === "remove-friend")
         await state.socialApp.notifyUser(userId);
+		if (action === 'remove-friend')
+		{
+			state.mmakingApp.remove_friend(userId)
+		}
 
     try {
         const { url, method } = actions[action];

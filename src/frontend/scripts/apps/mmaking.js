@@ -41,6 +41,12 @@ export class Mmaking
 		this.bracket = false;
     }
 
+	remove_friend(friendId)
+	{
+		Reflect.deleteProperty(this.invited_by, friendId);
+		Reflect.deleteProperty(this.guests, friendId);
+	}
+
 	update_friendList()
 	{
 
