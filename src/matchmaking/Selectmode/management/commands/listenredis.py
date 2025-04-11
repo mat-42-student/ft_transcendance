@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from redis.asyncio import from_url
+import threading
 import json
 import asyncio
 from asyncio import run as arun, sleep as asleep, create_task
@@ -775,17 +776,25 @@ class Command(BaseCommand):
                 self.salons[player.type_game].clear()
 
         elif (salon.type_game == 'tournament'and len(self.salons[salon.type_game]) == self.maxPlayersTournament / 2 and self.allSalonsAreFull()):
+            statusPlayers = {}
             tournament = await sync_to_async(self.create_tournament)()
             if (tournament):
                 # send bracket to players
                 
+                # Set check refresh 
+                # Créer et démarrer les threads pour chaque tâche
+                        
                 self.games[player.type_game].update({tournament.id:{}})
+                
                 # send ingame to players
                 for salon in self.salons[player.type_game]:
                     idgame = await self.create_game(salon.type_game, salon, tournament)
-                    await self.send_1vs1(salon, idgame)
                     self.games[player.type_game][tournament.id].update({idgame: salon})
+                
                     
+                for key, value in self.games[player.type_game][tournament.id].items():
+                    await self.send_1vs1(value, key)
+                
                 self.salons[player.type_game].clear()
 
     # check salons
@@ -1139,8 +1148,17 @@ class Command(BaseCommand):
                 round = await sync_to_async(self.nextRoundTournament)(gamesOfTournament)
                 if (round is not None):
                     await self.sendNextRoundToClient(gamesOfTournament)
-            else:
+            elif(game.round == self.roundMax + 1):
                 await self.endGame(game)
+                try:
+                    tournament = await sync_to_async(getattr)(game, 'tournament')
+                    if (tournament is not None):
+                        if (self.games['tournament'][tournament.id][game.id]):
+                            del self.games['tournament'][tournament.id]
+                    
+                    self.display_games()
+                except Exception as e:
+                    print(f'delete tournament at the end failed: {e}')
         else:
             await self.endGame(game)
             
@@ -1185,6 +1203,7 @@ class Command(BaseCommand):
                 print(f'Send engame failed: {e}')
         
         try:
+
             if (self.games[gameInCache.type_game][game.id]):
                 del self.games[gameInCache.type_game][game.id]
         except Exception as e:
