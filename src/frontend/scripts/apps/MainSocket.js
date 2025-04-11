@@ -18,7 +18,8 @@ export class MainSocket {
 		this.socket = new WebSocket(socketURL);
 		state.chatApp = new ChatApp();
 		state.socialApp = new SocialApp();
-		await state.socialApp.getFriends();
+		// console.log("init");
+		// await state.socialApp.render();
 		// state.socialApp.startPollingPendingCount();  // Lancement automatique du polling
 		state.mmakingApp = new Mmaking();
 
@@ -50,7 +51,7 @@ export class MainSocket {
 					break;
 				case 'notify':
 					// console.log("mainSocket : incoming notify");
-					state.socialApp.incomingNotify();
+					state.socialApp.smallRender();
 					break;
 				default:
 				console.warn('mainSocket : could not handle incoming JSON' + JSON.stringify(data, null, 2));

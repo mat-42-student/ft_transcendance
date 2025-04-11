@@ -64,7 +64,7 @@ function createElement(tag, className, attributes = {}, innerHTML = '', eventHan
 async function acceptFriendRequest(userId, listItem) {
     await state.socialApp.acceptFriendRequest(userId);  // Fonction de la logique de backend pour accepter
     listItem.remove();  // Retirer l'élément de la liste
-    state.socialApp.render();
+    state.socialApp.renderNotif();
     // state.socialApp.getPendingCount();
     // state.socialApp.getFriends();
     state.socialApp.notifyUser(userId);

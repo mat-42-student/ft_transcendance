@@ -69,9 +69,11 @@ export class Client{
     async globalRender() {
         this.renderProfileBtn();
         if (this.state.socialApp) {
-            await this.state.socialApp.fetchFriends();
-            await this.state.socialApp.getInfos();
-            await this.state.socialApp.getPendingCount();
+            console.log("globalRender");
+            await this.state.socialApp.render();
+            // await this.state.socialApp.fetchFriends();
+            // await this.state.socialApp.getInfos();
+            // await this.state.socialApp.getPendingCount();
         }
         if (this.state.chatApp)
             this.state.chatApp.renderChat();

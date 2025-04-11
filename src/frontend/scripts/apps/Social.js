@@ -7,47 +7,69 @@ import { ft_fetch } from '../main.js';
 export class SocialApp{
 
     constructor(){
-        this.friendList = null;
+        this.friendList = new Map();
         this.myStatus = null;
         this.friendReceivedRequests = new Map();
         this.friendSentRequests = new Map();
         this.pendingCount = 0;
-        // this.pollingInterval = null;
     }
 
     async render() {
-        await this.fetchFriends();
-        this.getPendingCount();
-        await this.getInfos();
-		await state.mmakingApp.update_friendList();
+        console.log("SocialApp render");
+        await this.updateFriendMap();
+        this.displayFriendList();
+        await this.renderNotif();
+        if (state.chatApp)
+            await state.chatApp.renderChat();
+        if (state.mmakingApp)
+            await state.mmakingApp.update_friendList();
     }
 
-    async fetchFriends() {
-        if (!state.client.accessToken) {
-            console.error("User is not connected");
+    async smallRender() {
+        console.log("SocialApp smallRender");
+        await this.updateFriendMap();
+        await this.renderNotif();
+        if (state.chatApp)
+            await state.chatApp.renderChat();
+        if (state.mmakingApp)
+            await state.mmakingApp.update_friendList();
+    }
+
+    async renderNotif() {
+        this.getPendingCount();
+        await this.getInfos();
+    }
+
+    async updateFriendMap() {
+        const newList = await this.getFriendMap();
+        if (newList == null || newList.size == 0)
             return;
+        for (const id of this.friendList.keys())
+            if (!newList.has(id)) this.deleteFriend(id);
+        for (const [id, friend] of newList.entries())
+            if (!this.friendList.has(id)) this.addFriend(id, friend);
+    }
+
+    deleteFriend(id) {
+        console.log("deleteFriend", id);
+        this.friendList.delete(id);
+        const htmlFriendList = document.querySelector('.friends-list');
+        if (!htmlFriendList)
+            return;
+        console.log("ok");
+        const friendItem = htmlFriendList.querySelector(`.friend-item-${id}`);
+        if (friendItem) {
+            console.log("removing");
+            friendItem.remove();
         }
-        try {
-            const response = await ft_fetch('api/v1/users/' + state.client.userId + '/friends/', {
-                headers: {
-                    'Authorization': `Bearer ${state.client.accessToken}`,
-                },
-            });
-            if (response.ok) {
-                const data = await response.json();
-                const friendsData = data.friends;
-                if (!friendsData) {
-                    console.error("Error fetching friends: ", friendsData);
-                    return;
-                }
-                this.friendList = new Map(friendsData.map(friend => [friend.id, friend]));
-            } else {
-                console.error("Error while loading friendList :", response.status);
-            }
-        } catch (error) {
-            console.error("Fetch error: ", error);
-        }
-        this.displayFriendList();
+    }
+
+    addFriend(id, friend) {
+        this.friendList.set(id, friend);
+        const htmlFriendList = document.querySelector('.friends-list');
+        if (!htmlFriendList)
+            return;
+        this.addFriendEntry(friend, htmlFriendList);
     }
 
     getFriend(id) {
@@ -59,11 +81,6 @@ export class SocialApp{
         this.removeAllFriendListeners();
         document.querySelector('.friends-list').innerHTML = '<p>Sign in to interact with friends</p>';
         this.friendList = null;
-    }
-
-    incomingNotify() {
-        // console.log('incomingNotify !');
-        this.render();
     }
 
     incomingMsg(data) {
@@ -111,7 +128,7 @@ export class SocialApp{
         });
         htmlFriendList.innerHTML = '';
         if (this.friendList == null || this.friendList.size == 0) {
-            htmlFriendList.innerHTML = '<p>I\'m sorry you have no friends</p>';
+            // htmlFriendList.innerHTML = '<p>I\'m sorry you have no friends</p>';
             return;
         }
         this.friendList.forEach((friend) => this.addFriendEntry(friend, htmlFriendList));
@@ -127,7 +144,7 @@ export class SocialApp{
                 <div class="friend-detail" data-user-id="${friend.id}">
                     <span class="friend-status ${friend.status}"></span>
                     <button class="btn-match"><img id=btn-match-picture-${friend.id} src="/ressources/vs.png"></button>
-                    <button class="btn-chat"><img src="/ressources/chat.png"></button>
+                    <button class="btn-chat"><img src="${state.chatApp.fixChatIcon(friend.id)}"></button>
                 </div>
             </div>
         `;
@@ -143,7 +160,7 @@ export class SocialApp{
 
         btnChat.dataset.friendId = friend.id;
         btnMatch.dataset.friendId = friend.id;
-        
+
         // add by Adrien
         btnMatch.dataset.invite = 0;
         btnMatch.classList.add(`btn-match-${friend.id}`);
@@ -215,10 +232,10 @@ export class SocialApp{
         }
     }
 
-    async getFriends() {
+    async getFriendMap() {
         const friends = await fetchFriends(state.client.userId);
-        this.friendList = new Map(friends.map(friend => [friend.id, friend]));
-        this.displayFriendList();
+        return new Map(friends.map(friend => [friend.id, friend]));
+        // this.displayFriendList();
     }
 
     async getReceivedRequests() {
