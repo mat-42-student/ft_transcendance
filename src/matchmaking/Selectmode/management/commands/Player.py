@@ -81,11 +81,12 @@ class Player ():
                 status = await redis.get(f'user_{self.user_id}_status')
                 print(f'GET status = {status}')
                 if (status is not None):
+                    redis.delete(f'user_{self.user_id}_status')
                     return (status)
             except asyncio.TimeoutError:
                 print("Timeout atteint lors de l'attente de Redis.")
                 return None
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.2)
             test -= 1
         return None
     

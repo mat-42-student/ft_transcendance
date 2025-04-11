@@ -9,6 +9,16 @@
     margin-left: 0;
 }
 
+.success-message {
+    color: rgb(0, 0, 0);
+
+    /* margin: 10px 0; shorthand for */
+    margin-top: 10px;
+    margin-right: 0;
+    margin-bottom: 10px;
+    margin-left: 0;
+}
+
 .hidden {
     display: none;
 }

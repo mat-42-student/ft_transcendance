@@ -167,6 +167,8 @@ async function handleAuthError(response) {
         handle2FA(response);
     } else if (errorData.detail === 'User not found' || errorData.detail === 'Incorrect password') {
         displayErrorMessage("Incorrect username or password.");
+    } else if (errorData.error === 'User already logged in') {
+        displayErrorMessage("User already logged in.");
     } else {
         if (errorData.username || errorData.email) {
             displayErrorMessage("Username or email already taken.");

@@ -19,6 +19,7 @@ export class SocialApp{
         await this.fetchFriends();
         this.getPendingCount();
         await this.getInfos();
+		await state.mmakingApp.update_friendList();
     }
 
     async fetchFriends() {
@@ -146,7 +147,7 @@ export class SocialApp{
         // add by Adrien
         btnMatch.dataset.invite = 0;
         btnMatch.classList.add(`btn-match-${friend.id}`);
-        btnMatch.addEventListener('click', this.handleMatchClick);
+        // btnMatch.addEventListener('click', state.mmakingApp.boundEventListenersFriend[friend.id].btnInviteDesactive);
         btnChat.addEventListener('click', this.handleChatClick);
         username.addEventListener('click', () => this.handleUsernameClick(friend.id));
     }
@@ -156,7 +157,8 @@ export class SocialApp{
         await state.chatApp.changeChatUser(friendId);
     }
 
-    handleMatchClick(friendId) {
+    handleMatchClick(event) {
+        const friendId = event.currentTarget.dataset.friendId;
         state.mmakingApp.btnInviteDesactive(friendId);
     }
 
