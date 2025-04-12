@@ -29,20 +29,6 @@ export async function apiRequest(endpoint, method = 'GET', body = null) {
         }
 
         return await response.json();
-        // const response = await fetch(endpoint, {
-        //     method: method,
-        //     headers: {
-        //         'Authorization': `Bearer ${state.client.accessToken}`,
-        //         'Content-Type': 'application/json',
-        //     },
-        //     body: body ? JSON.stringify(body) : null,
-        // });
-        
-        // if (!response.ok) {
-        //     throw new Error(`API Error (${response.status}): ${await response.text()}`);
-        // }
-        
-        // return await response.json();
     } catch (error) {
         console.error("Fetch error:", error);
     }
@@ -92,13 +78,6 @@ export async function fetchSentRequests() {
     }
 }
 
-// function updatePendingRequestCount(count) {
-//     const pendingCountElement = document.getElementById('pending-requests-count');
-//     if (pendingCountElement) {
-//         pendingCountElement.textContent = count > 0 ? `(${count})` : '';
-//     }
-// }
-
 export async function fetchPendingCount() {
     try {
         const data = await apiRequest(`${apiBase}/relationships/pending-count/`, 'GET');
@@ -138,15 +117,18 @@ export async function performUserAction(userId, action) {
         return;
     }
 
-    if (action === "add-friend" || action === "remove-friend")
-        await state.socialApp.notifyUser(userId);
-		if (action === 'remove-friend')
-			state.mmakingApp.remove_friend(userId)
     try {
         const { url, method } = actions[action];
         await apiRequest(url, method);
-        await state.socialApp.render();
-        return
+        // await state.socialApp.render();
+
+        if (action === "add-friend")
+            await state.socialApp.notifyUser(userId);
+        if (action === 'remove-friend') {
+            await state.socialApp.notifyUser(userId);
+            await state.socialApp.notifyUser(state.client.userId);
+            state.mmakingApp.remove_friend(userId)
+        }
     } catch (error) {
         console.error(`Erreur lors de l'action ${action}:`, error);
     }
