@@ -20,16 +20,12 @@ function updateProfileUI(data) {
         document.getElementById("profile-actions").innerHTML = "<p>Impossible de charger le profil.</p>";
         return;
     }
-
     document.getElementById("profile-username").textContent = data.username;
     document.getElementById("profile-avatar").src = data.avatar;
-    // document.getElementById("profile").classList.add(data.status);
 
     const actionsEl = document.getElementById("profile-actions");
     actionsEl.innerHTML = generateProfileActions(data);
-
-    // Mettre à jour l'historique des parties
-    // updateGamesHistory(data.last_games);
+    updateGamesHistory(data.last_games);
 }
 
 // Fonction pour mettre à jour l'historique des parties
@@ -53,15 +49,19 @@ function createGameRow(game) {
     const row = document.createElement("tr");
 
     const resultCell = document.createElement("td");
-    resultCell.textContent = game.result === "win" ? "Victoire" : "Défaite";
+    resultCell.textContent = game.result;
     row.appendChild(resultCell);
 
     const playersCell = document.createElement("td");
-    playersCell.textContent = game.players.join(" - ");
+    const player1 = game.player1 || "Joueur 1";
+    const player2 = game.player2 || "Joueur 2";
+    playersCell.textContent = `${player1} - ${player2}`;
     row.appendChild(playersCell);
 
     const scoresCell = document.createElement("td");
-    scoresCell.textContent = game.scores.join(" - ");
+    const score1 = game.score_player1 ?? "-";
+    const score2 = game.score_player2 ?? "-";
+    scoresCell.textContent = `${score1} - ${score2}`;
     row.appendChild(scoresCell);
 
     const dateCell = document.createElement("td");
@@ -70,7 +70,7 @@ function createGameRow(game) {
 
     const tournamentCell = document.createElement("td");
     if (game.tournament) {
-        tournamentCell.textContent = `Tournoi : ${game.tournament.organizer}`;
+        tournamentCell.textContent = `Tournoi : ${game.tournament_organizer}`;
     } else {
         tournamentCell.textContent = "Partie normale";
     }

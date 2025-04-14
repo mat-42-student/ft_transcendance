@@ -251,15 +251,17 @@ class GameSerializer(serializers.ModelSerializer):
 
     def get_result(self, obj):
         """
-        Détermine si l'utilisateur ciblé par la requête a gagné ou perdu la partie.
+        Détermine si l'utilisateur ciblé par la requête a gagné ou perdu la partie,
+        selon le profil consulté.
         """
-        request = self.context.get('request')
-        user = request.user
-        if user == obj.player1:
-            return "Victory" if obj.score_player1 > obj.score_player2 else "Defeat"
-        elif user == obj.player2:
-            return "Victory" if obj.score_player2 > obj.score_player1 else "Defeat"
-        return "Not Involved"
+        target_user = self.context.get('target_user')
+
+        # Si le joueur cible est player1
+        if target_user == obj.player1:
+            return "Victoire" if obj.score_player1 > obj.score_player2 else "Defaite"
+        # Si le joueur cible est player2
+        elif target_user == obj.player2:
+            return "Victoire" if obj.score_player2 > obj.score_player1 else "Defaite"
 
     def get_tournament(self, obj):
         """

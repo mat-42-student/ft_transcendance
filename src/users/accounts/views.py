@@ -340,7 +340,7 @@ class UserViewSet(viewsets.ModelViewSet):
         games = Game.objects.filter(
             Q(player1=target_user) | Q(player2=target_user)
         ).order_by('-date')[:10]
-        response_data["last_games"] = GameSerializer(games, many=True, context={'request': request}).data
+        response_data["last_games"] = GameSerializer(games, many=True, context={'request': request, 'target_user': target_user}).data
 
         return Response(response_data, status=200)
 
