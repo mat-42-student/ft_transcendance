@@ -112,7 +112,7 @@ export default class LevelDebug extends LevelBase {
 		// 	if (state.gameApp && state.gameApp.level) {
 		// 		state.engine.scene = state.gameApp.level;
 		// 	} else {
-		// 		state.engine.showLoadingErrorScene();
+		// 		state.engine.showErrorScene();
 		// 		this.dispose();
 		// 	}
 		// }).bind(this);

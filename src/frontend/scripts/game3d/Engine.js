@@ -88,7 +88,7 @@ export class Engine {
 					console.warn('Quitting game because of loading error.');
 					state.gameApp.close(true);
 				}
-				state.engine.showLoadingErrorScene();
+				state.engine.showErrorScene();
 			}
 
 			this.fontLoader = new FontLoader();
@@ -190,7 +190,7 @@ export class Engine {
 	}
 
 
-	showLoadingErrorScene() {
+	showErrorScene() {
 		if (this.scene != null) {
 			console.warn('This function was called improperly.');
 			return;
