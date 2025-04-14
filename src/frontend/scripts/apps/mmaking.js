@@ -352,7 +352,7 @@ export class Mmaking
 				if (this.gameId != null) {
 					if (state.gameApp != null)
 						state.gameApp.close(true);
-					state.gameApp = new WebGame('debug');
+					state.gameApp = new WebGame();
 					state.gameApp.launchGameSocket(this.gameId);
 					selectVisibleHeader(true);
 					this.game = false;

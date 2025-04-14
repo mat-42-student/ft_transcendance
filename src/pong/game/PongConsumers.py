@@ -7,9 +7,11 @@ from redis.asyncio import from_url #type: ignore
 from channels.generic.websocket import AsyncWebsocketConsumer #type: ignore
 # from urllib.parse import parse_qs
 from .Game import Game
-from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT
+from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT, LEVELS
 import time
 from collections import deque
+import random
+import math
 
 class PongConsumer(AsyncWebsocketConsumer):
 
@@ -275,7 +277,8 @@ class PongConsumer(AsyncWebsocketConsumer):
             self.opponent_name = opponent_name
         if self.nb_players != 2 or not self.master:
             return
-        self.game = Game(self.game_id, self.player_id, self.player_name, self.opponent_id, self.opponent_name, self)
+        level_name = self.random_level_name()
+        self.game = Game(self.game_id, self.player_id, self.player_name, self.opponent_id, self.opponent_name, self, level_name)
         json_data = {
             "action" : "init",
             "dir" : self.game.ball_speed,
@@ -283,10 +286,17 @@ class PongConsumer(AsyncWebsocketConsumer):
             "rplayer": self.game.players[RIGHT].name,
             "lpos":self.game.players[LEFT].pos,
             "rpos":self.game.players[RIGHT].pos,
+            "level_name": level_name,
         }
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "handle.message", "message": json_data}
         )
+
+    def random_level_name(self):
+        keys = list(LEVELS.keys())
+        random_index = math.floor(len(keys) * random.random())
+        level_name = keys[random_index]
+        return level_name
 
     async def launch_game(self, data):
         self.side = LEFT if self.master else RIGHT # master player == player[0] == left player

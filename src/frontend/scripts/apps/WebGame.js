@@ -5,7 +5,7 @@ import * as LEVELS from '../game3d/gameobjects/levels/levels.js';
 
 export class WebGame extends GameBase {
 
-    constructor(levelName) {
+    constructor() {
         super();
 
         try {
@@ -15,7 +15,6 @@ export class WebGame extends GameBase {
         this.socket = null;
 
         this.side = 2;  // Set to neutral until server tells us
-        this.level = new (LEVELS.LIST[levelName])();
     }
 
     frame(delta, time) {
@@ -104,6 +103,7 @@ export class WebGame extends GameBase {
             if (data.action != 'info') { console.log('Game packet:', data.action, ', data = ', data); }
 
             if (data.action == 'init') {
+                wg.level = new (LEVELS.LIST[data.level_name])();
                 wg.receivedInit = true;
                 wg.side = Number(data.side);
                 wg.playerNames[0] = data.lplayer;
