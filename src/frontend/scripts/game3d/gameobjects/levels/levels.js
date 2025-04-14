@@ -4,13 +4,13 @@ import LevelPingpong from './pingpong/LevelPingpong.js';
 
 
 const RANDOM_LIST = {
-	'pingpong': LevelPingpong,
+	'debug': LevelDebug,
 };
 
 
 export const LIST = {
 	...RANDOM_LIST,
-	'debug': LevelDebug,
+	'pingpong': LevelPingpong,
 };
 
 

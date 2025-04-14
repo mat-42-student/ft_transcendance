@@ -34,7 +34,7 @@ LEVELS = {
     "debug": {
         "board_size": [1.5, 1.0],
     },
-    "pingpong": {
-        "board_size": [1.8, 1.0],
-    },
+    # "pingpong": {
+    #     "board_size": [1.8, 1.0],
+    # },
 }
