@@ -58,7 +58,7 @@ export class Engine {
 				powerPreference: "high-performance",
 			});
 			this.renderer.setAnimationLoop(this.animationLoop.bind(this))
-			this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+			this.renderer.toneMapping = THREE.NoToneMapping;
 			this.renderer.toneMappingExposure = 1;
 
 			{  // Post processing

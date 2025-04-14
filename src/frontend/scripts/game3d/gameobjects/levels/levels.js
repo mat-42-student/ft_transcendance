@@ -1,4 +1,3 @@
-import { state } from '../../../main.js';
 import LevelBase from './LevelBase.js';
 import LevelDebug from './debug/LevelDebug.js';
 
@@ -10,10 +9,8 @@ export const LIST = {
 
 /** @returns {LevelBase} */
 export function pickRandomLevel() {
-	if (state && state.engine && state.engine.DEBUG_MODE == true) {
-		return LevelDebug;
-	}
-
-	var keys = Object.keys(LIST);
-	return LIST[keys[ keys.length * Math.random() << 0]];
+	const keys = Object.keys(LIST);
+	const randomIndex = Math.floor(keys.length * Math.random());
+	const key = keys[randomIndex];
+	return LIST[key];
 }
