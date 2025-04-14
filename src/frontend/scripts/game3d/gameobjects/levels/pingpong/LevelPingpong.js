@@ -7,7 +7,11 @@ import PingpongBall from './PingpongBall.js';
 import PingpongPaddle from './PingpongPaddle.js';
 
 
-export default class LevelDebug extends LevelBase {
+export const BALL_DIAMETER = 0.02;
+export const BOUNCE_ANIMATION_HEIGHT = 0.3;
+
+
+export default class LevelPingpong extends LevelBase {
 
 
 	gltfToDispose = [];
