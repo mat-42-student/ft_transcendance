@@ -1,9 +1,11 @@
 import LevelBase from './LevelBase.js';
 import LevelDebug from './debug/LevelDebug.js';
+import LevelPingpong from './pingpong/LevelPingpong.js';
 
 
 export const LIST = {
-	'debug': LevelDebug,
+	// 'debug': LevelDebug,
+	'pingpong': LevelPingpong,
 };
 
 

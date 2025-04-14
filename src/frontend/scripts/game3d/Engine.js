@@ -204,7 +204,7 @@ export class Engine {
 
 	// MARK: Private
 
-	#DEBUG_MODE = false;
+	#DEBUG_MODE = true;
 
 	/** @type {THREE.WebGLRenderer} */
 	#renderer;
