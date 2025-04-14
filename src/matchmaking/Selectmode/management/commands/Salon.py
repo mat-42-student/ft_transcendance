@@ -7,8 +7,11 @@ class Salon():
         self.score2 = None
         
     def __str__(self):
+        flux = ''
         for value in self.players.values():
-            return(f'Players : {value} type_game: {self.type_game}')
+            flux += (f'{value} type_game: {self.type_game} ' + '\t')
+        
+        return flux
 
     def getDictPlayers(self):
         players = {}

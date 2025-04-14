@@ -252,6 +252,7 @@ export class Mmaking
 		this.type_game = null;
 		this.SearchRandomGame = false;
 		this.game = false;
+		this.gameId = null;
 		this.salonHost = false;
 
 		const btnTournament = document.getElementsByClassName('btn-tournament');
