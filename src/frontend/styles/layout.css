@@ -54,18 +54,48 @@ header .container {
 /* Home Button */
 .header-left #btn-home,
 .header-right #btn-profile {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
     color: #fff;
     text-decoration: none;
-    background: #4caf50;
+    background: #007bff;
     padding: 0.5rem 1rem;
     border-radius: 5px;
     font-size: 1rem;
     transition: background 0.3s;
 }
 
+.user-status {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-left: 8px;
+    vertical-align: middle;
+    background-color: gray; /* fallback par défaut */
+}
+
+/* Couleurs selon status */
+.user-status.online {
+    background-color: green; /* vert */
+}
+.user-status.ingame {
+    background-color: darkred; /* orange */
+}
+.user-status.offline {
+    background-color: gray; /* gris */
+}
+.user-status.pending {
+    background-color: orange; /* rouge */
+}
+.user-status.undefined {
+    background-color: black; /* bleu/gris */
+}
+
 .header-left #btn-home:hover,
 .header-right #btn-profile:hover {
-    background: #45a049;
+    background: #11008f;
 }
 
 
@@ -172,4 +202,21 @@ header .container {
 
 .right-sidebar {
     border-left: 1px solid #ddd;
+}
+
+/* Statuts possibles */
+.friend-status.online {
+    background: green;
+}
+
+.friend-status.ingame {
+    background: darkred;
+}
+
+.friend-status.pending {
+    background: orange;
+}
+
+.friend-status.offline {
+    background: grey;
 }

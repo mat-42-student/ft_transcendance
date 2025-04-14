@@ -15,6 +15,7 @@ export class Client{
     // Avoiding circular imports (main.js/Client.js)
     setState(state) {
         this.state = state;
+        this.renderProfileBtn();
     }
 
     async login(token) {
@@ -67,7 +68,6 @@ export class Client{
     }
 
     async globalRender() {
-        this.renderProfileBtn();
         if (this.state.socialApp) {
             await this.state.socialApp.fetchFriends();
             await this.state.socialApp.getInfos();
@@ -77,14 +77,50 @@ export class Client{
             this.state.chatApp.renderChat();
         if (this.state.mmakingApp)
             await this.state.mmakingApp.renderMatchmaking();
+        this.renderProfileBtn();
     }
 
-    renderProfileBtn(){
-        let label =  "Sign in";
+    renderProfileBtn() {
+        const profileLink = document.getElementById('profile-link');
+        const statusIndicator = document.querySelector('.user-status');
+    
+        let label = "Sign in";
+    
         if (this.state.client.userName)
-            label = this.state.client.userName + '(' + this.state.client.userId + ')';
-        document.getElementById('btn-profile').innerText = label;
+            label = `${this.state.client.userName} (${this.state.client.userId})`;
+    
+        if (profileLink)
+            profileLink.textContent = label;
+    
+        if (statusIndicator) {
+            statusIndicator.classList.remove('online', 'ingame', 'offline', 'pending');
+    
+            console.log("status: " + this.state.socialApp?.myStatus); //après auth -> logs de social indiquent que user à reçu son status mais s'affiche comme `null` ici ???
+            const status = this.state.socialApp?.myStatus;
+            if (status)
+                statusIndicator.classList.add(status);
+            else
+                statusIndicator.classList.add('offline');
+        }
     }
+    
+
+    // renderProfileBtn(){
+    //     let label =  "Sign in";
+    //     const status_indicator = document.querySelector(".user-status");
+
+    //     if (this.state.client.userName)
+    //         label = this.state.client.userName + '(' + this.state.client.userId + ')';
+    //     document.getElementById('btn-profile').a = label;
+
+    //     if (status_indicator) {
+    //         status_indicator.classList.remove('online', 'ingame', 'offline', 'pending');
+    //         if (this.state.socialApp.myStatus)
+    //             status_indicator.classList.add(this.state.socialApp.myStatus);
+    //         else
+    //             status_indicator.classList.add("undefined");
+    //     }
+    // }
 
     fillUserDataFromJWT() {
         if (this.state.client.accessToken == null) {
