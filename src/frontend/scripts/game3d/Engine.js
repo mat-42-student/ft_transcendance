@@ -80,6 +80,17 @@ export class Engine {
 				this.#effectComposer.addPass(new OutputPass());
 			}  // Post processing
 
+			THREE.DefaultLoadingManager.onError = (url) => {
+				console.error(`ThreeJS asset loading error: '${url}'.\n`,
+					"Does the file not exist? Did we loose connection?"
+				);
+				if (state.gameApp != null) {
+					console.warn('Quitting game because of loading error.');
+					state.gameApp.close(true);
+				}
+				state.engine.showLoadingErrorScene();
+			}
+
 			this.fontLoader = new FontLoader();
 			this.fontLoader.load(
 				'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/fonts/helvetiker_regular.typeface.json',
@@ -180,12 +191,13 @@ export class Engine {
 
 
 	showLoadingErrorScene() {
-		if (this.scene != null || this.errorScene) {
+		if (this.scene != null) {
 			console.warn('This function was called improperly.');
 			return;
+		} else if (this.errorScene) {
+			console.warn('Attempted to show loading error scene multiple times.');
 		}
 
-		console.log('Scene loading was interrupted. Now showing error scene.');
 		this.errorScene = new LevelError();
 	}
 
