@@ -2,6 +2,7 @@ import { state } from '../main.js';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import Stats from 'three/addons/libs/stats.module.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
@@ -37,6 +38,8 @@ export class Engine {
 	 */
 	paramsForAddDuringRender = null;
 
+	stats = new Stats();
+
 
 	/** Initialization code needs to read state.engine, which, at the time of running the constructor, was not set yet. */
 	init() {
@@ -49,6 +52,12 @@ export class Engine {
 			this.#html_canvas.style.display = 'none';  // Hide by default, shows up again when a scene exists.
 
 			this.#html_mainContent = document.getElementsByClassName('main-content')[0];
+
+			this.stats.dom.style.position = null;
+			try {
+				const el = document.getElementsByTagName("header")[0];
+				el.prepend(this.stats.dom);
+			} catch {}  // it is what it is...
 		}
 
 		{  // Setup ThreeJS
@@ -96,6 +105,8 @@ export class Engine {
 			window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS = undefined;
 			debugger;
 		}
+
+		this.stats.update();  // FPS meter
 
 		try {
 			const delta = this.#clock.getDelta();
