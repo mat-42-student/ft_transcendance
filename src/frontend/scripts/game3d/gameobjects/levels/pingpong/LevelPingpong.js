@@ -8,7 +8,7 @@ import PingpongPaddle from './PingpongPaddle.js';
 
 
 export const BALL_DIAMETER = 0.02;
-export const BOUNCE_ANIMATION_HEIGHT = 0.3;
+export let bounceAnimationHeight = 0.3;
 
 
 export default class LevelPingpong extends LevelBase {

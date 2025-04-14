@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { state } from '../../../../main.js';
 import Paddle from '../../../gameobjects/gameplay/Paddle.js';
-import { BALL_DIAMETER, BOUNCE_ANIMATION_HEIGHT } from './LevelPingpong.js';
+import { BALL_DIAMETER, bounceAnimationHeight } from './LevelPingpong.js';
 import Cross2DHelper from '../../utils/Cross2DHelper.js';
 
 
@@ -14,7 +14,7 @@ export default class PingpongPaddle extends Paddle {
 
 
 	onAdded() {
-		this.position.y = BOUNCE_ANIMATION_HEIGHT;
+		this.position.y = bounceAnimationHeight;
 
 		this.model.position.x = BALL_DIAMETER;
 		this.add(this.model);

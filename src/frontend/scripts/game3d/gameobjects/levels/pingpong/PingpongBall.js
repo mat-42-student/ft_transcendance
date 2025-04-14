@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import Ball from '../../gameplay/Ball.js';
 import { state } from '../../../../main.js';
-import { BALL_DIAMETER, BOUNCE_ANIMATION_HEIGHT } from './LevelPingpong.js';
+import { BALL_DIAMETER, bounceAnimationHeight } from './LevelPingpong.js';
 import Cross2DHelper from '../../utils/Cross2DHelper.js';
 
 
@@ -44,7 +44,7 @@ export default class PingpongBall extends Ball {
 
 	#bounceAnimation() {
 		// https://www.desmos.com/calculator/sznvwyvlle
-		const BOUNCE_HEIGHT = BOUNCE_ANIMATION_HEIGHT;
+		const BOUNCE_HEIGHT = bounceAnimationHeight;
 		const BOARD_HALF_WIDTH = state.gameApp.level.boardSize.x / 2;
 		const currentX = state.gameApp.ballPosition.x;
 		return BOUNCE_HEIGHT * Math.abs(Math.cos((currentX * Math.PI) / BOARD_HALF_WIDTH));
