@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import * as UTILS from '../../../../utils.js';
 import LevelBase from '../LevelBase.js';
 import SceneOriginHelper from '../../utils/SceneOriginHelper.js';
+import PingpongBall from './PingpongBall.js';
+import PingpongPaddle from './PingpongPaddle.js';
 
 
 export default class LevelDebug extends LevelBase {
@@ -26,11 +28,11 @@ export default class LevelDebug extends LevelBase {
 		{  //TODO change values, these are copied from LevelDebug
 			this.views.position[2].set(0, 1.2, -0.8);
 			this.views.quaternion[2].copy(UTILS.makeLookDownQuaternion(180, 60));
-			this.views.fov[2] = 60;
+			this.views.fov[2] = 80;
 
 			this.views.position[0].set(1.4, 1.2, 0);
 			this.views.quaternion[0].copy(UTILS.makeLookDownQuaternion(90, 45));
-			this.views.fov[1] = this.views.fov[0] = 40;
+			this.views.fov[1] = this.views.fov[0] = 60;
 
 			this.views.position[1].copy(this.views.position[0]).x *= -1;
 			this.views.quaternion[1].copy(UTILS.makeLookDownQuaternion(-90, 45));
@@ -45,28 +47,30 @@ export default class LevelDebug extends LevelBase {
 		state.engine.gltfLoader.load('/ressources/3d/level_pingpong/paddle.glb', (gltf) => {
 			const scene = gltf.scene;
 			this.gltfToDispose.push(scene);
-			UTILS.materialAutoChangeHierarchy(scene);
 			this.loadComplete();
-			this.add(scene)  //TODO instantiate paddle objects
+
+			UTILS.materialAutoChangeHierarchy(scene);
+			this.add(new PingpongPaddle(0, scene.clone()));
+			this.add(new PingpongPaddle(1, scene.clone()));
 		});
 
 		state.engine.gltfLoader.load('/ressources/3d/level_pingpong/ball.glb', (gltf) => {
 			const scene = gltf.scene;
 			this.gltfToDispose.push(scene);
-			UTILS.materialAutoChangeHierarchy(scene);
 			this.loadComplete();
-			this.add(scene)  //TODO instantiate ball object
+
+			UTILS.materialAutoChangeHierarchy(scene);
+			this.add(new PingpongBall(scene));
 		});
 
 		state.engine.gltfLoader.load('/ressources/3d/level_pingpong/environment.glb', (gltf) => {
 			const scene = gltf.scene;
 			this.gltfToDispose.push(scene);
-			UTILS.materialAutoChangeHierarchy(scene);
 			this.loadComplete();
-			this.add(scene)  //TODO instantiate paddle objects
-		});
 
-		//TODO ?
+			UTILS.materialAutoChangeHierarchy(scene);
+			this.add(scene);
+		});
 	}
 
 
