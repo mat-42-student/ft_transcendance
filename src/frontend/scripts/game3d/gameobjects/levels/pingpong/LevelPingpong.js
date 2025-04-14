@@ -43,21 +43,27 @@ export default class LevelDebug extends LevelBase {
 		this.remainingToLoad = 3;
 
 		state.engine.gltfLoader.load('/ressources/3d/level_pingpong/paddle.glb', (gltf) => {
-			this.gltfToDispose.push(gltf);
+			const scene = gltf.scene;
+			this.gltfToDispose.push(scene);
+			UTILS.materialAutoChangeHierarchy(scene);
 			this.loadComplete();
-			this.add(gltf.scene)  //TODO instantiate paddle objects
+			this.add(scene)  //TODO instantiate paddle objects
 		});
 
 		state.engine.gltfLoader.load('/ressources/3d/level_pingpong/ball.glb', (gltf) => {
-			this.gltfToDispose.push(gltf);
+			const scene = gltf.scene;
+			this.gltfToDispose.push(scene);
+			UTILS.materialAutoChangeHierarchy(scene);
 			this.loadComplete();
-			this.add(gltf.scene)  //TODO instantiate ball object
+			this.add(scene)  //TODO instantiate ball object
 		});
 
 		state.engine.gltfLoader.load('/ressources/3d/level_pingpong/environment.glb', (gltf) => {
-			this.gltfToDispose.push(gltf);
+			const scene = gltf.scene;
+			this.gltfToDispose.push(scene);
+			UTILS.materialAutoChangeHierarchy(scene);
 			this.loadComplete();
-			this.add(gltf.scene)  //TODO instantiate paddle objects
+			this.add(scene)  //TODO instantiate paddle objects
 		});
 
 		//TODO ?
