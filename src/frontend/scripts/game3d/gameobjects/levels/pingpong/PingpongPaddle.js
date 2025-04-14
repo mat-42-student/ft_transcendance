@@ -33,8 +33,10 @@ export default class PingpongPaddle extends Paddle {
 		super.onFrame(delta, time);
 
 		if (this.visible) {
+			const size = state.gameApp.paddleHeights[this.playerIndex];
 			// assumes 3d model is 1 units wide, to match correctly.
-			this.model.scale.setScalar(state.gameApp.paddleHeights[this.playerIndex]);
+			this.model.scale.setScalar(size);
+			this.shadow.scale.setScalar(size)
 		}
 	}
 
