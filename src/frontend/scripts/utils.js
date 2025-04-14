@@ -80,9 +80,8 @@ export function shouldPowersave() {
  * Recursively disposes child objects.
  * @param {THREE.Object3D} obj
  */
-export function disposeHierarchy(obj)
-{
-    if (obj == null || obj.children == null)
+export function disposeHierarchy(obj) {
+    if (obj == null)
         return;
 
     obj.children.forEach((child) => {
@@ -119,8 +118,7 @@ export function disposeMesh(obj)
  * If there is nothing to dispose, the function will silently skip.
  * @param {THREE.Material} mat
  */
-export function disposeMaterial(mat)
-{
+export function disposeMaterial(mat) {
     if (!(mat instanceof THREE.Material))
         return;
 
