@@ -131,6 +131,10 @@ export class Engine {
 			}
 		} catch (error) {
 			console.error('ThreeJS Animation Loop: Error:', error);
+			if (state.gameApp) {
+				console.warn("Cancelling game because of rendering error.");
+				state.gameApp.close(true);
+			}
 		}
 	}
 
