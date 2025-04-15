@@ -94,33 +94,14 @@ export class Client{
     
         if (statusIndicator) {
             statusIndicator.classList.remove('online', 'ingame', 'offline', 'pending');
-    
-            console.log("status: " + this.state.socialApp?.myStatus); //après auth -> logs de social indiquent que user à reçu son status mais s'affiche comme `null` ici ???
             const status = this.state.socialApp?.myStatus;
+
             if (status)
                 statusIndicator.classList.add(status);
             else
                 statusIndicator.classList.add('offline');
         }
     }
-    
-
-    // renderProfileBtn(){
-    //     let label =  "Sign in";
-    //     const status_indicator = document.querySelector(".user-status");
-
-    //     if (this.state.client.userName)
-    //         label = this.state.client.userName + '(' + this.state.client.userId + ')';
-    //     document.getElementById('btn-profile').a = label;
-
-    //     if (status_indicator) {
-    //         status_indicator.classList.remove('online', 'ingame', 'offline', 'pending');
-    //         if (this.state.socialApp.myStatus)
-    //             status_indicator.classList.add(this.state.socialApp.myStatus);
-    //         else
-    //             status_indicator.classList.add("undefined");
-    //     }
-    // }
 
     fillUserDataFromJWT() {
         if (this.state.client.accessToken == null) {
@@ -180,96 +161,3 @@ export class Client{
         }
     }
 }
-
-// import { state } from '../main.js';
-// import { MainSocket } from './MainSocket.js';
-
-// export class Client {
-//     constructor() {
-//         this.state = null;
-//         this.userId = null;
-//         this.userName = null;
-//         this.accessToken = null;
-//     }
-
-//     setState(state) {
-//         this.state = state;
-//     }
-
-//     async login(token) {
-//         this.accessToken = token;
-//         try {
-//             this.fillUserDataFromJWT();
-//         } catch (error) {
-//             console.error(error);
-//             throw error;
-//         }
-//         localStorage.setItem('cookieSet', true);
-//         this.renderProfileBtn();
-//         if (!this.state.mainSocket) {
-//             this.state.mainSocket = new MainSocket();
-//             await this.state.mainSocket.init();
-//         }
-//     }
-
-//     async logout() {
-//         this.userId = null;
-//         this.userName = null;
-//         this.accessToken = null;
-//         if (this.state.mainSocket) this.state.mainSocket.close();
-//         this.state.mainSocket = null;
-//         this.renderProfileBtn();
-
-//         try {
-//             const response = await ft_fetch('/api/v1/auth/logout/', {
-//                 method: 'POST',
-//                 credentials: 'include',
-//                 headers: { 'Content-Type': 'application/json' },
-//                 body: JSON.stringify({}),
-//             });
-//             if (!response.ok) throw new Error('Logout failed');
-//             localStorage.removeItem('cookieSet');
-//             window.location.hash = '#home';
-//         } catch (error) {
-//             console.error('Error:', error);
-//         }
-//     }
-
-//     async globalRender() {
-//         this.renderProfileBtn();
-//         if (this.state.socialApp) {
-//             await this.state.socialApp.getFriends();
-//             this.state.socialApp.displayFriendList();
-//             await this.state.socialApp.getInfos();
-//         }
-//         if (this.state.chatApp) this.state.chatApp.renderChat();
-//     }
-
-//     renderProfileBtn() {
-//         document.getElementById('btn-profile').innerText = this.userName ? `${this.userName} (${this.userId})` : "Sign in";
-//     }
-
-//     fillUserDataFromJWT() {
-//         if (!this.accessToken) throw new Error('Token not found');
-//         const payload = JSON.parse(atob(this.accessToken.split('.')[1]));
-//         this.userId = payload.id;
-//         this.userName = payload.username;
-//     }
-
-//     async refreshSession(location = null) {
-//         if (!localStorage.getItem('cookieSet'))
-//             return;
-//         try {
-//             const response = await ft_fetch('api/v1/auth/refresh/', {
-//                 method: 'POST',
-//                 credentials: 'include'
-//             });
-//             if (!response.ok) throw new Error("Could not refresh token");
-//             const data = await response.json();
-//             await this.login(data.accessToken);
-//             if (location) window.location.hash = location;
-//         } catch (error) {
-//             // console.warn(error);
-//         }
-//     }
-// }
