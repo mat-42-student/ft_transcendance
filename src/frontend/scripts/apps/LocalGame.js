@@ -6,9 +6,6 @@ import { GameBase } from "./GameBase.js";
 import LevelBase from "../game3d/gameobjects/levels/LevelBase.js";
 
 
-//REVIEW Exceptions should be caught, and should terminate the game
-
-
 // Controls how the game runs.
 // Should be (manually) kept in sync with game/const.py
 const STATS = JSON.parse(`
@@ -68,25 +65,39 @@ export class LocalGame extends GameBase {
     }
 
 	frame(delta, time) {
-        this.waitTime = Math.max(0, this.waitTime - delta);
+        try {
+            this.waitTime = Math.max(0, this.waitTime - delta);
 
-        if (this.waitTime <= 0 && document.hasFocus()) {
-            if (this.level)  this.level.unpause();
+            if (this.waitTime <= 0 && document.hasFocus()) {
+                if (this.level)  this.level.unpause();
 
-            if (this.cpuDecideIn != NaN)
-                this.cpuDecideIn = Math.max(0, this.cpuDecideIn - delta);
-            if (this.cpuDecideIn === 0)
-                this.cpuDecide();
+                if (this.cpuDecideIn != NaN)
+                    this.cpuDecideIn = Math.max(0, this.cpuDecideIn - delta);
+                if (this.cpuDecideIn === 0)
+                    this.cpuDecide();
 
-            this.movePaddles(delta);
-            this.moveBall(delta);
+                this.movePaddles(delta);
+                this.moveBall(delta);
+            }
+
+            super.frame(delta, time);
+        } catch (error) {
+            console.error("Local game error, exiting:", error);
+            this.close();
+            state.engine.showErrorScene();
         }
-
-        super.frame(delta, time);
 	}
 
     close(youCancelled) {
-        this.endgame(youCancelled);
+        if (youCancelled) {
+            this.level.endShowNothing();
+        } else {
+            this.level.endShowWinner(
+                [...this.scores],
+                this.scores[0] >= this.maxScore ? 0 : 1,
+                [...this.playerNames]
+            );
+        }
 
         try {
             const id = this.isCPU ? "keyhint-versus" : "keyhint-local";
@@ -325,16 +336,4 @@ export class LocalGame extends GameBase {
         }
     }
 
-    /** @param {boolean} isEndingBecauseCancelled */
-    endgame(isEndingBecauseCancelled) {
-        if (isEndingBecauseCancelled) {
-            this.level.endShowNothing();
-        } else {
-            this.level.endShowWinner(
-                [...this.scores],
-                this.scores[0] >= this.maxScore ? 0 : 1,
-                [...this.playerNames]
-            );
-        }
-    }
 }

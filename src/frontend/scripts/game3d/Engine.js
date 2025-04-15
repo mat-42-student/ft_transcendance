@@ -2,6 +2,7 @@ import { state } from '../main.js';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import Stats from 'three/addons/libs/stats.module.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
@@ -37,6 +38,8 @@ export class Engine {
 	 */
 	paramsForAddDuringRender = null;
 
+	stats = new Stats();
+
 
 	/** Initialization code needs to read state.engine, which, at the time of running the constructor, was not set yet. */
 	init() {
@@ -49,6 +52,12 @@ export class Engine {
 			this.#html_canvas.style.display = 'none';  // Hide by default, shows up again when a scene exists.
 
 			this.#html_mainContent = document.getElementsByClassName('main-content')[0];
+
+			this.stats.dom.style.position = null;
+			try {
+				const el = document.getElementsByTagName("header")[0];
+				el.prepend(this.stats.dom);
+			} catch {}  // it is what it is...
 		}
 
 		{  // Setup ThreeJS
@@ -58,7 +67,7 @@ export class Engine {
 				powerPreference: "high-performance",
 			});
 			this.renderer.setAnimationLoop(this.animationLoop.bind(this))
-			this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+			this.renderer.toneMapping = THREE.NoToneMapping;
 			this.renderer.toneMappingExposure = 1;
 
 			{  // Post processing
@@ -70,6 +79,17 @@ export class Engine {
 
 				this.#effectComposer.addPass(new OutputPass());
 			}  // Post processing
+
+			THREE.DefaultLoadingManager.onError = (url) => {
+				console.error(`ThreeJS asset loading error: '${url}'.\n`,
+					"Does the file not exist? Did we loose connection?"
+				);
+				if (state.gameApp != null) {
+					console.warn('Quitting game because of loading error.');
+					state.gameApp.close(true);
+				}
+				state.engine.showErrorScene();
+			}
 
 			this.fontLoader = new FontLoader();
 			this.fontLoader.load(
@@ -97,6 +117,8 @@ export class Engine {
 			debugger;
 		}
 
+		this.stats.update();  // FPS meter
+
 		try {
 			const delta = this.#clock.getDelta();
 			const time = this.#clock.elapsedTime;
@@ -109,6 +131,10 @@ export class Engine {
 			}
 		} catch (error) {
 			console.error('ThreeJS Animation Loop: Error:', error);
+			if (state.gameApp) {
+				console.warn("Cancelling game because of rendering error.");
+				state.gameApp.close(true);
+			}
 		}
 	}
 
@@ -168,13 +194,14 @@ export class Engine {
 	}
 
 
-	showLoadingErrorScene() {
-		if (this.scene != null || this.errorScene) {
+	showErrorScene() {
+		if (this.scene != null) {
 			console.warn('This function was called improperly.');
 			return;
+		} else if (this.errorScene) {
+			console.warn('Attempted to show loading error scene multiple times.');
 		}
 
-		console.log('Scene loading was interrupted. Now showing error scene.');
 		this.errorScene = new LevelError();
 	}
 

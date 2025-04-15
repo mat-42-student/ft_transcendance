@@ -1,4 +1,4 @@
-import { state } from '../main.js';
+import { delay, state } from '../main.js';
 import { MainSocket } from './MainSocket.js';
 import { verifyToken } from '../api/auth.js';
 import { resetPendingCountDisplay } from '../components/friend_requests.js';
@@ -27,11 +27,12 @@ export class Client{
             throw error;
         }
         localStorage.setItem('cookieSet', true); // modfis ajoutées après merge
-		if (this.state.mainSocket == null)
-		{
+		if (this.state.mainSocket == null) {
         	this.state.mainSocket = new MainSocket();
-        	await this.state.mainSocket.init();
+        	this.state.mainSocket.init();
 		}
+        while (this.state.mainSocket.socket.readyState != WebSocket.OPEN)
+            await delay(0.1); // don't hit me
         this.globalRender();
     }
 
@@ -69,9 +70,10 @@ export class Client{
 
     async globalRender() {
         if (this.state.socialApp) {
-            await this.state.socialApp.fetchFriends();
-            await this.state.socialApp.getInfos();
-            await this.state.socialApp.getPendingCount();
+            await this.state.socialApp.render();
+            // await this.state.socialApp.fetchFriends();
+            // await this.state.socialApp.getInfos();
+            // await this.state.socialApp.getPendingCount();
         }
         if (this.state.chatApp)
             this.state.chatApp.renderChat();

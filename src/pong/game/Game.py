@@ -1,13 +1,9 @@
-from random import randint, choice
+from random import choice
 from time import time
 from json import dumps
 from asyncio import sleep as asleep
-from .const import LEFT, RIGHT, FPS, DELTATIME, GREEN, RED, RESET, STATS
+from .const import LEFT, RIGHT, FPS, DELTATIME, GREEN, RED, RESET, STATS, LEVELS
 from .bounce import bounce
-
-
-# TODO: this will be read from a dictionary of levels, matching on level name
-BOARD_SIZE = [1.5, 1.0]
 
 
 class Player:
@@ -20,10 +16,9 @@ class Player:
         self.pad_size = STATS['initialPadSize']
         self.move = 0
 
-    def move_paddle(self, speed):
-        HALF_HEIGHT = BOARD_SIZE[1] / 2
-        is_too_low = self.pos <= -HALF_HEIGHT
-        is_too_high = self.pos >= HALF_HEIGHT
+    def move_paddle(self, speed, board_half_height):
+        is_too_low = self.pos <= -board_half_height
+        is_too_high = self.pos >= board_half_height
         if ((self.move < 0 and not is_too_low)
             or (self.move > 0 and not is_too_high)):
             self.pos += self.move * speed * DELTATIME
@@ -34,8 +29,9 @@ class Player:
 
 class Game:
 
-    def __init__(self, game_id, id1, username1, id2, username2, wsh):
+    def __init__(self, game_id, id1, username1, id2, username2, wsh, level_name):
         self.wsh = wsh
+        self.level = LEVELS[level_name]
         self.players = [Player(username1, id1), Player(username2, id2)]
         self.over = False
         self.id = game_id
@@ -45,7 +41,7 @@ class Game:
         self.loaded = False
         self.was_not_loaded = True
         self.recenter()
-        print(f"{GREEN}New game {game_id} launched opposing **{self.players[LEFT].name}({self.players[LEFT].id})** vs {self.players[RIGHT].name}({self.players[RIGHT].id}){RESET}")
+        print(f"{GREEN}New game {game_id}: **{self.players[LEFT].name}({self.players[LEFT].id})** vs {self.players[RIGHT].name}({self.players[RIGHT].id}), on level '{level_name}'.{RESET}")
 
     def recenter(self):
         self.ball_pos = [0, 0]
@@ -69,13 +65,14 @@ class Game:
         # move
         self.ball_pos[0] += DELTATIME * self.ball_direction[0] * self.ball_speed
         self.ball_pos[1] += DELTATIME * self.ball_direction[1] * self.ball_speed
+        HALF_BOARD = [ self.level["board_size"][0] / 2, self.level["board_size"][1] / 2 ]
         # top / bottom collision
-        if (self.ball_pos[1] <= BOARD_SIZE[1]/-2 or self.ball_pos[1] >= BOARD_SIZE[1]/2):
+        if (self.ball_pos[1] <= -HALF_BOARD[1] or self.ball_pos[1] >= HALF_BOARD[1]):
             self.ball_direction[1] *= -1
         # left / right collision
-        if (self.ball_pos[0] < BOARD_SIZE[0]/-2):
+        if (self.ball_pos[0] < -HALF_BOARD[0]):
             await self.side_collided(RIGHT)
-        elif (self.ball_pos[0] > BOARD_SIZE[0]/2):
+        elif (self.ball_pos[0] > HALF_BOARD[0]):
             await self.side_collided(LEFT)
 
     async def side_collided(self, side):
@@ -108,7 +105,7 @@ class Game:
 
     def move_players(self):
         for player in self.players:
-            player.move_paddle(self.pad_speed)
+            player.move_paddle(self.pad_speed, self.level["board_size"][1] / 2)
 
     def get_game_state(self):
         return {

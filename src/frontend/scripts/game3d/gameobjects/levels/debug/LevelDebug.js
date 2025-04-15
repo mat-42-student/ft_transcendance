@@ -25,9 +25,6 @@ export default class LevelDebug extends LevelBase {
 		this.background = new THREE.Color('#112211');
 		this.fog = null;
 
-		this.gameplayObjects = new THREE.Group();
-		this.gameEndObjects = new THREE.Group();
-
 		{
 			this.views.position[2].set(0, 1.2, -0.8);
 			this.views.quaternion[2].copy(UTILS.makeLookDownQuaternion(180, 60));
@@ -41,7 +38,10 @@ export default class LevelDebug extends LevelBase {
 			this.views.quaternion[1].copy(UTILS.makeLookDownQuaternion(-90, 45));
 		}
 
+		this.gameplayObjects = new THREE.Group();
 		this.add(this.gameplayObjects);
+
+		this.gameEndObjects = new THREE.Group();
 		this.add(this.gameEndObjects);
 
 		this.gameplayObjects.add(new DebugBall());
@@ -103,35 +103,20 @@ export default class LevelDebug extends LevelBase {
 		}
 
 		// Debug level does not load any external resources, so it can mark itself as loaded immediately.
-		// state.engine.scene = this;  //TODO uncomment instant loading
+		state.engine.scene = this;
 
-		//TODO comment out this fake loading time
-		const timeout = Math.random() * 100;
-		const loadCompleteCallback = (() => {
-			console.log('LevelDebug.js: Fake loading complete:', Math.round(timeout / 100) / 10, 's');
-			if (state.gameApp && state.gameApp.level) {
-				state.engine.scene = state.gameApp.level;
-			} else {
-				state.engine.showLoadingErrorScene();
-				this.dispose();
-			}
-		}).bind(this);
-		setTimeout(loadCompleteCallback, timeout);
-	}
-
-
-	onFrame(delta, time) {
-		super.onFrame(delta, time);
-
-		if (this.gameInitialized != true && state.gameApp != null
-			&& state.gameApp.playerNames[0] != '-'
-		) {
-			this.gameInitialized = true;
-			this.nameTextMeshes[0].setText(state.gameApp.playerNames[0]);
-			this.nameTextMeshes[1].setText(state.gameApp.playerNames[1]);
-			if (this.flipFunction)
-				this.flipFunction();
-		}
+		//Fake loading time, for development purposes
+		// const timeout = Math.random() * 2000;
+		// const loadCompleteCallback = (() => {
+		// 	console.log('LevelDebug.js: Fake loading complete:', Math.round(timeout / 100) / 10, 's');
+		// 	if (state.gameApp && state.gameApp.level) {
+		// 		state.engine.scene = state.gameApp.level;
+		// 	} else {
+		// 		state.engine.showErrorScene();
+		// 		this.dispose();
+		// 	}
+		// }).bind(this);
+		// setTimeout(loadCompleteCallback, timeout);
 	}
 
 
@@ -140,6 +125,15 @@ export default class LevelDebug extends LevelBase {
 
 		if (this.textMaterial) this.textMaterial.dispose();
 	}
+
+
+	namesReady() {
+		this.nameTextMeshes[0].setText(state.gameApp.playerNames[0]);
+		this.nameTextMeshes[1].setText(state.gameApp.playerNames[1]);
+		if (this.flipFunction)
+			this.flipFunction();
+	}
+
 
 	pause(time) {
 		super.pause(time);

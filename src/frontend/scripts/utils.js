@@ -76,13 +76,51 @@ export function shouldPowersave() {
 
 
 /**
+ * Automatically change materials in an imported GLTF file according to what i want.
+ * @param {THREE.Object3D} gltf A hierarchy of Object3D's, that will be recursively affected
+ */
+export function materialAutoChangeHierarchy(gltf) {
+    if (gltf == null)
+        return;
+
+    let materialsList = new Set();
+    gltf.traverse((gltf) => {
+        if (gltf.material instanceof Array) {
+            gltf.material.forEach((mat) => {
+                if (!materialsList.has(mat))
+                    materialsList.add(mat);
+            });
+        } else if (gltf.material) {
+            if (!materialsList.has(gltf.material))
+                materialsList.add(gltf.material);
+        }
+    });
+
+    materialsList.forEach((mat) => {
+        materialAutoChange(mat);
+    })
+}
+
+
+/**
+ * Automatically change a material's properties according to what i want.
+ * @param {THREE.Material} mat
+ */
+export function materialAutoChange(mat) {
+    if (!(mat instanceof THREE.Material))
+        return;
+
+    mat.dithering = true;
+}
+
+
+/**
  * Fully dispose a hierarchy of meshes. Intended for GLTF imported models.
  * Recursively disposes child objects.
  * @param {THREE.Object3D} obj
  */
-export function disposeHierarchy(obj)
-{
-    if (obj == null || obj.children == null)
+export function disposeHierarchy(obj) {
+    if (obj == null)
         return;
 
     obj.children.forEach((child) => {
@@ -119,8 +157,7 @@ export function disposeMesh(obj)
  * If there is nothing to dispose, the function will silently skip.
  * @param {THREE.Material} mat
  */
-export function disposeMaterial(mat)
-{
+export function disposeMaterial(mat) {
     if (!(mat instanceof THREE.Material))
         return;
 

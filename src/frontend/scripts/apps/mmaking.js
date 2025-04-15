@@ -16,7 +16,6 @@ export class Mmaking
 			const keyNumber = Number(key);
 			if (keyNumber != NaN)
 			{
-				console.log(keyNumber)
 				this.invited_by[keyNumber] = false;
 				this.guests[keyNumber] = false;
 				this.buildEventsbtnInvite(keyNumber);
@@ -55,7 +54,6 @@ export class Mmaking
 				const keyNumber = Number(key);
 				if (keyNumber != NaN)
 				{
-					console.log(keyNumber)
 					if (!this.invited_by[keyNumber] && !this.guests[keyNumber])
 					{
 						this.invited_by[keyNumber] = false;
@@ -230,7 +228,6 @@ export class Mmaking
 			'cancel' : true
 		};
 
-		console.log(`cancelGame = ${friendId}`);
 		if (friendId != state.client.userId)
 		{
 			this.guests[friendId] = false;
@@ -275,7 +272,6 @@ export class Mmaking
 			}
 		};
 
-		console.log("btninviteDesactive " + key);
 		this.guests[key] = null;
 		this.invited_by[key] = false;
 		this.host = true;
@@ -287,7 +283,6 @@ export class Mmaking
 	async btnInviteActive(key)
 	{
 		const friendId = key;
-		console.log(key);
 		const btnInviteAccept = document.getElementsByClassName('btn-accepter');
 		const btnInviteRefuse = document.getElementsByClassName('btn-refuser');
 
@@ -301,7 +296,6 @@ export class Mmaking
 	{
 		// const friendId = event.currentTarget.dataset.friendId;
 
-		console.log(`friendId -> ${friendId}`);
 		const data = {
 			'type_game': {
 				'invite':{
@@ -323,7 +317,6 @@ export class Mmaking
 
 	async btnInviteRefuse(event, friendId)
 	{
-		console.log(friendId);
 		const data = {
 			'type_game': {
 				'invite':{
@@ -359,7 +352,7 @@ export class Mmaking
 				if (this.gameId != null) {
 					if (state.gameApp != null)
 						state.gameApp.close(true);
-					state.gameApp = new WebGame('debug');
+					state.gameApp = new WebGame();
 					state.gameApp.launchGameSocket(this.gameId);
 					selectVisibleHeader(true);
 					this.game = false;
@@ -382,7 +375,6 @@ export class Mmaking
 		}
 		else if (this.btnsearchRandomisActive == false)
 		{
-			console.log('acitve button random')
 			btnRandom.addEventListener('click', this.boundEventListenersClient.btnsearchRandomGame);
 			this.btnsearchRandomisActive = true;
 		}
@@ -433,7 +425,6 @@ export class Mmaking
 	{
 		closeDynamicCard();
 		await initDynamicCard('tournament');
-		console.log('tournament bracket is setting');
 		const bracketContainer = document.getElementById('tournamentBracket');
 
 		for (const [key, value] of Object.entries(this.opponents))
@@ -568,7 +559,6 @@ export class Mmaking
 			if (data.body.opponents)
 			{
 				this.opponents = data.body.opponents;
-				console.log(this.opponents);  //TODO remove log?
 			}
 
         }
@@ -616,7 +606,6 @@ export class Mmaking
 				}
 				this.salonLoad = false;
 
-				console.log('invited_by: ' + invite.host_id);
 			}
 			else if (invite.guest_id)
 			{

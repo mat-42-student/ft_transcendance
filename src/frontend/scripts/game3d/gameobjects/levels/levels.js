@@ -1,19 +1,23 @@
-import { state } from '../../../main.js';
 import LevelBase from './LevelBase.js';
 import LevelDebug from './debug/LevelDebug.js';
+import LevelPingpong from './pingpong/LevelPingpong.js';
+
+
+const RANDOM_LIST = {
+	'debug': LevelDebug,
+};
 
 
 export const LIST = {
-	'debug': LevelDebug,
+	...RANDOM_LIST,
+	'pingpong': LevelPingpong,
 };
 
 
 /** @returns {LevelBase} */
 export function pickRandomLevel() {
-	if (state && state.engine && state.engine.DEBUG_MODE == true) {
-		return LevelDebug;
-	}
-
-	var keys = Object.keys(LIST);
-	return LIST[keys[ keys.length * Math.random() << 0]];
+	const keys = Object.keys(RANDOM_LIST);
+	const randomIndex = Math.floor(keys.length * Math.random());
+	const key = keys[randomIndex];
+	return RANDOM_LIST[key];
 }
