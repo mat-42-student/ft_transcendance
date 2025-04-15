@@ -69,11 +69,10 @@ function createGameRow(game) {
     row.appendChild(dateCell);
 
     const tournamentCell = document.createElement("td");
-    if (game.tournament) {
-        tournamentCell.textContent = `Tournoi : ${game.tournament_organizer}`;
-    } else {
+    if (game.tournament)
+        tournamentCell.textContent = "Tournoi";
+    else
         tournamentCell.textContent = "Partie normale";
-    }
     row.appendChild(tournamentCell);
 
     return row;

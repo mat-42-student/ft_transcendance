@@ -243,11 +243,10 @@ class GameSerializer(serializers.ModelSerializer):
     player1 = serializers.CharField(source='player1.username')
     player2 = serializers.CharField(source='player2.username')
     tournament = serializers.SerializerMethodField()
-    tournament_organizer = serializers.SerializerMethodField()
 
     class Meta:
         model = Game
-        fields = ['id', 'result', 'player1', 'player2', 'score_player1', 'score_player2', 'date', 'tournament', 'tournament_organizer']
+        fields = ['id', 'result', 'player1', 'player2', 'score_player1', 'score_player2', 'date', 'tournament']
 
     def get_result(self, obj):
         """
@@ -268,11 +267,3 @@ class GameSerializer(serializers.ModelSerializer):
         Vérifie si la partie est liée à un tournoi.
         """
         return obj.tournament is not None
-
-    def get_tournament_organizer(self, obj):
-        """
-        Récupère l'organisateur du tournoi si applicable.
-        """
-        if obj.tournament:
-            return obj.tournament.organizer.username
-        return None
