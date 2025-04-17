@@ -53,7 +53,6 @@ export default class LevelPingpong extends LevelBase {
 			this.gltfToDispose.push(scene);
 			this.loadComplete();
 
-			UTILS.materialAutoChangeHierarchy(scene);
 			this.add(new PingpongPaddle(0, scene.clone()));
 			this.add(new PingpongPaddle(1, scene.clone()));
 		});
@@ -63,7 +62,6 @@ export default class LevelPingpong extends LevelBase {
 			this.gltfToDispose.push(scene);
 			this.loadComplete();
 
-			UTILS.materialAutoChangeHierarchy(scene);
 			this.add(new PingpongBall(scene));
 		});
 
@@ -72,7 +70,6 @@ export default class LevelPingpong extends LevelBase {
 			this.gltfToDispose.push(scene);
 			this.loadComplete();
 
-			UTILS.materialAutoChangeHierarchy(scene);
 			this.add(scene);
 		});
 	}

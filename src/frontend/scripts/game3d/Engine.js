@@ -190,6 +190,9 @@ export class Engine {
 			this.#html_canvas.style.display = null;
 		}
 
+		if (newScene)
+			UTILS.autoMaterial(newScene);
+
 		this.#scene = newScene;
 	}
 

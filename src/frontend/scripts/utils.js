@@ -76,41 +76,37 @@ export function shouldPowersave() {
 
 
 /**
- * Automatically change materials in an imported GLTF file according to what i want.
- * @param {THREE.Object3D} gltf A hierarchy of Object3D's, that will be recursively affected
+ * Automatically change materials according to my own preferences.
+ * Intended for GLTF imported materials, where I didnt write code to define them.
+ * @param {THREE.Object3D | THREE.Material} obj A hierarchy of Object3D's, that will be recursively affected,
+ * or a single material.
  */
-export function materialAutoChangeHierarchy(gltf) {
-    if (gltf == null)
-        return;
+//FIXME i am not sure if this is really working, some materials appear unchanged
+export function autoMaterial(obj) {
+    if (obj instanceof THREE.Material)
+    {
+        if (obj.wireframe !== undefined) obj.wireframe = true;
+        obj.dithering = false;
+    }
+    else if (obj instanceof THREE.Object3D)
+    {
+        let materialsListWithDuplicates = [];
+        obj.traverse((obj2) => {
+            if (obj2.material instanceof Array) {
+                materialsListWithDuplicates.push(...obj2.material)
+            } else if (obj2.material instanceof THREE.Material) {
+                materialsListWithDuplicates.push(obj2.material);
+            }
+        });
 
-    let materialsList = new Set();
-    gltf.traverse((gltf) => {
-        if (gltf.material instanceof Array) {
-            gltf.material.forEach((mat) => {
-                if (!materialsList.has(mat))
-                    materialsList.add(mat);
-            });
-        } else if (gltf.material) {
-            if (!materialsList.has(gltf.material))
-                materialsList.add(gltf.material);
-        }
-    });
+        // This removes any duplicates.
+        let materialsList = new Set(materialsListWithDuplicates);
 
-    materialsList.forEach((mat) => {
-        materialAutoChange(mat);
-    })
-}
-
-
-/**
- * Automatically change a material's properties according to what i want.
- * @param {THREE.Material} mat
- */
-export function materialAutoChange(mat) {
-    if (!(mat instanceof THREE.Material))
-        return;
-
-    mat.dithering = true;
+        materialsList.forEach((mat) => {
+            if (mat instanceof THREE.Material)  // check just in case, spooky recursion
+                autoMaterial(mat);
+        });
+    }
 }
 
 
