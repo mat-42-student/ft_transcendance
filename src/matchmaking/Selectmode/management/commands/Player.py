@@ -17,7 +17,8 @@ class Player ():
         self.username = None
         self.type_game = None
         self.guests = {}
-        self.cancel = None
+        self.socketGame_is_online = None
+        self.leave_game = False
     
     def get_id(self):
         return (self.user_id)

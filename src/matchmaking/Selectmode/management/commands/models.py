@@ -230,6 +230,7 @@ class Game(models.Model):
     round = models.IntegerField(default=1)
     game_type = models.CharField(max_length=20, choices=GAME_TYPE_CHOICES, default="friendly")
     created_at = models.DateTimeField(auto_now_add=True)
+    failed = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'Game'

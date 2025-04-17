@@ -47,7 +47,7 @@ export class Mmaking
 		Reflect.deleteProperty(this.guests, friendId);
 	}
 
-	update_friendList()
+	async update_friendList()
 	{
 
 		for (let [key, value] of state.socialApp.friendList)
