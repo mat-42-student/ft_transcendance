@@ -11,8 +11,6 @@ export default class DebugBall extends Ball {
 	/** @type {THREE.ArrowHelper} */
 	#arrow;
 
-	#previousPosition = new THREE.Vector2();
-
 
 	constructor() {
 		super();
@@ -43,23 +41,17 @@ export default class DebugBall extends Ball {
 	onFrame(delta, time) {
 		super.onFrame(delta, time);
 
-		const currentPosition = new THREE.Vector2(this.position.x, this.position.z);
-
 		if (delta == 0) {  // Divide by zero risk. (Not sure when delta would be 0)
 			this.#arrow.visible = false;
 		} else {
-			const detectedVelocity = new THREE.Vector2().subVectors(
-				currentPosition, this.#previousPosition
-			).divideScalar(delta);
-			const detectedDirection = detectedVelocity.clone().normalize();
-
-			this.#arrow.setDirection(new THREE.Vector3(
-				detectedDirection.x, 0, detectedDirection.y
-			));
-			this.#arrow.visible = detectedVelocity.length() > 0.01;
+			this.#arrow.visible = this.velocity.length() > 0.01;
+			if (this.#arrow.visible) {
+				const direction = this.velocity.clone().normalize();
+				this.#arrow.setDirection(new THREE.Vector3(
+					direction.x, 0, direction.y
+				));
+			}
 		}
-
-		this.#previousPosition.copy(currentPosition);
 	}
 
 

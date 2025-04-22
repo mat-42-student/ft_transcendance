@@ -6,7 +6,7 @@ export class ChatApp{
     constructor(){
         this.doDOMThings();
         this.storedMessages = new Map(); // map to store messages with keys = userid and value = array of messages
-        this.mutedUsers = new Set(); // set to store muted users
+        this.unreadMessages = new Set(); // set to store unread messages with keys = userid and value = boolean
         this.activeChatUserId = null; // Change value by calling loadHistory 
     }
 
@@ -68,7 +68,7 @@ export class ChatApp{
         if (this.activeChatUserId == friend)
             this.postFriendMessage(data.body.message);
         else
-            this.hasUnreadMessage(friend);
+            this.setUnreadMessage(friend);
     }
 
     toggleChatInput(status) {
@@ -163,16 +163,25 @@ export class ChatApp{
         await this.renderMute();
     }
 
-    hasUnreadMessage(friend) {
-    // Make chat btn with friend to be green or something
+    setUnreadMessage(friend) {
+    // Make chat btn with friend to be green or something adn add user to unreadMessages Set
+        this.unreadMessages.add(friend);
         const chatImg = document.querySelector('.friend-detail[data-user-id="' + friend + '"] .btn-chat img');
         chatImg.src = "/ressources/chat_new_msg.png";
     }
 
     noUnreadMessage() {
-    // Make chat btn with friend to be normal
+    // Make chat btn with friend to be normal and remove user from unreadMessages Set
+        this.unreadMessages.delete(this.activeChatUserId);
         const chatImg = document.querySelector('.friend-detail[data-user-id="' + this.activeChatUserId + '"] .btn-chat img');
         chatImg.src = "/ressources/chat.png";
+    }
+
+    fixChatIcon(friend_id) {
+        if (this.unreadMessages.has(friend_id))
+            return "/ressources/chat_new_msg.png";
+        else
+            return "/ressources/chat.png";
     }
 
     async sendMsg(dest, message) {

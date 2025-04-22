@@ -29,58 +29,6 @@
     font-weight: bold;
 }
 
-.profile-status{
-    display: flex;
-    flex-direction: row;
-}
-
-.profile-status .indicator{
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    background: grey;
-    align-self: center;
-}
-
-.profile-status .message{
-    margin-left: 0.5rem;
-    font-size: 14px;
-    color: grey;
-}
-
-.profile-status.online .indicator {
-    background: green;
-}
-
-.profile-status.online .message {
-    color: green;
-}
-
-.profile-status.ingame .indicator {
-    background: blue;
-}
-
-.profile-status.ingame .message {
-    color: blue;
-}
-
-/* Statuts possibles */
-.friend-status.online {
-    background: green;
-}
-
-.friend-status.ingame {
-    background: darkred;
-}
-
-.friend-status.pending {
-    background: orange;
-}
-
-.friend-status.offline {
-    background: grey;
-}
-
 /* Boutons d'action */
 #profile-actions {
     display: flex;

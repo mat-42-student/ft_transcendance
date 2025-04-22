@@ -12,13 +12,13 @@ export class MainSocket {
 		}
 	}
 
-	async init() {
+	init() {
 		let socketURL = "wss://" + window.location.hostname + ":3000/ws/?t=" + state.client.accessToken;
 		// ws://localhost:3000/ws/?t=
 		this.socket = new WebSocket(socketURL);
 		state.chatApp = new ChatApp();
 		state.socialApp = new SocialApp();
-		await state.socialApp.getFriends();
+		// await state.socialApp.render();
 		// state.socialApp.startPollingPendingCount();  // Lancement automatique du polling
 		state.mmakingApp = new Mmaking();
 
@@ -50,7 +50,7 @@ export class MainSocket {
 					break;
 				case 'notify':
 					// console.log("mainSocket : incoming notify");
-					state.socialApp.incomingNotify();
+					state.socialApp.renderNoBuild();
 					break;
 				default:
 				console.warn('mainSocket : could not handle incoming JSON' + JSON.stringify(data, null, 2));
@@ -61,11 +61,18 @@ export class MainSocket {
 	send(data) {
 		// I added this check because it appears that sending without while still .CONNECTING
 		// breaks the socket permanently? Not sure about this...
-		if (this.socket.readyState == this.socket.OPEN)
-			this.socket.send(data);
-		else
-			console.error('Tried to send data over the main socket, but it is not open.\n',
-				'Data that could not be sent:', data);
+        try{
+            this.socket.send(data);
+        }
+        catch(DomException){
+            console.error('Tried to send data over the main socket, but it is not open.\n',
+                'Data that could not be sent:', data);
+        }
+        // if (this.socket.readyState == this.socket.OPEN)
+		// 	this.socket.send(data);
+		// else
+		// 	console.error('Tried to send data over the main socket, but it is not open.\n',
+		// 		'Data that could not be sent:', data);
 	}
 
 	// Ajout verifs
@@ -85,15 +92,4 @@ export class MainSocket {
 		// state.mmakingApp.close();
 		// state.mmakingApp = null;
 	}
-
-    // close() {
-    //     state.chatApp.close();
-    //     state.chatApp = null;
-    //     state.socialApp.close();
-	// 	state.socialApp = null;
-	// 	// state.mmakingApp.close();
-	// 	// state.mmakingApp = null;
-    //     this.socket.close();
-    //     this.socket = null;
-    // }
 }

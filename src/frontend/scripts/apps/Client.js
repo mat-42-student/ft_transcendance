@@ -1,4 +1,4 @@
-import { state } from '../main.js';
+import { delay, state } from '../main.js';
 import { MainSocket } from './MainSocket.js';
 import { verifyToken } from '../api/auth.js';
 import { resetPendingCountDisplay } from '../components/friend_requests.js';
@@ -15,6 +15,7 @@ export class Client{
     // Avoiding circular imports (main.js/Client.js)
     setState(state) {
         this.state = state;
+        this.renderProfileBtn();
     }
 
     async login(token) {
@@ -26,11 +27,12 @@ export class Client{
             throw error;
         }
         localStorage.setItem('cookieSet', true); // modfis ajoutées après merge
-		if (this.state.mainSocket == null)
-		{
+		if (this.state.mainSocket == null) {
         	this.state.mainSocket = new MainSocket();
-        	await this.state.mainSocket.init();
+        	this.state.mainSocket.init();
 		}
+        while (this.state.mainSocket.socket.readyState != WebSocket.OPEN)
+            await delay(0.1); // don't hit me
         this.globalRender();
     }
 
@@ -67,23 +69,40 @@ export class Client{
     }
 
     async globalRender() {
-        this.renderProfileBtn();
         if (this.state.socialApp) {
-            await this.state.socialApp.fetchFriends();
-            await this.state.socialApp.getInfos();
-            await this.state.socialApp.getPendingCount();
+            await this.state.socialApp.render();
+            // await this.state.socialApp.fetchFriends();
+            // await this.state.socialApp.getInfos();
+            // await this.state.socialApp.getPendingCount();
         }
         if (this.state.chatApp)
             this.state.chatApp.renderChat();
         if (this.state.mmakingApp)
             await this.state.mmakingApp.renderMatchmaking();
+        this.renderProfileBtn();
     }
 
-    renderProfileBtn(){
-        let label =  "Sign in";
+    renderProfileBtn() {
+        const profileLink = document.getElementById('profile-link');
+        const statusIndicator = document.querySelector('.user-status');
+    
+        let label = "Sign in";
+    
         if (this.state.client.userName)
-            label = this.state.client.userName + '(' + this.state.client.userId + ')';
-        document.getElementById('btn-profile').innerText = label;
+            label = `${this.state.client.userName} (${this.state.client.userId})`;
+    
+        if (profileLink)
+            profileLink.textContent = label;
+    
+        if (statusIndicator) {
+            statusIndicator.classList.remove('online', 'ingame', 'offline', 'pending');
+            const status = this.state.socialApp?.myStatus;
+
+            if (status)
+                statusIndicator.classList.add(status);
+            else
+                statusIndicator.classList.add('offline');
+        }
     }
 
     fillUserDataFromJWT() {
@@ -144,96 +163,3 @@ export class Client{
         }
     }
 }
-
-// import { state } from '../main.js';
-// import { MainSocket } from './MainSocket.js';
-
-// export class Client {
-//     constructor() {
-//         this.state = null;
-//         this.userId = null;
-//         this.userName = null;
-//         this.accessToken = null;
-//     }
-
-//     setState(state) {
-//         this.state = state;
-//     }
-
-//     async login(token) {
-//         this.accessToken = token;
-//         try {
-//             this.fillUserDataFromJWT();
-//         } catch (error) {
-//             console.error(error);
-//             throw error;
-//         }
-//         localStorage.setItem('cookieSet', true);
-//         this.renderProfileBtn();
-//         if (!this.state.mainSocket) {
-//             this.state.mainSocket = new MainSocket();
-//             await this.state.mainSocket.init();
-//         }
-//     }
-
-//     async logout() {
-//         this.userId = null;
-//         this.userName = null;
-//         this.accessToken = null;
-//         if (this.state.mainSocket) this.state.mainSocket.close();
-//         this.state.mainSocket = null;
-//         this.renderProfileBtn();
-
-//         try {
-//             const response = await ft_fetch('/api/v1/auth/logout/', {
-//                 method: 'POST',
-//                 credentials: 'include',
-//                 headers: { 'Content-Type': 'application/json' },
-//                 body: JSON.stringify({}),
-//             });
-//             if (!response.ok) throw new Error('Logout failed');
-//             localStorage.removeItem('cookieSet');
-//             window.location.hash = '#home';
-//         } catch (error) {
-//             console.error('Error:', error);
-//         }
-//     }
-
-//     async globalRender() {
-//         this.renderProfileBtn();
-//         if (this.state.socialApp) {
-//             await this.state.socialApp.getFriends();
-//             this.state.socialApp.displayFriendList();
-//             await this.state.socialApp.getInfos();
-//         }
-//         if (this.state.chatApp) this.state.chatApp.renderChat();
-//     }
-
-//     renderProfileBtn() {
-//         document.getElementById('btn-profile').innerText = this.userName ? `${this.userName} (${this.userId})` : "Sign in";
-//     }
-
-//     fillUserDataFromJWT() {
-//         if (!this.accessToken) throw new Error('Token not found');
-//         const payload = JSON.parse(atob(this.accessToken.split('.')[1]));
-//         this.userId = payload.id;
-//         this.userName = payload.username;
-//     }
-
-//     async refreshSession(location = null) {
-//         if (!localStorage.getItem('cookieSet'))
-//             return;
-//         try {
-//             const response = await ft_fetch('api/v1/auth/refresh/', {
-//                 method: 'POST',
-//                 credentials: 'include'
-//             });
-//             if (!response.ok) throw new Error("Could not refresh token");
-//             const data = await response.json();
-//             await this.login(data.accessToken);
-//             if (location) window.location.hash = location;
-//         } catch (error) {
-//             // console.warn(error);
-//         }
-//     }
-// }

@@ -243,34 +243,27 @@ class GameSerializer(serializers.ModelSerializer):
     player1 = serializers.CharField(source='player1.username')
     player2 = serializers.CharField(source='player2.username')
     tournament = serializers.SerializerMethodField()
-    tournament_organizer = serializers.SerializerMethodField()
 
     class Meta:
         model = Game
-        fields = ['id', 'result', 'player1', 'player2', 'score_player1', 'score_player2', 'date', 'tournament', 'tournament_organizer']
+        fields = ['id', 'result', 'player1', 'player2', 'score_player1', 'score_player2', 'date', 'tournament']
 
     def get_result(self, obj):
         """
-        Détermine si l'utilisateur ciblé par la requête a gagné ou perdu la partie.
+        Détermine si l'utilisateur ciblé par la requête a gagné ou perdu la partie,
+        selon le profil consulté.
         """
-        request = self.context.get('request')
-        user = request.user
-        if user == obj.player1:
-            return "Victory" if obj.score_player1 > obj.score_player2 else "Defeat"
-        elif user == obj.player2:
-            return "Victory" if obj.score_player2 > obj.score_player1 else "Defeat"
-        return "Not Involved"
+        target_user = self.context.get('target_user')
+
+        # Si le joueur cible est player1
+        if target_user == obj.player1:
+            return "Victoire" if obj.score_player1 > obj.score_player2 else "Defaite"
+        # Si le joueur cible est player2
+        elif target_user == obj.player2:
+            return "Victoire" if obj.score_player2 > obj.score_player1 else "Defaite"
 
     def get_tournament(self, obj):
         """
         Vérifie si la partie est liée à un tournoi.
         """
         return obj.tournament is not None
-
-    def get_tournament_organizer(self, obj):
-        """
-        Récupère l'organisateur du tournoi si applicable.
-        """
-        if obj.tournament:
-            return obj.tournament.organizer.username
-        return None

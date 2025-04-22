@@ -27,7 +27,6 @@ export default class LevelBase extends THREE.Scene {
 
 		const fakeEvent = { child: this };
 		__onObjectAddedToScene(fakeEvent);
-
 	}
 
 
@@ -41,6 +40,17 @@ export default class LevelBase extends THREE.Scene {
 			this.smoothCamera.position.copy(this.views.position[this.viewIndex]);
 			this.smoothCamera.quaternion.copy(this.views.quaternion[this.viewIndex]);
 			this.smoothCamera.fov = this.views.fov[this.viewIndex];
+		}
+
+		// the namesReady function is called when a web game is done initializing,
+		// so that the level can read a correct value for the usernames.
+		if (this.namesReady != undefined
+			&& this.namesReadyWasAlreadyExecuted != true
+			&& state.gameApp != null
+			&& state.gameApp.playerNames[0] != '-'
+		) {
+			this.namesReadyWasAlreadyExecuted = true;
+			this.namesReady();
 		}
 	}
 
