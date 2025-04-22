@@ -595,8 +595,10 @@ export class Mmaking
 			{
 				this.btnSearchTournamentActive = false;
 				this.btnsearchRandomisActive = false;
+				this.cancel = true
 			}
-			this.cancel = true;
+			else
+				this.cancel = true;
 		}
 		// Routing to communication mode Invite
         else if (data.body.invite)
