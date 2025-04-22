@@ -1263,13 +1263,21 @@ class Command(BaseCommand):
             round = await sync_to_async(self.nextRoundTournament)(all_games_of_tournament_are_Finished)
             if (round <= self.roundMax + 1):
                 await self.sendNextRoundToClient(all_games_of_tournament_are_Finished)
-            elif (round > self.roundMax + 1):
+            elif (round > self.roundMax + 1): # if 2 player quit the same game, i come here 
                 await self.endGame(game)
+
+                # set winner of tournament
+                player = await sync_to_async(getattr)(game, 'winner')
+                await sync_to_async(self.setTournament_winner_db)(tournament.id, player.id)
+ 
                 del self.games['tournament'][tournament.id]
         elif(game.round >= self.roundMax + 1):
             await self.endGame(game)
             
             # set the winner of tournament !!!!!
+            player = await sync_to_async(getattr)(game, 'winner')
+            await sync_to_async(self.setTournament_winner_db)(tournament.id, player.id)
+
             try:
                 if (self.games['tournament'][tournament.id][game.id]):
                     del self.games['tournament'][tournament.id]
@@ -1334,9 +1342,9 @@ class Command(BaseCommand):
                                 pass
                             elif(player.socketGame_is_online == False):
                                 await self.JSON_endgameWithoutError(playerId)
-                                
-                        if (await self.checkStatus(player, 'online') == False):
-                            print('Imposible to set new status')
+
+                            if (await self.checkStatus(player, 'online') == False):
+                                print('Imposible to set new status')
                         del self.games[gameInCache.type_game][gameDB.id]
                         break
             except Exception as e:
@@ -1481,7 +1489,21 @@ class Command(BaseCommand):
             game.delete()
         except Exception as e:
             print(f"Delete Game in Database failed: {e}")
-        
+
+    
+    def setTournament_winner_db(self, tournamentId, winnerId):
+        print("Set winner of tournament START")
+        try:
+            tournament = Tournament.objects.get(id=tournamentId)
+            winner = User.objects.get(id=winnerId)
+
+            tournament.winner = winner
+            tournament.save()
+            print("Set winner of tournament END")
+
+
+        except Exception as e:
+            print(f"set tournament winner in db failed: {e}")       
         
                   
 
