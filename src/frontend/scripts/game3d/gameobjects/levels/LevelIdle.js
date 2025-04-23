@@ -28,6 +28,22 @@ export default class LevelIdle extends LevelBase {
 		this.smoothCamera.mouseRotationMultiplier.setScalar(0.3);
 		this.smoothCamera.diagonal = 36.87;  // 4:3 aspect ratio, arbitrarily
 
+		this.remainingToLoad = 2;
+
+		new THREE.CubeTextureLoader()
+			.setPath( '/ressources/3d/computerCubemap/' )
+			.load( [
+				'px.jpg',
+				'nx.jpg',
+				'py.jpg',
+				'ny.jpg',
+				'pz.jpg',
+				'nz.jpg'
+		], (tex) => {
+			this.screenEnvMap = tex;
+			this.loadComplete();
+		} );
+
 		state.engine.gltfLoader.load('/ressources/3d/computerScene.glb', (gltf) => {
 			state.engine.scene = window.idleLevel;
 			window.idleLevel = undefined;
@@ -69,6 +85,7 @@ export default class LevelIdle extends LevelBase {
 			}  // Screen render target
 
 			UTILS.autoMaterial(gltf.scene);  // call again just in case
+			this.loadComplete();
 		});
 	}
 
@@ -90,6 +107,14 @@ export default class LevelIdle extends LevelBase {
 
 			this.#wiggleScreensaver(delta);
 		}
+	}
+
+
+	onLoadComplete() {
+		const screenMaterial = UTILS.findMaterialInHierarchy(this, "Screen");
+		if (!(screenMaterial instanceof THREE.MeshStandardMaterial))  throw Error("screen't");
+
+		screenMaterial.envMap = this.screenEnvMap;
 	}
 
 
