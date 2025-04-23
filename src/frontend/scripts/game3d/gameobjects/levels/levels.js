@@ -1,13 +1,15 @@
 import LevelBase from './LevelBase.js';
+import LevelRetroPong from './LevelRetroPong.js';
 import LevelDebug from './debug/LevelDebug.js';
 
 
 const RANDOM_LIST = {
-	'debug': LevelDebug,
+	'retro-pong': LevelRetroPong,
 };
 
 
 export const LIST = {
+	'debug': LevelDebug,
 	...RANDOM_LIST,
 };
 

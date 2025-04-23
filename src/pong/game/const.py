@@ -34,4 +34,7 @@ LEVELS = {
     "debug": {
         "board_size": [1.5, 1.0],
     },
+    # "retro-pong": {
+    #     "board_size": [4/3, 1.0],
+    # },
 }

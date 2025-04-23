@@ -1,9 +1,7 @@
 import * as THREE from 'three';
 import * as UTILS from '../../../utils.js';
 import LevelBase from './LevelBase.js';
-import SceneOriginHelper from '../utils/SceneOriginHelper.js';
 import { state } from '../../../main.js';
-import TextMesh from '../utils/TextMesh.js';
 
 
 export default class LevelComputerBase extends LevelBase {
@@ -18,7 +16,9 @@ export default class LevelComputerBase extends LevelBase {
 		super.onAdded();
 
 		this.boardSize = null;
-		this.name = 'Idle Level';
+		this.name = 'Computer Level';
+
+		this.boardSize = new THREE.Vector2(4/3, 1);
 
 		this.background = new THREE.Color("#000000");
 
@@ -51,11 +51,9 @@ export default class LevelComputerBase extends LevelBase {
 		} );
 
 		state.engine.gltfLoader.load('/ressources/3d/computerScene.glb', (gltf) => {
-			state.engine.scene = window.idleLevel;
-			window.idleLevel = undefined;
 
 			this.gltfToDispose = gltf.scene;
-			state.engine.scene.add(gltf.scene);
+			this.add(gltf.scene);
 
 			{  // Screen render target
 				const screenMaterial = UTILS.findMaterialInHierarchy(gltf.scene, "Screen");
@@ -64,7 +62,7 @@ export default class LevelComputerBase extends LevelBase {
 				this.rt = new THREE.WebGLRenderTarget(640, 480);
 
 				this.rtCamera = new THREE.PerspectiveCamera(90, this.rt.width/this.rt.height);
-				this.rtCamera.position.set(0, 0, -1);
+				this.rtCamera.position.set(0, 0, -1.1);
 				this.rtCamera.rotateX(UTILS.RAD180);
 
 				screenMaterial.roughness = 0;
@@ -101,6 +99,13 @@ export default class LevelComputerBase extends LevelBase {
 	onLoadComplete() {
 		const screenMaterial = UTILS.findMaterialInHierarchy(this, "Screen");
 		if (!(screenMaterial instanceof THREE.MeshStandardMaterial))  throw Error("screen't");
+
+		if (this === window.idleLevel) {
+			state.engine.scene = this;
+			window.idleLevel = undefined;
+		} else {
+			state.engine.scene = this;
+		}
 
 		screenMaterial.envMap = this.screenEnvMap;
 		this.rtScene = new this.subsceneClass();
