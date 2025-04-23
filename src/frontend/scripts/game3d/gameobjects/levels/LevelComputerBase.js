@@ -108,7 +108,7 @@ export default class LevelComputerBase extends LevelBase {
 		}
 
 		screenMaterial.envMap = this.screenEnvMap;
-		this.rtScene = new this.subsceneClass();
+		this.rtScene = new this.subsceneClass(this);
 		this.rtScene.onAdded();
 	}
 

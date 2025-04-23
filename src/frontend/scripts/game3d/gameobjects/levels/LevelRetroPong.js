@@ -16,6 +16,11 @@ export default class LevelRetroPong extends LevelComputerBase {
 
 class SubsceneRetroPong extends THREE.Scene {
 
+	constructor(parentScene) {
+		super();
+		this.parentScene = parentScene;
+	}
+
 	onAdded() {
 		this.background = new THREE.Color("#007700");
 

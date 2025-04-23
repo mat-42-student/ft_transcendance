@@ -15,6 +15,11 @@ export default class LevelIdle extends LevelComputerBase {
 
 class SubsceneIdle extends THREE.Scene {
 
+	constructor(parentScene) {
+		super();
+		this.parentScene = parentScene;
+	}
+
 	onAdded() {
 		// this.add(new THREE.AxesHelper(1));
 		this.background = new THREE.Color("#000000");
