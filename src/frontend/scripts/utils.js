@@ -115,6 +115,44 @@ export function autoMaterial(obj) {
 
 
 /**
+ * @param {THREE.Object3D} obj Object hierarchy, will be traversed recursively.
+ * @param {string} materialName
+ * @returns {THREE.Material?}
+ */
+export function findMaterialInHierarchy(obj, materialName) {
+    if (!(obj instanceof THREE.Object3D))
+        throw Error("Bad function argument 1");
+
+    if (typeof materialName != "string" || materialName == "")
+        throw Error("Bad function argument 2");
+
+    let result = null;
+
+    obj.traverse((currentObj) => {
+        if (currentObj.material instanceof Array) {
+            if (currentObj.material instanceof Array) {
+
+                currentObj.material.forEach((currentMaterial) => {
+                    if (currentMaterial.name == materialName) {
+                        result = currentMaterial
+                        return;
+                    }
+                });
+
+            }
+        } else if (currentObj.material instanceof THREE.Material && currentObj.material.name == materialName) {
+
+            result = currentObj.material;
+            return;
+
+        }
+    });
+
+    return result;
+}
+
+
+/**
  * Fully dispose a hierarchy of meshes. Intended for GLTF imported models.
  * Recursively disposes child objects.
  * @param {THREE.Object3D} obj
