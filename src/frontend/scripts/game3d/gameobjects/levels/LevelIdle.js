@@ -3,6 +3,7 @@ import * as UTILS from '../../../utils.js';
 import LevelBase from './LevelBase.js';
 import SceneOriginHelper from '../utils/SceneOriginHelper.js';
 import { state } from '../../../main.js';
+import TextMesh from '../utils/TextMesh.js';
 
 
 export default class LevelIdle extends LevelBase {
@@ -38,16 +39,28 @@ export default class LevelIdle extends LevelBase {
 				const screenMaterial = UTILS.findMaterialInHierarchy(gltf.scene, "Screen");
 				if (!(screenMaterial instanceof THREE.MeshStandardMaterial))  throw Error("screen't");
 
-				this.rt = new THREE.WebGLRenderTarget(160, 120);
+				this.rt = new THREE.WebGLRenderTarget(640, 480);
 
 				this.rtCamera = new THREE.PerspectiveCamera(90, this.rt.width/this.rt.height);
-				this.rtCamera.position.set(0, 0, 1);
+				this.rtCamera.position.set(0, 0, -1);
+				this.rtCamera.rotateX(UTILS.RAD180);
 
 				this.rtScene = new THREE.Scene();
+				// this.rtScene.add(new THREE.AxesHelper(1));
 				this.rtScene.background = new THREE.Color("#000000");
-				this.rtScene.add(new THREE.AmbientLight("#ffffff", 1));  // just in case a material is shaded
-				this.rtScene.add(new THREE.AxesHelper(1));
-				this.rtScene.add(new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.1, 12, 48)));
+				this.rtScene.add(new THREE.AmbientLight("#ffffff", 0.2));
+				const sun = new THREE.DirectionalLight("#ffffff", 1.8);
+				this.rtScene.add(sun);
+				sun.position.set(-0.2, 0.2, -1);  // this turns the light
+				this.screensaverTextMaterial = new THREE.MeshStandardMaterial({
+					color: "#33dd55",
+					roughness: 1,
+				});
+				this.screensaverText = new TextMesh(this.screensaverTextMaterial, null, true, true);
+				this.screensaverText.depth = 0.04;
+				this.screensaverText.setText("Transcendance");
+				this.screensaverText.scale.setScalar(1.2);
+				this.rtScene.add(this.screensaverText);
 
 				screenMaterial.roughness = 0;
 				screenMaterial.emissive = new THREE.Color("#ffffff");  //THIS IS NEEDED: it multiplies emissiveMap.
@@ -74,6 +87,8 @@ export default class LevelIdle extends LevelBase {
 			}
 
 			state.engine.renderer.setRenderTarget(prevTarget);
+
+			this.#wiggleScreensaver(delta);
 		}
 	}
 
@@ -83,6 +98,25 @@ export default class LevelIdle extends LevelBase {
 		UTILS.disposeHierarchy(this.gltfToDispose);
 		if (this.rt)  this.rt.dispose();
 		if (this.rtScene)  UTILS.disposeHierarchy(this.rtScene);
+	}
+
+
+	#screensaver = {
+		direction: 1,
+		pos: 0,
+		turn: 0,
+	};
+	#wiggleScreensaver(delta) {
+		if (this.#screensaver.direction == 1 && this.#screensaver.pos > 1)
+			this.#screensaver.direction = -1;
+		else if (this.#screensaver.direction == -1 && this.#screensaver.pos < -1)
+			this.#screensaver.direction = 1;
+
+		this.#screensaver.pos += delta * 0.3 * this.#screensaver.direction;
+		this.#screensaver.turn += delta * 0.7;
+
+		this.screensaverText.position.x = 0.9 * this.#screensaver.pos;
+		this.screensaverText.rotation.y = this.#screensaver.turn;
 	}
 
 }
