@@ -84,8 +84,8 @@ export function shouldPowersave() {
 export function autoMaterial(obj) {
     if (obj instanceof THREE.Material)
     {
-        if (obj.wireframe !== undefined) obj.wireframe = true;
-        obj.dithering = false;
+        // if (obj.wireframe !== undefined) obj.wireframe = true;  // Useful for testing
+        obj.dithering = true;
     }
     else if (obj instanceof THREE.Object3D)
     {
