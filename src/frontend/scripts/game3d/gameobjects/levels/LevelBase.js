@@ -21,6 +21,8 @@ export default class LevelBase extends THREE.Scene {
 
 	get viewIndex() { return state.isPlaying ? state.gameApp.side : 2; }
 
+	remainingToLoad = -1;
+
 
 	constructor() {
 		super();
@@ -71,6 +73,23 @@ export default class LevelBase extends THREE.Scene {
 			return true;
 		}
 		return false;
+	}
+
+
+	loadComplete() {
+		this.remainingToLoad--;
+
+		if (this.remainingToLoad === 0) {
+			if (!state.gameApp || (state.gameApp && state.gameApp.level === this)) {
+				state.engine.scene = this;
+				if (typeof this.onLoadComplete == "function")  this.onLoadComplete();
+			} else {
+				state.engine.showErrorScene();
+				this.dispose();
+			}
+		} else if (this.remainingToLoad < 0) {
+			throw new Error();
+		}
 	}
 
 

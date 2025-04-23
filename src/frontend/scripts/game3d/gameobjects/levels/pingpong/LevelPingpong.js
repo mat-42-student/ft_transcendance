@@ -85,22 +85,6 @@ export default class LevelPingpong extends LevelBase {
 	}
 
 
-	loadComplete() {
-		this.remainingToLoad--;
-
-		if (this.remainingToLoad === 0) {
-			if (state.gameApp && state.gameApp.level && state.gameApp.level === this) {
-				state.engine.scene = this;
-			} else {
-				state.engine.showErrorScene();
-				this.dispose();
-			}
-		} else if (this.remainingToLoad < 0) {
-			throw new Error();
-		}
-	}
-
-
 	namesReady() {
 		//TODO show usernames
 	}
