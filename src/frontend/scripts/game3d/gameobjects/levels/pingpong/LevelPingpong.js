@@ -51,26 +51,26 @@ export default class LevelPingpong extends LevelBase {
 		state.engine.gltfLoader.load('/ressources/3d/level_pingpong/paddle.glb', (gltf) => {
 			const scene = gltf.scene;
 			this.gltfToDispose.push(scene);
-			this.loadComplete();
 
 			this.add(new PingpongPaddle(0, scene.clone()));
 			this.add(new PingpongPaddle(1, scene.clone()));
+			this.loadComplete();
 		});
 
 		state.engine.gltfLoader.load('/ressources/3d/level_pingpong/ball.glb', (gltf) => {
 			const scene = gltf.scene;
 			this.gltfToDispose.push(scene);
-			this.loadComplete();
 
 			this.add(new PingpongBall(scene));
+			this.loadComplete();
 		});
 
 		state.engine.gltfLoader.load('/ressources/3d/level_pingpong/environment.glb', (gltf) => {
 			const scene = gltf.scene;
 			this.gltfToDispose.push(scene);
-			this.loadComplete();
 
 			this.add(scene);
+			this.loadComplete();
 		});
 	}
 

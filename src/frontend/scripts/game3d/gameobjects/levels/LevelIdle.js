@@ -36,6 +36,7 @@ export default class LevelIdle extends LevelBase {
 			state.engine.scene.funnycube = gltf.scene;
 			state.engine.scene.funnycube.scale.setScalar(0.2);
 			state.engine.scene.add(state.engine.scene.funnycube);
+			UTILS.autoMaterial(state.engine.scene);  // call again just in case
 		});
 	}
 

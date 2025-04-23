@@ -81,7 +81,6 @@ export function shouldPowersave() {
  * @param {THREE.Object3D | THREE.Material} obj A hierarchy of Object3D's, that will be recursively affected,
  * or a single material.
  */
-//FIXME i am not sure if this is really working, some materials appear unchanged
 export function autoMaterial(obj) {
     if (obj instanceof THREE.Material)
     {
