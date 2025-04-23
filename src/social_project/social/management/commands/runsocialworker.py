@@ -82,7 +82,9 @@ class Command(BaseCommand):
 
     async def social_process(self, data):
         user_id = data['header']['id']
-        if data['body']['status'] == 'notify': # User's first connection, get all friends status
+        if data['body'].get('from') == 'mmaking' and self.user_status.get(user_id, "offline") == "offline":
+            return
+        if data['body']['status'] == 'notify':
            await self.notifyUser(data)
            return
         friends_data = self.get_friend_list(user_id)

@@ -46,7 +46,7 @@ export class Mmaking
 		Reflect.deleteProperty(this.guests, friendId);
 	}
 
-	update_friendList()
+	async update_friendList()
 	{
 
 		for (let [key, value] of state.socialApp.friendList)
@@ -249,6 +249,7 @@ export class Mmaking
 		this.type_game = null;
 		this.SearchRandomGame = false;
 		this.game = false;
+		this.gameId = null;
 		this.salonHost = false;
 
 		const btnTournament = document.getElementsByClassName('btn-tournament');
@@ -584,8 +585,10 @@ export class Mmaking
 			{
 				this.btnSearchTournamentActive = false;
 				this.btnsearchRandomisActive = false;
+				this.cancel = true
 			}
-			this.cancel = true;
+			else
+				this.cancel = true;
 		}
 		// Routing to communication mode Invite
         else if (data.body.invite)

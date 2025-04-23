@@ -11,6 +11,7 @@ from urllib.parse import urlencode
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import ValidationError
 from rest_framework.renderers import JSONRenderer
 from rest_framework.permissions import AllowAny
 from rest_framework import status
@@ -107,24 +108,24 @@ class LoginView(APIView):
 
         user = User.objects.filter(email=email).first()
 
+        if user is None:
+            raise AuthenticationFailed('User not found!')
+
         user_status = getStatus(user.id)
 
         if user_status != "offline":
-            return Response({"success": False, "error": "User already logged in"}, status=400)
-
-        if user is None:
-            raise AuthenticationFailed('User not found!')
+            raise ValidationError({"error": "User already logged in"})
         
         if not user.check_password(password):
             raise AuthenticationFailed('Incorrect password!')
             
         if user.is_2fa_enabled:
             if not code:
-                return Response({"success": False, "error": "2fa_required!"}, status=400)
+                raise ValidationError({"error": "2fa_required!"})
 
             totp = pyotp.TOTP(user.totp_secret)
             if not totp.verify(code):
-                return Response({"success": False, "error": "invalid_totp"}, status=400)
+                raise ValidationError({"error": "invalid_totp"})
 
         access_payload = {
             'id': user.id,

@@ -7,8 +7,11 @@ class Salon():
         self.score2 = None
         
     def __str__(self):
+        flux = ''
         for value in self.players.values():
-            return(f'Players : {value} type_game: {self.type_game}')
+            flux += (f'{value} type_game: {self.type_game} ' + '\t')
+        
+        return flux
 
     def getDictPlayers(self):
         players = {}
@@ -24,3 +27,15 @@ class Salon():
                 score1isSet = False
             players.update({key: dict})
         return (players)
+    
+    def all_players_have_errors_SocketGame(self):
+        for player in self.players.values():
+            if (player.socketGame_is_online == True or player.socketGame_is_online == None):
+                return False
+        return True
+    
+    def all_players_have_leave_game(self):
+        for player in self.players.values():
+            if (player.leave_game == False):
+                return False
+        return True
