@@ -14,13 +14,19 @@ export default class TextMesh extends THREE.Mesh {
 	bevelOffset = 0;
 	bevelSegments = 5;
 
+	centerH = true;
+	centerV = false;
+
 
 	/**
 	 * @param {THREE.Material} material Material to use. Remember to dispose it.
 	 * @param {string} text
 	 */
-	constructor(material, text = null) {
+	constructor(material, text = null, centerH = true, centerV = false) {
 		super(new THREE.BufferGeometry(), material);
+
+		this.centerH = centerH;
+		this.centerV = centerV;
 
 		if (text != null)
 			this.setText(text);
@@ -52,6 +58,15 @@ export default class TextMesh extends THREE.Mesh {
 				bevelSegments: this.bevelSegments,
 			}
 		);
+
+		if (this.centerH || this.centerV) {
+			this.geometry.computeBoundingBox();
+			const center = this.geometry.boundingBox.getCenter(new THREE.Vector3());
+			const offsetH = this.centerH ? -center.x : 0;
+			const offsetV = this.centerV ? -center.y : 0;
+			// unnecessarily expensive compared to setting transform on child object but uhhh who cares
+			this.geometry.translate(offsetH, offsetV, 0);
+		}
 	}
 
 
