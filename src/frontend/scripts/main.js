@@ -124,10 +124,11 @@ function setupSearchInput() {
     });
 }
 
-// page unload // necessary ??
+// page unload
 window.addEventListener('beforeunload', function() {
     state.mainSocket?.close();
-    state.gameApp?.socket?.close();
+    state.gameApp?.close();
+    state.engine.scene = null;
 });
 
 // window.addEventListener('beforeunload', function(event) {
