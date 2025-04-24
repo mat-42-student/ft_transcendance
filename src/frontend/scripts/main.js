@@ -4,7 +4,7 @@ import { initDynamicCard, closeDynamicCard } from './components/dynamic_card.js'
 import { GameBase } from './apps/GameBase.js';
 import { Input } from './game3d/Input.js';
 import { Engine } from './game3d/Engine.js';
-import LevelIdle from './game3d/gameobjects/levels/LevelIdle.js';
+import LevelIdle from './game3d/gameobjects/levels/idle/LevelIdle.js';
 import { LocalGame } from './apps/LocalGame.js';
 
 export const state = {

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import TextMesh from '../utils/TextMesh.js';
+import TextMesh from '../../utils/TextMesh.js';
 
 export default class SubsceneScreensaver extends THREE.Scene {
 

@@ -1,4 +1,4 @@
-import LevelComputerBase from "./LevelComputerBase.js";
+import LevelComputerBase from "../LevelComputerBase.js";
 import SubsceneRetroPong from "./SubsceneRetroPong.js";
 
 

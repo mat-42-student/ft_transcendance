@@ -1,4 +1,4 @@
-import LevelComputerBase from "./LevelComputerBase.js";
+import LevelComputerBase from "../LevelComputerBase.js";
 import SubsceneScreensaver from "./SubsceneScreensaver.js";
 
 

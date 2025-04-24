@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import TextMesh from '../utils/TextMesh.js';
-import { state } from '../../../main.js';
+import TextMesh from '../../utils/TextMesh.js';
+import { state } from '../../../../main.js';
 
 
 export default class SubsceneRetroPong extends THREE.Scene {

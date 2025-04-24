@@ -1,5 +1,5 @@
 import LevelBase from './LevelBase.js';
-import LevelRetroPong from './LevelRetroPong.js';
+import LevelRetroPong from './retro/LevelRetroPong.js';
 import LevelDebug from './debug/LevelDebug.js';
 
 
