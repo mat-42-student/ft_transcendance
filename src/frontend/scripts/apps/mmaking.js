@@ -445,7 +445,7 @@ export class Mmaking
 
 					const team1Score = document.createElement('span');
 					team1Score.classList.add('score');
-					team1Score.textContent = player.score1 !== undefined ? player.score1 : '-';
+					team1Score.textContent = player.score !== undefined ? player.score : '-';
 
 					teamContainer.appendChild(team1Element);
 					team1Element.appendChild(team1Score);
@@ -467,7 +467,7 @@ export class Mmaking
 
 					const team2Score = document.createElement('span');
 					team2Score.classList.add('score');
-					team2Score.textContent = player.score2 !== undefined ? player.score2 : '-';
+					team2Score.textContent = player.score !== undefined ? player.score : '-';
 
 					teamContainer.appendChild(team2Element);
 					team2Element.appendChild(team2Score);

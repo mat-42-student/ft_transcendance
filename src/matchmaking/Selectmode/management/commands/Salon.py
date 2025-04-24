@@ -15,16 +15,15 @@ class Salon():
 
     def getDictPlayers(self):
         players = {}
-        score1isSet = False
+        firstScoreIsSet = False
         dict = {}
         for key, player in self.players.items():
             dict = player.getDict()
-            if (score1isSet == False):
-                dict.update({'score1': self.score1})
-                score1isSet = True
-            else:
-                dict.update({'score2':self.score2})
-                score1isSet = False
+            if (firstScoreIsSet == False):
+                dict.update({'score': self.score1})
+                firstScoreIsSet = True
+            elif (firstScoreIsSet == True):
+                dict.update({'score': self.score2})
             players.update({key: dict})
         return (players)
     
