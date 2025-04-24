@@ -27,12 +27,13 @@ export default class SubsceneScreensaver extends THREE.Scene {
 	}
 
 	onFrame(delta, time) {
-		if (this.#screensaver.direction == 1 && this.#screensaver.pos > 1)
+		if (this.#screensaver.direction == 1 && this.#screensaver.pos >= 1)
 			this.#screensaver.direction = -1;
-		else if (this.#screensaver.direction == -1 && this.#screensaver.pos < -1)
+		else if (this.#screensaver.direction == -1 && this.#screensaver.pos <= -1)
 			this.#screensaver.direction = 1;
 
 		this.#screensaver.pos += delta * 0.3 * this.#screensaver.direction;
+		this.#screensaver.pos = THREE.MathUtils.clamp(this.#screensaver.pos, -1, 1);
 		this.#screensaver.turn += delta * 0.7;
 
 		this.screensaverText.position.x = 0.9 * this.#screensaver.pos;
