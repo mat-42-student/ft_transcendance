@@ -2,10 +2,14 @@ import * as THREE from 'three';
 import TextMesh from '../../utils/TextMesh.js';
 import { state } from '../../../../main.js';
 import RetroScoreIndicator from './RetroScoreIndicator.js';
+import LevelComputerBase from '../LevelComputerBase.js';
 
 
 export default class SubsceneRetroPong extends THREE.Scene {
 
+	/**
+	 * @param {LevelComputerBase} parentScene
+	 */
 	constructor(parentScene) {
 		super();
 		this.parentScene = parentScene;
@@ -47,6 +51,35 @@ export default class SubsceneRetroPong extends THREE.Scene {
 	dispose() {
 		if (this.whiteMaterial) this.whiteMaterial.dispose();
 		if (this.grayMaterial) this.grayMaterial.dispose();
+	}
+
+
+	//TODO these functions maybe show something different?
+	endShowWinner(
+		scores = [NaN, NaN],
+		winner = NaN,
+		playerNames = ['?1', '?2'],
+	) {
+		this.#endGeneric(scores);
+	}
+	endShowWebOpponentQuit(opponentName) {
+		this.#endGeneric(state.gameApp.side === 0 ? [1, 0] : [0, 1]);
+	}
+	endShowYouRagequit() {
+		this.#endGeneric(state.gameApp.side === 1 ? [1, 0] : [0, 1]);
+	}
+	endShowNothing = this.endHideResult;
+	endHideResult() {
+		//TODO start screensaver :)
+	}
+
+
+	#endGeneric(scores) {
+		this.scoreText?.forEach((scoreIndicator, i) => {
+			// otherwise it automatically hides, because the game is no longer playing
+			scoreIndicator.freeze = true;
+			scoreIndicator.scoreChanged(scores[i]);
+		});
 	}
 
 }

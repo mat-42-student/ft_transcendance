@@ -158,5 +158,31 @@ export default class LevelComputerBase extends LevelBase {
 		if (this.rtScene && this.rtScene.dispose)  this.rtScene.dispose();
 	}
 
+
+	endShowWinner(
+		scores = [NaN, NaN],
+		winner = NaN,
+		playerNames = ['?1', '?2'],
+	) {
+		super.endShowWinner(scores, winner, playerNames);
+		this.rtScene?.endShowWinner?.(scores, winner, playerNames);
+	}
+	endShowWebOpponentQuit(opponentName) {
+		super.endShowWebOpponentQuit(opponentName);
+		this.rtScene?.endShowWebOpponentQuit?.(opponentName);
+	}
+	endShowYouRagequit() {
+		super.endShowYouRagequit();
+		this.rtScene?.endShowYouRagequit?.();
+	}
+	endShowNothing() {
+		super.endShowNothing();
+		this.rtScene?.endShowNothing?.();
+	}
+	endHideResult() {
+		super.endHideResult();
+		this.rtScene?.endHideResult?.();
+	}
+
 }
 
