@@ -105,7 +105,18 @@ export default class LevelComputerBase extends LevelBase {
 		}
 
 		screenMaterial.envMap = this.screenEnvMap;
-		this.rtScene = new this.subsceneClass(this);
+		this.setRtScene(new this.subsceneClass(this));
+	}
+
+
+	setRtScene(newScene) {
+		if (this.rtScene) {
+			this.rtScene._listeners?.removed?.forEach((eventHandler) => {
+				eventHandler({target: this.rtScene});
+			});
+		}
+
+		this.rtScene = newScene;
 
 		// Because the subscene is never added into the "normal" object tree,
 		// my custom functions don't work.

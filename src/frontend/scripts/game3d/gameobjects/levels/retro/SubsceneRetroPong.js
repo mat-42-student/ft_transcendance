@@ -3,6 +3,7 @@ import TextMesh from '../../utils/TextMesh.js';
 import { state } from '../../../../main.js';
 import RetroScoreIndicator from './RetroScoreIndicator.js';
 import LevelComputerBase from '../LevelComputerBase.js';
+import SubsceneScreensaver from '../idle/SubsceneScreensaver.js';
 
 
 export default class SubsceneRetroPong extends THREE.Scene {
@@ -71,8 +72,7 @@ export default class SubsceneRetroPong extends THREE.Scene {
 	}
 	endShowNothing = this.endHideResult;
 	endHideResult() {
-		//TODO start screensaver :)
-		this.parentScene.useDefaultCameraAngle();
+		this.parentScene.setRtScene(new SubsceneScreensaver(this.parentScene));
 	}
 
 
