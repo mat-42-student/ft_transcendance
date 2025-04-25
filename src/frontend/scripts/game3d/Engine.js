@@ -113,6 +113,12 @@ export class Engine {
 			);
 		}
 
+		window.addEventListener('beforeunload', () => {
+			this.#renderPass?.dispose?.();  this.#renderPass = null;
+			this.#unrealBloomPass?.dispose?.();  this.#unrealBloomPass = null;
+			this.#effectComposer?.dispose?.();  this.#effectComposer = null;
+		});
+
 		const resizeCallback = this.#onResize.bind(this);
 		this.#resizeObserver = new ResizeObserver(resizeCallback);
 		this.#resizeObserver.observe(this.#html_mainContent);
