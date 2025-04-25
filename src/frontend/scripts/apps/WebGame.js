@@ -1,6 +1,7 @@
 import { state } from '../main.js';
 import { GameBase } from './GameBase.js';
 import * as LEVELS from '../game3d/gameobjects/levels/levels.js';
+import { navigator } from '../nav.js'
 
 
 export class WebGame extends GameBase {
@@ -53,6 +54,7 @@ export class WebGame extends GameBase {
 
     async launchGameSocket(gameId) {
         await state.client.refreshSession();
+		await navigator.goToPage('home');
         let socketURL = "wss://" + window.location.hostname + ":3000/game/" + gameId + "/?t=" + state.client.accessToken;
         // websocat ws://pong:8006/game/1234/?t=
 
