@@ -28,7 +28,7 @@ export default class LevelBase extends THREE.Scene {
 		super();
 
 		const fakeEvent = { child: this };
-		__onObjectAddedToScene(fakeEvent);
+		onObjectAddedToScene(fakeEvent);
 	}
 
 
@@ -135,11 +135,11 @@ export default class LevelBase extends THREE.Scene {
 
 // MARK: Injected functions
 
-function __onObjectAddedToScene(e) {
+export function onObjectAddedToScene(e) {
 	/** @type {THREE.Object3D} */
 	const obj = e.child;
 
-	obj.addEventListener('childadded', __onObjectAddedToScene);
+	obj.addEventListener('childadded', onObjectAddedToScene);
 	obj.addEventListener('removed', __onObjectRemoved);
 
 	const statics = obj.__proto__.constructor;

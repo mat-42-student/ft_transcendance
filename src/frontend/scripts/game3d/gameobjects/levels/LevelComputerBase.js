@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import * as UTILS from '../../../utils.js';
-import LevelBase from './LevelBase.js';
+import LevelBase, { onObjectAddedToScene } from './LevelBase.js';
 import { state } from '../../../main.js';
 
 
@@ -81,10 +81,12 @@ export default class LevelComputerBase extends LevelBase {
 		super.onFrame(delta, time);
 
 		if (this.rtScene) {
+			this.subsceneCallOnRender(delta, time);
+
+			// Try/catch is important to make sure the renderer can not remain stuck in the subscene.
 			const prevTarget = state.engine.renderer.getRenderTarget();
 
 			try {
-				this.rtScene.onFrame(delta, time);
 				state.engine.renderer.setRenderTarget(this.rt);
 				state.engine.renderer.render(this.rtScene, this.rtCamera);
 			} catch (error) {
@@ -109,7 +111,38 @@ export default class LevelComputerBase extends LevelBase {
 
 		screenMaterial.envMap = this.screenEnvMap;
 		this.rtScene = new this.subsceneClass(this);
-		this.rtScene.onAdded();
+
+		// Because the subscene is never added into the "normal" object tree,
+		// my custom functions don't work.
+		// Injecting these events manually here fixes that.
+		// The only exception is onFrame, but we call that manually in this class's onFrame.
+		const fakeEvent = { child: this.rtScene };
+		onObjectAddedToScene(fakeEvent);
+	}
+
+
+	/**
+	 * Manually call onFrame for every object in the subscene.
+	 * Engine can't do that automatically: these objects are in a different hierarchy,
+	 * it's not even aware of them.
+	 *
+	 * But the code an identical copy of what Engine does to objects in the normal
+	 * scene, nothing special is happening here.
+	 *
+	 * Dubious design choice. Ship it.
+	 */
+	subsceneCallOnRender(delta, time) {
+		const updateQueue = [];
+
+		this.rtScene?.traverse((obj) => {
+			if ('onFrame' in obj) {
+				updateQueue.push(obj.onFrame.bind(obj));
+			}
+		});
+
+		for (const objectRenderFunction of updateQueue) {
+			objectRenderFunction(delta, time);
+		}
 	}
 
 
