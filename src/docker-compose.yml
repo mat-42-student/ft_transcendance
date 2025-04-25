@@ -6,6 +6,7 @@ volumes:
   postgres_data:
   media:
   static_volume:
+  vault_data:
 
 services:
   # django-base:
@@ -13,6 +14,23 @@ services:
   #       context: .
   #       dockerfile: Dockerfile.django
   #     image: django-base
+
+  vault:
+    container_name: vault
+    build:
+      context: ./vault
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./vault/logs:/var/log
+      - vault_data:/vault/file
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - dev-network
+    restart: unless-stopped
 
   auth:
     container_name: auth
@@ -25,6 +43,7 @@ services:
       - ./certs/services/auth/auth.crt:/etc/ssl/auth.crt:ro
       - ./certs/services/auth/auth.key:/etc/ssl/auth.key:ro
       - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
+      - vault_data:/vault/file
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,6 +69,7 @@ services:
       - ./certs/services/users/users.crt:/etc/ssl/users.crt:ro
       - ./certs/services/users/users.key:/etc/ssl/users.key:ro
       - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
+      - vault_data:/vault/file
     env_file:
       - .env
     networks:
@@ -82,6 +102,7 @@ services:
       - ./certs/services/chat/chat.crt:/etc/ssl/chat.crt:ro
       - ./certs/services/chat/chat.key:/etc/ssl/chat.key:ro
       - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
+      - vault_data:/vault/file
     networks:
       - dev-network
     restart: on-failure
@@ -98,6 +119,7 @@ services:
       - ./certs/services/social/social.crt:/etc/ssl/social.crt:ro
       - ./certs/services/social/social.key:/etc/ssl/social.key:ro
       - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
+      - vault_data:/vault/file
     depends_on:
       redis:
         condition: service_started 
@@ -119,6 +141,7 @@ services:
       - ./certs/services/gateway/gateway.crt:/etc/ssl/gateway.crt:ro
       - ./certs/services/gateway/gateway.key:/etc/ssl/gateway.key:ro
       - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
+      - vault_data:/vault/file
     depends_on:
       matchmaking:
         condition: service_started
@@ -140,6 +163,7 @@ services:
       - ./certs/services/matchmaking/matchmaking.crt:/etc/ssl/matchmaking.crt:ro
       - ./certs/services/matchmaking/matchmaking.key:/etc/ssl/matchmaking.key:ro
       - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
+      - vault_data:/vault/file
     depends_on:
       postgres:
         condition: service_healthy
@@ -157,8 +181,8 @@ services:
     container_name: nginx
     image: nginx
     build:
-      context: .
-      dockerfile: nginx/Dockerfile
+      context: nginx
+      dockerfile: Dockerfile
     ports:
       - "3000:443"    # Public port (frontend)
       - "8443:8443"   # Internal port (backend services)
@@ -172,6 +196,7 @@ services:
       - ./frontend:/usr/share/nginx/frontend
       - static_volume:/app/staticfiles
       - ./certs/ca/ca.crt:/etc/nginx/ssl/ca.crt:ro
+      - vault_data:/vault/file
     networks:
       - dev-network
     restart: on-failure
@@ -188,6 +213,7 @@ services:
       - ./certs/services/pong/pong.crt:/etc/ssl/pong.crt:ro
       - ./certs/services/pong/pong.key:/etc/ssl/pong.key:ro
       - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
+      - vault_data:/vault/file
     depends_on:
       - redis
     expose:

@@ -2,7 +2,7 @@
 set -e  # Exit immediately if any command fails
 
 # ==== BEGIN VAULT BOOTSTRAP ====
-SERVICE_NAME=${SERVICE_NAME:-"auth"}
+SERVICE_NAME=${SERVICE_NAME:-"chat"}
 VAULT_URL=${VAULT_URL:-"http://vault:8200"}
 BOOTSTRAP_TOKEN_PATH=${BOOTSTRAP_TOKEN_PATH:-"/vault/file/${SERVICE_NAME}-bootstrap-token.txt"}
 export VAULT_ADDR=$VAULT_URL
@@ -68,11 +68,7 @@ else
     exit 1
   fi
 fi
-# ==== END VAULT BOOTSTRAP ====
 
-# Run Django setup commands
-python manage.py collectstatic --noinput
-python manage.py makemigrations authentication --noinput
-python manage.py migrate --noinput
-
+# Execute the command passed to the entrypoint
+echo "Starting $SERVICE_NAME service..."
 exec "$@"
