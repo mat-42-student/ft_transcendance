@@ -1019,8 +1019,10 @@ class Command(BaseCommand):
         }
         salonNumber = 1
         bracket = {}
-        for salon in self.games[player.type_game][tournamentId].values():
+        for i_gamId, salon in self.games[player.type_game][tournamentId].items():
             bracket.update({salonNumber: salon.getDictPlayers()})
+            gameDB = await sync_to_async(self.getGame)(i_gamId)
+            bracket[salonNumber].update({'round': gameDB.round})
             salonNumber = salonNumber + 1
 
         data['body']['opponents'] = bracket
@@ -1165,6 +1167,21 @@ class Command(BaseCommand):
                 'cancel': True,
                 'invite': False,
                 'tournament': True,
+            }
+        }
+        await self.redis_client.publish(self.channel_front, json.dumps(data))
+        
+    async def JSON_endgameWinnerTournament(self, id):
+        data = {
+            'header':{
+                'service': 'mmaking',
+                'dest': 'front',
+                'id': id,
+            },
+            'body':{
+                'cancel': False,
+                'tournament': True,
+                'winner': True
             }
         }
         await self.redis_client.publish(self.channel_front, json.dumps(data))
@@ -1315,6 +1332,9 @@ class Command(BaseCommand):
         try:
             allgamesDB = await sync_to_async(self.getallgamesForTournament)(gameDB)
             tournament = await sync_to_async(getattr)(gameDB, 'tournament')
+            winnerTournament = await sync_to_async(getattr)(gameDB, 'winner')
+            await self.JSON_endgameWinnerTournament(winnerTournament.id)
+            
             for i_game in allgamesDB:
                 gameInCache = self.getGameInCache(i_game.id, tournament.id)
                 for playerId, player in gameInCache.players.items():

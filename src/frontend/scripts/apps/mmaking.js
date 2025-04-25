@@ -38,6 +38,7 @@ export class Mmaking
 		this.btnsearchRandomisActive = false;
 		this.btnSearchTournamentActive = false;
 		this.bracket = false;
+		this.winner = false;
     }
 
 	remove_friend(friendId)
@@ -420,6 +421,10 @@ export class Mmaking
 		{
 			closeDynamicCard();
 		}
+		else if (this.winner_of_tournament == true)
+		{
+
+		}
 	}
 
 	async bracketTournament()
@@ -433,11 +438,21 @@ export class Mmaking
 			let firstPlayer = false;
 			const matchElement = document.createElement('div');
 			const teamContainer = document.createElement('div');
+			const roundName = document.createElement('div');
 			matchElement.classList.add('match');
+
+			if (value.round == 1)
+			{
+				roundName.innerHTML = `Round ${value.round}`;
+			}
+			else if (value.round == 2)
+			{
+				roundName.innerHTML = `Final`;
+			}
 
 			for (const [id, player] of Object.entries(value))
 			{
-				if (firstPlayer == false)
+				if (firstPlayer == false && id != 'round')
 				{
 					const team1Element = document.createElement('div');
 					team1Element.classList.add('team-name');
@@ -459,22 +474,23 @@ export class Mmaking
 					firstPlayer = true
 
 				}
-				else
+				else if (id != 'round')
 				{
-					const team2Element = document.createElement('div');
-					team2Element.classList.add('team-name');
-					team2Element.textContent = player.username;
-
 					const team2Score = document.createElement('span');
 					team2Score.classList.add('score');
 					team2Score.textContent = player.score !== undefined ? player.score : '-';
 
-					teamContainer.appendChild(team2Element);
+					const team2Element = document.createElement('div');
+					team2Element.classList.add('team-name');
 					team2Element.appendChild(team2Score);
+					team2Element.insertAdjacentHTML('beforeend', player.username);
+
+					teamContainer.appendChild(team2Element);
 
 				}
 			}
 			teamContainer.classList.add('team');
+			matchElement.appendChild(roundName)
 			matchElement.appendChild(teamContainer);
 			bracketContainer.appendChild(matchElement);
 
@@ -625,6 +641,13 @@ export class Mmaking
 			}
 
         }
+		else if (data.body.tournament == true)
+		{
+			if (data.body.winner == true)
+			{
+				this.winner_of_tournament = true;
+			}
+		}
 		await this.renderMatchmaking();
 
     }
