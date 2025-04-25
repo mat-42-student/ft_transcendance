@@ -272,8 +272,11 @@ class UserViewSet(viewsets.ModelViewSet):
         """
         requested_user = self.get_object()  # Récupère l'utilisateur cible
 
+        # If request.user is a service allow it
+        if isinstance(request.user, str):
+            pass
         # Vérification des permissions
-        if request.user != requested_user and not request.user.is_superuser:
+        elif request.user != requested_user and not request.user.is_superuser:
             raise PermissionDenied("Vous n'avez pas la permission d'accéder aux contacts de cet utilisateur.")
         
         try:
