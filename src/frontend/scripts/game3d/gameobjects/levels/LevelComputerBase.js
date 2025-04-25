@@ -22,17 +22,7 @@ export default class LevelComputerBase extends LevelBase {
 
 		this.background = new THREE.Color("#000000");
 
-		this.views = null;
-
-		const q1 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), UTILS.RAD90 / 2);
-		const q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -UTILS.RAD90 / 3);
-		this.smoothCamera.position.set(5, 4, 5);
-		this.smoothCamera.quaternion.copy(q1.multiply(q2));
-		this.smoothCamera.fov = 39.6;
-		this.smoothCamera.smoothSpeed = 10;
-		this.smoothCamera.mousePositionMultiplier.setScalar(1);
-		this.smoothCamera.mouseRotationMultiplier.setScalar(0.3);
-		this.smoothCamera.diagonal = 36.87;  // 4:3 aspect ratio, arbitrarily
+		this.useDefaultCameraAngle();
 
 		this.remainingToLoad = 2;
 
@@ -182,6 +172,21 @@ export default class LevelComputerBase extends LevelBase {
 	endHideResult() {
 		super.endHideResult();
 		this.rtScene?.endHideResult?.();
+	}
+
+
+	useDefaultCameraAngle() {
+		this.views = null;
+
+		const q1 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), UTILS.RAD90 / 2);
+		const q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -UTILS.RAD90 / 3);
+		this.smoothCamera.position.set(5, 4, 5);
+		this.smoothCamera.quaternion.copy(q1.multiply(q2));
+		this.smoothCamera.fov = 39.6;
+		this.smoothCamera.smoothSpeed = 10;
+		this.smoothCamera.mousePositionMultiplier.setScalar(1);
+		this.smoothCamera.mouseRotationMultiplier.setScalar(0.3);
+		this.smoothCamera.diagonal = 36.87;  // 4:3 aspect ratio, arbitrarily
 	}
 
 }

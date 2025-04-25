@@ -1,15 +1,19 @@
 import * as THREE from 'three';
 import TextMesh from '../../utils/TextMesh.js';
+import LevelComputerBase from '../LevelComputerBase.js';
 
 export default class SubsceneScreensaver extends THREE.Scene {
 
+	/**
+	 * @param {LevelComputerBase} parentScene
+	 */
 	constructor(parentScene) {
 		super();
 		this.parentScene = parentScene;
 	}
 
 	onAdded() {
-		// this.add(new THREE.AxesHelper(1));
+		this.parentScene.useDefaultCameraAngle();
 		this.background = new THREE.Color("#000000");
 		this.add(new THREE.AmbientLight("#ffffff", 0.2));
 		const sun = new THREE.DirectionalLight("#ffffff", 1.8);

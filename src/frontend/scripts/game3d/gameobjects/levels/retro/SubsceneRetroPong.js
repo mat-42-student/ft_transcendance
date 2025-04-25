@@ -17,6 +17,7 @@ export default class SubsceneRetroPong extends THREE.Scene {
 
 	onAdded() {
 		this.background = new THREE.Color("#000000");
+		this.useScreenCameraAngle();
 
 		this.add(new THREE.AmbientLight("#ff00ff", 1));  // just in case i accidentally have a lit material
 
@@ -71,6 +72,7 @@ export default class SubsceneRetroPong extends THREE.Scene {
 	endShowNothing = this.endHideResult;
 	endHideResult() {
 		//TODO start screensaver :)
+		this.parentScene.useDefaultCameraAngle();
 	}
 
 
@@ -80,6 +82,21 @@ export default class SubsceneRetroPong extends THREE.Scene {
 			scoreIndicator.freeze = true;
 			scoreIndicator.scoreChanged(scores[i]);
 		});
+	}
+
+
+	useScreenCameraAngle() {
+		const p = this.parentScene;
+
+		p.views = null;
+
+		p.smoothCamera.position.set(0, 0, 4);
+		p.smoothCamera.quaternion.copy(new THREE.Quaternion());
+		p.smoothCamera.fov = 30;
+		p.smoothCamera.smoothSpeed = 2;
+		p.smoothCamera.mousePositionMultiplier.setScalar(0.5);
+		p.smoothCamera.mouseRotationMultiplier.setScalar(0.1);
+		p.smoothCamera.diagonal = 36.87;  // 4:3 aspect ratio, arbitrarily
 	}
 
 }
