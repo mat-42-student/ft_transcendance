@@ -373,6 +373,7 @@ export class Mmaking
 		{
 			await initDynamicCard('versus');
 			document.getElementById('player-name').textContent = state.client.userName;
+			document.getElementById('close-dynamic-card').style.display = 'none'
             document.getElementById("cancel-button").addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, '1vs1R'));
 		}
 		else if (this.btnsearchRandomisActive == false)
@@ -414,6 +415,7 @@ export class Mmaking
 		else if (this.salonTournament == true)
 		{
 			await initDynamicCard('versus');
+			document.getElementById('close-dynamic-card').style.display = 'none'
             document.getElementById("cancel-button").addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, 'tournament'));
 
 		}
@@ -657,6 +659,8 @@ export class Mmaking
         document.getElementById("opponent-name").textContent = name;
         document.getElementById("opponent-photo").src = photo;
         document.getElementById("cancel-button").style.display = "none";
+		document.getElementById('close-dynamic-card').style.display = 'none'
+
     }
 
     setFriendwithoutLoader(name, picture)
@@ -664,6 +668,7 @@ export class Mmaking
         document.getElementById("opponent-info").style.display = "block";
         document.getElementById("opponent-name").textContent = name;
         document.getElementById("opponent-photo").src = picture;
+		document.getElementById('close-dynamic-card').style.display = 'none'
     }
 
     setFriendwithLoader(name, picture)
@@ -672,5 +677,6 @@ export class Mmaking
         document.getElementById("opponent-name").textContent = name;
         document.getElementById("opponent-photo").src = picture;
 		document.getElementById("random-loader").style.display = "none";
+		document.getElementById('close-dynamic-card').style.display = 'none'
     }
 }
