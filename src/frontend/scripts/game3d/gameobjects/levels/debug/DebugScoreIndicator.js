@@ -7,8 +7,7 @@ import * as UTILS from "../../../../utils.js";
 
 export default class DebugScoreIndicator extends ScoreIndicator {
 
-	constructor(playerIndex) {
-		super(playerIndex);
+	onAdded() {
 		this.add(this.#textMesh);
 		this.#textMesh.setText('0');
 	}
