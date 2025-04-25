@@ -98,6 +98,11 @@ export default class LevelComputerBase extends LevelBase {
 	}
 
 
+	namesReady() {
+		this.rtScene?.namesReady?.();
+	}
+
+
 	onLoadComplete() {
 		const screenMaterial = UTILS.findMaterialInHierarchy(this, "Screen");
 		if (!(screenMaterial instanceof THREE.MeshStandardMaterial))  throw Error("screen't");

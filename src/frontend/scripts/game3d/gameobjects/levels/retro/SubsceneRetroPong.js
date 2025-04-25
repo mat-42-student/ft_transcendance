@@ -28,14 +28,20 @@ export default class SubsceneRetroPong extends THREE.Scene {
 		this.namesText = [ new TextMesh(this.grayMaterial), new TextMesh(this.grayMaterial), ];
 		this.namesText.forEach((t, i) => {
 			this.add(t);
-			t.size = 0.1;
+			t.size = 0.05;
 			t.depth = 0;
 			t.position.set(i ? 0.5 : -0.5, -0.8, -0.1);
-			t.setText(`?${i}`);
+			t.setText(state.gameApp?.playerNames[i] || 'Connecting');
 		});
 	}
 
 	onFrame(delta, time) {
+	}
+
+	namesReady() {
+		this.namesText?.forEach((t, i) => {
+			t.setText(state.gameApp?.playerNames[i]);
+		});
 	}
 
 	dispose() {
