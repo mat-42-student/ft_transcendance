@@ -13,8 +13,10 @@ from collections import deque
 import random
 import math
 
-class PongConsumer(AsyncWebsocketConsumer):
+class InvalidPacket(Exception):
+    pass
 
+class PongConsumer(AsyncWebsocketConsumer):
     # Anti-flood system
     MESSAGE_LIMIT = 20 # each player input counts 2 (keydown and keyup)
     TIME_WINDOW = 1 # seconds
@@ -96,22 +98,6 @@ class PongConsumer(AsyncWebsocketConsumer):
             print(e)
             return
 
-    # def checkAuth(self):
-    #     try:
-    #         self.get_public_key()
-    #     except RuntimeError as e:
-    #         raise e
-    #     params = parse_qs(self.scope['query_string'].decode())
-    #     self.token = params.get('t', [None])[0]
-    #     try:
-    #         payload = jwt.decode(self.token, self.public_key, algorithms=['RS256'])
-    #         return payload
-    #     except jwt.ExpiredSignatureError as e:
-    #         print(e)
-    #     except jwt.InvalidTokenError as e:
-    #         print(e)
-    #     return None
-
     def get_public_key(self):
         try:
             url = "https://nginx:8443/api/v1/auth/public-key/"
@@ -129,17 +115,6 @@ class PongConsumer(AsyncWebsocketConsumer):
         except RuntimeError as e:
             print(e)
             raise(e)
-
-    # def get_public_key(self):
-    #     try:
-    #         response = requests.get(f"http://auth:8000/api/v1/auth/public-key/")
-    #         if response.status_code == 200:
-    #             self.public_key = response.json().get("public_key")
-    #         else:
-    #             raise RuntimeError("Impossible de récupérer la clé publique JWT")
-    #     except RuntimeError as e:
-    #         print(e)
-    #         raise(e)
 
     async def join_redis_channels(self):
         try:
@@ -222,31 +197,28 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def load_valid_json(self, data):
         if len(data.encode("utf-8")) > self.MAX_MESSAGE_SIZE:
             self.mute = True
-            return
+            return None
         try:
             data = json.loads(data)
             if "action" not in data:
-                raise Exception()
+                raise InvalidPacket("Missing 'action' field")
             data["side"] = self.side
             if data["action"] == "wannaplay!":
                 data["username"] = self.player_name
                 data["id"] = self.player_id
                 return data
             if data["action"] == "move":
-                if "key" not in data or data["key"] not in [-1, 0, 1]:
-                    raise Exception()
+                if data.get("key") not in (-1, 0, 1):
+                    raise InvalidPacket(f"Invalid key value: {data.get('key')}")
                 return data
             if data["action"] == "load_complete":
-                if data["side"] not in [0, 1]:
-                    raise Exception()
+                if data.get("side") not in (0, 1):
+                    raise InvalidPacket(f"Invalid side value: {data.get('side')}")
                 return data
-            # If we get to this point, we received a packet that we don't know.
-            # Write a new if statement to properly validate it.
-            raise Exception()
-        except:
-            print(RED, "Bad JSON: " + str(data) + RESET)
-            await self.kick(1003, "Invalid JSON")
-            return
+            raise InvalidPacket(f"Unknown action: {data['action']}")
+        except (json.JSONDecodeError, InvalidPacket) as e:
+            print(f"{RED}Json error: {e} | data: {data}{RESET}")
+            return None
 
     async def handle_message(self, data):
         data = data.get("message")
