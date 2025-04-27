@@ -15,7 +15,7 @@ const STATS = JSON.parse(`
     "padShrinkFactor": 0.95,
     "padAccelerateFactor": 1.1,
 
-    "initialBallSpeed": 0.1,
+    "initialBallSpeed": 0.4,
     "ballAccelerateFactor": 1.1,
     "redirectionFactor": 1.5,
     "maxAngleDeg": 45.0,
@@ -34,11 +34,6 @@ export class LocalGame extends GameBase {
 
     constructor (isCPU = false) {
         super();
-
-        try {
-            const id = isCPU ? "keyhint-versus" : "keyhint-local";
-            document.getElementById(id).style.display = null;
-        } catch {}
 
         this.isCPU = isCPU;
         this.cpuTarget = 0;
@@ -59,6 +54,11 @@ export class LocalGame extends GameBase {
 
         /** @type {LevelBase} */
         this.level = new (LEVELS.pickRandomLevel())();  // randomly select class, then construct it
+
+        try {
+            const id = isCPU && !this.level.forceVerticalInputs ? "keyhint-versus" : "keyhint-local";
+            document.getElementById(id).style.display = null;
+        } catch {}
 
         this.pause();
         this.recenter();

@@ -10,6 +10,7 @@ export default class LevelComputerBase extends LevelBase {
 		super();
 		this.subsceneClass = subsceneClass;
 		this.gltfToDispose = [];
+		this.forceVerticalInputs = true;
 	}
 
 
