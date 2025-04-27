@@ -122,14 +122,14 @@ function setupSearchInput() {
 
     function showAlert(message) {
         alertBox.textContent = message;
-    
+
         const inputRect = searchInput.getBoundingClientRect();
         alertBox.style.top = `${inputRect.bottom + window.scrollY + 5}px`;
         alertBox.style.left = `${inputRect.left + window.scrollX}px`;
         alertBox.style.minWidth = `${inputRect.width}px`;
-    
+
         alertBox.style.display = "block";
-    
+
         setTimeout(() => {
             alertBox.style.display = "none";
         }, 3000);
@@ -206,15 +206,19 @@ export function selectVisibleHeader(isInGame = false) {
 window.toggleHeaderButtons = selectVisibleHeader;  //debug
 selectVisibleHeader(false);  // hide quit button for the first time
 
-buttonLocalBot.addEventListener('click', () => {
-    if (state.gameApp == null)
+buttonLocalBot.addEventListener('click', async () => {
+    if (state.gameApp == null) {
+        await navigator.goToPage('home');
         state.gameApp = new LocalGame(true);
+    }
     selectVisibleHeader(true);
 });
 
-buttonLocalVersus.addEventListener('click', () => {
-    if (state.gameApp == null)
+buttonLocalVersus.addEventListener('click', async () => {
+    if (state.gameApp == null) {
+        await navigator.goToPage('home');
         state.gameApp = new LocalGame(false);
+    }
     selectVisibleHeader(true);
 });
 
