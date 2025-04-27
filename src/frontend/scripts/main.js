@@ -68,51 +68,63 @@ async function handleProfileClick(e) {
 
 function setupSearchInput() {
     const searchInput = document.getElementById("searchInput");
-    const searchResults = document.getElementById("searchResults");
+    if (!searchInput) return;
 
-    if (!searchInput || !searchResults) return;
+    // Création de l'alerte flottante
+    const alertBox = document.createElement("div");
+    alertBox.style.position = "absolute";
+    alertBox.style.backgroundColor = "#fff";
+    alertBox.style.border = "1px solid #ccc";
+    alertBox.style.borderRadius = "5px";
+    alertBox.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
+    alertBox.style.padding = "8px 12px";
+    alertBox.style.color = "#d00";
+    alertBox.style.fontSize = "0.9em";
+    alertBox.style.display = "none";
+    alertBox.style.zIndex = "1000";
 
-    searchInput.addEventListener("input", async () => {
-        const query = searchInput.value.trim();
+    document.body.appendChild(alertBox);
 
-        if (!query) {
-            searchResults.style.display = "none";
-            return;
-        }
+    // Gestion de la recherche au clavier
+    searchInput.addEventListener("keydown", async (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            const query = searchInput.value.trim();
 
-        try {
-            const response = await ft_fetch(`/api/v1/users/?search=${query}`);
-            const users = await response.json();
+            if (!query) return;
 
-            searchResults.innerHTML = "";
-            if (users.length > 0) {
-                users.slice(0, 5).forEach(user => {
-                    const li = document.createElement("li");
-                    li.textContent = user.username;
-                    li.addEventListener("click", () => {
-                        searchInput.value = user.username;
-                        searchResults.innerHTML = "";
-                        searchResults.style.display = "none";
-                        navigator.goToPage('profile', user.id)
-                    });
-                    searchResults.appendChild(li);
-                });
+            try {
+                const response = await ft_fetch(`/api/v1/users/?search=${query}`);
+                const users = await response.json();
 
-                searchResults.style.display = "block";
-            } else {
-                searchResults.style.display = "none";
+                if (users.length > 0) {
+                    navigator.goToPage('profile', users[0].id);
+                    searchInput.value = "";
+                    alertBox.style.display = "none";
+                } else {
+                    showAlert(`Aucun utilisateur trouvé avec le nom "${query}".`);
+                }
+            } catch (error) {
+                console.error("Erreur lors de la recherche :", error);
+                showAlert("Erreur lors de la recherche.");
             }
-        } catch (error) {
-            console.error("Erreur lors de la recherche :", error);
         }
     });
 
-    document.addEventListener("click", (event) => {
-        if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
-            searchResults.innerHTML = "";
-            searchResults.style.display = "none";
-        }
-    });
+    function showAlert(message) {
+        alertBox.textContent = message;
+    
+        const inputRect = searchInput.getBoundingClientRect();
+        alertBox.style.top = `${inputRect.bottom + window.scrollY + 5}px`;
+        alertBox.style.left = `${inputRect.left + window.scrollX}px`;
+        alertBox.style.minWidth = `${inputRect.width}px`;
+    
+        alertBox.style.display = "block";
+    
+        setTimeout(() => {
+            alertBox.style.display = "none";
+        }, 3000);
+    }
 }
 
 // page unload // necessary ??

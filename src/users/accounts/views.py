@@ -12,13 +12,13 @@ from .permissions import IsAuthenticatedOrService
 # from .authentication import RemoteOAuth2Authentication
 from django.core.exceptions import PermissionDenied
 from rest_framework import viewsets, status
-from rest_framework import viewsets, status, filters
+from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.renderers import JSONRenderer
-from .models import User, Relationship, Game, Tournament
+from .models import User, Relationship, Game
 from .serializers import (
     UserListSerializer, 
     UserMinimalSerializer, 
@@ -84,7 +84,7 @@ class UserViewSet(viewsets.ModelViewSet):
         """Définit les permissions pour chaque action."""
         if self.action in ['list', 'retrieve', 'contacts', 'friends', 'blocks']:
             return [AllowAny()]
-        return [IsAuthenticatedOrService()]  # Authentification requise pour toutes les autres actions
+        return [IsAuthenticatedOrService()]
 
     def get_serializer_class(self):
         """Définit le serializer selon l'action."""
@@ -94,14 +94,28 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserUpdateSerializer
         return UserDetailSerializer  # Par défaut pour les autres
     
+    # def list(self, request, *args, **kwargs):
+    #     """Renvoie une liste d'utilisateurs pour la recherche de profils via searchbar."""
+    #     search_query = request.GET.get("search", "").strip()
+
+    #     if search_query:
+    #         users = User.objects.filter(username__istartswith=search_query)[:10]
+    #     else:
+    #         users = User.objects.none()  # Pas de recherche, pas de résultats
+
+    #     serializer = self.get_serializer(users, many=True)
+    #     return Response(serializer.data)
+
     def list(self, request, *args, **kwargs):
-        """Renvoie une liste d'utilisateurs pour la recherche de profils via searchbar."""
+        """
+        Renvoie une liste avec l'utilisateur dont le nom correspond exactement à la recherche.
+        """
         search_query = request.GET.get("search", "").strip()
 
         if search_query:
-            users = User.objects.filter(username__istartswith=search_query)[:10]
+            users = User.objects.filter(username__iexact=search_query)[:1]
         else:
-            users = User.objects.none()  # Pas de recherche, pas de résultats
+            users = User.objects.none()
 
         serializer = self.get_serializer(users, many=True)
         return Response(serializer.data)
@@ -345,6 +359,18 @@ class UserViewSet(viewsets.ModelViewSet):
         response_data["last_games"] = GameSerializer(games, many=True, context={'request': request, 'target_user': target_user}).data
 
         return Response(response_data, status=200)
+    
+    @action(detail=True, methods=['GET'], permission_classes=[IsAuthenticatedOrService], url_path='is_blocked')
+    def is_blocked(self, request, pk=None):
+        """
+        Vérifie si l'utilisateur cible est bloqué par l'utilisateur authentifié.
+        """
+        try:
+            user_to_check = User.objects.get(id=pk)
+            is_blocked = user_to_check in request.user.blocked_users.all()
+            return Response({'is_blocked': is_blocked}, status=200)
+        except User.DoesNotExist:
+            return Response({'detail': 'Utilisateur non trouvé.'}, status=404)
 
 
 # Relationship ViewSet

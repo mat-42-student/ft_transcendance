@@ -13,33 +13,38 @@ class Navigator {
 
     async goToPage(page, userId = null) {
         if (!this.mainContent) return;
-
+    
         if (state && state.engine && state.engine.scene && state.engine.scene.pendingEndHide) {
             state.engine.scene.endHideResult();
         }
-
+    
         const pageFiles = {
             home: { url: './partials/home.html', setup: initHomePage },
             profile: { url: './partials/profile.html', setup: initProfilePage }
         };
-
+    
         if (!pageFiles[page]) return console.error('Page not found:', page);
-
+    
         if (page === 'profile' && !(await state.client.isAuthenticated())) {
-            window.history.replaceState({}, '', `#signin`);
-            return initDynamicCard('auth');
+            return window.history.pushState({}, '', `#signin`);
+            // return initDynamicCard('auth');
         }
-
+    
+        const hash = page === 'profile'
+            ? `#profile/${userId || state.client.userId}`
+            : `#${page}`;
+    
         try {
             const response = await ft_fetch(pageFiles[page].url);
             const html = await response.text();
             this.mainContent.innerHTML = html;
-
+            const hash = userId ? `#${page}/${userId}` : `#${page}`;
+            
+            window.history.pushState({}, '', hash);
+    
             requestAnimationFrame(() => {
                 pageFiles[page].setup(userId);
             });
-
-            window.history.replaceState({}, '', `#${page}`);
         } catch (error) {
             console.error('Error loading page:', error);
         }
@@ -48,25 +53,31 @@ class Navigator {
     async handleHashChange() {
         const hash = window.location.hash;
         const isAuth = await state.client.isAuthenticated();
-
-        const pageMap = {
-            '#home': () => this.goToPage('home'),
-            '#profile': () => this.goToPage('profile')
-        };
-
-        // Gestion des cas d'authentification
+    
         if (hash === '#register' || hash === '#signin') {
-            if (isAuth) return pageMap['#profile'];
+            if (isAuth) return this.goToPage('profile');
             if (this.cardContainer.classList.contains('hidden')) initDynamicCard('auth');
             return updateAuthForm(hash);
         }
-
-        // Fermer la carte dynamique si on change de page
-        if (!this.cardContainer.classList.contains('hidden')) {
+    
+        if (!this.cardContainer.classList.contains('hidden'))
             closeDynamicCard();
+    
+        // Parsing du hash
+        const hashMatch = hash.match(/^#(\w+)(?:\/(\d+))?$/);
+        if (!hashMatch) return this.goToPage('home');
+    
+        const page = hashMatch[1];
+        const userId = hashMatch[2];
+    
+        switch (page) {
+            case 'home':
+                return this.goToPage('home');
+            case 'profile':
+                return this.goToPage('profile', userId || null);
+            default:
+                return this.goToPage('home');
         }
-
-        return (pageMap[hash] || pageMap['#home'])();
     }
 }
 
