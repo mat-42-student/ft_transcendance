@@ -9,6 +9,7 @@ export default class LevelComputerBase extends LevelBase {
 	constructor(subsceneClass) {
 		super();
 		this.subsceneClass = subsceneClass;
+		this.gltfToDispose = [];
 	}
 
 
@@ -24,7 +25,7 @@ export default class LevelComputerBase extends LevelBase {
 
 		this.useDefaultCameraAngle();
 
-		this.remainingToLoad = 2;
+		this.remainingToLoad = 3;
 
 		new THREE.CubeTextureLoader()
 			.setPath( '/ressources/3d/computerCubemap/' )
@@ -42,7 +43,7 @@ export default class LevelComputerBase extends LevelBase {
 
 		state.engine.gltfLoader.load('/ressources/3d/computerScene.glb', (gltf) => {
 
-			this.gltfToDispose = gltf.scene;
+			this.gltfToDispose.push(gltf.scene);
 			this.add(gltf.scene);
 
 			{  // Screen render target
@@ -63,6 +64,14 @@ export default class LevelComputerBase extends LevelBase {
 			}  // Screen render target
 
 			UTILS.autoMaterial(gltf.scene);  // call again just in case
+			this.loadComplete();
+		});
+
+		state.engine.gltfLoader.load('/ressources/3d/retroboard.glb', (gltf) => {
+
+			this.gltfToDispose.push(gltf.scene);
+			this.retroBoardModel = gltf.scene;
+
 			this.loadComplete();
 		});
 	}
@@ -155,7 +164,7 @@ export default class LevelComputerBase extends LevelBase {
 
 	dispose() {
 		super.dispose();
-		UTILS.disposeHierarchy(this.gltfToDispose);
+		this.gltfToDispose.forEach((m) => {UTILS.disposeHierarchy(m);});
 		if (this.rt)  this.rt.dispose();
 		if (this.rtScene && this.rtScene.dispose)  this.rtScene.dispose();
 	}

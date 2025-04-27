@@ -15,7 +15,7 @@ const STATS = JSON.parse(`
     "padShrinkFactor": 0.95,
     "padAccelerateFactor": 1.1,
 
-    "initialBallSpeed": 0.4,
+    "initialBallSpeed": 0.1,
     "ballAccelerateFactor": 1.1,
     "redirectionFactor": 1.5,
     "maxAngleDeg": 45.0,

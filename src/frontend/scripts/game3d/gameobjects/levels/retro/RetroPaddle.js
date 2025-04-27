@@ -13,7 +13,7 @@ export default class RetroPaddle extends Paddle {
 		this.#geo = new THREE.BoxGeometry(0.02, 0, 1);
 		this.#mesh = new THREE.Mesh(this.#geo, this.#material);
 		this.add(this.#mesh);
-		this.#mesh.position.z = 0.01 * (this.playerIndex ? 1 : -1);
+		this.#mesh.position.x = 0.02;
 	}
 
 	onFrame(delta, time) {

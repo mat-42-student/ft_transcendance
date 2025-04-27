@@ -48,6 +48,10 @@ export default class SubsceneRetroPong extends THREE.Scene {
 		this.add(new RetroBall(this.whiteMaterial));
 		this.add(new RetroPaddle(0, this.whiteMaterial));
 		this.add(new RetroPaddle(1, this.whiteMaterial));
+
+		this.parentScene.retroBoardModel.children[0].material = this.grayMaterial;
+		this.add(this.parentScene.retroBoardModel);
+		this.parentScene.retroBoardModel.position.y = 0.01;
 	}
 
 	onFrame(delta, time) {
