@@ -111,6 +111,13 @@ export class Engine {
 					state.engine.font = font;
 				}
 			);
+
+			this.fontLoader.load(
+				'/ressources/3d/Square One_Regular.json',
+				(font) => {
+					state.engine.squareFont = font;
+				}
+			);
 		}
 
 		window.addEventListener('beforeunload', () => {
