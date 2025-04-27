@@ -13,9 +13,11 @@ export default class RetroScoreIndicator extends ScoreIndicator {
 		this.#textMesh = new TextMesh(this.#material);
 		this.#textMesh.font = state.engine.squareFont;
 		this.add(this.#textMesh);
-		this.#textMesh.size = 0.2;
+		this.#textMesh.size = 0.1;
 		this.#textMesh.depth = 0;
-		this.position.set(this.playerIndex ? 0.5 : -0.5, 0.5, -0.1);
+		this.position.set(this.playerIndex ? -0.3 : 0.3, 0.01, 0.25);
+		this.rotateX(-Math.PI/2);
+		this.rotateZ(Math.PI);
 		this.#textMesh.setText('0');
 	}
 

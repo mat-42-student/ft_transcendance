@@ -52,8 +52,9 @@ export default class LevelComputerBase extends LevelBase {
 				this.rt = new THREE.WebGLRenderTarget(640, 480);
 
 				this.rtCamera = new THREE.PerspectiveCamera(90, this.rt.width/this.rt.height);
-				this.rtCamera.position.set(0, 0, -1.1);
-				this.rtCamera.rotateX(UTILS.RAD180);
+				this.rtCamera.position.set(0, -0.6, 0);
+				this.rtCamera.rotateX(UTILS.RAD90);
+				this.rtCamera.rotateZ(UTILS.RAD180);
 
 				screenMaterial.roughness = 0;
 				screenMaterial.emissive = new THREE.Color("#ffffff");  //THIS IS NEEDED: it multiplies emissiveMap.
@@ -200,5 +201,17 @@ export default class LevelComputerBase extends LevelBase {
 		this.smoothCamera.diagonal = 36.87;  // 4:3 aspect ratio, arbitrarily
 	}
 
-}
 
+	useScreenCameraAngle() {
+		this.views = null;
+
+		this.smoothCamera.position.set(0, 0, 4);
+		this.smoothCamera.quaternion.copy(new THREE.Quaternion());
+		this.smoothCamera.fov = 30;
+		this.smoothCamera.smoothSpeed = 2;
+		this.smoothCamera.mousePositionMultiplier.setScalar(0.5);
+		this.smoothCamera.mouseRotationMultiplier.setScalar(0.1);
+		this.smoothCamera.diagonal = 36.87;  // 4:3 aspect ratio, arbitrarily
+	}
+
+}

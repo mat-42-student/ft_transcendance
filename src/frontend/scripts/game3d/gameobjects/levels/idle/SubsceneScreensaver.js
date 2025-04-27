@@ -18,7 +18,7 @@ export default class SubsceneScreensaver extends THREE.Scene {
 		this.add(new THREE.AmbientLight("#ffffff", 0.2));
 		const sun = new THREE.DirectionalLight("#ffffff", 1.8);
 		this.add(sun);
-		sun.position.set(-0.2, 0.2, -1);  // this turns the light
+		sun.position.set(-0.2, -1, 0.2);  // this turns the light
 		this.screensaverTextMaterial = new THREE.MeshStandardMaterial({
 			color: "#33dd55",
 			roughness: 1,
@@ -27,6 +27,8 @@ export default class SubsceneScreensaver extends THREE.Scene {
 		this.screensaverText.depth = 0.04;
 		this.screensaverText.setText("Transcendance");
 		this.screensaverText.scale.setScalar(1.2);
+		this.screensaverText.rotateX(-Math.PI/2);
+		this.screensaverText.rotateZ(Math.PI);
 		this.add(this.screensaverText);
 	}
 
@@ -40,7 +42,7 @@ export default class SubsceneScreensaver extends THREE.Scene {
 		this.#screensaver.pos = THREE.MathUtils.clamp(this.#screensaver.pos, -1, 1);
 		this.#screensaver.turn += delta * 0.7;
 
-		this.screensaverText.position.x = 0.9 * this.#screensaver.pos;
+		this.screensaverText.position.x = 0.5 * this.#screensaver.pos;
 		this.screensaverText.rotation.y = this.#screensaver.turn;
 	}
 

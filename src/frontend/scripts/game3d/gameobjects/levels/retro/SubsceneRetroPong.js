@@ -4,6 +4,7 @@ import { state } from '../../../../main.js';
 import RetroScoreIndicator from './RetroScoreIndicator.js';
 import LevelComputerBase from '../LevelComputerBase.js';
 import SubsceneScreensaver from '../idle/SubsceneScreensaver.js';
+import RetroBall from './RetroBall.js';
 
 
 export default class SubsceneRetroPong extends THREE.Scene {
@@ -18,7 +19,7 @@ export default class SubsceneRetroPong extends THREE.Scene {
 
 	onAdded() {
 		this.background = new THREE.Color("#000000");
-		this.useScreenCameraAngle();
+		this.parentScene.useScreenCameraAngle();
 
 		this.add(new THREE.AmbientLight("#ff00ff", 1));  // just in case i accidentally have a lit material
 
@@ -35,11 +36,15 @@ export default class SubsceneRetroPong extends THREE.Scene {
 		this.namesText.forEach((t, i) => {
 			this.add(t);
 			t.font = state.engine.squareFont;
-			t.size = 0.08;
+			t.size = 0.03;
 			t.depth = 0;
-			t.position.set(i ? 0.5 : -0.5, -0.8, -0.1);
+			t.position.set(i ? -0.3 : 0.3, 0.01, -0.4);
+			t.rotateX(-Math.PI/2);
+			t.rotateZ(Math.PI);
 			t.setText(state.gameApp?.playerNames[i] || 'Connecting');
 		});
+
+		this.add(new RetroBall(this.whiteMaterial));
 	}
 
 	onFrame(delta, time) {
@@ -83,21 +88,6 @@ export default class SubsceneRetroPong extends THREE.Scene {
 			scoreIndicator.freeze = true;
 			scoreIndicator.scoreChanged(scores[i]);
 		});
-	}
-
-
-	useScreenCameraAngle() {
-		const p = this.parentScene;
-
-		p.views = null;
-
-		p.smoothCamera.position.set(0, 0, 4);
-		p.smoothCamera.quaternion.copy(new THREE.Quaternion());
-		p.smoothCamera.fov = 30;
-		p.smoothCamera.smoothSpeed = 2;
-		p.smoothCamera.mousePositionMultiplier.setScalar(0.5);
-		p.smoothCamera.mouseRotationMultiplier.setScalar(0.1);
-		p.smoothCamera.diagonal = 36.87;  // 4:3 aspect ratio, arbitrarily
 	}
 
 }
