@@ -15,12 +15,13 @@
     border: 1px solid #ccc;
     border-radius: 5px;
     background-color: #fff;
-    width: 200px;
+    width: 80%;
 }
 
 .team {
     display: flex;
     justify-content: space-between;
+	align-items: baseline;
 }
 
 .team-name {
@@ -28,12 +29,12 @@
 }
 
 .vs {
-    font-size: 1em;
+    font-size: 1.2em;
     color: #888;
 }
 
 .score {
     font-size: 1.2em;
     font-weight: bold;
-    margin-left: 5px;
+    margin: 5px;
 }

@@ -216,6 +216,7 @@ class Tournament(models.Model):
     end_date = models.DateField(auto_now=True)
     organizer = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="organized_tournaments")
     created_at = models.DateTimeField(auto_now_add=True)
+    winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="won_tournament")
 
     class Meta:
         db_table = 'Tournament'
@@ -234,6 +235,7 @@ class Game(models.Model):
     round = models.IntegerField(default=1)
     game_type = models.CharField(max_length=20, choices=GAME_TYPE_CHOICES, default="friendly")
     created_at = models.DateTimeField(auto_now_add=True)
+    failed = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'Game'

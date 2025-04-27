@@ -66,7 +66,16 @@ async function handleProfileClick(e) {
     navigator.goToPage('profile');
 }
 
+function searchFormListener(event) {
+    event.preventDefault(); // J'aimerais bien que ca fasse comme un click (sur un li des suggestions des users)
+                            // mais les fonctions fléchées c'est pas très modulaire (je pense que la fonction intéressante est celle
+                            // de  la ligne 101 ?). Sinon faisons juste rien...
+}
+
 function setupSearchInput() {
+    const searchForm = document.getElementById('search-form');;
+    searchForm.addEventListener('submit', searchFormListener);
+
     const searchInput = document.getElementById("searchInput");
     if (!searchInput) return;
 

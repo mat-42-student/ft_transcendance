@@ -17,7 +17,8 @@ class Player ():
         self.username = None
         self.type_game = None
         self.guests = {}
-        self.cancel = None
+        self.socketGame_is_online = None
+        self.leave_game = False
     
     def get_id(self):
         return (self.user_id)
@@ -81,7 +82,7 @@ class Player ():
                 status = await redis.get(f'user_{self.user_id}_status')
                 print(f'GET status = {status}')
                 if (status is not None):
-                    redis.delete(f'user_{self.user_id}_status')
+                    await redis.delete(f'user_{self.user_id}_status')
                     return (status)
             except asyncio.TimeoutError:
                 print("Timeout atteint lors de l'attente de Redis.")
@@ -110,6 +111,7 @@ class Player ():
             },
             'body':{
                 'status': status,
+                'from': 'mmaking' # mdjemaa
             }
         }
         await redis.publish(channel, json.dumps(data))
