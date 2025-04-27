@@ -5,6 +5,7 @@ import RetroScoreIndicator from './RetroScoreIndicator.js';
 import LevelComputerBase from '../LevelComputerBase.js';
 import SubsceneScreensaver from '../idle/SubsceneScreensaver.js';
 import RetroBall from './RetroBall.js';
+import RetroPaddle from './RetroPaddle.js';
 
 
 export default class SubsceneRetroPong extends THREE.Scene {
@@ -45,6 +46,8 @@ export default class SubsceneRetroPong extends THREE.Scene {
 		});
 
 		this.add(new RetroBall(this.whiteMaterial));
+		this.add(new RetroPaddle(0, this.whiteMaterial));
+		this.add(new RetroPaddle(1, this.whiteMaterial));
 	}
 
 	onFrame(delta, time) {
