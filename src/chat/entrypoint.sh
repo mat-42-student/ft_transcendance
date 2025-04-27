@@ -34,18 +34,9 @@ else
     echo "Bootstrap token loaded successfully"
     
     # Get AppRole credentials
-    echo "Fetching AppRole credentials..."
-    CREDS_JSON=$(vault kv get -format=json kv/data/${SERVICE_NAME}-service/creds)
+    ROLE_ID=$(vault read -field=role_id auth/approle/role/chat-service/role-id)
+    SECRET_ID=$(vault write -f -field=secret_id auth/approle/role/chat-service/secret-id)
                  
-    if [ $? -ne 0 ]; then
-      echo "Failed to retrieve AppRole credentials"
-      exit 1
-    fi
-    
-    # Extract role_id and secret_id
-    ROLE_ID=$(echo $CREDS_JSON | jq -r '.data.data.role_id')
-    SECRET_ID=$(echo $CREDS_JSON | jq -r '.data.data.secret_id')
-    
     # Authenticate with AppRole
     echo "Authenticating with AppRole..."
     AUTH_RESP=$(curl -s -X POST \

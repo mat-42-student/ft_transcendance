@@ -194,14 +194,6 @@ for service in auth users chat social matchmaking pong gateway nginx; do
     token_max_ttl=24h \
     secret_id_ttl=24h
 
-  ROLE_ID=$(vault read -field=role_id auth/approle/role/${service}-service/role-id)
-  SECRET_ID=$(vault write -f -field=secret_id auth/approle/role/${service}-service/secret-id)
-
-  # Store credentials in KV
-  vault kv put kv/${service}-service/creds \
-    role_id="$ROLE_ID" \
-    secret_id="$SECRET_ID"
-
   # Create service-specific bootstrap token
   SERVICE_BOOTSTRAP_TOKEN=$(vault token create \
     -policy=${service}-bootstrap-policy \
@@ -215,8 +207,7 @@ for service in auth users chat social matchmaking pong gateway nginx; do
   
   # Also save it in a plain file for initial container bootstrapping
   echo "$SERVICE_BOOTSTRAP_TOKEN" > /vault/file/${service}-bootstrap-token.txt
-
-  chmod 644 /vault/file/${service}-bootstrap-token.txt
+  chmod 600 /vault/file/${service}-bootstrap-token.txt
   echo "Created service-specific bootstrap token for ${service}-service"
 done
 
