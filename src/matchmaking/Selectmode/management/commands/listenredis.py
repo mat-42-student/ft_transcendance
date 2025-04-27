@@ -917,19 +917,23 @@ class Command(BaseCommand):
         return game.id
     
     def setScoreSalonsCacheTournament(self, tournament_id, FinishGames):
+        print('Set score in Salon Cache Start')
         for game in FinishGames:
             try:
                 if (game.id in self.games['tournament'][tournament_id]):
                     salon = self.games['tournament'][tournament_id][game.id]
                     salon.score1 = game.score_player1
                     salon.score2 = game.score_player2
+                    print(f'{game.id}: score1 = {salon.score1} score2 = {salon.score2}')
             except Exception as e:
                 print(f'SetScoreSalonCacheTournament failed: {e}')
+        print('Set score in Salon Cache End')
+        
     
     async def sendNextRoundToClient(self, FinishGames):
-        tournamentId = FinishGames[0].tournament.id
+        tournament = await sync_to_async(getattr)(FinishGames[0], 'tournament')
         notfound = False
-        for gameId, game in  self.games['tournament'][tournamentId].items():
+        for gameId, game in  self.games['tournament'][tournament.id].items():
             for oldGame in FinishGames:
                 if (gameId == oldGame.id):
                     for playerId, player in game.players.items():
@@ -937,7 +941,7 @@ class Command(BaseCommand):
                             print(f'Send nextroundToclient has loose the previous game')
                             if (await self.checkStatus(player, 'online') == False):
                                 print("can't to setup new status")
-                            await self.nextRoundTournamentJSON(playerId, player, None, tournamentId)
+                            await self.nextRoundTournamentJSON(playerId, player, None, tournament.id)
                     notfound = False
                     break
                 else:
@@ -947,7 +951,7 @@ class Command(BaseCommand):
                     print(f'Send nextroundToclient has win the previous game')
                     if (await self.checkStatus(player, 'ingame') == False):
                         print("can't to setup new status")
-                    await self.nextRoundTournamentJSON(playerId, player, gameId, tournamentId)
+                    await self.nextRoundTournamentJSON(playerId, player, gameId, tournament.id)
                         
 
     def nextRoundTournament(self, previousGames):
@@ -1015,8 +1019,10 @@ class Command(BaseCommand):
         }
         salonNumber = 1
         bracket = {}
-        for salon in self.games[player.type_game][tournamentId].values():
+        for i_gamId, salon in self.games[player.type_game][tournamentId].items():
             bracket.update({salonNumber: salon.getDictPlayers()})
+            gameDB = await sync_to_async(self.getGame)(i_gamId)
+            bracket[salonNumber].update({'round': gameDB.round})
             salonNumber = salonNumber + 1
 
         data['body']['opponents'] = bracket
@@ -1161,6 +1167,21 @@ class Command(BaseCommand):
                 'cancel': True,
                 'invite': False,
                 'tournament': True,
+            }
+        }
+        await self.redis_client.publish(self.channel_front, json.dumps(data))
+        
+    async def JSON_endgameWinnerTournament(self, id):
+        data = {
+            'header':{
+                'service': 'mmaking',
+                'dest': 'front',
+                'id': id,
+            },
+            'body':{
+                'cancel': False,
+                'tournament': True,
+                'winner': True
             }
         }
         await self.redis_client.publish(self.channel_front, json.dumps(data))
@@ -1311,6 +1332,9 @@ class Command(BaseCommand):
         try:
             allgamesDB = await sync_to_async(self.getallgamesForTournament)(gameDB)
             tournament = await sync_to_async(getattr)(gameDB, 'tournament')
+            winnerTournament = await sync_to_async(getattr)(gameDB, 'winner')
+            await self.JSON_endgameWinnerTournament(winnerTournament.id)
+            
             for i_game in allgamesDB:
                 gameInCache = self.getGameInCache(i_game.id, tournament.id)
                 for playerId, player in gameInCache.players.items():
