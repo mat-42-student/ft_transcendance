@@ -21,8 +21,7 @@ export class GameBase {
 	}
 
 	frame(delta, time) {
-		if (this.level && state.engine.scene)
-			this.level.onFrame(delta, time);
+		// it stops working if i delete this and i will not question it.
 	}
 
 	close(youCancelled) {
