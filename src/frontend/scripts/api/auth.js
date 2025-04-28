@@ -93,6 +93,10 @@ export async function handleAuthSubmit(event) {
         return;
     }
 
+    if (password.length < 5) {
+        displayErrorMessage("Password must be at least 5 characters long.");
+    }
+
     const { apiUrl, payload } = getApiUrlAndPayload(hash, username, email, password, confirm_password);
 
     if (!apiUrl) {
@@ -165,7 +169,7 @@ async function handleAuthError(response) {
     
     if (errorData.error === '2fa_required') {
         handle2FA(response);
-    } else if (errorData.detail === 'User not found' || errorData.detail === 'Incorrect password') {
+    } else if (errorData.detail === 'User not found!' || errorData.detail === 'Incorrect password') {
         displayErrorMessage("Incorrect username or password.");
     } else if (errorData.error === 'User already logged in') {
         displayErrorMessage("User already logged in.");
