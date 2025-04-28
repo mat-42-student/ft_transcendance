@@ -6,6 +6,7 @@ import LevelComputerBase from '../LevelComputerBase.js';
 import SubsceneScreensaver from '../idle/SubsceneScreensaver.js';
 import RetroBall from './RetroBall.js';
 import RetroPaddle from './RetroPaddle.js';
+import RetroTimer from './RetroTimer.js';
 
 
 export default class SubsceneRetroPong extends THREE.Scene {
@@ -52,6 +53,13 @@ export default class SubsceneRetroPong extends THREE.Scene {
 		this.parentScene.retroBoardModel.children[0].material = this.grayMaterial;
 		this.add(this.parentScene.retroBoardModel);
 		this.parentScene.retroBoardModel.position.y = 0.01;
+
+		this.timerIndicator = new RetroTimer(this.whiteMaterial, this);
+		this.add(this.timerIndicator);
+		this.timerIndicator.position.y = 0.005;
+		this.timerIndicator.position.z = 0.1;
+		this.timerIndicator.rotateX(Math.PI/2);
+		this.timerIndicator.rotateY(Math.PI);
 	}
 
 	onFrame(delta, time) {

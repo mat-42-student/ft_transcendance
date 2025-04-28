@@ -171,6 +171,22 @@ export default class LevelComputerBase extends LevelBase {
 	}
 
 
+	pause(time) {
+		super.pause(time);
+		if (this.rtScene?.timerIndicator) {
+			this.rtScene.timerIndicator.setWait(time);
+		}
+	}
+
+	unpause() {
+		const justUnpaused = super.unpause();
+		if (justUnpaused && this.rtScene?.timerIndicator) {
+			this.rtScene.timerIndicator.setGo();
+		}
+		return justUnpaused;
+	}
+
+
 	endShowWinner(
 		scores = [NaN, NaN],
 		winner = NaN,
