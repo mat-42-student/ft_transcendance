@@ -63,7 +63,7 @@ export class LocalGame extends GameBase {
     }
 
     startLocalGame() {
-        this.pause(2);
+        this.pause(3);
         this.recenter();
     }
 

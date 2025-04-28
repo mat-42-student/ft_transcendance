@@ -40,7 +40,7 @@ export default class SubsceneRetroPong extends THREE.Scene {
 			t.font = state.engine.squareFont;
 			t.size = 0.03;
 			t.depth = 0;
-			t.position.set(i ? -0.3 : 0.3, 0.01, -0.4);
+			t.position.set(i ? -0.333 : 0.333, 0.01, -0.4);
 			t.rotateX(-Math.PI/2);
 			t.rotateZ(Math.PI);
 			t.setText(state.gameApp?.playerNames[i] || 'Connecting');
