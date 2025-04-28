@@ -274,7 +274,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             },
             'password': {
                 'write_only': True,
-                'min_length': 5,
+                'min_length': 1,
                 'max_length': 128,
                 'label': 'Password'
             },
@@ -284,10 +284,38 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             },
         }
 
+    # def validate_password(self, value):
+    #     """
+    #     Validate that the password meets security requirements.
+    #     """
+    #     # Check for at least one uppercase letter
+    #     if not any(char.isupper() for char in value):
+    #         raise serializers.ValidationError("Password must contain at least one uppercase letter.")
+        
+    #     # Check for at least one lowercase letter
+    #     if not any(char.islower() for char in value):
+    #         raise serializers.ValidationError("Password must contain at least one lowercase letter.")
+        
+    #     # Check for at least one digit
+    #     if not any(char.isdigit() for char in value):
+    #         raise serializers.ValidationError("Password must contain at least one number.")
+        
+    #     # Check for at least one special character
+    #     special_chars = "!@#$%^&*()-_=+[]{}|;:'\",.<>/?"
+    #     if not any(char in special_chars for char in value):
+    #         raise serializers.ValidationError("Password must contain at least one special character.")
+        
+    #     # Check that password doesn't contain common patterns
+    #     common_patterns = ['password', '123456', 'qwerty', 'admin']
+    #     if any(pattern in value.lower() for pattern in common_patterns):
+    #         raise serializers.ValidationError("Password contains a common pattern and is too weak.")
+        
+    #     return value
+
     def validate(self, data):
         if data['password'] != data['confirm_password']:
             raise serializers.ValidationError("Passwords don't match.")
-            # Ne pas accepter `is_staff` ou `is_superuser` dans les données
+        # Ne pas accepter `is_staff` ou `is_superuser` dans les données
         if 'is_staff' in data or 'is_superuser' in data:
             raise serializers.ValidationError("La création d'un super utilisateur est interdite via cette API.")
         return data
@@ -302,7 +330,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user.save()
         return user
     
-
 
 # Relationship 'detail' serializer
 class RelationshipSerializer(serializers.ModelSerializer):

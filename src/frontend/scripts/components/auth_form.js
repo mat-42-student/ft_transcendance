@@ -3,8 +3,10 @@ import { handleAuthSubmit } from "../api/auth.js";
 // Fonction pour nettoyer les messages d'erreur
 export function cleanErrorMessage() {
     const loginErrorContainer = document.getElementById('auth-error');
-    loginErrorContainer.textContent = "";
-    loginErrorContainer.classList.add('hidden');
+    if (loginErrorContainer) {
+        loginErrorContainer.textContent = "";
+        loginErrorContainer.classList.add('hidden');
+    }
 }
 
 // Attache l'écouteur au formulaire d'authentification
