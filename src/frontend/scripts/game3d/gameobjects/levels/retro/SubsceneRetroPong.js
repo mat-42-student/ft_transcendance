@@ -45,7 +45,7 @@ export default class SubsceneRetroPong extends THREE.Scene {
 			t.setText(state.gameApp?.playerNames[i] || 'Connecting');
 		});
 
-		this.add(new RetroBall(this.whiteMaterial));
+		this.add(new RetroBall(this.whiteMaterial, this));
 		this.add(new RetroPaddle(0, this.whiteMaterial));
 		this.add(new RetroPaddle(1, this.whiteMaterial));
 
@@ -55,6 +55,7 @@ export default class SubsceneRetroPong extends THREE.Scene {
 	}
 
 	onFrame(delta, time) {
+		this.#blinkTimer = (this.#blinkTimer + delta) % 1.0;
 	}
 
 	namesReady() {
@@ -88,6 +89,10 @@ export default class SubsceneRetroPong extends THREE.Scene {
 		this.parentScene.setRtScene(new SubsceneScreensaver(this.parentScene));
 	}
 
+	getBlink() {
+		return Math.floor(this.#blinkTimer * 10) % 2 == 0;
+	}
+
 
 	#endGeneric(scores) {
 		this.scoreText?.forEach((scoreIndicator, i) => {
@@ -96,5 +101,7 @@ export default class SubsceneRetroPong extends THREE.Scene {
 			scoreIndicator.scoreChanged(scores[i]);
 		});
 	}
+
+	#blinkTimer = 0;
 
 }
