@@ -21,12 +21,14 @@ export default class LevelBase extends THREE.Scene {
 
 	get viewIndex() { return state.isPlaying ? state.gameApp.side : 2; }
 
+	remainingToLoad = -1;
+
 
 	constructor() {
 		super();
 
 		const fakeEvent = { child: this };
-		__onObjectAddedToScene(fakeEvent);
+		onObjectAddedToScene(fakeEvent);
 	}
 
 
@@ -74,6 +76,23 @@ export default class LevelBase extends THREE.Scene {
 	}
 
 
+	loadComplete() {
+		this.remainingToLoad--;
+
+		if (this.remainingToLoad === 0) {
+			if (!state.gameApp || (state.gameApp && state.gameApp.level === this)) {
+				state.engine.scene = this;
+				if (typeof this.onLoadComplete == "function")  this.onLoadComplete();
+			} else {
+				state.engine.showErrorScene();
+				this.dispose();
+			}
+		} else if (this.remainingToLoad < 0) {
+			throw new Error();
+		}
+	}
+
+
 	/** Override in each level. Should display the winner. */
 	endShowWinner(
 		scores = [NaN, NaN],
@@ -116,11 +135,11 @@ export default class LevelBase extends THREE.Scene {
 
 // MARK: Injected functions
 
-function __onObjectAddedToScene(e) {
+export function onObjectAddedToScene(e) {
 	/** @type {THREE.Object3D} */
 	const obj = e.child;
 
-	obj.addEventListener('childadded', __onObjectAddedToScene);
+	obj.addEventListener('childadded', onObjectAddedToScene);
 	obj.addEventListener('removed', __onObjectRemoved);
 
 	const statics = obj.__proto__.constructor;

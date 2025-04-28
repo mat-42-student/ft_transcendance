@@ -159,7 +159,9 @@ export default class LevelDebug extends LevelBase {
 
 		this.#endClear();
 		const text = new TextMesh(this.textMaterial,
-			`${scores[0]} : ${scores[1]}\n\n${playerNames[winner]}\nwon!`);
+			`${scores[0]} : ${scores[1]}\n\n${playerNames[winner]}\nwon!`,
+			true, true
+		);
 		text.rotateX(-UTILS.RAD90);
 		text.rotateZ(UTILS.RAD180);
 		this.gameEndObjects.add(text);
@@ -174,7 +176,8 @@ export default class LevelDebug extends LevelBase {
 		this.#endClear();
 		const text = new TextMesh(this.textMaterial,
 			`Your opponent\n${opponentName}\nquit!\n`
-			+ "This match will show\nas a win on your\nprofile.\n"
+			+ "This match will show\nas a win on your\nprofile.\n",
+			true, true
 		);
 		text.rotateX(-UTILS.RAD90);
 		text.rotateZ(UTILS.RAD180);
@@ -189,7 +192,8 @@ export default class LevelDebug extends LevelBase {
 
 		this.#endClear();
 		const text = new TextMesh(this.textMaterial,
-			`don't ragequit!\nThis match will show\nas a loss on your\nprofile.`
+			`don't ragequit!\nThis match will show\nas a loss on your\nprofile.`,
+			true, true
 		);
 		text.rotateX(-UTILS.RAD90);
 		text.rotateZ(UTILS.RAD180);

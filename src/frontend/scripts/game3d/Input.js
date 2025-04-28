@@ -55,7 +55,7 @@ export class Input {
 			return 0;  // If the game wants the input for 'nobody'
 		}
 
-		const isLocal1v1 = state.gameApp.side == 2;
+		const isLocal1v1 = state.gameApp.side == 2 || state.gameApp.level?.forceVerticalInputs;
 
 		const keybinds = [
 			{

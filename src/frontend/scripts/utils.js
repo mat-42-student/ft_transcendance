@@ -76,41 +76,79 @@ export function shouldPowersave() {
 
 
 /**
- * Automatically change materials in an imported GLTF file according to what i want.
- * @param {THREE.Object3D} gltf A hierarchy of Object3D's, that will be recursively affected
+ * Automatically change materials according to my own preferences.
+ * Intended for GLTF imported materials, where I didnt write code to define them.
+ * @param {THREE.Object3D | THREE.Material} obj A hierarchy of Object3D's, that will be recursively affected,
+ * or a single material.
  */
-export function materialAutoChangeHierarchy(gltf) {
-    if (gltf == null)
-        return;
+export function autoMaterial(obj) {
+    if (obj instanceof THREE.Material)
+    {
+        // if (obj.wireframe !== undefined) obj.wireframe = true;  // Useful for testing
+        obj.dithering = true;
 
-    let materialsList = new Set();
-    gltf.traverse((gltf) => {
-        if (gltf.material instanceof Array) {
-            gltf.material.forEach((mat) => {
-                if (!materialsList.has(mat))
-                    materialsList.add(mat);
-            });
-        } else if (gltf.material) {
-            if (!materialsList.has(gltf.material))
-                materialsList.add(gltf.material);
-        }
-    });
+        getTexturesInMaterial(obj).forEach((tex) => {
+            tex.generateMipmaps = false;
+            tex.minFilter = tex.magFilter = THREE.LinearFilter;
+        })
+    }
+    else if (obj instanceof THREE.Object3D)
+    {
+        let materialsListWithDuplicates = [];
+        obj.traverse((obj2) => {
+            if (obj2.material instanceof Array) {
+                materialsListWithDuplicates.push(...obj2.material)
+            } else if (obj2.material instanceof THREE.Material) {
+                materialsListWithDuplicates.push(obj2.material);
+            }
+        });
 
-    materialsList.forEach((mat) => {
-        materialAutoChange(mat);
-    })
+        // This removes any duplicates.
+        let materialsList = new Set(materialsListWithDuplicates);
+
+        materialsList.forEach((mat) => {
+            if (mat instanceof THREE.Material)  // check just in case, spooky recursion
+                autoMaterial(mat);
+        });
+    }
 }
 
 
 /**
- * Automatically change a material's properties according to what i want.
- * @param {THREE.Material} mat
+ * @param {THREE.Object3D} obj Object hierarchy, will be traversed recursively.
+ * @param {string} materialName
+ * @returns {THREE.Material?}
  */
-export function materialAutoChange(mat) {
-    if (!(mat instanceof THREE.Material))
-        return;
+export function findMaterialInHierarchy(obj, materialName) {
+    if (!(obj instanceof THREE.Object3D))
+        throw Error("Bad function argument 1");
 
-    mat.dithering = true;
+    if (typeof materialName != "string" || materialName == "")
+        throw Error("Bad function argument 2");
+
+    let result = null;
+
+    obj.traverse((currentObj) => {
+        if (currentObj.material instanceof Array) {
+            if (currentObj.material instanceof Array) {
+
+                currentObj.material.forEach((currentMaterial) => {
+                    if (currentMaterial.name == materialName) {
+                        result = currentMaterial
+                        return;
+                    }
+                });
+
+            }
+        } else if (currentObj.material instanceof THREE.Material && currentObj.material.name == materialName) {
+
+            result = currentObj.material;
+            return;
+
+        }
+    });
+
+    return result;
 }
 
 
@@ -151,6 +189,32 @@ export function disposeMesh(obj)
 }
 
 
+export function getTexturesInMaterial(mat)
+{
+    if (mat instanceof THREE.Material) {
+        let textures = new Set();
+
+        if (mat.map)              textures.add(mat.map);
+        if (mat.lightMap)         textures.add(mat.lightMap);
+        if (mat.bumpMap)          textures.add(mat.bumpMap);
+        if (mat.normalMap)        textures.add(mat.normalMap);
+        if (mat.specularMap)      textures.add(mat.specularMap);
+        if (mat.envMap)           textures.add(mat.envMap);
+        if (mat.alphaMap)         textures.add(mat.alphaMap);
+        if (mat.aoMap)            textures.add(mat.aoMap);
+        if (mat.displacementMap)  textures.add(mat.displacementMap);
+        if (mat.emissiveMap)      textures.add(mat.emissiveMap);
+        if (mat.gradientMap)      textures.add(mat.gradientMap);
+        if (mat.metalnessMap)     textures.add(mat.metalnessMap);
+        if (mat.roughnessMap)     textures.add(mat.roughnessMap);
+
+        return [...textures];
+    }
+
+    return [];
+}
+
+
 /**
  * Fully dispose a material and any textures it uses.
  * Assumes that the material owns those textures.
@@ -161,19 +225,9 @@ export function disposeMaterial(mat) {
     if (!(mat instanceof THREE.Material))
         return;
 
-    if (mat.map)              mat.map.dispose ();
-    if (mat.lightMap)         mat.lightMap.dispose ();
-    if (mat.bumpMap)          mat.bumpMap.dispose ();
-    if (mat.normalMap)        mat.normalMap.dispose ();
-    if (mat.specularMap)      mat.specularMap.dispose ();
-    if (mat.envMap)           mat.envMap.dispose ();
-    if (mat.alphaMap)         mat.alphaMap.dispose();
-    if (mat.aoMap)            mat.aoMap.dispose();
-    if (mat.displacementMap)  mat.displacementMap.dispose();
-    if (mat.emissiveMap)      mat.emissiveMap.dispose();
-    if (mat.gradientMap)      mat.gradientMap.dispose();
-    if (mat.metalnessMap)     mat.metalnessMap.dispose();
-    if (mat.roughnessMap)     mat.roughnessMap.dispose();
+    getTexturesInMaterial(mat).forEach((tex) => {
+        tex.dispose();
+    });
 
     mat.dispose();
 }

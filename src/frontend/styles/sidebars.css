@@ -90,6 +90,7 @@
     border: none;
     cursor: pointer;
     color: #2675ea;
+    border-radius: 5px;
     background: #dbe4f3;
 }
 

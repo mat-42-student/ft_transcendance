@@ -35,6 +35,7 @@ export default class LevelError extends LevelBase {
 			state.engine.errorScene = null;
 			state.engine.scene.gltf = gltf.scene;
 			state.engine.scene.add(gltf.scene);
+			UTILS.autoMaterial(state.engine.scene);  // call again just in case
 		});
 	}
 

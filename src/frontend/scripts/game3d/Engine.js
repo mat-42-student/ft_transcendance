@@ -6,6 +6,8 @@ import Stats from 'three/addons/libs/stats.module.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { RenderPixelatedPass } from 'three/addons/postprocessing/RenderPixelatedPass.js';
 import * as UTILS from '../utils.js';
 import LevelBase from './gameobjects/levels/LevelBase.js';
 import LevelError from './gameobjects/levels/LevelError.js';
@@ -74,8 +76,19 @@ export class Engine {
 				this.#effectComposer = new EffectComposer(this.renderer);
 				this.#effectComposer.renderTarget1.samples = 8;  // Turn on antialiasing.
 
-				this.#renderPass = new RenderPass(null, null);
+				this.#renderPass = new RenderPixelatedPass(1, null, null);
 				this.#effectComposer.addPass(this.#renderPass);
+
+				this.#renderPass.normalEdgeStrength = 5;
+				this.#renderPass.depthEdgeStrength = 5;
+
+				this.#unrealBloomPass = new UnrealBloomPass(
+					undefined,  // Resolution
+					0.25, // Strength
+					0.1, // Radius
+					0.98 // Treshold
+				);
+				this.#effectComposer.addPass(this.#unrealBloomPass);
 
 				this.#effectComposer.addPass(new OutputPass());
 			}  // Post processing
@@ -98,7 +111,20 @@ export class Engine {
 					state.engine.font = font;
 				}
 			);
+
+			this.fontLoader.load(
+				'/ressources/3d/Square One_Regular.json',
+				(font) => {
+					state.engine.squareFont = font;
+				}
+			);
 		}
+
+		window.addEventListener('beforeunload', () => {
+			this.#renderPass?.dispose?.();  this.#renderPass = null;
+			this.#unrealBloomPass?.dispose?.();  this.#unrealBloomPass = null;
+			this.#effectComposer?.dispose?.();  this.#effectComposer = null;
+		});
 
 		const resizeCallback = this.#onResize.bind(this);
 		this.#resizeObserver = new ResizeObserver(resizeCallback);
@@ -190,6 +216,9 @@ export class Engine {
 			this.#html_canvas.style.display = null;
 		}
 
+		if (newScene)
+			UTILS.autoMaterial(newScene);
+
 		this.#scene = newScene;
 	}
 
@@ -218,6 +247,8 @@ export class Engine {
 
 	/** @type {RenderPass} */
 	#renderPass;
+
+	#unrealBloomPass;
 
 	#gltfLoader = new GLTFLoader();
 
@@ -257,7 +288,8 @@ export class Engine {
 
 
 	#updateAutoResolution() {
-		const res = UTILS.shouldPowersave() ? window.devicePixelRatio / 2 : window.devicePixelRatio;
+		// const res = UTILS.shouldPowersave() ? window.devicePixelRatio / 2 : window.devicePixelRatio;
+		const res = window.devicePixelRatio;  // post processing changes appearance with resolution
 		this.renderer.setPixelRatio(res);
 		this.#effectComposer.setPixelRatio(res);
 	}
