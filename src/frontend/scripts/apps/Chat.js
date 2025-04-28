@@ -21,11 +21,11 @@ export class ChatApp{
     }
 
     async isChatUserMuted() {
-        const muted = await apiRequest(`/api/v1/users/${this.activeChatUserId}/muted/`);
-        if (muted == null)
+        const response = await apiRequest(`/api/v1/users/${this.activeChatUserId}/muted/`);
+        if (response == null || typeof response.is_blocked !== 'boolean')
             return false;
-        return muted;
-    }
+        return response.is_blocked;
+    }    
 
     async chatMuteListener(event) {
         if (this.activeChatUserId == null)

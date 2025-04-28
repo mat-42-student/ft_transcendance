@@ -80,6 +80,8 @@ function createGameRow(game) {
 
 // Voir si gestion nécessaire quand user est bloqué && à bloqué
 function generateProfileActions(data) {
+    console.log("is friend?: " + data.is_friend);
+    console.log("is blocked?:" + data.is_blocked_by_user);
     if (data.is_self) {
         return `
             <button data-action="2fa" data-user-id="${data.id}" title="Enable Two-Factor Authentication">
@@ -116,6 +118,7 @@ function setupProfileEventListeners(userId) {
         if (!button || !button.dataset.action) return;
 
         handleProfileAction(button.dataset.action, userId);
+        initProfilePage(userId);
     });
 }
 
@@ -131,12 +134,8 @@ async function handleProfileAction(action, userId) {
             initDynamicCard('2fa');
             break;
         case "update":
-            initDynamicCard('update'); // À implémenter
+            initDynamicCard('update');
             break;
-        // case "match":
-        // case "chat":
-        //     console.log(`Action ${action} non encore implémentée.`);
-        //     break;
         default:
             if (!userId) {
                 console.error("ID utilisateur manquant pour l'action:", action);

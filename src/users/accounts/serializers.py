@@ -75,51 +75,54 @@ class UserBlockedSerializer(serializers.ModelSerializer):
         else:
             return "Cet utilisateur vous a bloqué."
 
-
 # User 'update' & 'partial_update' serializer
 class UserUpdateSerializer(serializers.ModelSerializer):
+    new_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
     confirm_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = User
-        fields = ['username', 'confirm_password', 'password', 'avatar']
+        fields = ['avatar', 'password', 'new_password', 'confirm_password']
         extra_kwargs = {
-            'username': {
-                'min_length': 3, 
-                'max_length': 50,
-                'label': 'Nom d’utilisateur'
-            },
-            'confirm_password': {
-                'write_only': True,
-                'label': 'Mot de passe actuel'
-            },
             'password': {
+                'write_only': True,
+                'label': 'Current password'
+            },
+            'new_password': {
                 'write_only': True,
                 'min_length': 5,
                 'max_length': 128,
-                'label': 'Nouveau mot de passe'
+                'label': 'New password'
+            },
+            'confirm_password': {
+                'write_only': True,
+                'min_length': 5,
+                'max_length': 128,
+                'label': 'Confirm new password'
             },
         }
 
     def validate(self, data):
         user = self.context['user']
+
+        password = data.get('password', None)
+        new_password = data.get('new_password', None)
+        confirm_password = data.get('confirm_password', None)
+
+        if (new_password or confirm_password) and not password:
+            raise serializers.ValidationError({"password": "Your current password is needed to update it."})
         
-        # Vérification du username
-        username = data.get('username')
-        if username and User.objects.filter(username=username).exclude(id=user.id).exists():
-            raise serializers.ValidationError({"username": "Ce nom d'utilisateur est déjà pris. Veuillez en choisir un autre."})
+        if (not new_password or not confirm_password) and password:
+            raise serializers.ValidationError({"new_password": "You did not provide a new password."})
 
-        # Vérification du mot de passe actuel et du nouveau mot de passe
-        password = data.get('confirm_password', None)
-        new_password = data.get('password', None)
+        if (new_password and not confirm_password) or (confirm_password and not new_password):
+            raise serializers.ValidationError({"new_password": "You must fill both `new_password` and `confirm_password` to update your password."})
 
-        # Si l'un des deux champs est présent sans l'autre
-        if (password and not new_password) or (new_password and not password):
-            raise serializers.ValidationError({"password": "Veuillez fournir à la fois le mot de passe actuel et le nouveau mot de passe pour la mise à jour."})
+        if (new_password and confirm_password) and (new_password != confirm_password):
+            raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
 
-        # Vérifier que le mot de passe actuel est correct si fourni
         if password and not user.check_password(password):
-            raise serializers.ValidationError({"confirm_password": "Le mot de passe actuel est incorrect."})
+            raise serializers.ValidationError({"password": "The current password is incorrect."})
 
         return data
 
@@ -138,21 +141,10 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         return avatar
         
     def update(self, instance, validated_data):
-        validated_data.pop('confirm_password', None)  # Supprime `password` des données validées
+        validated_data.pop('password', None)
+        validated_data.pop('confirm_password', None)
 
-        # Suppression de l'ancien fichier avatar si un nouvel avatar est uploadé
-
-
-        # Gestion du nouveau username
-        new_username = validated_data.get('username')
-        if new_username:
-            instance.username = new_username
-        
-        # Gestion du nouveau mot de passe
-        new_password = validated_data.pop('password', None)
-        if new_password:
-            instance.set_password(new_password)
-        
+        # Suppression de l'ancien fichier avatar si un nouvel avatar est uploadé ??? -> voir si problème avec `default.png` réglé
         # Gestion du nouvel avatar
         new_avatar = validated_data.get('avatar', None)
         if new_avatar is not None:
@@ -161,7 +153,99 @@ class UserUpdateSerializer(serializers.ModelSerializer):
                     default_storage.delete(instance.avatar.path)  # Supprime le fichier
             instance.avatar = new_avatar
         
+        # Gestion du nouveau mot de passe
+        new_password = validated_data.pop('new_password', None)
+        if new_password:
+            instance.set_password(new_password)
+
         return super().update(instance, validated_data)
+
+# # User 'update' & 'partial_update' serializer
+# class UserUpdateSerializer(serializers.ModelSerializer):
+#     confirm_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+
+#     class Meta:
+#         model = User
+#         fields = ['username', 'confirm_password', 'password', 'avatar']
+#         extra_kwargs = {
+#             'username': {
+#                 'min_length': 3, 
+#                 'max_length': 50,
+#                 'label': 'Nom d’utilisateur'
+#             },
+#             'confirm_password': {
+#                 'write_only': True,
+#                 'label': 'Mot de passe actuel'
+#             },
+#             'password': {
+#                 'write_only': True,
+#                 'min_length': 5,
+#                 'max_length': 128,
+#                 'label': 'Nouveau mot de passe'
+#             },
+#         }
+
+#     def validate(self, data):
+#         user = self.context['user']
+        
+#         # Vérification du username
+#         username = data.get('username')
+#         if username and User.objects.filter(username=username).exclude(id=user.id).exists():
+#             raise serializers.ValidationError({"username": "Ce nom d'utilisateur est déjà pris. Veuillez en choisir un autre."})
+
+#         # Vérification du mot de passe actuel et du nouveau mot de passe
+#         password = data.get('confirm_password', None)
+#         new_password = data.get('password', None)
+
+#         # Si l'un des deux champs est présent sans l'autre
+#         if (password and not new_password) or (new_password and not password):
+#             raise serializers.ValidationError({"password": "Veuillez fournir à la fois le mot de passe actuel et le nouveau mot de passe pour la mise à jour."})
+
+#         # Vérifier que le mot de passe actuel est correct si fourni
+#         if password and not user.check_password(password):
+#             raise serializers.ValidationError({"confirm_password": "Le mot de passe actuel est incorrect."})
+
+#         return data
+
+#     def validate_avatar(self, avatar):
+#         try:
+#             img = Image.open(avatar)
+#             img.verify()  # Vérifie que le fichier est bien une image
+#             if img.format not in ['JPEG', 'PNG']:  # Formats acceptés
+#                 raise serializers.ValidationError("Seuls les formats JPEG et PNG sont autorisés.")
+#             # Recharger l'image pour s'assurer qu'elle est valide
+#             img = Image.open(avatar)
+#             img.load()
+#         except (IOError, ValidationError):
+#             raise serializers.ValidationError("Le fichier de l'avatar doit être une image valide.")
+        
+#         return avatar
+        
+#     def update(self, instance, validated_data):
+#         validated_data.pop('confirm_password', None)  # Supprime `password` des données validées
+
+#         # Suppression de l'ancien fichier avatar si un nouvel avatar est uploadé
+
+
+#         # Gestion du nouveau username
+#         new_username = validated_data.get('username')
+#         if new_username:
+#             instance.username = new_username
+        
+#         # Gestion du nouveau mot de passe
+#         new_password = validated_data.pop('password', None)
+#         if new_password:
+#             instance.set_password(new_password)
+        
+#         # Gestion du nouvel avatar
+#         new_avatar = validated_data.get('avatar', None)
+#         if new_avatar is not None:
+#             if instance.avatar.name != 'default.png':
+#                 if default_storage.exists(instance.avatar.path):  # Vérifie si le fichier existe
+#                     default_storage.delete(instance.avatar.path)  # Supprime le fichier
+#             instance.avatar = new_avatar
+        
+#         return super().update(instance, validated_data)
 
 
 # User registration serializer
