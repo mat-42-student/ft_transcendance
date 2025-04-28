@@ -273,8 +273,8 @@ export class Engine {
 	#onResize() {
 		const rect = this.#html_container.getBoundingClientRect();
 		this.#updateAutoResolution();
-		this.renderer.setSize(rect.width, rect.height);
-		this.#effectComposer.setSize(rect.width, rect.height);
+		this.renderer?.setSize(rect.width, rect.height);
+		this.#effectComposer?.setSize(rect.width, rect.height);
 		if (this.scene && this.scene.smoothCamera) {
 			this.scene.smoothCamera.aspect = rect.width / rect.height;
 		}
@@ -290,8 +290,8 @@ export class Engine {
 	#updateAutoResolution() {
 		// const res = UTILS.shouldPowersave() ? window.devicePixelRatio / 2 : window.devicePixelRatio;
 		const res = window.devicePixelRatio;  // post processing changes appearance with resolution
-		this.renderer.setPixelRatio(res);
-		this.#effectComposer.setPixelRatio(res);
+		this.renderer?.setPixelRatio(res);
+		this.#effectComposer?.setPixelRatio(res);
 	}
 
 };
