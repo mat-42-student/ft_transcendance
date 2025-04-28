@@ -29,12 +29,14 @@ class Salon():
     
     def all_players_have_errors_SocketGame(self):
         for player in self.players.values():
+            print(f'player {player.user_id} error with SocketGame ? {player.socketGame_is_online}')
             if (player.socketGame_is_online == True or player.socketGame_is_online == None):
                 return False
         return True
     
     def all_players_have_leave_game(self):
         for player in self.players.values():
+            print(f'player {player.user_id} leave the game ? {player.leave_game}')
             if (player.leave_game == False):
                 return False
         return True

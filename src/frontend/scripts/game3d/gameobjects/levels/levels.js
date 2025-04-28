@@ -4,12 +4,13 @@ import LevelDebug from './debug/LevelDebug.js';
 
 
 const RANDOM_LIST = {
-	'retro-pong': LevelRetroPong,
+
+	'debug': LevelDebug,
 };
 
 
 export const LIST = {
-	'debug': LevelDebug,
+		'retro-pong': LevelRetroPong,
 	...RANDOM_LIST,
 };
 

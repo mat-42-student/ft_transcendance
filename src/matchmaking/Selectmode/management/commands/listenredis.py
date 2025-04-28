@@ -68,7 +68,6 @@ class Command(BaseCommand):
                 self.roundMax = self.roundMax + 1
                 nbPlayer = nbPlayer / 2
             
-            print(f'Max round of tournament without final is {self.roundMax}')
             
             # Subscribe all channels
             await self.pubsub.subscribe(self.channel_front)
@@ -98,6 +97,7 @@ class Command(BaseCommand):
                         else:
                             await self.SelectTypeGame(message)
                     elif (msg.get('channel') == self.channel_pong):
+                        print(f'Message form PONGGG')
                         await self.parseInfoGame(message)
                     
                     print("listen again...")
@@ -455,14 +455,14 @@ class Command(BaseCommand):
                     print(f'GameCache is not None')
                     print(f'State GameSocket: {data['GameSocket']}')
                     if (player.socketGame_is_online == None and data['GameSocket'] == True):
-                        player.socketGame_is_online = False
-                    elif (player.socketGame_is_online == None and data['GameSocket'] == False):
                         player.socketGame_is_online = True
+                    elif ((player.socketGame_is_online == None or player.socketGame_is_online == True) and data['GameSocket'] == False):
+                        player.socketGame_is_online = False
                 
                 for gamerId, gamer in gameCache.players.items():
-                    if (gamer.socketGame_is_online == True):
+                    if (gamer.socketGame_is_online == False):
                         playerNotReady = playerNotReady + 1
-                    elif(gamer.socketGame_is_online == False):
+                    elif(gamer.socketGame_is_online == True):
                         playerReady = playerReady + 1
                 
                 if (playerNotReady + playerReady == 2):
@@ -985,6 +985,7 @@ class Command(BaseCommand):
         for salon in self.salons['tournament']:
             try:
                 if (len(salon.players) < 2):
+                    print("WE have just a WINNER")
                     round += 1
                     break
                 idgame = async_to_sync(self.create_game)('tournament', salon, game.tournament, round)
@@ -1315,11 +1316,11 @@ class Command(BaseCommand):
         gameInCache = self.getGameInCache(gameDB.id, tournament.id)
         
         for playerId, player in gameInCache.players.items():
-            if (player.socketGame_is_online == True):
+            if (player.socketGame_is_online == False):
                 await self.JSON_cancelTournament(playerId)
                 if (await self.checkStatus(player, 'online') == False):
                     print('Imposible to set new status')
-            elif (player.socketGame_is_online == False):
+            elif (player.socketGame_is_online == True):
                 await self.JSON_endgameWithoutError(playerId)
                 if (await self.checkStatus(player, 'pending') == False):
                     print('Imposible to set new status')
@@ -1328,9 +1329,10 @@ class Command(BaseCommand):
                 
 
     async def end_tournament(self, gameDB):
-        print("End tournament START")
+        print(f"End tournament START with last game: {gameDB}")
         try:
             allgamesDB = await sync_to_async(self.getallgamesForTournament)(gameDB)
+            print(f'the last game(s) is(are): {allgamesDB}')
             tournament = await sync_to_async(getattr)(gameDB, 'tournament')
             winnerTournament = await sync_to_async(getattr)(gameDB, 'winner')
             await self.JSON_endgameWinnerTournament(winnerTournament.id)
@@ -1338,7 +1340,7 @@ class Command(BaseCommand):
             for i_game in allgamesDB:
                 gameInCache = self.getGameInCache(i_game.id, tournament.id)
                 for playerId, player in gameInCache.players.items():
-                    if (player.socketGame_is_online == True):
+                    if (player.socketGame_is_online == False):
                         await self.JSON_cancelTournament(playerId)
                     else:
                         await self.JSON_endgameWithoutError(playerId)
@@ -1467,6 +1469,8 @@ class Command(BaseCommand):
 
     def SetScoreGame(self, players, game, score_int):
         try:
+            if (game.score_player1 != 0 or game.score_player2 != 0):
+                return False
             for player in players:
                 if (game.player1.id == player):
                     game.score_player1 = score_int[player]
