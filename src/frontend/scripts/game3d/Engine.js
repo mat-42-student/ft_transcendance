@@ -44,7 +44,7 @@ export class Engine {
 
 
 	/** Initialization code needs to read state.engine, which, at the time of running the constructor, was not set yet. */
-	init() {
+	async init() {
 		{  // Setup DOM elements
 			this.#html_container = document.getElementById("engine");
 			if (this.DEBUG_MODE) {
@@ -118,6 +118,11 @@ export class Engine {
 					state.engine.squareFont = font;
 				}
 			);
+
+			// dubious solution to a dubious problem
+			while (this.font == undefined && this.squareFont == undefined) {
+				await new Promise(resolve => setTimeout(resolve, 100));
+			}
 		}
 
 		window.addEventListener('beforeunload', () => {
