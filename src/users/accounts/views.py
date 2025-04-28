@@ -82,7 +82,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """Définit les permissions pour chaque action."""
-        if self.action in ['list', 'retrieve', 'contacts', 'friends', 'blocks']:
+        if self.action in ['list', 'retrieve', 'get_user_contacts', 'get_user_friends', 'get_user_blocks']:
             return [AllowAny()]
         return [IsAuthenticatedOrService()]
 
@@ -286,12 +286,12 @@ class UserViewSet(viewsets.ModelViewSet):
         """
         requested_user = self.get_object()  # Récupère l'utilisateur cible
 
-        # If request.user is a service allow it
-        if isinstance(request.user, str):
-            pass
-        # Vérification des permissions
-        elif request.user != requested_user and not request.user.is_superuser:
-            raise PermissionDenied("Vous n'avez pas la permission d'accéder aux contacts de cet utilisateur.")
+        # # If request.user is a service allow it
+        # if isinstance(request.user, str):
+        #     pass
+        # # Vérification des permissions
+        # elif request.user != requested_user and not request.user.is_superuser:
+        #     raise PermissionDenied("Vous n'avez pas la permission d'accéder aux contacts de cet utilisateur.")
         
         try:
             user = User.objects.get(pk=pk)
@@ -363,7 +363,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response(response_data, status=200)
     
-    @action(detail=True, methods=['GET'], permission_classes=[IsAuthenticatedOrService], url_path='is_blocked')
+    @action(detail=True, methods=['GET'], permission_classes=[IsAuthenticatedOrService], url_path='muted')
     def is_blocked(self, request, pk=None):
         """
         Vérifie si l'utilisateur cible est bloqué par l'utilisateur authentifié.
