@@ -26,7 +26,10 @@ window.idleLevel = new LevelIdle();
 state.client.setState(state);
 window.state = state; // Debugging purpose
 
-document.addEventListener('DOMContentLoaded', initApp);
+// this used to respond to DOMContentLoaded. But now, engine.init is async.
+// This means DOMContentLoaded would never fire this function (the event had happened before
+// it was registered on this line.)
+await initApp();
 
 // Fonction d'initialisation
 async function initApp() {
