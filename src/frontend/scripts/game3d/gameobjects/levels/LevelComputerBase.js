@@ -26,7 +26,7 @@ export default class LevelComputerBase extends LevelBase {
 
 		this.useDefaultCameraAngle();
 
-		this.remainingToLoad = 4;
+		this.remainingToLoad = 5;
 
 		new THREE.CubeTextureLoader()
 			.setPath( '/ressources/3d/computerCubemap/' )
@@ -92,6 +92,20 @@ export default class LevelComputerBase extends LevelBase {
 
 			core.material = new THREE.MeshBasicMaterial({color: "#000000"});
 			wireframe.material = new THREE.MeshBasicMaterial({color: "#ffffff", wireframe: true});
+
+			this.loadComplete();
+		});
+
+		state.engine.gltfLoader.load('/ressources/3d/keys.glb', (gltf) => {
+
+			this.gltfToDispose.push(gltf.scene);
+			this.keysModels = {};
+
+			const mat = new THREE.MeshBasicMaterial({color: "#cccc22", wireframe: true});
+			gltf.scene.children.forEach((obj) => {
+				this.keysModels[obj.name] = obj;
+				obj.material = mat;
+			});
 
 			this.loadComplete();
 		});
