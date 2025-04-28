@@ -60,7 +60,10 @@ export class LocalGame extends GameBase {
             document.getElementById(id).style.display = null;
         } catch {}
 
-        this.pause();
+    }
+
+    startLocalGame() {
+        this.pause(2);
         this.recenter();
     }
 
