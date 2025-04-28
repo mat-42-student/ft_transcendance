@@ -34,8 +34,21 @@ else
     echo "Bootstrap token loaded successfully"
     
     # Get AppRole credentials
-    ROLE_ID=$(vault read -field=role_id auth/approle/role/chat-service/role-id)
-    SECRET_ID=$(vault write -f -field=secret_id auth/approle/role/chat-service/secret-id)
+    ROLE_ID=$(curl -s \
+      -H "X-Vault-Token: $BOOTSTRAP_TOKEN" \
+      $VAULT_URL/v1/auth/approle/role/chat-service/role-id | jq -r '.data.role_id')
+
+    # Generate a new secret_id using Vault API
+    SECRET_ID=$(curl -s \
+      -X POST \
+      -H "X-Vault-Token: $BOOTSTRAP_TOKEN" \
+      $VAULT_URL/v1/auth/approle/role/chat-service/secret-id | jq -r '.data.secret_id')
+
+    # Verify we got values
+    if [ -z "$ROLE_ID" ] || [ "$ROLE_ID" = "null" ] || [ -z "$SECRET_ID" ] || [ "$SECRET_ID" = "null" ]; then
+      echo "Failed to retrieve AppRole credentials from Vault API"
+      exit 1
+    fi
                  
     # Authenticate with AppRole
     echo "Authenticating with AppRole..."
