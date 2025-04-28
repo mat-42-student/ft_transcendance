@@ -103,7 +103,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta:
         db_table = 'users'
 
-# ft42Profile model
 class Ft42Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='ft42_profile')
 
