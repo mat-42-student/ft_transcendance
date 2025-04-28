@@ -230,7 +230,7 @@ export class Engine {
 
 	showErrorScene() {
 		if (this.scene != null) {
-			console.warn('This function was called improperly.');
+			console.warn('Refusing to show error scene.');
 			return;
 		} else if (this.errorScene) {
 			console.warn('Attempted to show loading error scene multiple times.');
