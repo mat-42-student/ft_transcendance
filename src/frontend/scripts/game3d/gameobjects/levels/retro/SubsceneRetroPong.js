@@ -64,6 +64,12 @@ export default class SubsceneRetroPong extends THREE.Scene {
 
 	onFrame(delta, time) {
 		this.#blinkTimer = (this.#blinkTimer + delta) % 1.0;
+		this.#lowFPSTimer += delta;
+		if (this.#lowFPSTimer > 0.1) {
+			this.trophy?.rotateY(this.#lowFPSTimer * Math.PI / 2);
+			// before the next line, this.#lowFPSTimer acts as a delta value.
+			this.#lowFPSTimer = 0;
+		}
 	}
 
 	namesReady() {
@@ -108,8 +114,14 @@ export default class SubsceneRetroPong extends THREE.Scene {
 			scoreIndicator.freeze = true;
 			scoreIndicator.scoreChanged(scores[i]);
 		});
+
+		this.trophy = this.parentScene.trophyModel;
+		this.add(this.trophy);
+		this.trophy.position.set(scores[0] > scores[1] ? 0.333 : -0.333, 0, -0.1);
+		this.trophy.rotateX(Math.PI / 2);
 	}
 
 	#blinkTimer = 0;
+	#lowFPSTimer = 0;
 
 }
