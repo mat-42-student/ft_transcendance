@@ -127,20 +127,20 @@ export class WebGame extends GameBase {
                 wg.scores[0] = data.lscore;
                 wg.scores[1] = data.rscore;
 
-                if (wg.level)  wg.level.unpause();
+                wg.level?.unpause();
             }
             if (data.action == "wait") {
-                if (wg.level)  wg.level.pause(Number(data.time));
+                wg.level?.pause(Number(data.time));
             }
             if (data.action == "disconnect") {
                 wg.close(false);
             }
             if (data.action == "game_cancelled") {
-                const opponentName = state.gameApp.playerNames[1 - state.gameApp.side];
-                wg.level.endShowWebOpponentQuit(opponentName);
+                const opponentName = state.gameApp?.playerNames[1 - state.gameApp.side];
+                wg.level?.endShowWebOpponentQuit(opponentName);
             }
             if (data.action == "game_won") {
-                wg.level.endShowWinner(data.scores, data.winner, [...wg.playerNames]);
+                wg.level?.endShowWinner(data.scores, data.winner, [...wg.playerNames]);
             }
         };
     }
