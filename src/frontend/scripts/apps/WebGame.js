@@ -107,7 +107,7 @@ export class WebGame extends GameBase {
             }
 
             // Debug with less spam from constant 'info' packets.
-            if (data.action != 'info') { console.log('Game packet:', data.action, ', data = ', data); }
+            // if (data.action != 'info') { console.log('Game packet:', data.action, ', data = ', data); }
 
             if (data.action == 'init') {
                 wg.level = new (LEVELS.LIST[data.level_name])();

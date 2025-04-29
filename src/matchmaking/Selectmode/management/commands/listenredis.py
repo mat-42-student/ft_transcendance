@@ -6,7 +6,7 @@ import asyncio
 from asyncio import run as arun, sleep as asleep, create_task
 from signal import signal, SIGTERM, SIGINT
 from django.conf import settings
-from .models import Game, Tournament, User
+from ...models import Game, Tournament, User
 from asgiref.sync import sync_to_async, async_to_sync
 from datetime import datetime
 from django.core.cache import cache

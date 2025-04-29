@@ -17,9 +17,9 @@ export async function initProfilePage(userId) {
 export function renderProfileFriendButton(data) {
     // Vérifie si le hash correspond à la page profil de l'utilisateur concerné
     const currentHash = window.location.hash;
-    console.log("currentHash: " + currentHash + " data ", data);
+    // console.log("currentHash: " + currentHash + " data ", data);
     if (currentHash === `#profile/${data?.header?.from}`) {
-        console.log("refresh page")
+        // console.log("refresh page")
         initProfilePage(data?.header?.from);
     }
 }
@@ -90,8 +90,8 @@ function createGameRow(game) {
 
 // Voir si gestion nécessaire quand user est bloqué && à bloqué
 function generateProfileActions(data) {
-    console.log("is friend?: " + data.is_friend);
-    console.log("is blocked?:" + data.is_blocked_by_user);
+    // console.log("is friend?: " + data.is_friend);
+    // console.log("is blocked?:" + data.is_blocked_by_user);
     if (data.is_self) {
         return `
             <button data-action="2fa" data-user-id="${data.id}" title="Enable Two-Factor Authentication">

@@ -69,7 +69,7 @@ export function verify2fa() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log("2FA has been enabled!");
+            // console.log("2FA has been enabled!");
             successPage.style.display = 'block';
             qrSection.style.display = 'none';
             verificationSection.style.display = 'none';

@@ -115,7 +115,6 @@ export class SocialApp{
     // }
 
     incomingMsg(data) {
-        console.log("incomingMsg du user " + data.user_id + " : ", data);
         if (data.user_id == state.client.userId) {
             this.myStatus = data.status;
             state.client.renderProfileBtn();
@@ -128,7 +127,6 @@ export class SocialApp{
         this.renderFriendStatus(data.user_id);
         if (data.user_id == state.chatApp.activeChatUserId)
             state.chatApp.toggleChatInput(data.status);
-
     }
 
     renderFriendStatus(id) {

@@ -62,6 +62,8 @@ export class ChatApp{
 
     incomingMsg(data) {
         const friend = data.body.from;
+        if (friend == state.userId)
+            return this.postError(data);
         if (!this.storedMessages.has(friend))
             this.storedMessages.set(friend, []);
         this.storeIncomingMessage(data);
@@ -102,6 +104,13 @@ export class ChatApp{
         if (!this.storedMessages.has(user))
             this.storedMessages.set(user, []);
         this.storedMessages.get(user).push(newMessage);
+    }
+
+    postError(data) {
+        let myDiv = document.createElement('div');
+        myDiv.className = "chat-message error-message";
+        myDiv.textContent = "Error: " + data.body.message;
+        this.chatBody.appendChild(myDiv);
     }
 
     postFriendMessage(data){

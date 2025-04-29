@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
 
@@ -22,8 +22,10 @@ class UserManager(BaseUserManager):
     class Meta:
         db_table = 'user_manager'
     
+
+
 # User model (inherits Django user model) -> Ajouter: bio, tableaux historique 1à dernières games ???
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     STATUS_CHOICES = [
         ('online', 'Online'),
         ('offline', 'Offline'),
@@ -35,9 +37,13 @@ class User(AbstractBaseUser):
         unique=True,
         validators=[MinLengthValidator(3)]
     )
-    password = models.CharField( # Utilisation d'un mot de passe hashé -> SUPPRIMER pour laisser django gérer hashage ou utiliser set_password()
-        max_length=128, 
-        validators=[MinLengthValidator(5)]
+    first_name = models.CharField(
+        max_length=50,
+        validators=[MinLengthValidator(3)]
+    )
+    last_name = models.CharField(
+        max_length=50,
+        validators=[MinLengthValidator(3)]
     )
     email = models.EmailField(
         max_length=254,
@@ -89,7 +95,7 @@ class User(AbstractBaseUser):
     objects = UserManager()
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['password', 'email']
+    REQUIRED_FIELDS = []
 
     def __str__(self):
         return self.username
@@ -97,7 +103,6 @@ class User(AbstractBaseUser):
     class Meta:
         db_table = 'users'
 
-# ft42Profile model
 class Ft42Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='ft42_profile')
 
@@ -177,11 +182,24 @@ class Relationship(models.Model):
 
     class Meta:
         db_table = 'relationship'
-        unique_together = ('from_user', 'to_user')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['from_user', 'to_user'],
+                name='unique_relationship_symmetric'
+            )
+        ]
 
     def clean(self):
         if self.from_user == self.to_user:
             raise ValidationError("Un utilisateur ne peut pas avoir de relation avec lui-même.")
+        
+        # Forcer un ordre pour empêcher les doublons inversés
+        if self.from_user.id > self.to_user.id:
+            self.from_user, self.to_user = self.to_user, self.from_user
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.from_user.username} -> {self.to_user.username} ({self.status})"
@@ -190,7 +208,6 @@ class Relationship(models.Model):
 # Choices for game rounds
 ROUND_CHOICES = [
     ("friendly", "Friendly Match"),
-    ("ranked", "Ranked"),
     ("first_round", "First Round"),
     ("quarter_final", "Quarter-Final"),
     ("semi_final", "Semi-Final"),
@@ -200,17 +217,15 @@ ROUND_CHOICES = [
 # Game type choices (tournament or friendly)
 GAME_TYPE_CHOICES = [
     ("friendly", "Friendly Match"),
-    ("ranked", "Ranked"),
     ("tournament", "Tournament Game"),
 ]
 
 class Tournament(models.Model):
-    name = models.CharField(max_length=255, blank=True, null=True)
-    round_max = models.IntegerField(default=2)
+    name = models.CharField(max_length=255)
     location = models.CharField(max_length=255, blank=True, null=True)
-    start_date = models.DateField(auto_now_add=True)
-    end_date = models.DateField(auto_now=True)
-    organizer = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="organized_tournaments")
+    start_date = models.DateField()
+    end_date = models.DateField()
+    organizer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="organized_tournaments")
     created_at = models.DateTimeField(auto_now_add=True)
     winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="won_tournament")
 
@@ -229,11 +244,10 @@ class Game(models.Model):
     score_player2 = models.IntegerField(default=0)
     date = models.DateTimeField()
     winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="won_games")
-    round = models.IntegerField(default=1)
+    round = models.CharField(max_length=20, choices=ROUND_CHOICES, default="friendly")
     game_type = models.CharField(max_length=20, choices=GAME_TYPE_CHOICES, default="friendly")
     created_at = models.DateTimeField(auto_now_add=True)
     failed = models.BooleanField(default=False)
-
 
     class Meta:
         db_table = 'Game'
@@ -241,4 +255,4 @@ class Game(models.Model):
     def __str__(self):
         if self.tournament:
             return f"{self.round}: {self.player1.username} vs {self.player2.username} - {self.tournament.name}"
-        return f"Friendly {self.id}: {self.player1.username} vs {self.player2.username}"
+        return f"Friendly: {self.player1.username} vs {self.player2.username}"
