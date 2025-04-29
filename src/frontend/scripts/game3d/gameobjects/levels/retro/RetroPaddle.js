@@ -97,6 +97,6 @@ export default class RetroPaddle extends Paddle {
 
 	#keyHintUp;
 	#keyHintDown;
-	#keyHintsDisappearTimer = 6;
+	#keyHintsDisappearTimer = 10;
 
 }
