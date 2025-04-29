@@ -1,5 +1,6 @@
 import { state } from '../main.js';
 import { navigator } from '../nav.js';
+import { initProfilePage } from '../pages.js';
 import { updatePendingCountDisplay } from '../components/friend_requests.js';
 import { fetchFriends, fetchPendingCount, fetchReceivedRequests, fetchSentRequests, modifyRelationship } from '../api/users.js';
 import { ft_fetch } from '../main.js';
@@ -114,6 +115,7 @@ export class SocialApp{
     // }
 
     incomingMsg(data) {
+        console.log("incomingMsg de user " + data.user_id);
         if (data.user_id == state.client.userId) {
             this.myStatus = data.status;
             state.client.renderProfileBtn();
@@ -126,6 +128,14 @@ export class SocialApp{
         this.renderFriendStatus(data.user_id);
         if (data.user_id == state.chatApp.activeChatUserId)
             state.chatApp.toggleChatInput(data.status);
+
+        // Vérifie si le hash correspond à la page profil de l'utilisateur concerné
+        const currentHash = window.location.hash;
+        console.log("current hash: " + currentHash);
+        if (currentHash === `#profile/${data.user_id}`) {
+            console.log("refresh page")
+            initProfilePage(data.user_id);
+        }
     }
 
     renderFriendStatus(id) {

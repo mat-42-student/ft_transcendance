@@ -115,9 +115,8 @@ const cardInitializers = {
                 const response = await updateProfile(formData, state.client.userId);
 
                 if (response) {
-                    displaySuccessMessage("Successfuly updated data.")
-                    // closeDynamicCard();
                     initProfilePage(state.client.userId);
+                    closeDynamicCard();
                 } else {
                     displayErrorMessage("Update failed.") // adapter au type d'erreur
                 }
