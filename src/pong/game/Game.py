@@ -136,7 +136,7 @@ class Game:
             if self.loaded:
                 if self.was_not_loaded:
                     self.was_not_loaded = False
-                    await self.eepytime(2)
+                    await self.eepytime(3)
                 await self.wsh.channel_layer.group_send(
                     self.wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
                 )
