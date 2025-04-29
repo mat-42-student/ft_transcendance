@@ -115,7 +115,7 @@ export class SocialApp{
     // }
 
     incomingMsg(data) {
-        console.log("incomingMsg de user " + data.user_id);
+        console.log("incomingMsg du user " + data.user_id + " : ", data);
         if (data.user_id == state.client.userId) {
             this.myStatus = data.status;
             state.client.renderProfileBtn();
@@ -129,13 +129,6 @@ export class SocialApp{
         if (data.user_id == state.chatApp.activeChatUserId)
             state.chatApp.toggleChatInput(data.status);
 
-        // Vérifie si le hash correspond à la page profil de l'utilisateur concerné
-        const currentHash = window.location.hash;
-        console.log("current hash: " + currentHash);
-        if (currentHash === `#profile/${data.user_id}`) {
-            console.log("refresh page")
-            initProfilePage(data.user_id);
-        }
     }
 
     renderFriendStatus(id) {
@@ -246,7 +239,8 @@ export class SocialApp{
             },
             "body": {
                 "status": "notify",
-                "id": userId
+                "id": userId,
+                "from": state.client.userId,
             }
         };
         await state.mainSocket.send(JSON.stringify(data));

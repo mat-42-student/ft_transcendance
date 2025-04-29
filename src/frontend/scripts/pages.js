@@ -14,6 +14,16 @@ export async function initProfilePage(userId) {
     setupProfileEventListeners(userId);
 }
 
+export function renderProfileFriendButton(data) {
+    // Vérifie si le hash correspond à la page profil de l'utilisateur concerné
+    const currentHash = window.location.hash;
+    console.log("currentHash: " + currentHash + " data ", data);
+    if (currentHash === `#profile/${data?.header?.from}`) {
+        console.log("refresh page")
+        initProfilePage(data?.header?.from);
+    }
+}
+
 // status perso -> state.socialapp.mystatus
 function updateProfileUI(data) {
     if (!data) {
