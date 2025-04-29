@@ -349,7 +349,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 "message": "Vous avez été mis en sourdine par cet utilisateur.",
             })
         # Vérifier si l'utilisateur est ami avec la personne consultée
-        elif Relationship.objects.filter(
+        if Relationship.objects.filter(
             Q(from_user=user, to_user=target_user, status='friend') |
             Q(from_user=target_user, to_user=user, status='friend')
         ).exists():
