@@ -16,6 +16,11 @@ export class WebGame extends GameBase {
         this.socket = null;
 
         this.side = 2;  // Set to neutral until server tells us
+
+        // quick and dirty fix for a cosmetic issue:
+        // web game does not send this until game start, so the paddles would be invisible
+        // for the initial countdown.
+        this.paddleHeights = [0.2, 0.2];
     }
 
     frame(delta, time) {

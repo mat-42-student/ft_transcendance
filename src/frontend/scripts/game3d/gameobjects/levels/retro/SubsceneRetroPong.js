@@ -11,6 +11,10 @@ import RetroTimer from './RetroTimer.js';
 
 export default class SubsceneRetroPong extends THREE.Scene {
 
+	#blinkTimer = 0;
+	#lowFPSTimer = 0;
+	#disconnectAnimFrame = 0;
+
 	/**
 	 * @param {LevelComputerBase} parentScene
 	 */
@@ -73,7 +77,14 @@ export default class SubsceneRetroPong extends THREE.Scene {
 		this.#blinkTimer = (this.#blinkTimer + delta) % 1.0;
 		this.#lowFPSTimer += delta;
 		if (this.#lowFPSTimer > 0.1) {
+			this.#disconnectAnimFrame = (this.#disconnectAnimFrame + 1) % (5 * 4);
 			this.trophy?.rotateY(this.#lowFPSTimer * Math.PI / 2);
+			this.disconnectCenter?.rotateOnWorldAxis(new THREE.Vector3(0,0,-1), this.#lowFPSTimer * Math.PI / 2);
+			this.disconnect?.forEach((obj, i) => {
+				const animation = [0, 1, 2, 2];
+				const offset = animation[Math.floor(this.#disconnectAnimFrame / 5) % animation.length];
+				obj.position.z = (i ? -1 : 1) * offset;
+			});
 			// before the next line, this.#lowFPSTimer acts as a delta value.
 			this.#lowFPSTimer = 0;
 		}
@@ -91,7 +102,6 @@ export default class SubsceneRetroPong extends THREE.Scene {
 	}
 
 
-	//TODO these functions maybe show something different?
 	endShowWinner(
 		scores = [NaN, NaN],
 		winner = NaN,
@@ -100,9 +110,11 @@ export default class SubsceneRetroPong extends THREE.Scene {
 		this.#endGeneric(scores);
 	}
 	endShowWebOpponentQuit(opponentName) {
+		this.#endShowDisconnect(state.gameApp.side ? 1 : -1);
 		this.#endGeneric(state.gameApp.side === 0 ? [1, 0] : [0, 1]);
 	}
 	endShowYouRagequit() {
+		this.#endShowDisconnect(state.gameApp.side ? -1 : 1);
 		this.#endGeneric(state.gameApp.side === 1 ? [1, 0] : [0, 1]);
 	}
 	endShowNothing = this.endHideResult;
@@ -115,6 +127,16 @@ export default class SubsceneRetroPong extends THREE.Scene {
 	}
 
 
+	#endShowDisconnect(sideMult) {
+		this.#disconnectAnimFrame = 0;
+		this.disconnect = [...this.parentScene.disconnectModels];
+		this.disconnectCenter = new THREE.Group();
+		this.add(this.disconnectCenter);
+		this.disconnectCenter.add(this.disconnect[0]).add(this.disconnect[1]);
+		this.disconnectCenter.scale.setScalar(0.04);
+		this.disconnectCenter.rotateY(Math.PI/4);
+		this.disconnectCenter.position.set(sideMult * 0.333, 0, 0);
+	}
 	#endGeneric(scores) {
 		this.scoreText?.forEach((scoreIndicator, i) => {
 			// otherwise it automatically hides, because the game is no longer playing
@@ -127,8 +149,5 @@ export default class SubsceneRetroPong extends THREE.Scene {
 		this.trophy.position.set(scores[0] > scores[1] ? 0.333 : -0.333, 0, -0.1);
 		this.trophy.rotateX(Math.PI / 2);
 	}
-
-	#blinkTimer = 0;
-	#lowFPSTimer = 0;
 
 }
