@@ -23,6 +23,13 @@ export default class SubsceneRetroPong extends THREE.Scene {
 		this.background = new THREE.Color("#000000");
 		this.parentScene.useScreenCameraAngle();
 
+		this.parentScene.rtCamera.position.set(0, -5, 0);
+		this.parentScene.rtCamera.rotation.copy(new THREE.Euler());
+		this.parentScene.rtCamera.rotateX(Math.PI / 2);
+		this.parentScene.rtCamera.rotateZ(Math.PI);
+		this.parentScene.rtCamera.fov = 15;
+		this.parentScene.rtCamera.updateProjectionMatrix();
+
 		this.add(new THREE.AmbientLight("#ff00ff", 1));  // just in case i accidentally have a lit material
 
 		this.whiteMaterial = new THREE.MeshBasicMaterial({color: "#ffffff"});

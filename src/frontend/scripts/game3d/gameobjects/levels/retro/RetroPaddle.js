@@ -52,7 +52,7 @@ export default class RetroPaddle extends Paddle {
 			this.#keyHintDown.rotateY(Math.PI);
 		}
 
-		const tiltZ = (Math.PI / 5) * (this.playerIndex ? 1 : -1);
+		const tiltZ = THREE.MathUtils.degToRad(10) * (this.playerIndex ? 1 : -1);
 		this.#keyHintUp.rotateZ(tiltZ);
 		this.#keyHintDown.rotateZ(tiltZ);
 

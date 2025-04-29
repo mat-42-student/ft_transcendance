@@ -53,7 +53,6 @@ export default class LevelComputerBase extends LevelBase {
 
 				const transparentMaterial = UTILS.findMaterialInHierarchy(gltf.scene, "Baked Transparent");
 				if (transparentMaterial) {
-					console.log('Changing transparent');  //TODO remove log 'Changing transparent'
 					transparentMaterial.transparent = true;
 					transparentMaterial.opacity = 0.7;
 				}
@@ -61,9 +60,6 @@ export default class LevelComputerBase extends LevelBase {
 				this.rt = new THREE.WebGLRenderTarget(640, 480);
 
 				this.rtCamera = new THREE.PerspectiveCamera(90, this.rt.width/this.rt.height);
-				this.rtCamera.position.set(0, -0.6, 0);
-				this.rtCamera.rotateX(UTILS.RAD90);
-				this.rtCamera.rotateZ(UTILS.RAD180);
 
 				screenMaterial.roughness = 0;
 				screenMaterial.emissive = new THREE.Color("#ffffff");  //THIS IS NEEDED: it multiplies emissiveMap.
