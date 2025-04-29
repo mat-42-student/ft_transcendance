@@ -51,6 +51,13 @@ export default class LevelComputerBase extends LevelBase {
 				const screenMaterial = UTILS.findMaterialInHierarchy(gltf.scene, "Screen");
 				if (!(screenMaterial instanceof THREE.MeshStandardMaterial))  throw Error("screen't");
 
+				const transparentMaterial = UTILS.findMaterialInHierarchy(gltf.scene, "Baked Transparent");
+				if (transparentMaterial) {
+					console.log('Changing transparent');  //TODO remove log 'Changing transparent'
+					transparentMaterial.transparent = true;
+					transparentMaterial.opacity = 0.7;
+				}
+
 				this.rt = new THREE.WebGLRenderTarget(640, 480);
 
 				this.rtCamera = new THREE.PerspectiveCamera(90, this.rt.width/this.rt.height);
