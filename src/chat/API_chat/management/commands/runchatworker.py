@@ -106,6 +106,7 @@ class Command(BaseCommand):
                 if data.get('error'):
                     raise ValueError("Recipient not found")
                 blocked_users = data.get('blocked_users')
+                print(f"Blocked users of user {exp} : {blocked_users}")
                 if blocked_users and exp in blocked_users:
                     return True
             except requests.exceptions.RequestException as e:
