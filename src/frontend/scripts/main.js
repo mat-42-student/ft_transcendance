@@ -21,7 +21,7 @@ export const state = {
 
 await state.engine.init();
 // Temporary variable. This is deleted by LevelIdle itself after it is done loading.
-// window.idleLevel = new LevelIdle();
+window.idleLevel = new LevelIdle();
 
 state.client.setState(state);
 window.state = state; // Debugging purpose

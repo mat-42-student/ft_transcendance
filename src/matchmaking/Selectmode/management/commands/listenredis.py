@@ -766,6 +766,9 @@ class Command(BaseCommand):
                             checkplayers = checkplayers + 1
                         else:
                             return False
+                    for pid, pvalue in salon.players.items():
+                        if (await self.checkStatus(pvalue, 'ingame') == False):
+                            print('failed Checkstatus')
                     
                     # start the game
                     if (checkplayers == 2):
