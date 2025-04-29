@@ -176,7 +176,6 @@ export class ChatApp{
     // Make chat btn with friend to be green or something adn add user to unreadMessages Set
         this.unreadMessages.add(friend);
         const chatImg = document.querySelector('.friend-detail[data-user-id="' + friend + '"] .btn-chat img');
-        console.log(chatImg);
         chatImg.src = "/ressources/chat_new_msg.png";
     }
 

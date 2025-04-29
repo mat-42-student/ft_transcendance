@@ -115,7 +115,6 @@ export class SocialApp{
     // }
 
     incomingMsg(data) {
-        console.log("incomingMsg du user " + data.user_id + " : ", data);
         if (data.user_id == state.client.userId) {
             this.myStatus = data.status;
             state.client.renderProfileBtn();
