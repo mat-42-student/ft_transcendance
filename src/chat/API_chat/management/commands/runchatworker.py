@@ -63,7 +63,7 @@ class Command(BaseCommand):
         # if self.recipient_exists(data['body']['to']):
         try:
             if await self.is_muted(data['header']['id'], data['body']['to']):
-                data['body']['message'] += f"You were muted by {data['body']['to']}"
+                data['body']['message'] = "You have been muted"
             else:
                 data['body']['from'] = data['header']['id']
                 data['header']['id'] = data['body']['to'] # username OR userID
@@ -103,11 +103,10 @@ class Command(BaseCommand):
         if response.status_code == 200:
             try:
                 data = response.json()
-                if data.get('error'):
-                    raise ValueError("Recipient not found")
-                blocked_users = data.get('blocked_users')
-                print(f"Blocked users of user {exp} : {blocked_users}")
-                if blocked_users and exp in blocked_users:
+                if not isinstance(data, list):
+                    raise ValueError("Invalid JSON response")
+                print(f"blocks {data}")
+                if any(d['id'] == exp for d in data):
                     return True
             except requests.exceptions.RequestException as e:
                 print(f"Error in request : {e}")

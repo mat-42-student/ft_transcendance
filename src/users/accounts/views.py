@@ -327,13 +327,8 @@ class UserViewSet(viewsets.ModelViewSet):
         try:
             user = User.objects.get(pk=pk)
             blocked_users = user.blocked_users.all().distinct()
-            blocked_by_users = user.blocked_by.all().distinct()
-
             serializer_blocked = UserMicroSerializer(blocked_users, many=True)
-            serializer_blocked_by = UserMicroSerializer(blocked_by_users, many=True)
-
             return Response(serializer_blocked.data, status=200)
-
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=404)
 

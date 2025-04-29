@@ -128,7 +128,6 @@ export class SocialApp{
         this.renderFriendStatus(data.user_id);
         if (data.user_id == state.chatApp.activeChatUserId)
             state.chatApp.toggleChatInput(data.status);
-
     }
 
     renderFriendStatus(id) {

@@ -62,6 +62,8 @@ export class ChatApp{
 
     incomingMsg(data) {
         const friend = data.body.from;
+        if (friend == state.userId)
+            return this.postError(data);
         if (!this.storedMessages.has(friend))
             this.storedMessages.set(friend, []);
         this.storeIncomingMessage(data);
@@ -102,6 +104,13 @@ export class ChatApp{
         if (!this.storedMessages.has(user))
             this.storedMessages.set(user, []);
         this.storedMessages.get(user).push(newMessage);
+    }
+
+    postError(data) {
+        let myDiv = document.createElement('div');
+        myDiv.className = "chat-message error-message";
+        myDiv.textContent = "Error: " + data.body.message;
+        this.chatBody.appendChild(myDiv);
     }
 
     postFriendMessage(data){
@@ -167,6 +176,7 @@ export class ChatApp{
     // Make chat btn with friend to be green or something adn add user to unreadMessages Set
         this.unreadMessages.add(friend);
         const chatImg = document.querySelector('.friend-detail[data-user-id="' + friend + '"] .btn-chat img');
+        console.log(chatImg);
         chatImg.src = "/ressources/chat_new_msg.png";
     }
 
