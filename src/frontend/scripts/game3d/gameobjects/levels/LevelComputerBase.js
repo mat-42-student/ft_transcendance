@@ -164,7 +164,7 @@ export default class LevelComputerBase extends LevelBase {
 
 		if (this === window.idleLevel) {
 			state.engine.scene = this;
-			window.idleLevel = undefined;
+			window.idleLevel = null;
 		} else {
 			state.engine.scene = this;
 		}

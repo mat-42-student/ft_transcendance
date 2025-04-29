@@ -6,6 +6,7 @@ import Stats from 'three/addons/libs/stats.module.js';
 import * as UTILS from '../utils.js';
 import LevelBase from './gameobjects/levels/LevelBase.js';
 import LevelError from './gameobjects/levels/LevelError.js';
+import LevelIdle from './gameobjects/levels/idle/LevelIdle.js';
 
 
 export class Engine {
@@ -55,6 +56,8 @@ export class Engine {
 				const el = document.getElementsByTagName("header")[0];
 				el.prepend(this.stats.dom);
 			} catch {}  // it is what it is...
+
+			this.#html_loadError = document.getElementById("engine-loading-error");
 		}
 
 		{  // Setup ThreeJS
@@ -75,7 +78,6 @@ export class Engine {
 					console.warn('Quitting game because of loading error.');
 					state.gameApp.close(true);
 				}
-				state.engine.showErrorScene();
 			}
 
 			this.fontLoader = new FontLoader();
@@ -120,9 +122,9 @@ export class Engine {
 			debugger;
 		}
 
-		this.stats.update();  // FPS meter
-
 		try {
+			this.stats.update();  // FPS meter
+
 			const delta = this.#clock.getDelta();
 			const time = this.#clock.elapsedTime;
 
@@ -132,6 +134,8 @@ export class Engine {
 				}
 				this.render(delta, time);
 			}
+
+			this.sceneWatchdog(delta);
 		} catch (error) {
 			console.error('ThreeJS Animation Loop: Error:', error);
 			if (state.gameApp) {
@@ -191,22 +195,33 @@ export class Engine {
 			this.#html_canvas.style.display = null;
 		}
 
-		if (newScene)
+		if (newScene) {
+			this.#didSceneWatchdogAlreadyTry = false;
+			this.#html_loadError.style.display = 'none';
 			UTILS.autoMaterial(newScene);
+		}
 
 		this.#scene = newScene;
 	}
 
 
-	showErrorScene() {
-		if (this.scene != null) {
-			console.warn('Refusing to show error scene.');
-			return;
-		} else if (this.errorScene) {
-			console.warn('Attempted to show loading error scene multiple times.');
+	#didSceneWatchdogAlreadyTry = false;
+	sceneWatchdog(delta) {
+		if (this.scene == null
+			&& (
+				state.gameApp == null
+				&& window.idleLevel == null
+				&& window.waitpleasedontfreakout != true
+			)
+		) {
+			// uh oh! this would be a stuck loading screen. warn the user...
+			this.#html_loadError.style.display = null;
+			// ...and attempt to fix that, but don't always try, or this would go on forever.
+			if (this.#didSceneWatchdogAlreadyTry == false) {
+				this.#didSceneWatchdogAlreadyTry = true;
+				window.idleLevel = new LevelIdle();
+			}
 		}
-
-		this.errorScene = new LevelError();
 	}
 
 
@@ -233,6 +248,9 @@ export class Engine {
 
 	/** @type {HTMLElement} */
 	#html_mainContent;
+
+	/** @type {HTMLElement} */
+	#html_loadError;
 
 	#clock = new THREE.Clock(true);
 

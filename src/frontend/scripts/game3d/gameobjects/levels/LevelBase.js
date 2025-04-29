@@ -85,7 +85,6 @@ export default class LevelBase extends THREE.Scene {
 				if (typeof this.onLoadComplete == "function")  this.onLoadComplete();
 				state.gameApp?.startLocalGame?.();
 			} else {
-				state.engine.showErrorScene();
 				this.dispose();
 			}
 		} else if (this.remainingToLoad < 0) {
