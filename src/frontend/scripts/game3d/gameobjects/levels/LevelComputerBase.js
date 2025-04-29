@@ -118,12 +118,6 @@ export default class LevelComputerBase extends LevelBase {
 			this.gltfToDispose.push(gltf.scene);
 			this.disconnectModels = [];
 
-			const mat = new THREE.MeshBasicMaterial({color: "#cccc22", wireframe: true});
-			gltf.scene.children.forEach((obj) => {
-				this.keysModels[obj.name] = obj;
-				obj.material = mat;
-			});
-
 			const coreMaterial = new THREE.MeshBasicMaterial({color: "#440000"});
 			const wireMaterial = new THREE.MeshBasicMaterial({color: "#ff6666", wireframe: true});
 
