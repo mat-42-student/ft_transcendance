@@ -21,6 +21,7 @@ from rest_framework.renderers import JSONRenderer
 from .models import User, Relationship, Game
 from .serializers import (
     UserListSerializer, 
+    UserMicroSerializer,
     UserMinimalSerializer, 
     UserDetailSerializer, 
     UserPrivateDetailSerializer, 
@@ -279,6 +280,36 @@ class UserViewSet(viewsets.ModelViewSet):
             except User.DoesNotExist:
                 return Response({'error': 'User not found'}, status=404)
         
+    # @action(detail=True, methods=['GET'], url_path='blocks')
+    # def get_user_blocks(self, request, pk=None):
+    #     """
+    #     Endpoint pour récupérer les utilisateurs bloqués et ceux ayant bloqué l'utilisateur.
+    #     """
+    #     requested_user = self.get_object()  # Récupère l'utilisateur cible
+
+    #     # # If request.user is a service allow it
+    #     # if isinstance(request.user, str):
+    #     #     pass
+    #     # # Vérification des permissions
+    #     # elif request.user != requested_user and not request.user.is_superuser:
+    #     #     raise PermissionDenied("Vous n'avez pas la permission d'accéder aux contacts de cet utilisateur.")
+        
+    #     try:
+    #         user = User.objects.get(pk=pk)
+    #         blocked_users = user.blocked_users.all().distinct()
+    #         blocked_by_users = user.blocked_by.all().distinct()
+
+    #         serializer_blocked = UserMinimalSerializer(blocked_users, many=True)
+    #         serializer_blocked_by = UserMinimalSerializer(blocked_by_users, many=True)
+
+    #         return Response({
+    #             'blocked_users': serializer_blocked.data,
+    #             'blocked_by_users': serializer_blocked_by.data
+    #         }, status=200)
+
+    #     except User.DoesNotExist:
+    #         return Response({'error': 'User not found'}, status=404)
+
     @action(detail=True, methods=['GET'], url_path='blocks')
     def get_user_blocks(self, request, pk=None):
         """
@@ -298,13 +329,10 @@ class UserViewSet(viewsets.ModelViewSet):
             blocked_users = user.blocked_users.all().distinct()
             blocked_by_users = user.blocked_by.all().distinct()
 
-            serializer_blocked = UserMinimalSerializer(blocked_users, many=True)
-            serializer_blocked_by = UserMinimalSerializer(blocked_by_users, many=True)
+            serializer_blocked = UserMicroSerializer(blocked_users, many=True)
+            serializer_blocked_by = UserMicroSerializer(blocked_by_users, many=True)
 
-            return Response({
-                'blocked_users': serializer_blocked.data,
-                'blocked_by_users': serializer_blocked_by.data
-            }, status=200)
+            return Response(serializer_blocked.data, status=200)
 
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=404)
