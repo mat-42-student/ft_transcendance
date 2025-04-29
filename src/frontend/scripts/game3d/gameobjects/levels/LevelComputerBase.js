@@ -26,7 +26,7 @@ export default class LevelComputerBase extends LevelBase {
 
 		this.useDefaultCameraAngle();
 
-		this.remainingToLoad = 5;
+		this.remainingToLoad = 6;
 
 		new THREE.CubeTextureLoader()
 			.setPath( '/ressources/3d/computerCubemap/' )
@@ -108,6 +108,29 @@ export default class LevelComputerBase extends LevelBase {
 			gltf.scene.children.forEach((obj) => {
 				this.keysModels[obj.name] = obj;
 				obj.material = mat;
+			});
+
+			this.loadComplete();
+		});
+
+		state.engine.gltfLoader.load('/ressources/3d/disconnect.glb', (gltf) => {
+
+			this.gltfToDispose.push(gltf.scene);
+			this.disconnectModels = [];
+
+			const mat = new THREE.MeshBasicMaterial({color: "#cccc22", wireframe: true});
+			gltf.scene.children.forEach((obj) => {
+				this.keysModels[obj.name] = obj;
+				obj.material = mat;
+			});
+
+			const coreMaterial = new THREE.MeshBasicMaterial({color: "#440000"});
+			const wireMaterial = new THREE.MeshBasicMaterial({color: "#ff6666", wireframe: true});
+
+			gltf.scene.children.forEach((obj, i) => {
+				this.disconnectModels[i] = obj;
+				obj.material = wireMaterial;
+				obj.children[0].material = coreMaterial;
 			});
 
 			this.loadComplete();
