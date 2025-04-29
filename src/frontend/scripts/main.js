@@ -180,7 +180,6 @@ export function isTokenExpiringSoon() {
     return (payload.exp * 1000 - Date.now()) < 60000; // 60 sec
 }
 
-// REVIEW 23/2/2025, commit 074a0d9e0981: This function appears unused. Delete? Move to utils.js?
 // wait for n sec
 export function delay(n) {
     return new Promise(resolve => setTimeout(resolve, n * 1000));
