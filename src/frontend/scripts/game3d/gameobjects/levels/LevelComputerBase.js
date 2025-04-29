@@ -257,14 +257,13 @@ export default class LevelComputerBase extends LevelBase {
 	useDefaultCameraAngle() {
 		this.views = null;
 
-		const q1 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), UTILS.RAD90 / 2);
-		const q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -UTILS.RAD90 / 3);
-		this.smoothCamera.position.set(5, 4, 5);
-		this.smoothCamera.quaternion.copy(q1.multiply(q2));
+		const q1 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), UTILS.RAD90 / 3);
+		this.smoothCamera.position.set(4, 1, 7);
+		this.smoothCamera.quaternion.copy(q1);
 		this.smoothCamera.fov = 39.6;
-		this.smoothCamera.smoothSpeed = 10;
-		this.smoothCamera.mousePositionMultiplier.setScalar(1);
-		this.smoothCamera.mouseRotationMultiplier.setScalar(0.3);
+		this.smoothCamera.smoothSpeed = 20;
+		this.smoothCamera.mousePositionMultiplier.setScalar(2);
+		this.smoothCamera.mouseRotationMultiplier.setScalar(0.5);
 		this.smoothCamera.diagonal = 36.87;  // 4:3 aspect ratio, arbitrarily
 	}
 
@@ -275,7 +274,7 @@ export default class LevelComputerBase extends LevelBase {
 		this.smoothCamera.position.set(0, 0, 4);
 		this.smoothCamera.quaternion.copy(new THREE.Quaternion());
 		this.smoothCamera.fov = 30;
-		this.smoothCamera.smoothSpeed = 2;
+		this.smoothCamera.smoothSpeed = 20;
 		this.smoothCamera.mousePositionMultiplier.setScalar(0.5);
 		this.smoothCamera.mouseRotationMultiplier.setScalar(0.1);
 		this.smoothCamera.diagonal = 36.87;  // 4:3 aspect ratio, arbitrarily
