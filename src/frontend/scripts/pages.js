@@ -14,6 +14,16 @@ export async function initProfilePage(userId) {
     setupProfileEventListeners(userId);
 }
 
+export function renderProfileFriendButton(data) {
+    // Vérifie si le hash correspond à la page profil de l'utilisateur concerné
+    const currentHash = window.location.hash;
+    // console.log("currentHash: " + currentHash + " data ", data);
+    if (currentHash === `#profile/${data?.header?.from}`) {
+        // console.log("refresh page")
+        initProfilePage(data?.header?.from);
+    }
+}
+
 // status perso -> state.socialapp.mystatus
 function updateProfileUI(data) {
     if (!data) {
@@ -80,6 +90,8 @@ function createGameRow(game) {
 
 // Voir si gestion nécessaire quand user est bloqué && à bloqué
 function generateProfileActions(data) {
+    // console.log("is friend?: " + data.is_friend);
+    // console.log("is blocked?:" + data.is_blocked_by_user);
     if (data.is_self) {
         return `
             <button data-action="2fa" data-user-id="${data.id}" title="Enable Two-Factor Authentication">
@@ -98,6 +110,12 @@ function generateProfileActions(data) {
                 <img src="/ressources/remove-friend.png" alt="Remove Friend">
             </button>
         `;
+    } else if (data.is_pending) {
+        return `
+            <button data-action="pending-request" data-user-id="${data.id}" title="Pending Request">
+                <img src="/ressources/pending-friend.png" alt="Request Pending">
+            </button>
+        `;
     } else {
         return `
             <button data-action="add-friend" data-user-id="${data.id}" title="Add Friend">
@@ -111,12 +129,19 @@ function setupProfileEventListeners(userId) {
     const actionsEl = document.getElementById("profile-actions");
     if (!actionsEl) return;
 
+    // Vérifie si l'écouteur est déjà attaché
+    if (actionsEl.dataset.listenerAttached === "true") return;
+
     actionsEl.addEventListener("click", (event) => {
         const button = event.target.closest("button");
         if (!button || !button.dataset.action) return;
 
         handleProfileAction(button.dataset.action, userId);
+        initProfilePage(userId);
     });
+
+    // Marque que l'écouteur a été attaché
+    actionsEl.dataset.listenerAttached = "true";
 }
 
 // Ajouter rechargement page ou changement de hash pour changements après une action ou faire ça dans appels fonctions tierses
@@ -131,12 +156,8 @@ async function handleProfileAction(action, userId) {
             initDynamicCard('2fa');
             break;
         case "update":
-            initDynamicCard('update'); // À implémenter
+            initDynamicCard('update');
             break;
-        // case "match":
-        // case "chat":
-        //     console.log(`Action ${action} non encore implémentée.`);
-        //     break;
         default:
             if (!userId) {
                 console.error("ID utilisateur manquant pour l'action:", action);

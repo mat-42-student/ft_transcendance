@@ -19,14 +19,17 @@ export const state = {
     get isPlaying() { return this.gameApp != null && this.engine != null && this.engine.scene != null; },
 };
 
-state.engine.init();
+await state.engine.init();
 // Temporary variable. This is deleted by LevelIdle itself after it is done loading.
 // window.idleLevel = new LevelIdle();
 
 state.client.setState(state);
 window.state = state; // Debugging purpose
 
-document.addEventListener('DOMContentLoaded', initApp);
+// this used to respond to DOMContentLoaded. But now, engine.init is async.
+// This means DOMContentLoaded would never fire this function (the event had happened before
+// it was registered on this line.)
+await initApp();
 
 // Fonction d'initialisation
 async function initApp() {

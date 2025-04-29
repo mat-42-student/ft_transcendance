@@ -27,7 +27,7 @@ const STATS = JSON.parse(`
 // 0: perfect accuracy
 // 1: use the whole paddle (might miss)
 // >1: allow missing
-const __AI_MAX_ERROR = 0.5;
+window.CPU_INACCURACY = 0.5;
 
 
 export class LocalGame extends GameBase {
@@ -36,7 +36,8 @@ export class LocalGame extends GameBase {
         super();
 
         this.isCPU = isCPU;
-        this.cpuTarget = 0;
+        this.cpuMoveDirection = 0;
+        this.cpuMoveCountdown = 0;
         this.waitTime = 0;
 
         // game simulation stats - might want to keep these numbers synced with web game
@@ -60,7 +61,10 @@ export class LocalGame extends GameBase {
             document.getElementById(id).style.display = null;
         } catch {}
 
-        this.pause();
+    }
+
+    startLocalGame() {
+        this.pause(3);
         this.recenter();
     }
 
@@ -155,7 +159,7 @@ export class LocalGame extends GameBase {
         if (this.ballDirection.x < 0)
             this.cpuFindTarget();
         else
-            this.cpuTarget = 0;
+            this.cpuStartMove(0);
     }
 
     cpuFindTarget() {
@@ -179,24 +183,33 @@ export class LocalGame extends GameBase {
 
         // Assumes bot player is always player index 1
         let wallX = -(this.level.boardSize.x / 2);
-        this.cpuTarget = triangleWave(wallX);
+        let target = triangleWave(wallX);
 
-        const randomizer = __AI_MAX_ERROR
+        const randomizer = window.CPU_INACCURACY
             * (this.paddleHeights[1] / 2)
             * (Math.random() * 2 - 1);
-        this.cpuTarget += randomizer;
+        target += randomizer;
+
+        this.cpuStartMove(target);
     }
 
-    cpuSeekTarget() {
-        const error = this.cpuTarget - this.paddlePositions[1];
-        return error > 0 ? 1 : -1;
+    cpuStartMove(destination) {
+        const neededMovement = destination - this.paddlePositions[1];
+        this.cpuMoveDirection = Math.sign(neededMovement);
+        if (this.paddleSpeeds[1] > 0 && Math.abs(neededMovement) > 0.01)
+            this.cpuMoveCountdown = Math.abs(neededMovement / this.paddleSpeeds[1]);
+        else
+            this.cpuMoveCountdown = 0;
     }
 
     movePaddles(delta) {
         let inputs = [
             state.input.getPaddleInput(0),
-            this.isCPU ? this.cpuSeekTarget() : state.input.getPaddleInput(1)
+            this.isCPU ? this.cpuMoveDirection * Number(this.cpuMoveCountdown > 0) : state.input.getPaddleInput(1)
         ];
+        this.cpuMoveCountdown = Math.max(0, this.cpuMoveCountdown - delta);
+        if (this.cpuMoveCountdown <= 0)
+            this.cpuMoveDirection = 0;
 
         const limit = this.level.boardSize.y / 2;
         for (let i = 0; i < 2; i++) {
@@ -261,7 +274,7 @@ export class LocalGame extends GameBase {
                     );
 
                     const error = Math.round(Math.abs(hitPosition) * 100);
-                    if (this.isCPU && collisionSide == 1 && error > (__AI_MAX_ERROR*100 + 5))
+                    if (this.isCPU && collisionSide == 1 && error > (window.CPU_INACCURACY*100 + 5))
                         console.warn('Bot accuracy low:', error, '% error.');
 
                     let angle = this.ballDirection.angle();

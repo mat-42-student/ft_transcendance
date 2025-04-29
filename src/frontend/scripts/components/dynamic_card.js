@@ -87,6 +87,21 @@ const cardInitializers = {
             return;
         }
 
+        // Supprimer les champs password si l'utilisateur est OAuth
+        if (state.client.isOauth) {
+            const passwordFields = ['password', 'new_password', 'confirm_password'];
+
+            for (const fieldId of passwordFields) {
+                const input = document.getElementById(fieldId);
+                if (input) {
+                    const label = updateForm.querySelector(`label[for="${fieldId}"]`);
+                    if (label)
+                        label.remove();
+                    input.remove();
+                }
+            }
+        }
+
         updateForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const formData = new FormData(updateForm);
@@ -100,11 +115,10 @@ const cardInitializers = {
                 const response = await updateProfile(formData, state.client.userId);
 
                 if (response) {
-                    displaySuccessMessage("Successfuly updated data.")
-                    // closeDynamicCard();
                     initProfilePage(state.client.userId);
+                    closeDynamicCard();
                 } else {
-                    displayErrorMessage("Update failed.")
+                    displayErrorMessage("Update failed.") // adapter au type d'erreur
                 }
             } catch (error) {
                 displayErrorMessage("An error occurred during the update.")

@@ -69,7 +69,7 @@ export function verify2fa() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log("2FA has been enabled!");
+            // console.log("2FA has been enabled!");
             successPage.style.display = 'block';
             qrSection.style.display = 'none';
             verificationSection.style.display = 'none';
@@ -79,6 +79,48 @@ export function verify2fa() {
     })
     .catch(error => console.error('Error:', error));
 }
+
+function validatePassword(password) {
+    // Check for minimum length
+    if (password.length < 8) {
+      return "Password must be at least 8 characters long.";
+    }
+    
+    // Check for maximum length
+    if (password.length > 128) {
+      return "Password too long.";
+    }
+    
+    // Check for at least one uppercase letter
+    if (!/[A-Z]/.test(password)) {
+      return "Password must contain at least one uppercase letter.";
+    }
+    
+    // Check for at least one lowercase letter
+    if (!/[a-z]/.test(password)) {
+      return "Password must contain at least one lowercase letter.";
+    }
+    
+    // Check for at least one digit
+    if (!/[0-9]/.test(password)) {
+      return "Password must contain at least one number.";
+    }
+    
+    // Check for at least one special character
+    const specialChars = "!@#$%^&*()-_=+[]{}|;:'\",.<>/?";
+    if (!password.split('').some(char => specialChars.includes(char))) {
+      return "Password must contain at least one special character.";
+    }
+    
+    // Check that password doesn't contain common patterns
+    const commonPatterns = ['password', '123456', 'qwerty', 'admin'];
+    if (commonPatterns.some(pattern => password.toLowerCase().includes(pattern))) {
+      return "Password contains a common pattern and is too weak.";
+    }
+    
+    // If all checks pass
+    return null;
+  }
 
 // Handle API requests for login/registration
 export async function handleAuthSubmit(event) {
@@ -91,6 +133,23 @@ export async function handleAuthSubmit(event) {
     if (hash === '#register' && password !== confirm_password) {
         displayErrorMessage("Passwords don't match");
         return;
+    }
+
+    // Validate password requirements
+    // const passwordError = validatePassword(password);
+    // if (passwordError) {
+    //     displayErrorMessage(passwordError);
+    //     return;
+    // }
+    
+    if (email.length < 5) {
+        displayErrorMessage("Email must be at least 5 characters long.");
+    } else if (username.length < 2) {
+        displayErrorMessage("Username must be at least 2 characters long.");
+    } else if (email.length > 100) {
+        displayErrorMessage("Email too long.");
+    } else if (username.length > 50) {
+        displayErrorMessage("Username too long.");
     }
 
     const { apiUrl, payload } = getApiUrlAndPayload(hash, username, email, password, confirm_password);
@@ -165,7 +224,7 @@ async function handleAuthError(response) {
     
     if (errorData.error === '2fa_required') {
         handle2FA(response);
-    } else if (errorData.detail === 'User not found' || errorData.detail === 'Incorrect password') {
+    } else if (errorData.detail === 'User not found!' || errorData.detail === 'Incorrect password') {
         displayErrorMessage("Incorrect username or password.");
     } else if (errorData.error === 'User already logged in') {
         displayErrorMessage("User already logged in.");

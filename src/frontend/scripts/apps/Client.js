@@ -10,6 +10,7 @@ export class Client{
         this.userName = null;
         this.accessToken = null;
         this.state = null;
+        this.isOauth = null;
     }
 
     // Avoiding circular imports (main.js/Client.js)
@@ -118,6 +119,8 @@ export class Client{
         const parsedPayload = JSON.parse(decodedPayload);
         this.state.client.userId = parsedPayload.id;
         this.state.client.userName = parsedPayload.username;
+        console.log("is_Oauth?: " + parsedPayload.oauth); // debug
+        this.state.client.isOauth = parsedPayload.oauth ?? false; // mettre bool du status Oauth du user dans accessToken
     }
 
     async refreshSession(location = null) {

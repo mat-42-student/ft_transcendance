@@ -3,11 +3,6 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import Stats from 'three/addons/libs/stats.module.js';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { RenderPixelatedPass } from 'three/addons/postprocessing/RenderPixelatedPass.js';
 import * as UTILS from '../utils.js';
 import LevelBase from './gameobjects/levels/LevelBase.js';
 import LevelError from './gameobjects/levels/LevelError.js';
@@ -44,7 +39,7 @@ export class Engine {
 
 
 	/** Initialization code needs to read state.engine, which, at the time of running the constructor, was not set yet. */
-	init() {
+	async init() {
 		{  // Setup DOM elements
 			this.#html_container = document.getElementById("engine");
 			if (this.DEBUG_MODE) {
@@ -65,33 +60,12 @@ export class Engine {
 		{  // Setup ThreeJS
 			this.#renderer = new THREE.WebGLRenderer({
 				canvas: this.#html_canvas,
-				antialias: false,  // AA is turned on in EffectComposer's render target.
+				antialias: true,
 				powerPreference: "high-performance",
 			});
 			this.renderer.setAnimationLoop(this.animationLoop.bind(this))
 			this.renderer.toneMapping = THREE.NoToneMapping;
 			this.renderer.toneMappingExposure = 1;
-
-			{  // Post processing
-				this.#effectComposer = new EffectComposer(this.renderer);
-				this.#effectComposer.renderTarget1.samples = 8;  // Turn on antialiasing.
-
-				this.#renderPass = new RenderPixelatedPass(1, null, null);
-				this.#effectComposer.addPass(this.#renderPass);
-
-				this.#renderPass.normalEdgeStrength = 5;
-				this.#renderPass.depthEdgeStrength = 5;
-
-				this.#unrealBloomPass = new UnrealBloomPass(
-					undefined,  // Resolution
-					0.25, // Strength
-					0.1, // Radius
-					0.98 // Treshold
-				);
-				this.#effectComposer.addPass(this.#unrealBloomPass);
-
-				this.#effectComposer.addPass(new OutputPass());
-			}  // Post processing
 
 			THREE.DefaultLoadingManager.onError = (url) => {
 				console.error(`ThreeJS asset loading error: '${url}'.\n`,
@@ -118,12 +92,15 @@ export class Engine {
 					state.engine.squareFont = font;
 				}
 			);
+
+			// dubious solution to a dubious problem
+			while (this.font == undefined && this.squareFont == undefined) {
+				await new Promise(resolve => setTimeout(resolve, 100));
+			}
 		}
 
 		window.addEventListener('beforeunload', () => {
-			this.#renderPass?.dispose?.();  this.#renderPass = null;
-			this.#unrealBloomPass?.dispose?.();  this.#unrealBloomPass = null;
-			this.#effectComposer?.dispose?.();  this.#effectComposer = null;
+			this.renderer?.dispose();
 		});
 
 		const resizeCallback = this.#onResize.bind(this);
@@ -198,9 +175,7 @@ export class Engine {
 			this.paramsForAddDuringRender = null;
 		}
 
-		this.#renderPass.scene = this.scene;
-		this.#renderPass.camera = this.scene.smoothCamera.camera;
-		this.#effectComposer.render();
+		this.renderer.render(this.scene, this.scene.smoothCamera.camera);
 	}
 
 
@@ -225,7 +200,7 @@ export class Engine {
 
 	showErrorScene() {
 		if (this.scene != null) {
-			console.warn('This function was called improperly.');
+			console.warn('Refusing to show error scene.');
 			return;
 		} else if (this.errorScene) {
 			console.warn('Attempted to show loading error scene multiple times.');
@@ -241,14 +216,6 @@ export class Engine {
 
 	/** @type {THREE.WebGLRenderer} */
 	#renderer;
-
-	/** @type {EffectComposer} */
-	#effectComposer;
-
-	/** @type {RenderPass} */
-	#renderPass;
-
-	#unrealBloomPass;
 
 	#gltfLoader = new GLTFLoader();
 
@@ -273,8 +240,7 @@ export class Engine {
 	#onResize() {
 		const rect = this.#html_container.getBoundingClientRect();
 		this.#updateAutoResolution();
-		this.renderer.setSize(rect.width, rect.height);
-		this.#effectComposer.setSize(rect.width, rect.height);
+		this.renderer?.setSize(rect.width, rect.height);
 		if (this.scene && this.scene.smoothCamera) {
 			this.scene.smoothCamera.aspect = rect.width / rect.height;
 		}
@@ -290,8 +256,8 @@ export class Engine {
 	#updateAutoResolution() {
 		// const res = UTILS.shouldPowersave() ? window.devicePixelRatio / 2 : window.devicePixelRatio;
 		const res = window.devicePixelRatio;  // post processing changes appearance with resolution
-		this.renderer.setPixelRatio(res);
-		this.#effectComposer.setPixelRatio(res);
+		this.renderer?.setPixelRatio(res);
+		this.renderer?.setPixelRatio(res);
 	}
 
 };

@@ -133,7 +133,8 @@ class LoginView(APIView):
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
-            'typ': "user"
+            'typ': "user",
+            'oauth': False
         }
 
         refresh_payload = {
@@ -142,7 +143,9 @@ class LoginView(APIView):
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
-            'typ': "user"
+            'typ': "user",
+            'oauth': False
+
         }
 
         access_token = jwt.encode(access_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
@@ -194,15 +197,17 @@ class RefreshTokenView(APIView):
         if revoked:
             print('Token revoked successfuly.')
         else:
-            print('Error while revoking the token.')  
+            print('Error while revoking the token.')
 
+        isOauth = old_data.get('oauth')
         access_payload = {
             'id': user.id,
             'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
-            'typ': "user"
+            'typ': "user",
+            'oauth': True if isOauth else False
         }
 
         refresh_payload = {
@@ -211,8 +216,10 @@ class RefreshTokenView(APIView):
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
-            'typ': "user"
+            'typ': "user",
+            'oauth': True if isOauth else False
         }
+
 
         new_access_token = jwt.encode(access_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
         new_refresh_token = jwt.encode(refresh_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
@@ -406,7 +413,8 @@ class OAuthCallbackView(APIView):
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
-            'typ': "user"
+            'typ': "user",
+            'oauth': True
         }
 
         refresh_token = jwt.encode(refresh_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])

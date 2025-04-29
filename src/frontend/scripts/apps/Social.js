@@ -1,5 +1,6 @@
 import { state } from '../main.js';
 import { navigator } from '../nav.js';
+import { initProfilePage } from '../pages.js';
 import { updatePendingCountDisplay } from '../components/friend_requests.js';
 import { fetchFriends, fetchPendingCount, fetchReceivedRequests, fetchSentRequests, modifyRelationship } from '../api/users.js';
 import { ft_fetch } from '../main.js';
@@ -236,7 +237,8 @@ export class SocialApp{
             },
             "body": {
                 "status": "notify",
-                "id": userId
+                "id": userId,
+                "from": state.client.userId,
             }
         };
         await state.mainSocket.send(JSON.stringify(data));

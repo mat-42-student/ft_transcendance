@@ -26,17 +26,17 @@ export default class LevelComputerBase extends LevelBase {
 
 		this.useDefaultCameraAngle();
 
-		this.remainingToLoad = 3;
+		this.remainingToLoad = 6;
 
 		new THREE.CubeTextureLoader()
 			.setPath( '/ressources/3d/computerCubemap/' )
 			.load( [
-				'px.jpg',
-				'nx.jpg',
-				'py.jpg',
-				'ny.jpg',
-				'pz.jpg',
-				'nz.jpg'
+				'px.png',
+				'nx.png',
+				'py.png',
+				'ny.png',
+				'pz.png',
+				'nz.png'
 		], (tex) => {
 			this.screenEnvMap = tex;
 			this.loadComplete();
@@ -51,12 +51,15 @@ export default class LevelComputerBase extends LevelBase {
 				const screenMaterial = UTILS.findMaterialInHierarchy(gltf.scene, "Screen");
 				if (!(screenMaterial instanceof THREE.MeshStandardMaterial))  throw Error("screen't");
 
+				const transparentMaterial = UTILS.findMaterialInHierarchy(gltf.scene, "Baked Transparent");
+				if (transparentMaterial) {
+					transparentMaterial.transparent = true;
+					transparentMaterial.opacity = 0.7;
+				}
+
 				this.rt = new THREE.WebGLRenderTarget(640, 480);
 
 				this.rtCamera = new THREE.PerspectiveCamera(90, this.rt.width/this.rt.height);
-				this.rtCamera.position.set(0, -0.6, 0);
-				this.rtCamera.rotateX(UTILS.RAD90);
-				this.rtCamera.rotateZ(UTILS.RAD180);
 
 				screenMaterial.roughness = 0;
 				screenMaterial.emissive = new THREE.Color("#ffffff");  //THIS IS NEEDED: it multiplies emissiveMap.
@@ -72,6 +75,57 @@ export default class LevelComputerBase extends LevelBase {
 
 			this.gltfToDispose.push(gltf.scene);
 			this.retroBoardModel = gltf.scene;
+
+			this.loadComplete();
+		});
+
+		state.engine.gltfLoader.load('/ressources/3d/trophy.glb', (gltf) => {
+
+			this.gltfToDispose.push(gltf.scene);
+			this.trophyModel = gltf.scene;
+
+			let core, wireframe;
+			for (let i = 0; i < this.trophyModel.children.length; i++) {
+				const mesh = this.trophyModel.children[i];
+				if (mesh.name == 'Wireframe')
+					wireframe = mesh;
+				else if (mesh.name == 'Solid')
+					core = mesh;
+			}
+
+			core.material = new THREE.MeshBasicMaterial({color: "#000000"});
+			wireframe.material = new THREE.MeshBasicMaterial({color: "#ffffff", wireframe: true});
+
+			this.loadComplete();
+		});
+
+		state.engine.gltfLoader.load('/ressources/3d/keys.glb', (gltf) => {
+
+			this.gltfToDispose.push(gltf.scene);
+			this.keysModels = {};
+
+			const mat = new THREE.MeshBasicMaterial({color: "#cccc22", wireframe: true});
+			gltf.scene.children.forEach((obj) => {
+				this.keysModels[obj.name] = obj;
+				obj.material = mat;
+			});
+
+			this.loadComplete();
+		});
+
+		state.engine.gltfLoader.load('/ressources/3d/disconnect.glb', (gltf) => {
+
+			this.gltfToDispose.push(gltf.scene);
+			this.disconnectModels = [];
+
+			const coreMaterial = new THREE.MeshBasicMaterial({color: "#440000"});
+			const wireMaterial = new THREE.MeshBasicMaterial({color: "#ff6666", wireframe: true});
+
+			gltf.scene.children.forEach((obj, i) => {
+				this.disconnectModels[i] = obj;
+				obj.material = wireMaterial;
+				obj.children[0].material = coreMaterial;
+			});
 
 			this.loadComplete();
 		});
@@ -171,6 +225,22 @@ export default class LevelComputerBase extends LevelBase {
 	}
 
 
+	pause(time) {
+		super.pause(time);
+		if (this.rtScene?.timerIndicator) {
+			this.rtScene.timerIndicator.setWait(time);
+		}
+	}
+
+	unpause() {
+		const justUnpaused = super.unpause();
+		if (justUnpaused && this.rtScene?.timerIndicator) {
+			this.rtScene.timerIndicator.setGo();
+		}
+		return justUnpaused;
+	}
+
+
 	endShowWinner(
 		scores = [NaN, NaN],
 		winner = NaN,
@@ -200,14 +270,13 @@ export default class LevelComputerBase extends LevelBase {
 	useDefaultCameraAngle() {
 		this.views = null;
 
-		const q1 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), UTILS.RAD90 / 2);
-		const q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -UTILS.RAD90 / 3);
-		this.smoothCamera.position.set(5, 4, 5);
-		this.smoothCamera.quaternion.copy(q1.multiply(q2));
+		const q1 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), UTILS.RAD90 / 3);
+		this.smoothCamera.position.set(4, 1, 7);
+		this.smoothCamera.quaternion.copy(q1);
 		this.smoothCamera.fov = 39.6;
-		this.smoothCamera.smoothSpeed = 10;
-		this.smoothCamera.mousePositionMultiplier.setScalar(1);
-		this.smoothCamera.mouseRotationMultiplier.setScalar(0.3);
+		this.smoothCamera.smoothSpeed = 20;
+		this.smoothCamera.mousePositionMultiplier.setScalar(2);
+		this.smoothCamera.mouseRotationMultiplier.setScalar(0.5);
 		this.smoothCamera.diagonal = 36.87;  // 4:3 aspect ratio, arbitrarily
 	}
 
@@ -218,7 +287,7 @@ export default class LevelComputerBase extends LevelBase {
 		this.smoothCamera.position.set(0, 0, 4);
 		this.smoothCamera.quaternion.copy(new THREE.Quaternion());
 		this.smoothCamera.fov = 30;
-		this.smoothCamera.smoothSpeed = 2;
+		this.smoothCamera.smoothSpeed = 20;
 		this.smoothCamera.mousePositionMultiplier.setScalar(0.5);
 		this.smoothCamera.mouseRotationMultiplier.setScalar(0.1);
 		this.smoothCamera.diagonal = 36.87;  // 4:3 aspect ratio, arbitrarily

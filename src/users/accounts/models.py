@@ -103,7 +103,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta:
         db_table = 'users'
 
-# ft42Profile model
 class Ft42Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='ft42_profile')
 
@@ -183,11 +182,24 @@ class Relationship(models.Model):
 
     class Meta:
         db_table = 'relationship'
-        unique_together = ('from_user', 'to_user')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['from_user', 'to_user'],
+                name='unique_relationship_symmetric'
+            )
+        ]
 
     def clean(self):
         if self.from_user == self.to_user:
             raise ValidationError("Un utilisateur ne peut pas avoir de relation avec lui-même.")
+        
+        # Forcer un ordre pour empêcher les doublons inversés
+        if self.from_user.id > self.to_user.id:
+            self.from_user, self.to_user = self.to_user, self.from_user
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.from_user.username} -> {self.to_user.username} ({self.status})"

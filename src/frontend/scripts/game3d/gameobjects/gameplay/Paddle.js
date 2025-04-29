@@ -4,9 +4,6 @@ import { state } from '../../../main.js';
 
 export default class Paddle extends THREE.Group {
 
-	playerIndex = NaN;
-
-
 	constructor(playerIndex) {
 		super();
 
