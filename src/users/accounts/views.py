@@ -326,6 +326,7 @@ class UserViewSet(viewsets.ModelViewSet):
             "is_friend": False,
             "is_blocked_by_user": False,
             "has_blocked_user": False,
+            "is_pending": False,
             "message": None,
             "2fa": False,
             "last_games": [],
@@ -354,6 +355,10 @@ class UserViewSet(viewsets.ModelViewSet):
             Q(from_user=target_user, to_user=user, status='friend')
         ).exists():
             response_data["is_friend"] = True
+        elif Relationship.objects.filter(
+            Q(from_user=user, to_user=target_user, status='pending')
+        ).exists():
+            response_data["is_pending"] = True
 
         # Récupérer les 10 dernières parties où l'utilisateur est impliqué
         games = Game.objects.filter(
