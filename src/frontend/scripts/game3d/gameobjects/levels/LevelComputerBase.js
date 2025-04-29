@@ -31,12 +31,12 @@ export default class LevelComputerBase extends LevelBase {
 		new THREE.CubeTextureLoader()
 			.setPath( '/ressources/3d/computerCubemap/' )
 			.load( [
-				'px.jpg',
-				'nx.jpg',
-				'py.jpg',
-				'ny.jpg',
-				'pz.jpg',
-				'nz.jpg'
+				'px.png',
+				'nx.png',
+				'py.png',
+				'ny.png',
+				'pz.png',
+				'nz.png'
 		], (tex) => {
 			this.screenEnvMap = tex;
 			this.loadComplete();
