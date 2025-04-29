@@ -120,6 +120,9 @@ export default class SubsceneRetroPong extends THREE.Scene {
 	dispose() {
 		if (this.whiteMaterial) this.whiteMaterial.dispose();
 		if (this.grayMaterial) this.grayMaterial.dispose();
+
+		this.#startGameAnim = 1;
+		this.#updateMaterialAnimation();
 	}
 
 
