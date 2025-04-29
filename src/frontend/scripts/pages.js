@@ -100,6 +100,12 @@ function generateProfileActions(data) {
                 <img src="/ressources/remove-friend.png" alt="Remove Friend">
             </button>
         `;
+    } else if (data.is_pending) {
+        return `
+            <button data-action="pending-request" data-user-id="${data.id}" title="Pending Request">
+                <img src="/ressources/pending-friend.png" alt="Request Pending">
+            </button>
+        `;
     } else {
         return `
             <button data-action="add-friend" data-user-id="${data.id}" title="Add Friend">
@@ -113,6 +119,9 @@ function setupProfileEventListeners(userId) {
     const actionsEl = document.getElementById("profile-actions");
     if (!actionsEl) return;
 
+    // Vérifie si l'écouteur est déjà attaché
+    if (actionsEl.dataset.listenerAttached === "true") return;
+
     actionsEl.addEventListener("click", (event) => {
         const button = event.target.closest("button");
         if (!button || !button.dataset.action) return;
@@ -120,6 +129,9 @@ function setupProfileEventListeners(userId) {
         handleProfileAction(button.dataset.action, userId);
         initProfilePage(userId);
     });
+
+    // Marque que l'écouteur a été attaché
+    actionsEl.dataset.listenerAttached = "true";
 }
 
 // Ajouter rechargement page ou changement de hash pour changements après une action ou faire ça dans appels fonctions tierses
