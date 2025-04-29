@@ -164,7 +164,7 @@ export default class LevelComputerBase extends LevelBase {
 
 		if (this === window.idleLevel) {
 			state.engine.scene = this;
-			window.idleLevel = undefined;
+			window.idleLevel = null;
 		} else {
 			state.engine.scene = this;
 		}
@@ -287,10 +287,22 @@ export default class LevelComputerBase extends LevelBase {
 		this.smoothCamera.position.set(0, 0, 4);
 		this.smoothCamera.quaternion.copy(new THREE.Quaternion());
 		this.smoothCamera.fov = 30;
-		this.smoothCamera.smoothSpeed = 20;
+		this.smoothCamera.smoothSpeed = 5;
 		this.smoothCamera.mousePositionMultiplier.setScalar(0.5);
 		this.smoothCamera.mouseRotationMultiplier.setScalar(0.1);
 		this.smoothCamera.diagonal = 36.87;  // 4:3 aspect ratio, arbitrarily
+	}
+
+	useFake2DCameraAngle() {
+		this.views = null;
+
+		this.smoothCamera.quaternion.copy(new THREE.Quaternion());
+		this.smoothCamera.position.set(0, 0, 25);
+		this.smoothCamera.fov = 2.5;
+		this.smoothCamera.mousePositionMultiplier.setScalar(0);
+		this.smoothCamera.mouseRotationMultiplier.setScalar(0);
+		this.smoothCamera.diagonal = 36.87;  // 4:3 aspect ratio, arbitrarily
+		this.smoothCamera.teleportNow = true;
 	}
 
 }

@@ -56,9 +56,9 @@ export default class RetroPaddle extends Paddle {
 		this.#keyHintUp.rotateZ(tiltZ);
 		this.#keyHintDown.rotateZ(tiltZ);
 
-		// const tiltX = -Math.PI / 8;
-		// this.#keyHintUp.rotateX(tiltX);
-		// this.#keyHintDown.rotateX(tiltX);
+		const tiltX = -Math.PI / 8;
+		this.#keyHintUp.rotateX(tiltX);
+		this.#keyHintDown.rotateX(tiltX);
 	}
 
 	#update3dKeyHints() {
@@ -71,8 +71,11 @@ export default class RetroPaddle extends Paddle {
 			return;
 		}
 
-		this.#keyHintUp.position.z = state.gameApp.paddleHeights[this.playerIndex] / 2 + 0.1;
-		this.#keyHintDown.position.z = -(state.gameApp.paddleHeights[this.playerIndex] / 2 + 0.1);
+		this.#keyHintUp.position.z = 0.1;
+		this.#keyHintDown.position.z = -this.#keyHintUp.position.z;
+
+		this.#keyHintUp.position.x = 0.1;
+		this.#keyHintDown.position.x = 0.1;
 
 		if (this.playerIndex == 1) {
 			// the paddle is automatically rotated because i thought that was a good idea

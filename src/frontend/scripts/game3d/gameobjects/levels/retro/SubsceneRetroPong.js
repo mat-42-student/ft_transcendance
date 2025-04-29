@@ -7,6 +7,7 @@ import SubsceneScreensaver from '../idle/SubsceneScreensaver.js';
 import RetroBall from './RetroBall.js';
 import RetroPaddle from './RetroPaddle.js';
 import RetroTimer from './RetroTimer.js';
+import * as UTILS from '../../../../utils.js';
 
 
 export default class SubsceneRetroPong extends THREE.Scene {
@@ -14,6 +15,7 @@ export default class SubsceneRetroPong extends THREE.Scene {
 	#blinkTimer = 0;
 	#lowFPSTimer = 0;
 	#disconnectAnimFrame = 0;
+	#startGameAnim = -2.0;
 
 	/**
 	 * @param {LevelComputerBase} parentScene
@@ -25,7 +27,7 @@ export default class SubsceneRetroPong extends THREE.Scene {
 
 	onAdded() {
 		this.background = new THREE.Color("#000000");
-		this.parentScene.useScreenCameraAngle();
+		this.parentScene.useFake2DCameraAngle();
 
 		this.parentScene.rtCamera.position.set(0, -5, 0);
 		this.parentScene.rtCamera.rotation.copy(new THREE.Euler());
@@ -71,15 +73,34 @@ export default class SubsceneRetroPong extends THREE.Scene {
 		this.timerIndicator.position.z = 0.1;
 		this.timerIndicator.rotateX(Math.PI/2);
 		this.timerIndicator.rotateY(Math.PI);
+
+		if (state.engine.scene instanceof LevelComputerBase) {
+			const m = [];
+			m.push(UTILS.findMaterialInHierarchy(state.engine.scene, 'Baked'));
+			m.push(UTILS.findMaterialInHierarchy(state.engine.scene, 'Baked Transparent'));
+			m.push(UTILS.findMaterialInHierarchy(state.engine.scene, 'Baked Emissive'));
+			m.push(UTILS.findMaterialInHierarchy(state.engine.scene, 'Baked (Walls)'));
+			this.startAnimMaterials = m.filter(el => el != null);  // remove nulls just in case
+
+			this.screenMaterial = UTILS.findMaterialInHierarchy(state.engine.scene, 'Screen');
+
+			this.#updateMaterialAnimation();
+		}
 	}
 
 	onFrame(delta, time) {
 		this.#blinkTimer = (this.#blinkTimer + delta) % 1.0;
 		this.#lowFPSTimer += delta;
+		this.#startGameAnim = Math.min(1, this.#startGameAnim + 2 * delta);
+		this.#updateMaterialAnimation();
+		if (this.startAnimChangedCamera != true && this.#startGameAnim >= 0) {
+			this.startAnimChangedCamera = true;
+			this.parentScene.useScreenCameraAngle();
+		}
+
 		if (this.#lowFPSTimer > 0.1) {
 			this.#disconnectAnimFrame = (this.#disconnectAnimFrame + 1) % (5 * 4);
 			this.trophy?.rotateY(this.#lowFPSTimer * Math.PI / 2);
-			this.disconnectCenter?.rotateOnWorldAxis(new THREE.Vector3(0,0,-1), this.#lowFPSTimer * Math.PI / 2);
 			this.disconnect?.forEach((obj, i) => {
 				const animation = [0, 1, 2, 2];
 				const offset = animation[Math.floor(this.#disconnectAnimFrame / 5) % animation.length];
@@ -99,6 +120,9 @@ export default class SubsceneRetroPong extends THREE.Scene {
 	dispose() {
 		if (this.whiteMaterial) this.whiteMaterial.dispose();
 		if (this.grayMaterial) this.grayMaterial.dispose();
+
+		this.#startGameAnim = 1;
+		this.#updateMaterialAnimation();
 	}
 
 
@@ -110,12 +134,12 @@ export default class SubsceneRetroPong extends THREE.Scene {
 		this.#endGeneric(scores);
 	}
 	endShowWebOpponentQuit(opponentName) {
-		this.#endShowDisconnect(state.gameApp.side ? 1 : -1);
-		this.#endGeneric(state.gameApp.side === 0 ? [1, 0] : [0, 1]);
+		this.#endShowDisconnect(state.gameApp?.side ? 1 : -1);
+		this.#endGeneric(state.gameApp?.side === 0 ? [1, 0] : [0, 1]);
 	}
 	endShowYouRagequit() {
-		this.#endShowDisconnect(state.gameApp.side ? -1 : 1);
-		this.#endGeneric(state.gameApp.side === 1 ? [1, 0] : [0, 1]);
+		this.#endShowDisconnect(state.gameApp?.side ? -1 : 1);
+		this.#endGeneric(state.gameApp?.side === 1 ? [1, 0] : [0, 1]);
 	}
 	endShowNothing = this.endHideResult;
 	endHideResult() {
@@ -127,6 +151,20 @@ export default class SubsceneRetroPong extends THREE.Scene {
 	}
 
 
+	#updateMaterialAnimation() {
+		this.startAnimMaterials?.forEach((mat) => {
+			if (mat instanceof THREE.MeshStandardMaterial) {
+				mat.emissiveIntensity = THREE.MathUtils.clamp(this.#startGameAnim, 0, 1);
+				if (mat.name == 'Baked Emissive') {
+					mat.emissiveIntensity *= 10;
+				}
+			}
+		});
+		if (this.screenMaterial) {
+			this.screenMaterial.envMapIntensity = THREE.MathUtils.clamp(this.#startGameAnim, 0, 1);
+		}
+	}
+
 	#endShowDisconnect(sideMult) {
 		this.#disconnectAnimFrame = 0;
 		this.disconnect = [...this.parentScene.disconnectModels];
@@ -134,7 +172,7 @@ export default class SubsceneRetroPong extends THREE.Scene {
 		this.add(this.disconnectCenter);
 		this.disconnectCenter.add(this.disconnect[0]).add(this.disconnect[1]);
 		this.disconnectCenter.scale.setScalar(0.04);
-		this.disconnectCenter.rotateY(Math.PI/4);
+		this.disconnectCenter.rotateY(-Math.PI/4);
 		this.disconnectCenter.position.set(sideMult * 0.333, 0, 0);
 	}
 	#endGeneric(scores) {

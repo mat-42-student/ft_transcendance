@@ -88,7 +88,6 @@ export class LocalGame extends GameBase {
         } catch (error) {
             console.error("Local game error, exiting:", error);
             this.close();
-            state.engine.showErrorScene();
         }
 	}
 

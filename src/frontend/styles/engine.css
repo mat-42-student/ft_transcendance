@@ -13,7 +13,7 @@
 	user-select: none;
 }
 
-#engine-loading {
+.engine-loading {
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -32,4 +32,7 @@
 	font-size: 50px;
 	background-color: #333;
 	color: #fff;
+}
+#engine-loading-error {
+	background-color: #a33;
 }
