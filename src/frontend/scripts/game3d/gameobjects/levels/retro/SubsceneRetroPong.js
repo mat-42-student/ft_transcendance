@@ -79,7 +79,6 @@ export default class SubsceneRetroPong extends THREE.Scene {
 		if (this.#lowFPSTimer > 0.1) {
 			this.#disconnectAnimFrame = (this.#disconnectAnimFrame + 1) % (5 * 4);
 			this.trophy?.rotateY(this.#lowFPSTimer * Math.PI / 2);
-			this.disconnectCenter?.rotateOnWorldAxis(new THREE.Vector3(0,0,-1), this.#lowFPSTimer * Math.PI / 2);
 			this.disconnect?.forEach((obj, i) => {
 				const animation = [0, 1, 2, 2];
 				const offset = animation[Math.floor(this.#disconnectAnimFrame / 5) % animation.length];
@@ -134,7 +133,7 @@ export default class SubsceneRetroPong extends THREE.Scene {
 		this.add(this.disconnectCenter);
 		this.disconnectCenter.add(this.disconnect[0]).add(this.disconnect[1]);
 		this.disconnectCenter.scale.setScalar(0.04);
-		this.disconnectCenter.rotateY(Math.PI/4);
+		this.disconnectCenter.rotateY(-Math.PI/4);
 		this.disconnectCenter.position.set(sideMult * 0.333, 0, 0);
 	}
 	#endGeneric(scores) {
