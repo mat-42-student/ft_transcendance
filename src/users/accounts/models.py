@@ -179,24 +179,15 @@ class Relationship(models.Model):
         default=NONE,
     )
     created_at = models.DateTimeField(auto_now_add=True)
-
+    
     class Meta:
         db_table = 'relationship'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['from_user', 'to_user'],
-                name='unique_relationship_symmetric'
-            )
-        ]
+        unique_together = ('from_user', 'to_user')
 
     def clean(self):
         if self.from_user == self.to_user:
             raise ValidationError("Un utilisateur ne peut pas avoir de relation avec lui-même.")
         
-        # Forcer un ordre pour empêcher les doublons inversés
-        if self.from_user.id > self.to_user.id:
-            self.from_user, self.to_user = self.to_user, self.from_user
-
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
