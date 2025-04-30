@@ -7,6 +7,36 @@ export const RAD180 = THREE.MathUtils.degToRad(180);
 export const RAD270 = THREE.MathUtils.degToRad(270);
 export const RAD360 = THREE.MathUtils.degToRad(360);
 
+export function showErrorMessage(message) {
+    let errorBox = document.getElementById('global-error-box');
+
+    if (!errorBox) {
+        errorBox = document.createElement('div');
+        errorBox.id = 'global-error-box';
+        errorBox.style.position = 'fixed';
+        errorBox.style.top = '20px';
+        errorBox.style.left = '50%';
+        errorBox.style.transform = 'translateX(-50%)';
+        errorBox.style.zIndex = '9999';
+        errorBox.style.padding = '12px 24px';
+        errorBox.style.backgroundColor = '#f44336';
+        errorBox.style.color = 'white';
+        errorBox.style.borderRadius = '4px';
+        errorBox.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+        errorBox.style.fontSize = '16px';
+        errorBox.style.maxWidth = '90%';
+        errorBox.style.textAlign = 'center';
+        errorBox.style.display = 'none';
+        document.body.appendChild(errorBox);
+    }
+
+    errorBox.textContent = message;
+    errorBox.style.display = 'block';
+
+    setTimeout(() => {
+        errorBox.style.display = 'none';
+    }, 3000);
+}
 
 export function cleanErrorMessage() {
     const loginErrorContainer = document.getElementById('auth-error');

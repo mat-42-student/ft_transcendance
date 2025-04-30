@@ -108,6 +108,9 @@ function setupSearchInput() {
     searchInput.addEventListener("keydown", async (event) => {
         if (event.key === "Enter") {
             event.preventDefault();
+
+            if (!(await state.client.isAuthenticated()))
+                return showAlert(`Vous devez vous connecter pour accéder à cette fonctionnalité`);
             const query = searchInput.value.trim();
 
             if (!query) return;
