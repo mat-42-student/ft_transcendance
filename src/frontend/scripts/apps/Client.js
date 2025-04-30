@@ -10,6 +10,7 @@ export class Client{
         this.userName = null;
         this.accessToken = null;
         this.state = null;
+        this.isOauth = null;
     }
 
     // Avoiding circular imports (main.js/Client.js)
@@ -118,6 +119,7 @@ export class Client{
         const parsedPayload = JSON.parse(decodedPayload);
         this.state.client.userId = parsedPayload.id;
         this.state.client.userName = parsedPayload.username;
+        this.state.client.isOauth = parsedPayload.oauth ?? false;
     }
 
     async refreshSession(location = null) {

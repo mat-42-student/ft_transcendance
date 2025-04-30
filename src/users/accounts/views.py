@@ -21,6 +21,7 @@ from rest_framework.renderers import JSONRenderer
 from .models import User, Relationship, Game
 from .serializers import (
     UserListSerializer, 
+    UserMicroSerializer,
     UserMinimalSerializer, 
     UserDetailSerializer, 
     UserPrivateDetailSerializer, 
@@ -82,7 +83,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """Définit les permissions pour chaque action."""
-        if self.action in ['list', 'retrieve', 'contacts', 'friends', 'blocks']:
+        if self.action in ['list', 'retrieve', 'get_user_contacts', 'get_user_friends', 'get_user_blocks']:
             return [AllowAny()]
         return [IsAuthenticatedOrService()]
 
@@ -279,6 +280,36 @@ class UserViewSet(viewsets.ModelViewSet):
             except User.DoesNotExist:
                 return Response({'error': 'User not found'}, status=404)
         
+    # @action(detail=True, methods=['GET'], url_path='blocks')
+    # def get_user_blocks(self, request, pk=None):
+    #     """
+    #     Endpoint pour récupérer les utilisateurs bloqués et ceux ayant bloqué l'utilisateur.
+    #     """
+    #     requested_user = self.get_object()  # Récupère l'utilisateur cible
+
+    #     # # If request.user is a service allow it
+    #     # if isinstance(request.user, str):
+    #     #     pass
+    #     # # Vérification des permissions
+    #     # elif request.user != requested_user and not request.user.is_superuser:
+    #     #     raise PermissionDenied("Vous n'avez pas la permission d'accéder aux contacts de cet utilisateur.")
+        
+    #     try:
+    #         user = User.objects.get(pk=pk)
+    #         blocked_users = user.blocked_users.all().distinct()
+    #         blocked_by_users = user.blocked_by.all().distinct()
+
+    #         serializer_blocked = UserMinimalSerializer(blocked_users, many=True)
+    #         serializer_blocked_by = UserMinimalSerializer(blocked_by_users, many=True)
+
+    #         return Response({
+    #             'blocked_users': serializer_blocked.data,
+    #             'blocked_by_users': serializer_blocked_by.data
+    #         }, status=200)
+
+    #     except User.DoesNotExist:
+    #         return Response({'error': 'User not found'}, status=404)
+
     @action(detail=True, methods=['GET'], url_path='blocks')
     def get_user_blocks(self, request, pk=None):
         """
@@ -286,26 +317,18 @@ class UserViewSet(viewsets.ModelViewSet):
         """
         requested_user = self.get_object()  # Récupère l'utilisateur cible
 
-        # If request.user is a service allow it
-        if isinstance(request.user, str):
-            pass
-        # Vérification des permissions
-        elif request.user != requested_user and not request.user.is_superuser:
-            raise PermissionDenied("Vous n'avez pas la permission d'accéder aux contacts de cet utilisateur.")
+        # # If request.user is a service allow it
+        # if isinstance(request.user, str):
+        #     pass
+        # # Vérification des permissions
+        # elif request.user != requested_user and not request.user.is_superuser:
+        #     raise PermissionDenied("Vous n'avez pas la permission d'accéder aux contacts de cet utilisateur.")
         
         try:
             user = User.objects.get(pk=pk)
             blocked_users = user.blocked_users.all().distinct()
-            blocked_by_users = user.blocked_by.all().distinct()
-
-            serializer_blocked = UserMinimalSerializer(blocked_users, many=True)
-            serializer_blocked_by = UserMinimalSerializer(blocked_by_users, many=True)
-
-            return Response({
-                'blocked_users': serializer_blocked.data,
-                'blocked_by_users': serializer_blocked_by.data
-            }, status=200)
-
+            serializer_blocked = UserMicroSerializer(blocked_users, many=True)
+            return Response(serializer_blocked.data, status=200)
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=404)
 
@@ -326,6 +349,7 @@ class UserViewSet(viewsets.ModelViewSet):
             "is_friend": False,
             "is_blocked_by_user": False,
             "has_blocked_user": False,
+            "is_pending": False,
             "message": None,
             "2fa": False,
             "last_games": [],
@@ -349,11 +373,15 @@ class UserViewSet(viewsets.ModelViewSet):
                 "message": "Vous avez été mis en sourdine par cet utilisateur.",
             })
         # Vérifier si l'utilisateur est ami avec la personne consultée
-        elif Relationship.objects.filter(
+        if Relationship.objects.filter(
             Q(from_user=user, to_user=target_user, status='friend') |
             Q(from_user=target_user, to_user=user, status='friend')
         ).exists():
             response_data["is_friend"] = True
+        elif Relationship.objects.filter(
+            Q(from_user=user, to_user=target_user, status='pending')
+        ).exists():
+            response_data["is_pending"] = True
 
         # Récupérer les 10 dernières parties où l'utilisateur est impliqué
         games = Game.objects.filter(
@@ -363,7 +391,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response(response_data, status=200)
     
-    @action(detail=True, methods=['GET'], permission_classes=[IsAuthenticatedOrService], url_path='is_blocked')
+    @action(detail=True, methods=['GET'], permission_classes=[IsAuthenticatedOrService], url_path='muted')
     def is_blocked(self, request, pk=None):
         """
         Vérifie si l'utilisateur cible est bloqué par l'utilisateur authentifié.
@@ -380,10 +408,46 @@ class UserViewSet(viewsets.ModelViewSet):
 class RelationshipViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
+    # @action(detail=True, methods=['post'], url_path='add-friend')
+    # def add_friend(self, request, pk=None):
+    #     """Envoyer une demande d'ami ou accepter automatiquement si l'autre utilisateur a déjà initié une demande."""
+    #     to_user = get_object_or_404(User, id=pk)
+
+    #     # Vérification des utilisateurs bloqués
+    #     if to_user in request.user.blocked_users.all():
+    #         return Response({"detail": "Vous avez bloqué cet utilisateur."}, status=status.HTTP_403_FORBIDDEN)
+    #     if request.user in to_user.blocked_users.all():
+    #         return Response({"detail": "Vous êtes bloqué par cet utilisateur."}, status=status.HTTP_403_FORBIDDEN)
+
+    #     # Vérifier si une demande inverse existe
+    #     try:
+    #         existing_relation = Relationship.objects.get(from_user=to_user, to_user=request.user, status=Relationship.PENDING)
+    #         # Si une demande inverse existe, l'accepter
+    #         existing_relation.status = Relationship.FRIEND
+    #         existing_relation.save()
+    #         return Response({"detail": "Demande d'ami acceptée automatiquement."}, status=status.HTTP_200_OK)
+    #     except Relationship.DoesNotExist:
+    #         pass  # Continuer si aucune demande inverse n'existe
+
+    #     # Vérifier ou créer une relation
+    #     relation, created = Relationship.objects.get_or_create(from_user=request.user, to_user=to_user)
+    #     if relation.status == Relationship.FRIEND:
+    #         return Response({"detail": "Vous êtes déjà amis."}, status=status.HTTP_400_BAD_REQUEST)
+    #     if relation.status == Relationship.PENDING:
+    #         return Response({"detail": "Une demande est déjà en attente."}, status=status.HTTP_400_BAD_REQUEST)
+
+    #     # Marquer la relation comme "pending"
+    #     relation.status = Relationship.PENDING
+    #     relation.save()
+    #     return Response({"detail": "Demande d'ami envoyée."}, status=status.HTTP_201_CREATED)
+
     @action(detail=True, methods=['post'], url_path='add-friend')
     def add_friend(self, request, pk=None):
         """Envoyer une demande d'ami ou accepter automatiquement si l'autre utilisateur a déjà initié une demande."""
         to_user = get_object_or_404(User, id=pk)
+
+        if to_user == request.user:
+            return Response({"detail": "Vous ne pouvez pas vous ajouter vous-même."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Vérification des utilisateurs bloqués
         if to_user in request.user.blocked_users.all():
@@ -391,27 +455,28 @@ class RelationshipViewSet(viewsets.ViewSet):
         if request.user in to_user.blocked_users.all():
             return Response({"detail": "Vous êtes bloqué par cet utilisateur."}, status=status.HTTP_403_FORBIDDEN)
 
-        # Vérifier si une demande inverse existe
-        try:
-            existing_relation = Relationship.objects.get(from_user=to_user, to_user=request.user, status=Relationship.PENDING)
-            # Si une demande inverse existe, l'accepter
-            existing_relation.status = Relationship.FRIEND
-            existing_relation.save()
-            return Response({"detail": "Demande d'ami acceptée automatiquement."}, status=status.HTTP_200_OK)
-        except Relationship.DoesNotExist:
-            pass  # Continuer si aucune demande inverse n'existe
+        # Vérifier s’il existe déjà une relation dans un sens ou l’autre
+        relation = Relationship.objects.filter(
+            Q(from_user=request.user, to_user=to_user) |
+            Q(from_user=to_user, to_user=request.user)
+        ).first()
 
-        # Vérifier ou créer une relation
-        relation, created = Relationship.objects.get_or_create(from_user=request.user, to_user=to_user)
-        if relation.status == Relationship.FRIEND:
-            return Response({"detail": "Vous êtes déjà amis."}, status=status.HTTP_400_BAD_REQUEST)
-        if relation.status == Relationship.PENDING:
-            return Response({"detail": "Une demande est déjà en attente."}, status=status.HTTP_400_BAD_REQUEST)
+        if relation:
+            if relation.status == Relationship.FRIEND:
+                return Response({"detail": "Vous êtes déjà amis."}, status=status.HTTP_400_BAD_REQUEST)
+            elif relation.status == Relationship.PENDING:
+                if relation.from_user == request.user:
+                    return Response({"detail": "Une demande est déjà en attente."}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    # Demande en attente dans l'autre sens → on l’accepte automatiquement
+                    relation.status = Relationship.FRIEND
+                    relation.save()
+                    return Response({"detail": "Demande d'ami acceptée automatiquement."}, status=status.HTTP_200_OK)
 
-        # Marquer la relation comme "pending"
-        relation.status = Relationship.PENDING
-        relation.save()
+        # Aucune relation existante → création d’une demande
+        Relationship.objects.create(from_user=request.user, to_user=to_user, status=Relationship.PENDING)
         return Response({"detail": "Demande d'ami envoyée."}, status=status.HTTP_201_CREATED)
+
 
     @action(detail=True, methods=['post'], url_path='accept-friend')
     def accept_friend(self, request, pk=None):

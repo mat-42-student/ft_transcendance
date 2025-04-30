@@ -22,9 +22,10 @@ class UserManager(BaseUserManager):
     class Meta:
         db_table = 'user_manager'
     
+
+
 # User model (inherits Django user model) -> Ajouter: bio, tableaux historique 1à dernières games ???
 class User(AbstractBaseUser, PermissionsMixin):
-
     STATUS_CHOICES = [
         ('online', 'Online'),
         ('offline', 'Offline'),
@@ -50,7 +51,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     avatar = models.ImageField(
         upload_to="avatars/", 
-        default='default.png'
+        default='avatars/default.png'
     )
     # status à changer/supprimer -> gestion status via ws dans front
     status = models.CharField(
@@ -96,14 +97,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
 
-
     def __str__(self):
         return self.username
 
     class Meta:
         db_table = 'users'
 
-# ft42Profile model
 class Ft42Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='ft42_profile')
 
@@ -188,6 +187,10 @@ class Relationship(models.Model):
     def clean(self):
         if self.from_user == self.to_user:
             raise ValidationError("Un utilisateur ne peut pas avoir de relation avec lui-même.")
+        
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.from_user.username} -> {self.to_user.username} ({self.status})"
@@ -208,6 +211,7 @@ GAME_TYPE_CHOICES = [
     ("tournament", "Tournament Game"),
 ]
 
+
 class Tournament(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     round_max = models.IntegerField(default=2)
@@ -217,12 +221,13 @@ class Tournament(models.Model):
     organizer = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="organized_tournaments")
     created_at = models.DateTimeField(auto_now_add=True)
     winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="won_tournament")
-
+    
     class Meta:
         db_table = 'Tournament'
 
     def __str__(self):
         return self.name
+
 
 class Game(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, null=True, blank=True, related_name="games")
@@ -243,4 +248,4 @@ class Game(models.Model):
     def __str__(self):
         if self.tournament:
             return f"{self.round}: {self.player1.username} vs {self.player2.username} - {self.tournament.name}"
-        return f"Friendly {self.id}: {self.player1.username} vs {self.player2.username}"
+        return f"Friendly: {self.player1.username} vs {self.player2.username}"

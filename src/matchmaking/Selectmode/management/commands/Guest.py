@@ -6,6 +6,7 @@ class Guest(Player):
     def __init__(self):
         self.hosts = {}
         self.accepted = False
+        super().__init__()
 
     def __str__(self):
         return (f'Guest {self.user_id} type_game: {self.type_game}')

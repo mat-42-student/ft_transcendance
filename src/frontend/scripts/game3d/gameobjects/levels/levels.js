@@ -5,6 +5,7 @@ import LevelDebug from './debug/LevelDebug.js';
 
 const RANDOM_LIST = {
 	'retro-pong': LevelRetroPong,
+
 };
 
 

@@ -103,7 +103,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta:
         db_table = 'users'
 
-# ft42Profile model
 class Ft42Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='ft42_profile')
 
@@ -180,7 +179,7 @@ class Relationship(models.Model):
         default=NONE,
     )
     created_at = models.DateTimeField(auto_now_add=True)
-
+    
     class Meta:
         db_table = 'relationship'
         unique_together = ('from_user', 'to_user')
@@ -188,6 +187,10 @@ class Relationship(models.Model):
     def clean(self):
         if self.from_user == self.to_user:
             raise ValidationError("Un utilisateur ne peut pas avoir de relation avec lui-même.")
+        
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.from_user.username} -> {self.to_user.username} ({self.status})"
@@ -208,21 +211,23 @@ GAME_TYPE_CHOICES = [
     ("tournament", "Tournament Game"),
 ]
 
+
 class Tournament(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    round_max = models.IntegerField(default=2)
     location = models.CharField(max_length=255, blank=True, null=True)
-    start_date = models.DateField()
-    end_date = models.DateField()
-    organizer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="organized_tournaments")
+    start_date = models.DateField(auto_now_add=True)
+    end_date = models.DateField(auto_now=True)
+    organizer = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="organized_tournaments")
     created_at = models.DateTimeField(auto_now_add=True)
     winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="won_tournament")
-
 
     class Meta:
         db_table = 'Tournament'
 
     def __str__(self):
         return self.name
+
 
 class Game(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, null=True, blank=True, related_name="games")
@@ -232,7 +237,7 @@ class Game(models.Model):
     score_player2 = models.IntegerField(default=0)
     date = models.DateTimeField()
     winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="won_games")
-    round = models.CharField(max_length=20, choices=ROUND_CHOICES, default="friendly")
+    round = models.IntegerField(default=1)
     game_type = models.CharField(max_length=20, choices=GAME_TYPE_CHOICES, default="friendly")
     created_at = models.DateTimeField(auto_now_add=True)
     failed = models.BooleanField(default=False)

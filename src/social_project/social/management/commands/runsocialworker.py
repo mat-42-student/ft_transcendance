@@ -73,11 +73,15 @@ class Command(BaseCommand):
         if not body:
             return
         user_id = body.get('id')
+        from_id = body.get('from')
         if not user_id:
             print("No user_id in notifyUser")
             return
+        if not from_id:
+            print("No from_id in notifyUser")
+            return
         print(f"User {user_id} is going to be notified")
-        data = self.build_notify_data(user_id)
+        data = self.build_notify_data(user_id, from_id)
         await self.redis_client.publish(self.REDIS_GROUPS['gateway'], json.dumps(data))
 
     async def social_process(self, data):
@@ -219,13 +223,14 @@ class Command(BaseCommand):
         }
         return data
 
-    def build_notify_data(self, user_id):
+    def build_notify_data(self, user_id, from_id):
         """user_id will receive friend info"""
         data = {
             "header": {
                 "service": "notify",
                 "dest": "front",
-                "id": user_id
+                "id": user_id,
+                "from": from_id
             }
         }
         return data

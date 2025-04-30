@@ -132,7 +132,8 @@ class LoginView(APIView):
                 'jti': str(uuid.uuid4()),
                 'typ': "access",
                 'iss': access_config['issuer'],
-                'aud': access_config['audience']
+                'aud': access_config['audience'],
+                'oauth': False
             }
 
             # Create refresh token payload
@@ -144,7 +145,8 @@ class LoginView(APIView):
                 'jti': str(uuid.uuid4()),
                 'typ': "refresh",
                 'iss': refresh_config['issuer'],
-                'aud': refresh_config['audience']
+                'aud': refresh_config['audience'],
+                'oauth': False
             }
 
             # Sign JWTs using Vault
@@ -169,7 +171,6 @@ class LoginView(APIView):
         except Exception as e:
             logging.error(f"Login error: {str(e)}")
             raise AuthenticationFailed(f'Authentication failed: {str(e)}')
-
 
 class RefreshTokenView(APIView):
     renderer_classes = [JSONRenderer]
@@ -234,6 +235,7 @@ class RefreshTokenView(APIView):
             access_ttl_minutes = int(access_config['ttl'].replace('m', ''))
             refresh_ttl_days = int(refresh_config['ttl'].replace('d', ''))
             
+            isOauth = old_refresh_token.get('oauth')
             # Create new access token payload
             access_payload = {
                 'id': user.id,
@@ -243,7 +245,8 @@ class RefreshTokenView(APIView):
                 'jti': str(uuid.uuid4()),
                 'typ': "access",
                 'iss': access_config['issuer'],
-                'aud': access_config['audience']
+                'aud': access_config['audience'],
+                'oauth': True if isOauth else False
             }
 
             # Create new refresh token payload
@@ -255,7 +258,8 @@ class RefreshTokenView(APIView):
                 'jti': str(uuid.uuid4()),
                 'typ': "refresh",
                 'iss': refresh_config['issuer'],
-                'aud': refresh_config['audience']
+                'aud': refresh_config['audience'],
+                'oauth': True if isOauth else False
             }
 
             # Sign new JWTs using Vault
@@ -474,7 +478,8 @@ class OAuthCallbackView(APIView):
                 'jti': str(uuid.uuid4()),
                 'typ': "refresh",
                 'iss': refresh_config['issuer'],
-                'aud': refresh_config['audience']
+                'aud': refresh_config['audience'],
+                'oauth': True
             }
 
             # Sign JWT using Vault

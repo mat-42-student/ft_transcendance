@@ -72,5 +72,8 @@ async function acceptFriendRequest(userId, listItem) {
 async function rejectFriendRequest(userId, listItem) {
     await state.socialApp.rejectFriendRequest(userId);  // Fonction de la logique de backend pour refuser
     listItem.remove();  // Retirer l'élément de la liste
-    state.socialApp.getPendingCount();
+    // console.log("Demande d'ami refusée pour l'utilisateur:", userId);
+    state.socialApp.notifyUser(userId);
+    state.socialApp.notifyUser(state.client.userId);
+    // state.socialApp.getPendingCount();
 }

@@ -64,14 +64,17 @@ class Command(BaseCommand):
         data['header']['dest'] = 'front' # data destination after deep processing
         # print(f"getting {data['body']}")
         # if self.recipient_exists(data['body']['to']):
+        exp = data['header']['id']
+        recipient = data['body']['to']
         try:
-            if await self.is_muted(data['header']['id'], data['body']['to']):
-                data['body']['message'] += f"You were muted by {data['body']['to']}"
+            if await self.is_muted(exp, recipient):
+                data['body']['message'] = "You have been muted"
+            elif not await self.is_friend(exp, recipient):
+                data['body']['message'] = "You are not friends"
             else:
-                data['body']['from'] = data['header']['id']
-                data['header']['id'] = data['body']['to'] # username OR userID
+                data['body']['from'] = exp
+                data['header']['id'] = recipient
                 del data['body']['to']
-                data['body']['message']
         except Exception as e:
             print(e)
             data['body']['message'] = str(e)
@@ -116,15 +119,19 @@ class Command(BaseCommand):
             )
             
             if response.status_code == 200:
-                data = response.json()
-                if data.get('error'):
-                    raise ValueError("Recipient not found")
-                    
-                blocked_users = data.get('blocked_users')
-                return blocked_users is not None and exp in blocked_users
+                try:
+                    data = response.json()
+                    if not isinstance(data, list):
+                        raise ValueError("Invalid JSON response")
+                    if any(d['id'] == exp for d in data):
+                        return True
+                except requests.exceptions.RequestException as e:
+                    print(f"Error in request : {e}")
+                except ValueError as e:
+                    print("JSON conversion error :", e)
             else:
                 print(f"Request failed (status {response.status_code})")
-                return False
+            return False
                 
         except requests.exceptions.RequestException as e:
             print(f"Error in request: {e}")
@@ -132,6 +139,63 @@ class Command(BaseCommand):
         except ValueError as e:
             print("JSON conversion error:", e)
             raise UserNotFoundException(f"User {recipient} not found")
+        
+    async def is_friend(self, exp, recipient) -> bool :
+        friends_data = self.get_friend_list(recipient)
+        if not friends_data:
+            return False
+        friends = [item['id'] for item in friends_data]
+        return exp in friends
+
+    async def get_friend_list(self, user_id):
+        """ Request friendlist from container 'users' using Vault for mTLS """
+        try:
+            # Initialize Vault client
+            vault_client = VaultClient()
+            
+            # Create payload for service-to-service communication
+            payload = {
+                "service": "chat",
+                "action": "get_friends",
+                "scope": "read",
+                "exp": int((datetime.now(timezone.utc) + timedelta(minutes=15)).timestamp()),
+                "iat": int(datetime.now(timezone.utc).timestamp()),
+                "jti": str(uuid.uuid4()),
+                "typ": "service",
+                "iss": "internal-services",
+                "aud": "internal-api"
+            }
+            
+            # Get service JWT configuration
+            service_config = vault_client.get_jwt_config('jwt-config/backend-service')
+            key_name = service_config['key_name']
+            
+            # Generate the JWT using Vault
+            token = vault_client.sign_jwt(key_name, payload)
+            
+            # Make the request to the users service using the mTLS session
+            url = f"https://nginx:8443/api/v1/users/{user_id}/friends/"
+            headers = {"Authorization": f"Service {token}"}
+            
+            # Use the mTLS session from vault client instead of specifying certs manually
+            response = vault_client.session.get(
+                url,
+                headers=headers,
+                timeout=10
+            )
+            
+            response.raise_for_status()
+            data = response.json()
+            
+            return data.get('friends')
+            
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
+        except ValueError as e:
+            print(f"JSON decode error: {e}")
+            return None
+
 
     # def recipient_exists(self, user):
     #     """Does user exist ?"""

@@ -16,6 +16,11 @@ export class WebGame extends GameBase {
         this.socket = null;
 
         this.side = 2;  // Set to neutral until server tells us
+
+        // quick and dirty fix for a cosmetic issue:
+        // web game does not send this until game start, so the paddles would be invisible
+        // for the initial countdown.
+        this.paddleHeights = [0.2, 0.2];
     }
 
     frame(delta, time) {
@@ -102,7 +107,7 @@ export class WebGame extends GameBase {
             }
 
             // Debug with less spam from constant 'info' packets.
-            if (data.action != 'info') { console.log('Game packet:', data.action, ', data = ', data); }
+            // if (data.action != 'info') { console.log('Game packet:', data.action, ', data = ', data); }
 
             if (data.action == 'init') {
                 wg.level = new (LEVELS.LIST[data.level_name])();
@@ -127,20 +132,20 @@ export class WebGame extends GameBase {
                 wg.scores[0] = data.lscore;
                 wg.scores[1] = data.rscore;
 
-                if (wg.level)  wg.level.unpause();
+                wg.level?.unpause();
             }
             if (data.action == "wait") {
-                if (wg.level)  wg.level.pause(Number(data.time));
+                wg.level?.pause(Number(data.time));
             }
             if (data.action == "disconnect") {
                 wg.close(false);
             }
             if (data.action == "game_cancelled") {
-                const opponentName = state.gameApp.playerNames[1 - state.gameApp.side];
-                wg.level.endShowWebOpponentQuit(opponentName);
+                const opponentName = state.gameApp?.playerNames[1 - state.gameApp.side];
+                wg.level?.endShowWebOpponentQuit(opponentName);
             }
             if (data.action == "game_won") {
-                wg.level.endShowWinner(data.scores, data.winner, [...wg.playerNames]);
+                wg.level?.endShowWinner(data.scores, data.winner, [...wg.playerNames]);
             }
         };
     }

@@ -129,6 +129,7 @@ export async function performUserAction(userId, action) {
             await state.socialApp.notifyUser(state.client.userId);
             state.mmakingApp.remove_friend(userId)
         }
+        state.socialApp.getPendingCount();
     } catch (error) {
         console.error(`Erreur lors de l'action ${action}:`, error);
     }

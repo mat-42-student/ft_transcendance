@@ -64,12 +64,12 @@ export default class LevelBase extends THREE.Scene {
 
 
 	pause(time) {
-		this.#isPaused = true;
+		this.isPaused = true;
 	}
 
 	unpause() {
-		if (this.#isPaused != false) {
-			this.#isPaused = false;
+		if (this.isPaused != false) {
+			this.isPaused = false;
 			return true;
 		}
 		return false;
@@ -83,8 +83,8 @@ export default class LevelBase extends THREE.Scene {
 			if (!state.gameApp || (state.gameApp && state.gameApp.level === this)) {
 				state.engine.scene = this;
 				if (typeof this.onLoadComplete == "function")  this.onLoadComplete();
+				state.gameApp?.startLocalGame?.();
 			} else {
-				state.engine.showErrorScene();
 				this.dispose();
 			}
 		} else if (this.remainingToLoad < 0) {
@@ -128,7 +128,7 @@ export default class LevelBase extends THREE.Scene {
 	}
 
 
-	#isPaused = false;
+	isPaused = false;
 
 }
 

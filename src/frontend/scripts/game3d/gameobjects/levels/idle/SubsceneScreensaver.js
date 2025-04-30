@@ -14,6 +14,14 @@ export default class SubsceneScreensaver extends THREE.Scene {
 
 	onAdded() {
 		this.parentScene.useDefaultCameraAngle();
+
+		this.parentScene.rtCamera.position.set(0, -0.6, 0);
+		this.parentScene.rtCamera.rotation.copy(new THREE.Euler());
+		this.parentScene.rtCamera.rotateX(Math.PI / 2);
+		this.parentScene.rtCamera.rotateZ(Math.PI);
+		this.parentScene.rtCamera.fov = 90;
+		this.parentScene.rtCamera.updateProjectionMatrix();
+
 		this.background = new THREE.Color("#000000");
 		this.add(new THREE.AmbientLight("#ffffff", 0.2));
 		const sun = new THREE.DirectionalLight("#ffffff", 1.8);

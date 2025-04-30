@@ -19,14 +19,23 @@ export const state = {
     get isPlaying() { return this.gameApp != null && this.engine != null && this.engine.scene != null; },
 };
 
-state.engine.init();
+/** Engine keeps checking if it got stuck without a scene.
+ * For a very brief moment, Engine exists but LevelIdle hasnt started loading yet.
+ * This would make Engine show an error screen, and attempt to reload the scene.
+ * The fix is this variable, that makes Engine be patient. */
+window.waitpleasedontfreakout = true;
+await state.engine.init();
 // Temporary variable. This is deleted by LevelIdle itself after it is done loading.
 window.idleLevel = new LevelIdle();
+window.waitpleasedontfreakout = false;
 
 state.client.setState(state);
 window.state = state; // Debugging purpose
 
-document.addEventListener('DOMContentLoaded', initApp);
+// this used to respond to DOMContentLoaded. But now, engine.init is async.
+// This means DOMContentLoaded would never fire this function (the event had happened before
+// it was registered on this line.)
+await initApp();
 
 // Fonction d'initialisation
 async function initApp() {
@@ -177,7 +186,6 @@ export function isTokenExpiringSoon() {
     return (payload.exp * 1000 - Date.now()) < 60000; // 60 sec
 }
 
-// REVIEW 23/2/2025, commit 074a0d9e0981: This function appears unused. Delete? Move to utils.js?
 // wait for n sec
 export function delay(n) {
     return new Promise(resolve => setTimeout(resolve, n * 1000));

@@ -9,8 +9,6 @@ export default class LevelError extends LevelBase {
 	onAdded() {
 		super.onAdded();
 
-		console.log('Showing error scene.');
-
 		this.boardSize = null;
 		this.name = 'Error Level';
 
