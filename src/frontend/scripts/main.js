@@ -16,6 +16,7 @@ export const state = {
     /** @type {GameBase} */ gameApp: null,
     input: new Input(),
     engine: new Engine(),
+    levelLoadingTempStorage: null,
     get isPlaying() { return this.gameApp != null && this.engine != null && this.engine.scene != null; },
 };
 
@@ -23,11 +24,11 @@ export const state = {
  * For a very brief moment, Engine exists but LevelIdle hasnt started loading yet.
  * This would make Engine show an error screen, and attempt to reload the scene.
  * The fix is this variable, that makes Engine be patient. */
-window.waitpleasedontfreakout = true;
+state.waitpleasedontfreakout = true;
 await state.engine.init();
 // Temporary variable. This is deleted by LevelIdle itself after it is done loading.
-window.idleLevel = new LevelIdle();
-window.waitpleasedontfreakout = false;
+state.levelLoadingTempStorage = new LevelIdle();
+state.waitpleasedontfreakout = undefined;
 
 state.client.setState(state);
 window.state = state; // Debugging purpose

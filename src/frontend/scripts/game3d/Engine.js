@@ -210,8 +210,8 @@ export class Engine {
 		if (this.scene == null
 			&& (
 				state.gameApp == null
-				&& window.idleLevel == null
-				&& window.waitpleasedontfreakout != true
+				&& state.levelLoadingTempStorage == null
+				&& state.waitpleasedontfreakout != true
 			)
 		) {
 			// uh oh! this would be a stuck loading screen. warn the user...
@@ -219,7 +219,7 @@ export class Engine {
 			// ...and attempt to fix that, but don't always try, or this would go on forever.
 			if (this.#didSceneWatchdogAlreadyTry == false) {
 				this.#didSceneWatchdogAlreadyTry = true;
-				window.idleLevel = new LevelIdle();
+				state.levelLoadingTempStorage = new LevelIdle();
 			}
 		}
 	}
