@@ -214,12 +214,13 @@ export async function handleAuthSubmit(event) {
     const { apiUrl, payload } = getApiUrlAndPayload(hash, username, email, password, confirm_password);
 
     if (!apiUrl) {
-        console.error('Unknown action for authentication form.');
+        displayErrorMessage('Invalid authentication action.');
         return;
     }
 
     try {
         const response = await sendAuthRequest(apiUrl, payload);
+
         if (response.ok) {
             const data = await response.json();
             await handleAuthResponse(data);
@@ -227,7 +228,8 @@ export async function handleAuthSubmit(event) {
             await handleAuthError(response);
         }
     } catch (error) {
-        console.error('API request error:', error);
+        console.error('Authentication error:', error.message || 'Unknown error');
+        return { success: false, message: 'Authentication failed' };
     }
 }
 
@@ -263,6 +265,8 @@ async function sendAuthRequest(apiUrl, payload) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        // Add credentials if you're using cookies for auth
+        credentials: 'same-origin'
     });
 }
 
@@ -273,30 +277,41 @@ async function handleAuthResponse(data) {
         window.location.hash = '#profile';
         closeDynamicCard();
     } catch (error) {
-        console.error('Error processing authentication response:', error);
+        displayErrorMessage("Error during login. Please try again.");
+        return { success: false };
     }
 }
-
 // Handle backend authentication errors
 async function handleAuthError(response) {
-    const errorData = await response.json();
-    
-    if (errorData.error === '2fa_required') {
-        handle2FA(response);
-    } else if (errorData.detail === 'User not found!' || errorData.detail === 'Incorrect password') {
-        displayErrorMessage("Incorrect username or password.");
-    } else if (errorData.error === 'User already logged in') {
-        displayErrorMessage("User already logged in.");
-    } else if (errorData.username || errorData.email) {
-        if (errorData.email && errorData.email.length > 0) {
-          displayErrorMessage(`Email: ${errorData.email[0]}`);
+    try {
+        if (response.status === 0) {
+            displayErrorMessage("Network error. Please check your connection and try again.");
+            return { success: false };
+        }
+
+        const errorData = await response.json();
+        
+        if (errorData.error === '2fa_required') {
+            handle2FA(response);
+        } else if (errorData.detail === 'User not found!' || errorData.detail === 'Incorrect password') {
+            displayErrorMessage("Incorrect username or password.");
+        } else if (errorData.error === 'User already logged in') {
+            displayErrorMessage("User already logged in.");
+        } else if (errorData.username || errorData.email) {
+            if (errorData.email && errorData.email.length > 0) {
+            displayErrorMessage(`Email: ${errorData.email[0]}`);
+            }
+            if (errorData.username && errorData.username.length > 0) {
+            displayErrorMessage(`Username: ${errorData.username[0]}`);
+            }
+        } else {
+            displayErrorMessage("Authentication failed. Please try again.");
         }
         
-        if (errorData.username && errorData.username.length > 0) {
-          displayErrorMessage(`Username: ${errorData.username[0]}`);
-        }
-    } else {
-        console.error('API Error:', errorData);
+        return { success: false, error: errorData };
+    } catch (error) {
+      displayErrorMessage("Authentication failed. Please try again.");
+      return { success: false, error: { message: response.statusText || "Unknown error" } };
     }
 }
 
