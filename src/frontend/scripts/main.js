@@ -153,37 +153,26 @@ window.addEventListener('beforeunload', function() {
     state.engine.scene = null;
 });
 
-// window.addEventListener('beforeunload', function(event) {
-//     if (state.mainSocket && state.mainSocket.socket)
-//         state.mainSocket.close();
-//     if (state.gameApp)
-//         state.gameApp.close();
-// });
-
 export async function ft_fetch(url, options = {}) {
-    // console.log("ft_fetch: ", url, options);
     if (isTokenExpiringSoon())
         await state.client.refreshSession();
     options.headers = {
         ...options.headers,
         Authorization: `Bearer ${state.client.accessToken}`,
     };
-    let response = await fetch(url, options);
-    if (response.status === 403) {
-        await state.client.refreshSession();
-        options.headers.Authorization = `Bearer ${state.client.accessToken}`;
-        response = await fetch(url, options);
+    try {
+        let response = await fetch(url, options);
+        return response;
+    } catch (error) {
+        // console.error("Fetch error:", error);
+        // throw error;
     }
-    return response;
 }
 
 export function isTokenExpiringSoon() {
-    if (!state.client.accessToken) {
-        // console.error("Token expired");
+    if (!state.client.accessToken)
         return true;
-    }
     const payload = JSON.parse(atob(state.client.accessToken.split('.')[1]));
-    // console.log("remaining time in token: ", (payload.exp * 1000 - Date.now()) / 60000, " min");
     return (payload.exp * 1000 - Date.now()) < 60000; // 60 sec
 }
 
