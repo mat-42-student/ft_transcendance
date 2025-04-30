@@ -131,11 +131,15 @@ const cardInitializers = {
 export async function initDynamicCard(routeKey) {
     const cardContainer = document.getElementById('dynamic-card-container');
     const cardContent = document.getElementById('dynamic-card-content');
+    const cancelButton = document.getElementById('close-dynamic-card');
 
     if (!dynamicCardRoutes[routeKey]) {
         console.error(`Aucune route trouvée pour la clé : ${routeKey}`);
         return;
     }
+
+    if (cancelButton.style.display === 'none')
+        cancelButton.style.display = 'inline';
 
     try {
         const response = await ft_fetch(dynamicCardRoutes[routeKey]);
@@ -156,7 +160,7 @@ export function closeDynamicCard() {
     const cardContainer = document.getElementById('dynamic-card-container');
     if (cardContainer)
         cardContainer.classList.add('hidden');
-    window.history.replaceState({}, '', `#home`);
+    // window.history.replaceState({}, '', `#home`);
 }
 
 function displayErrorMessage(message) {

@@ -1,5 +1,6 @@
 import { state } from '../main.js';
 import { ft_fetch } from '../main.js';
+import { initProfilePage } from '../pages.js';
 
 const apiBase = '/api/v1/users';
 
@@ -122,6 +123,7 @@ export async function performUserAction(userId, action) {
 
         if (action === "add-friend")
             await state.socialApp.notifyUser(userId);
+            await state.socialApp.notifyUser(state.client.userId);
         if (action === 'remove-friend') {
             await state.socialApp.notifyUser(userId);
             await state.socialApp.notifyUser(state.client.userId);

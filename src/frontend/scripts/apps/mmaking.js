@@ -38,7 +38,7 @@ export class Mmaking
 		this.btnsearchRandomisActive = false;
 		this.btnSearchTournamentActive = false;
 		this.bracket = false;
-		this.winner = false;
+		this.winnerId_of_tournament = null;
     }
 
 	remove_friend(friendId)
@@ -155,9 +155,15 @@ export class Mmaking
 			if (this.salonHost == false && (this.salonInvite == false && this.salonLoad == false && this.SearchRandomGame == false))
 				closeDynamicCard();
 			if (this.salonLoad == true)
+			{
 				await initDynamicCard('load');
+				document.getElementById('close-dynamic-card').style.display = 'none';
+			}
 			else if(this.salonInvite == true && value == true)
+			{
 				await initDynamicCard('salonGuest');
+				document.getElementById('close-dynamic-card').style.display = 'none';
+			}
 
 			const btnHost = document.querySelector(`.btn-match-${key}`);
 			const btnMatchPicture = document.getElementById(`btn-match-picture-${key}`);
@@ -495,7 +501,45 @@ export class Mmaking
 			matchElement.appendChild(roundName)
 			matchElement.appendChild(teamContainer);
 			bracketContainer.appendChild(matchElement);
+		}
+		this.setup_winner_tournament()
 
+	}
+
+	setup_winner_tournament()
+	{
+		for (const [id, value] of Object.entries(this.opponents))
+		{
+			for (const [key, player] of Object.entries(value))
+			{
+				const card_of_bracket = document.getElementById('tournamentBracket');
+				if (card_of_bracket != null)
+				{
+					const winnerContainer = document.createElement('div');
+
+					if (this.winnerId_of_tournament == null)
+					{
+						if (this.gameId != null)
+							winnerContainer.innerHTML = `The winner of this tournament could be you?`
+						else
+						{
+							winnerContainer.innerHTML = `Of course, the biggest loser is you! 💩`
+						}
+						card_of_bracket.appendChild(winnerContainer)
+						return 
+					}
+					else if (player.user_id == this.winnerId_of_tournament)
+					{
+						winnerContainer.innerHTML = `The Winner of tournament is ${player.username} 👑`
+						card_of_bracket.appendChild(winnerContainer)
+						return 
+					}
+
+				}
+
+
+
+			}
 		}
 	}
 
@@ -573,6 +617,7 @@ export class Mmaking
 			if (data.body.tournament == true)
 			{
 				this.bracket = true;
+				this.winnerId_of_tournament = data.body.winnerId
 				this.salonTournament = false;
 			}
 			if (data.body.opponents)
@@ -677,6 +722,6 @@ export class Mmaking
         document.getElementById("opponent-name").textContent = name;
         document.getElementById("opponent-photo").src = picture;
 		document.getElementById("random-loader").style.display = "none";
-		document.getElementById('close-dynamic-card').style.display = 'none'
+
     }
 }
