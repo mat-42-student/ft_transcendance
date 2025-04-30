@@ -16,6 +16,7 @@ export const state = {
     /** @type {GameBase} */ gameApp: null,
     input: new Input(),
     engine: new Engine(),
+    levelLoadingTempStorage: null,
     get isPlaying() { return this.gameApp != null && this.engine != null && this.engine.scene != null; },
 };
 
@@ -23,11 +24,11 @@ export const state = {
  * For a very brief moment, Engine exists but LevelIdle hasnt started loading yet.
  * This would make Engine show an error screen, and attempt to reload the scene.
  * The fix is this variable, that makes Engine be patient. */
-window.waitpleasedontfreakout = true;
+state.waitpleasedontfreakout = true;
 await state.engine.init();
 // Temporary variable. This is deleted by LevelIdle itself after it is done loading.
-window.idleLevel = new LevelIdle();
-window.waitpleasedontfreakout = false;
+state.levelLoadingTempStorage = new LevelIdle();
+state.waitpleasedontfreakout = undefined;
 
 state.client.setState(state);
 window.state = state; // Debugging purpose
@@ -152,37 +153,26 @@ window.addEventListener('beforeunload', function() {
     state.engine.scene = null;
 });
 
-// window.addEventListener('beforeunload', function(event) {
-//     if (state.mainSocket && state.mainSocket.socket)
-//         state.mainSocket.close();
-//     if (state.gameApp)
-//         state.gameApp.close();
-// });
-
 export async function ft_fetch(url, options = {}) {
-    // console.log("ft_fetch: ", url, options);
     if (isTokenExpiringSoon())
         await state.client.refreshSession();
     options.headers = {
         ...options.headers,
         Authorization: `Bearer ${state.client.accessToken}`,
     };
-    let response = await fetch(url, options);
-    if (response.status === 403) {
-        await state.client.refreshSession();
-        options.headers.Authorization = `Bearer ${state.client.accessToken}`;
-        response = await fetch(url, options);
+    try {
+        let response = await fetch(url, options);
+        return response;
+    } catch (error) {
+        // console.error("Fetch error:", error);
+        // throw error;
     }
-    return response;
 }
 
 export function isTokenExpiringSoon() {
-    if (!state.client.accessToken) {
-        // console.error("Token expired");
+    if (!state.client.accessToken)
         return true;
-    }
     const payload = JSON.parse(atob(state.client.accessToken.split('.')[1]));
-    // console.log("remaining time in token: ", (payload.exp * 1000 - Date.now()) / 60000, " min");
     return (payload.exp * 1000 - Date.now()) < 60000; // 60 sec
 }
 
