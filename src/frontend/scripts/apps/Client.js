@@ -42,10 +42,12 @@ export class Client{
         this.userId = null;
         this.userName = null;
         this.accessToken = null;
+		await state.mmakingApp.setBtnVersus_and_Tournament_on_card_login()
         if (this.state.mainSocket)
             this.state.mainSocket.close(); // handles sub-objects (social, chat, mmaking) closure
         this.state.mainSocket = null;
         this.renderProfileBtn();
+
 
         try {
             const response = await fetch('/api/v1/auth/logout/', {

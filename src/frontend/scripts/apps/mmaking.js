@@ -48,6 +48,15 @@ export class Mmaking
 		Reflect.deleteProperty(this.guests, friendId);
 	}
 
+	setBtnVersus_and_Tournament_on_card_login()
+	{
+		const btnTournament = document.getElementsByClassName('btn-tournament');
+		const btnRandom = document.getElementById('versus');
+
+		btnTournament[0]?.removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);
+		btnRandom?.removeEventListener('click', this.boundEventListenersClient.btnsearchRandomGame);
+	}
+
 	async update_friendList()
 	{
 
@@ -81,10 +90,14 @@ export class Mmaking
 
 	buildEvenbtnClient()
 	{
-		this.boundEventListenersClient = {
-			btnsearchRandomGame: this.btnsearchRandomGame.bind(this),
-			eventSearchTournament: this.eventSearchTournament.bind(this)
-		  };
+		if (state.client.isAuthenticated())
+		{
+			this.boundEventListenersClient = {
+				btnsearchRandomGame: this.btnsearchRandomGame.bind(this),
+				eventSearchTournament: this.eventSearchTournament.bind(this)
+			};
+
+		}
 
 	}
 
