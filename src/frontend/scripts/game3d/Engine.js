@@ -101,6 +101,7 @@ export class Engine {
 		}
 
 		window.addEventListener('beforeunload', () => {
+			state.waitpleasedontfreakout = true;  // maybe dont try to reload the page when the user is trying to get rid of the page
 			this.renderer?.dispose();
 		});
 
