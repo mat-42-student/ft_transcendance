@@ -2,7 +2,7 @@ import { ChatApp } from './Chat.js';
 import { SocialApp } from './Social.js';
 import { Mmaking } from './mmaking.js';
 import { state } from '../main.js';
-import { renderProfileFriendButton } from '../pages.js';
+import { renderFriendProfile } from '../pages.js';
 
 export class MainSocket {
 
@@ -52,7 +52,7 @@ export class MainSocket {
 				case 'notify':
 					// console.log("mainSocket : incoming notify");
 					state.socialApp.renderNoBuild();
-					renderProfileFriendButton(data);
+					renderFriendProfile(data);
 					break;
 				default:
 				console.warn('mainSocket : could not handle incoming JSON' + JSON.stringify(data, null, 2));

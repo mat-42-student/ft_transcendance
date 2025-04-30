@@ -229,7 +229,6 @@ export class SocialApp{
     }
 
     async notifyUser(userId) {
-        // console.log("Notifying user", userId);
         let data = {
             "header": {
                 "service": "social",
