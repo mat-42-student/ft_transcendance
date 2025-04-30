@@ -26,9 +26,7 @@ export async function initProfilePage(userId) {
 
 export function renderFriendProfile(data) {
     const currentHash = window.location.hash;
-    console.log("currentHash:", currentHash, "data:", data);
 
-    // Vérifie si le hash commence par #profile
     if (currentHash.startsWith("#profile")) {
         const match = currentHash.match(/^#profile\/(\d+)$/);
         const userId = match ? match[1] : null;
