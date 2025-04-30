@@ -130,7 +130,7 @@ class LoginView(APIView):
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=120),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user",
@@ -140,7 +140,7 @@ class LoginView(APIView):
         refresh_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user",
@@ -203,7 +203,7 @@ class RefreshTokenView(APIView):
         access_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=120),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user",
@@ -213,7 +213,7 @@ class RefreshTokenView(APIView):
         refresh_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user",
@@ -410,7 +410,7 @@ class OAuthCallbackView(APIView):
         refresh_payload = {
             'id': user.id,
             'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
+            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user",

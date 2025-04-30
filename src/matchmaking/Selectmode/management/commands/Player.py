@@ -41,7 +41,7 @@ class Player ():
 
         payload = {
             "service": "matchmaking",
-            "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=120),
         }
         
         token = jwt.encode(
@@ -121,7 +121,7 @@ class Player ():
         try:
             payload = {
                 "service": "social",
-                "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=120),
             }
             
             token = jwt.encode(
