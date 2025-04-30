@@ -62,6 +62,8 @@ class Navigator {
     
         if (!this.cardContainer.classList.contains('hidden'))
             closeDynamicCard();
+
+		await state.mmakingApp.cancelGame_with_pending_status();
     
         // Parsing du hash
         const hashMatch = hash.match(/^#(\w+)(?:\/(\d+))?$/);

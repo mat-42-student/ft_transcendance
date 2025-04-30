@@ -32,6 +32,7 @@ export class Mmaking
 		this.salonHost = false;
 		this.salonLoad = false
 		this.salonRandom = false;
+		this.salonTournament = false;
 		this.type_game = null;
 		this.game = null;
 		this.gameId = null;
@@ -102,6 +103,24 @@ export class Mmaking
 		await this.renderLaunchGame();
 	}
 
+	async cancelGame_with_pending_status()
+	{
+		if (state.socialApp?.myStatus != 'pending')
+			return
+		let type_game = null
+		if (this.salonInvite == true || this.salonLoad == true)
+			type_game = 'invite';
+		else if (this.salonRandom == true)
+		{
+			type_game = '1vs1R';
+		}
+		else if (this.salonTournament == true)
+		{
+			type_game = 'tournament';
+		}
+		await this.cancelGame(null, state.client.userId, type_game);
+	}
+
 	async renderHost()
 	{
 
@@ -138,15 +157,7 @@ export class Mmaking
 		}
 	}
 
-	cardFriendInvited(friendCard)
-	{
-		friendCard.style.backgroundColor = 'blue';
-	}
 
-	cardFriendReset(friendCard)
-	{
-		friendCard.style.backgroundColor = "#f8f9fa";
-	}
 
 	async renderGuest()
 	{
@@ -429,10 +440,6 @@ export class Mmaking
 		{
 			closeDynamicCard();
 		}
-		else if (this.winner_of_tournament == true)
-		{
-
-		}
 	}
 
 	async bracketTournament()
@@ -688,13 +695,6 @@ export class Mmaking
 			}
 
         }
-		else if (data.body.tournament == true)
-		{
-			if (data.body.winner == true)
-			{
-				this.winner_of_tournament = true;
-			}
-		}
 		await this.renderMatchmaking();
 
     }
@@ -724,4 +724,14 @@ export class Mmaking
 		document.getElementById("random-loader").style.display = "none";
 
     }
+
+	cardFriendInvited(friendCard)
+	{
+		friendCard.style.backgroundColor = 'blue';
+	}
+
+	cardFriendReset(friendCard)
+	{
+		friendCard.style.backgroundColor = "#f8f9fa";
+	}
 }
