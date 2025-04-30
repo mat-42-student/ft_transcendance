@@ -514,7 +514,7 @@ export class Mmaking
 					if (this.winnerId_of_tournament == null)
 					{
 						if (this.gameId != null)
-							winnerContainer.innerHTML = `The Winner of tournament maybe should be YOU !`
+							winnerContainer.innerHTML = `The winner of this tournament could be you?`
 						else
 						{
 							winnerContainer.innerHTML = `Of course, the biggest loser is you! 💩`
