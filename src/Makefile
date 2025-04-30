@@ -4,11 +4,13 @@ DOCKER_IMAGE_NAME = django-base
 DOCKERFILE = ./_Base/Dockerfile.django
 
 # Targets
-.PHONY: all build run re clean
+.PHONY: all build run re clean fclean
+
+re: clean all
 
 all: build_base build run
 
-run:	
+run:
 	docker compose up
 
 build_base:
@@ -35,5 +37,3 @@ fclean: clean
 
 clean: stop
 	docker compose down -v
-	
-re: clean all
