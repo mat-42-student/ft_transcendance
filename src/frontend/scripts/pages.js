@@ -14,13 +14,29 @@ export async function initProfilePage(userId) {
     setupProfileEventListeners(userId);
 }
 
-export function renderProfileFriendButton(data) {
-    // Vérifie si le hash correspond à la page profil de l'utilisateur concerné
+// export function renderFriendProfile(data) {
+//     // Vérifie si le hash correspond à la page profil de l'utilisateur concerné
+//     const currentHash = window.location.hash;
+//     console.log("currentHash: " + currentHash + " data ", data);
+//     if (currentHash === `#profile/${data?.header?.from}`) {
+//         console.log("refresh page")
+//         initProfilePage(data?.header?.from);
+//     }
+// }
+
+export function renderFriendProfile(data) {
     const currentHash = window.location.hash;
-    // console.log("currentHash: " + currentHash + " data ", data);
-    if (currentHash === `#profile/${data?.header?.from}`) {
-        // console.log("refresh page")
-        initProfilePage(data?.header?.from);
+    console.log("currentHash:", currentHash, "data:", data);
+
+    // Vérifie si le hash commence par #profile
+    if (currentHash.startsWith("#profile")) {
+        const match = currentHash.match(/^#profile\/(\d+)$/);
+        const userId = match ? match[1] : null;
+
+        if (userId) {
+            initProfilePage(userId);
+        } else
+            initProfilePage();
     }
 }
 
