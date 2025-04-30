@@ -61,19 +61,69 @@ class Command(BaseCommand):
         data['header']['dest'] = 'front' # data destination after deep processing
         # print(f"getting {data['body']}")
         # if self.recipient_exists(data['body']['to']):
+        exp = data['header']['id']
+        recipient = data['body']['to']
         try:
-            if await self.is_muted(data['header']['id'], data['body']['to']):
+            if await self.is_muted(exp, recipient):
                 data['body']['message'] = "You have been muted"
+            elif not await self.is_friend(exp, recipient):
+                data['body']['message'] = "You are not friends"
             else:
-                data['body']['from'] = data['header']['id']
-                data['header']['id'] = data['body']['to'] # username OR userID
+                data['body']['from'] = exp
+                data['header']['id'] = recipient
                 del data['body']['to']
-                data['body']['message']
         except Exception as e:
             print(e)
             data['body']['message'] = str(e)
         print(f"Sending back : {data}")
         await self.redis_client.publish(self.group_name, json.dumps(data))
+
+    async def is_friend(self, exp, recipient) -> bool :
+        friends_data = self.get_friend_list(recipient)
+        if not friends_data:
+            return False
+        friends = [item['id'] for item in friends_data]
+        return exp in friends
+
+    def get_friend_list(self, user_id):
+        """ Request friendlist from container 'users' """
+        try:
+            payload = {
+                "service": "chat",
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+            }
+
+            token = jwt.encode(
+                payload,
+                settings.BACKEND_JWT["PRIVATE_KEY"],
+                algorithm=settings.BACKEND_JWT["ALGORITHM"],
+            )
+
+            url = f"https://nginx:8443/api/v1/users/{user_id}/friends/"
+            headers = {"Authorization": f"Service {token}"}
+
+            response = requests.get(
+                url,
+                headers=headers,
+                timeout=10,
+                cert=("/etc/ssl/chat.crt", "/etc/ssl/chat.key"),
+                verify="/etc/ssl/ca.crt"
+            )
+
+            response.raise_for_status()
+            data = response.json()
+
+            return data.get('friends')
+
+        except jwt.exceptions.PyJWTError as e:
+            print(f"JWT Error: {e}")
+            return None
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
+        except ValueError as e:
+            print(f"JSON decode error: {e}")
+            return None
 
     async def is_muted(self, exp, recipient) -> bool :
         """is exp muted by recipient ? Raises an UserNotFoundException if recipient doesnt exist"""
@@ -105,7 +155,6 @@ class Command(BaseCommand):
                 data = response.json()
                 if not isinstance(data, list):
                     raise ValueError("Invalid JSON response")
-                print(f"blocks {data}")
                 if any(d['id'] == exp for d in data):
                     return True
             except requests.exceptions.RequestException as e:
