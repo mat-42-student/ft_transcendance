@@ -422,10 +422,13 @@ class Command(BaseCommand):
             
             
             
-    async def send_1vs1(self, salon, idgame):
+    async def send_1vs1(self, salon, idgame, tournamentId):
         
         for key, player in salon.players.items():
-            await self.start_toFront(key, player, idgame)
+            if (tournamentId is not None):
+                await self.nextRoundTournamentJSON(key, player, idgame, tournamentId)
+            else:
+                await self.start_toFront(key, player, idgame)
         
                 
     def gameSockets_are_already_setup_to_players(self, gameInCache):
@@ -783,7 +786,7 @@ class Command(BaseCommand):
                         
                         game = await self.create_game_sync(None, player1, player2, 'friendly')
                         self.games[salon.type_game].update({game.id: salon})
-                        await self.send_1vs1(salon, game.id)
+                        await self.send_1vs1(salon, game.id, None)
                         self.deleteSalon(salon)
                         return True
                     else:
@@ -854,7 +857,7 @@ class Command(BaseCommand):
             if (idgame is None):
                 return
             else:
-                await self.send_1vs1(salon, idgame)
+                await self.send_1vs1(salon, idgame, None)
                 self.salons[player.type_game].clear()
 
         elif (salon.type_game == 'tournament'and len(self.salons[salon.type_game]) == self.maxPlayersTournament / 2 and self.allSalonsAreFull()):
@@ -876,7 +879,7 @@ class Command(BaseCommand):
                 
                     
                 for key, value in self.games[player.type_game][tournament.id].items():
-                    await self.send_1vs1(value, key)
+                    await self.send_1vs1(value, key, tournament.id)
                 
                 self.salons[player.type_game].clear()
 
@@ -944,7 +947,8 @@ class Command(BaseCommand):
                             print(f'Send nextroundToclient has loose the previous game')
                             if (await self.checkStatus(player, 'online') == False):
                                 print("can't to setup new status")
-                            await self.nextRoundTournamentJSON(playerId, player, None, tournament.id)
+                            if (player.leave_game == False and (player.socketGame_is_online == True or player.socketGame_is_online == None)):
+                                await self.nextRoundTournamentJSON(playerId, player, None, tournament.id)
                     notfound = False
                     break
                 else:
@@ -1030,6 +1034,32 @@ class Command(BaseCommand):
             salonNumber = salonNumber + 1
 
         data['body']['opponents'] = bracket
+        await self.redis_client.publish(self.channel_front, json.dumps(data))
+        
+    async def sendEndTournamentWithBracketJSON(self, id, player, gameid, tournamentId, winnerId):
+        data = {
+            'header':{
+                'service': 'mmaking',
+                'dest': 'front',
+                'id': id,
+            },
+            'body':{
+                'status': 'ingame',
+                'id_game': gameid,
+                player.type_game: True,
+                'cancel': False
+            }
+        }
+        salonNumber = 1
+        bracket = {}
+        for i_gamId, salon in self.games[player.type_game][tournamentId].items():
+            bracket.update({salonNumber: salon.getDictPlayers()})
+            gameDB = await sync_to_async(self.getGame)(i_gamId)
+            bracket[salonNumber].update({'round': gameDB.round})
+            salonNumber = salonNumber + 1
+
+        data['body']['opponents'] = bracket
+        data['body']['winnerId'] = winnerId
         await self.redis_client.publish(self.channel_front, json.dumps(data))
 
     # Send status ingame to Front to start a game with all opponents
@@ -1175,7 +1205,7 @@ class Command(BaseCommand):
         }
         await self.redis_client.publish(self.channel_front, json.dumps(data))
         
-    async def JSON_endgameWinnerTournament(self, id):
+    async def JSON_endgameWinnerTournament(self, id, winnerId):
         data = {
             'header':{
                 'service': 'mmaking',
@@ -1185,7 +1215,7 @@ class Command(BaseCommand):
             'body':{
                 'cancel': False,
                 'tournament': True,
-                'winner': True
+                'winnerId': winnerId
             }
         }
         await self.redis_client.publish(self.channel_front, json.dumps(data))
@@ -1297,6 +1327,8 @@ class Command(BaseCommand):
  
                 del self.games['tournament'][tournament.id]
         elif(game.round >= self.roundMax + 1):
+            if (all_games_of_tournament_are_Finished is not None):
+                self.setScoreSalonsCacheTournament(tournament.id, all_games_of_tournament_are_Finished)
             await self.endGame(game)
             
             # set the winner of tournament !!!!!
@@ -1338,7 +1370,7 @@ class Command(BaseCommand):
             print(f'the last game(s) is(are): {allgamesDB}')
             tournament = await sync_to_async(getattr)(gameDB, 'tournament')
             winnerTournament = await sync_to_async(getattr)(gameDB, 'winner')
-            await self.JSON_endgameWinnerTournament(winnerTournament.id)
+            
             
             for i_game in allgamesDB:
                 gameInCache = self.getGameInCache(i_game.id, tournament.id)
@@ -1346,6 +1378,8 @@ class Command(BaseCommand):
                     if (player.socketGame_is_online == False):
                         await self.JSON_cancelTournament(playerId)
                     else:
+                        if (player.leave_game == False and (player.socketGame_is_online == True or player.socketGame_is_online == True)):
+                            await self.sendEndTournamentWithBracketJSON(playerId, player, None, tournament.id, winnerTournament.id)                            
                         await self.JSON_endgameWithoutError(playerId)
                         
                     if (await self.checkStatus(player, 'online') == False):
