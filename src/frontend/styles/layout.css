@@ -85,7 +85,7 @@ header .container {
     background-color: green; /* vert */
 }
 .user-status.ingame {
-    background-color: darkred; /* orange */
+    background-color: blue; /* orange */
 }
 .user-status.offline {
     background-color: gray; /* gris */

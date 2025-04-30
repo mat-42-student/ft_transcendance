@@ -443,7 +443,11 @@ class RelationshipViewSet(viewsets.ViewSet):
 
     @action(detail=True, methods=['post'], url_path='add-friend')
     def add_friend(self, request, pk=None):
+        """Envoyer une demande d'ami ou accepter automatiquement si l'autre utilisateur a déjà initié une demande."""
         to_user = get_object_or_404(User, id=pk)
+
+        if to_user == request.user:
+            return Response({"detail": "Vous ne pouvez pas vous ajouter vous-même."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Vérification des utilisateurs bloqués
         if to_user in request.user.blocked_users.all():
@@ -451,31 +455,28 @@ class RelationshipViewSet(viewsets.ViewSet):
         if request.user in to_user.blocked_users.all():
             return Response({"detail": "Vous êtes bloqué par cet utilisateur."}, status=status.HTTP_403_FORBIDDEN)
 
-        # Déterminer l'ordre normalisé
-        user1, user2 = sorted([request.user, to_user], key=lambda u: u.id)
+        # Vérifier s’il existe déjà une relation dans un sens ou l’autre
+        relation = Relationship.objects.filter(
+            Q(from_user=request.user, to_user=to_user) |
+            Q(from_user=to_user, to_user=request.user)
+        ).first()
 
-        try:
-            relation = Relationship.objects.get(from_user=user1, to_user=user2)
-        except Relationship.DoesNotExist:
-            relation = Relationship(from_user=user1, to_user=user2)
+        if relation:
+            if relation.status == Relationship.FRIEND:
+                return Response({"detail": "Vous êtes déjà amis."}, status=status.HTTP_400_BAD_REQUEST)
+            elif relation.status == Relationship.PENDING:
+                if relation.from_user == request.user:
+                    return Response({"detail": "Une demande est déjà en attente."}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    # Demande en attente dans l'autre sens → on l’accepte automatiquement
+                    relation.status = Relationship.FRIEND
+                    relation.save()
+                    return Response({"detail": "Demande d'ami acceptée automatiquement."}, status=status.HTTP_200_OK)
 
-        if relation.status == Relationship.FRIEND:
-            return Response({"detail": "Vous êtes déjà amis."}, status=status.HTTP_400_BAD_REQUEST)
-
-        if relation.status == Relationship.PENDING:
-            # Cas d'une demande déjà en attente
-            if relation.from_user == request.user:
-                return Response({"detail": "Une demande est déjà en attente."}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                # Accepter la demande en inversé
-                relation.status = Relationship.FRIEND
-                relation.save()
-                return Response({"detail": "Demande d'ami acceptée automatiquement."}, status=status.HTTP_200_OK)
-
-        # Créer une nouvelle demande
-        relation.status = Relationship.PENDING
-        relation.save()
+        # Aucune relation existante → création d’une demande
+        Relationship.objects.create(from_user=request.user, to_user=to_user, status=Relationship.PENDING)
         return Response({"detail": "Demande d'ami envoyée."}, status=status.HTTP_201_CREATED)
+
 
     @action(detail=True, methods=['post'], url_path='accept-friend')
     def accept_friend(self, request, pk=None):

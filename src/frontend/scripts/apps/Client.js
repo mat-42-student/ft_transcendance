@@ -119,8 +119,7 @@ export class Client{
         const parsedPayload = JSON.parse(decodedPayload);
         this.state.client.userId = parsedPayload.id;
         this.state.client.userName = parsedPayload.username;
-        console.log("is_Oauth?: " + parsedPayload.oauth); // debug
-        this.state.client.isOauth = parsedPayload.oauth ?? false; // mettre bool du status Oauth du user dans accessToken
+        this.state.client.isOauth = parsedPayload.oauth ?? false;
     }
 
     async refreshSession(location = null) {
