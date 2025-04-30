@@ -1,6 +1,6 @@
 FROM nginx:alpine
 
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl jq
 
 # RUN addgroup -S nginxgroup && adduser -S nginxuser -G nginxgroup && \
 #     mkdir -p /etc/nginx/ssl

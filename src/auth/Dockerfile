@@ -18,7 +18,7 @@
 
 FROM django-base
 
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl jq
 
 WORKDIR /app
 

@@ -48,4 +48,3 @@ class JWTAuthentication(BaseAuthentication):
         Returns the value for the `WWW-Authenticate` header in a 401 response.
         """
         return 'Bearer'
-

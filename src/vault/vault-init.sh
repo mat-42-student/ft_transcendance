@@ -126,8 +126,12 @@ vault write pki/config/urls \
 
 # Create PKI role for services
 vault write pki/roles/services \
-    allowed_domains="service.internal" \
+    allowed_domains="local,internal,$(hostname),.local" \
     allow_subdomains=true \
+    allow_localhost=true \
+    allow_ip_sans=true \
+    allow_any_name=true \
+    enforce_hostnames=false \
     max_ttl=720h
 
 vault policy write pki-cert-issuer /vault/config/policies/pki-policy.hcl
@@ -169,9 +173,11 @@ for service in auth users chat social matchmaking pong gateway nginx; do
     max_ttl="24h"
 done
 
-############### ###############
+############### ENABLE APPROLE AUTHENTICATION ###############
 
-for service in auth users chat social matchmaking pong gateway nginx; do
+vault auth enable approle
+
+for service in nginx auth users chat social matchmaking pong gateway; do
   echo "Setting up ${service}-service..."
 
   # Generate a random secret key
@@ -201,13 +207,13 @@ for service in auth users chat social matchmaking pong gateway nginx; do
     -format=json | jq -r '.auth.client_token')
 
   # Store service-specific bootstrap token securely
-  echo "$SERVICE_BOOTSTRAP_TOKEN" | gpg --batch --yes --symmetric --cipher-algo AES256 \
-    --output /vault/file/${service}-bootstrap-token.gpg \
-    --passphrase "${VAULT_SECRET_PASS}"
+  # echo "$SERVICE_BOOTSTRAP_TOKEN" | gpg --batch --yes --symmetric --cipher-algo AES256 \
+  #   --output /vault/file/${service}-bootstrap-token.gpg \
+  #   --passphrase "${VAULT_SECRET_PASS}"
   
-  # Also save it in a plain file for initial container bootstrapping
   echo "$SERVICE_BOOTSTRAP_TOKEN" > /vault/file/${service}-bootstrap-token.txt
   chmod 600 /vault/file/${service}-bootstrap-token.txt
+
   echo "Created service-specific bootstrap token for ${service}-service"
 done
 

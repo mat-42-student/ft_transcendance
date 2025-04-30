@@ -1,6 +1,6 @@
 FROM hashicorp/vault:latest
 
-RUN apk --no-cache add jq curl gpg gpg-agent netcat-openbsd
+RUN apk --no-cache add jq curl gpg gpg-agent netcat-openbsd openssl
 
 RUN mkdir -p /vault/config /vault/file
 

@@ -19,8 +19,10 @@ CHANNEL_LAYERS = {
 }
 
 BACKEND_JWT = {
-    "PUBLIC_KEY": os.getenv("BACKEND_JWT_PUBLIC_KEY"),
-    "PRIVATE_KEY": os.getenv("BACKEND_JWT_PRIVATE_KEY"),
-    "ALGORITHM": "RS256",
     "AUTH_HEADER_PREFIX": "Service",
 }
+
+# Vault settings
+SERVICE_NAME = os.environ.get('SERVICE_NAME', 'chat')
+VAULT_URL = os.environ.get('VAULT_URL', 'http://vault:8200')
+VAULT_BOOTSTRAP_TOKEN = os.environ.get('VAULT_BOOTSTRAP_TOKEN')

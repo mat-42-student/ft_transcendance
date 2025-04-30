@@ -1,7 +1,8 @@
-path "kv/data/pong-service/creds" {
-    capabilities = ["read"]
+path "auth/approle/role/pong-service/role-id" {
+  capabilities = ["read"]
 }
 
-path "sys/internal/ui/mounts/kv/" {
-    capabilities = ["read"]
+path "auth/approle/role/pong-service/secret-id" {
+  capabilities = ["create", "update"]
 }
+

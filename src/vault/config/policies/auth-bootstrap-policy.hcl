@@ -1,7 +1,7 @@
-path "kv/data/auth-service/creds" {
-    capabilities = ["read"]
+path "auth/approle/role/auth-service/role-id" {
+  capabilities = ["read"]
 }
 
-path "sys/internal/ui/mounts/kv/" {
-    capabilities = ["read"]
+path "auth/approle/role/auth-service/secret-id" {
+  capabilities = ["create", "update"]
 }

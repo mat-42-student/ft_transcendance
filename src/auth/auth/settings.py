@@ -1,11 +1,13 @@
 from pathlib import Path
 import os
+import logging
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-r)*s-=2l!4jiwy_qk5xk+s)s9@l*$c8fb@!1k#!@u_nh7(yq=2'
+# SECURITY WARNING: Initial secret key, will be replaced by Vault
+# Using a placeholder that will be overwritten
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'placeholder-that-will-be-replaced-by-vault')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -15,10 +17,23 @@ ALLOWED_HOSTS = ['*']
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# Vault settings
+SERVICE_NAME = os.environ.get('SERVICE_NAME', 'auth')
+VAULT_URL = os.environ.get('VAULT_URL', 'http://vault:8200')
+
+# Database configuration
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'ft_transcendance'),
+        'USER': os.getenv('POSTGRES_USER', 'postgres'),  # Default value until Vault sets it
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),  # Default value until Vault sets it
+        'HOST': os.getenv('POSTGRES_HOST', 'postgres'),
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
+    }
+}
+
 FRONTEND_JWT = {
-    "PUBLIC_KEY": os.getenv("JWT_PUBLIC_KEY"),
-    "PRIVATE_KEY": os.getenv("JWT_PRIVATE_KEY"),
-    "ALGORITHM": "RS256",
     "AUTH_HEADER_PREFIX": "Bearer",
 }
 
@@ -54,10 +69,9 @@ REST_FRAMEWORK = {
     ],
 }
 
-# OAuth 2.0 Authorization Code grant
-OAUTH2_ACF_REDIRECT_URI = 'https://localhost:3000/api/v1/auth/oauth/callback/'
-OAUTH2_ACF_CLIENT_ID = 'u-s4t2ud-e67daca7ed4b4e6fb9397d6f7b1ee0c2cd81dd3dda313a57d17975145ad21738'
-OAUTH2_ACF_CLIENT_SECRET = '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'
+
+OAUTH_REDIRECT_URI = 'https://localhost:3000/api/v1/auth/oauth/callback/'
+
 
 ROOT_URLCONF = 'auth.urls'
 
@@ -79,17 +93,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'auth.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'transcendance',
-        'USER': 'toto',
-        'PASSWORD': 'test',
-        'HOST': 'postgres',
-        'PORT': '5432',
-    }
-}
-
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -100,8 +103,6 @@ CACHES = {
         "KEY_PREFIX": "jwt_refresh_tokens",
     },
 }
-
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -132,14 +133,65 @@ CSRF_TRUSTED_ORIGINS = ['https://localhost:3000']
 AUTH_USER_MODEL = 'authentication.User'
 
 # CORS settings
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:5500",
-#     "http://127.0.0.1:5500",
-# ]
-# CORS_ALLOW_ALL_ORIGINS = True
-
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
+# Initialize logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    handlers=[logging.StreamHandler()]
+)
 
+# Initialize Vault clients after settings are loaded
+# This should be at the end of the file
+import atexit
+
+# Deferred import to avoid circular import issues
+def init_vault():
+    try:
+        # Import Vault modules
+        from auth.utils.vault_client import VaultClient
+        from auth.utils.vault_db import VaultDBManager
+        
+        # Initialize Vault client (uses VAULT_TOKEN from environment)
+        global vault_client
+        vault_client = VaultClient()
+        
+        # Initialize VaultDBManager for dynamic database credentials
+        global db_manager
+        db_manager = VaultDBManager(vault_client)
+        
+        # Get Django secret key from Vault
+        try:
+            config_path = f"{SERVICE_NAME}-service/django-config"
+            config = vault_client.get_kv_secret(config_path)
+            # Update Django settings with the fetched secret key
+            global SECRET_KEY
+            SECRET_KEY = config.get('secret_key', SECRET_KEY)
+            logging.info(f"Initialized Django config from Vault for {SERVICE_NAME}")
+        except Exception as e:
+            logging.warning(f"Could not fetch Django secret key from Vault: {e}")
+            # Continue using the environment variable
+        
+        # Register cleanup function
+        def cleanup():
+            """Clean up resources on shutdown"""
+            if 'db_manager' in globals():
+                try:
+                    logging.info("Cleaning up Vault resources")
+                    db_manager.cleanup()
+                except Exception as e:
+                    logging.error(f"Error during cleanup: {e}")
+                    
+        atexit.register(cleanup)
+        
+        return True
+    except Exception as e:
+        logging.error(f"Failed to initialize Vault integration: {e}")
+        return False
+
+# Initialize Vault if not running in test mode
+if not os.environ.get('DJANGO_RUNNING_TESTS'):
+    init_vault()

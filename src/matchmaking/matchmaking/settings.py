@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-k^yw982$m!331%$9)krnpi=32#-&vgm9qom02)&x+hfnspah09'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', None)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -16,6 +16,12 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 # settings.py
+
+
+# Vault settings
+SERVICE_NAME = os.environ.get('SERVICE_NAME', 'matchmaking')
+VAULT_URL = os.environ.get('VAULT_URL', 'http://vault:8200')
+VAULT_BOOTSTRAP_TOKEN = os.environ.get('VAULT_BOOTSTRAP_TOKEN')
 
 
 # Application definition
@@ -41,9 +47,6 @@ MIDDLEWARE = [
 ]
 
 BACKEND_JWT = {
-    "PUBLIC_KEY": os.getenv("BACKEND_JWT_PUBLIC_KEY"),
-    "PRIVATE_KEY": os.getenv("BACKEND_JWT_PRIVATE_KEY"),
-    "ALGORITHM": "RS256",
     "AUTH_HEADER_PREFIX": "Service",
 }
 

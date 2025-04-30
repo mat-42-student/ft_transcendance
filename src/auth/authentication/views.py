@@ -4,6 +4,7 @@ import requests
 import pyotp
 import qrcode
 import uuid
+import logging
 from io import BytesIO
 import base64
 from qrcode.constants import ERROR_CORRECT_L
@@ -22,82 +23,61 @@ from .models import Ft42Profile
 from .utils import generate_state
 from .utils import revoke_token
 from .utils import is_token_revoked
+from .utils import getStatus
 from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.http import HttpResponse
 from django.core.cache import cache
-import json
-from redis import Redis
-import time
+from auth.utils.vault_client import VaultClient  # Update import path to match your project structure
 
-def getStatus(user_id, channel="auth_social"):
-    """
-    Evaluate if a user is already logged in.
-    """
-    redis = Redis.from_url("redis://redis:6379", decode_responses=True)
 
-    test = 10
-    data = {
-        'user_id': user_id
-    }
-    status = None
-    print(data)  # debug
-    
-    redis.publish(channel, json.dumps(data))
-    
-    while status is None and test >= 0:
-        try:
-            status = redis.get(f'is_{user_id}_logged')
-            print(f'GET status = {status}')  # debug
-            if status is not None:
-                return status
-        except Exception as e:
-            print(f"Error occurred: {str(e)}")
-            return None
-        
-        time.sleep(0.1)
-        test -= 1
-    
-    return None
-class PublicKeyView(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request):
-        public_key = """
-        -----BEGIN PUBLIC KEY-----
-        MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnvGKZgRN72lJMBIMq8MtxHTjK
-        zJV/3WpHj52TiVYhD43Z+Z720BH257gqBni5Vpsph96EhBHmiDqDuJKr1x5KWz1tDG2A8
-        RQszEPfpryTRXZKnv33wMfLo+h9qo6yXvh8BT9It/zk5mNoqugTmH+oBo7qr8emuBFXXo
-        HIPF+AhcCpFoSETuTBe3ufAlT8v2LjKdw/NDzxm3KBd7s/3nA/+euQ97gWB1ZlwHFC9gb
-        0e5zCW6Clh7YCPEQ1OJ/YmzUsowVObQYqrPh0SLuv1qmUqLdFdEYr1wO0jYPiZeDP6Hf8
-        oH2s6dVoczMWvQvqr10xc9TPCefefPNE2lqpH2IrQIDAQAB
-        -----END PUBLIC KEY-----
-        """
-
-        return JsonResponse({'public_key': public_key.strip()}, status=status.HTTP_200_OK)
 class VerifyTokenView(APIView):
     renderer_classes = [JSONRenderer]
-
+    
     def post(self, request):
         auth_header = request.headers.get('Authorization')
-
         if not auth_header or not auth_header.startswith('Bearer '):
             raise AuthenticationFailed('Missing or invalid Authorization header!')
         
         access_token = auth_header.split(' ')[1]
-
-        if (access_token is None):
-           raise AuthenticationFailed('Missing token!')
-
+        if not access_token:
+            raise AuthenticationFailed('Missing token!')
+        
         try:
-            jwt.decode(access_token, settings.FRONTEND_JWT["PUBLIC_KEY"], algorithms=[settings.FRONTEND_JWT["ALGORITHM"]])
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Refresh token expired!')
-        except jwt.InvalidTokenError:
-            raise AuthenticationFailed('Invalid refresh token!')
+            # Get the Vault client - shared instance from settings
+            # This avoids creating a new client for each request
+            if hasattr(settings, 'vault_client') and settings.vault_client:
+                vault_client = settings.vault_client
+            else:
+                # Fallback to creating a new client if needed
+                vault_client = VaultClient()
+            
+            # Get JWT configuration for access tokens
+            access_config = vault_client.get_jwt_config('jwt-config/frontend-access')
+            
+            # Verify token using Vault
+            payload = vault_client.verify_jwt(access_config['key_name'], access_token)
+            
+            if not payload:
+                raise AuthenticationFailed('Invalid token!')
+            
+            # Check if token is expired
+            import time
+            current_time = int(time.time())
+            if payload.get('exp', 0) < current_time:
+                raise AuthenticationFailed('Token expired!')
+            
+            # Check token type
+            if payload.get('typ') != 'access':
+                raise AuthenticationFailed('Invalid token type!')
+            
+            return Response({'success': 'true'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logging.error(f"Token verification error: {str(e)}")
+            raise AuthenticationFailed(f'Token verification failed: {str(e)}')
 
-        return Response({'success': 'true'}, status=status.HTTP_200_OK)
+
 class LoginView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -107,7 +87,7 @@ class LoginView(APIView):
         code = request.data.get('totp')
 
         user = User.objects.filter(email=email).first()
-
+        
         if user is None:
             raise AuthenticationFailed('User not found!')
 
@@ -127,41 +107,70 @@ class LoginView(APIView):
             if not totp.verify(code):
                 raise ValidationError({"error": "invalid_totp"})
 
-        access_payload = {
-            'id': user.id,
-            'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
-            'iat': datetime.datetime.now(datetime.timezone.utc),
-            'jti': str(uuid.uuid4()),
-            'typ': "user"
-        }
+        try:
+            # Get the Vault client - shared instance from settings
+            if hasattr(settings, 'vault_client') and settings.vault_client:
+                vault_client = settings.vault_client
+            else:
+                # Fallback to creating a new client if needed
+                vault_client = VaultClient()
+            
+            # Get JWT configurations from Vault
+            access_config = vault_client.get_jwt_config('jwt-config/frontend-access')
+            refresh_config = vault_client.get_jwt_config('jwt-config/frontend-refresh')
+            
+            # Calculate expiration times based on configured TTL
+            access_ttl_minutes = int(access_config['ttl'].replace('m', ''))
+            refresh_ttl_days = int(refresh_config['ttl'].replace('d', ''))
+            
+            # Create access token payload
+            access_payload = {
+                'id': user.id,
+                'username': user.username,
+                'exp': int((datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=access_ttl_minutes)).timestamp()),
+                'iat': int(datetime.datetime.now(datetime.timezone.utc).timestamp()),
+                'jti': str(uuid.uuid4()),
+                'typ': "access",
+                'iss': access_config['issuer'],
+                'aud': access_config['audience']
+            }
 
-        refresh_payload = {
-            'id': user.id,
-            'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
-            'iat': datetime.datetime.now(datetime.timezone.utc),
-            'jti': str(uuid.uuid4()),
-            'typ': "user"
-        }
+            # Create refresh token payload
+            refresh_payload = {
+                'id': user.id,
+                'username': user.username,
+                'exp': int((datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=refresh_ttl_days)).timestamp()),
+                'iat': int(datetime.datetime.now(datetime.timezone.utc).timestamp()),
+                'jti': str(uuid.uuid4()),
+                'typ': "refresh",
+                'iss': refresh_config['issuer'],
+                'aud': refresh_config['audience']
+            }
 
-        access_token = jwt.encode(access_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
-        refresh_token = jwt.encode(refresh_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
+            # Sign JWTs using Vault
+            access_token = vault_client.sign_jwt(access_config['key_name'], access_payload)
+            refresh_token = vault_client.sign_jwt(refresh_config['key_name'], refresh_payload)
 
-        response = Response()
-        response.set_cookie(
-            key='refreshToken',
-            value=refresh_token, 
-            httponly=True,
-            samesite='Lax',
-            secure=True,
-            path='/'
-        )
-        response.data = {
-            'success': 'true',
-            'accessToken': access_token
-        }
-        return response 
+            response = Response()
+            response.set_cookie(
+                key='refreshToken',
+                value=refresh_token, 
+                httponly=True,
+                samesite='Lax',
+                secure=True,
+                path='/'
+            )
+            response.data = {
+                'success': 'true',
+                'accessToken': access_token
+            }
+            return response
+            
+        except Exception as e:
+            logging.error(f"Login error: {str(e)}")
+            raise AuthenticationFailed(f'Authentication failed: {str(e)}')
+
+
 class RefreshTokenView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -179,61 +188,101 @@ class RefreshTokenView(APIView):
 
         if not old_refresh_token:
             raise AuthenticationFailed('Refresh token missing!')
+        
         try:
-            old_data = jwt.decode(old_refresh_token, settings.FRONTEND_JWT["PUBLIC_KEY"], algorithms=[settings.FRONTEND_JWT["ALGORITHM"]])
-            user = User.objects.filter(id=old_data.get("id")).first()
+            # Get the Vault client - shared instance from settings
+            if hasattr(settings, 'vault_client') and settings.vault_client:
+                vault_client = settings.vault_client
+            else:
+                # Fallback to creating a new client if needed
+                vault_client = VaultClient()
+            
+            # Get JWT configuration from Vault
+            refresh_config = vault_client.get_jwt_config('jwt-config/frontend-refresh')
+            
+            # Verify refresh token using Vault
+            payload = vault_client.verify_jwt(refresh_config['key_name'], old_refresh_token)
+            
+            if not payload:
+                raise AuthenticationFailed('Invalid refresh token!')
+                
+            # Check if token is expired
+            current_time = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+            if payload.get('exp', 0) < current_time:
+                raise AuthenticationFailed('Refresh token expired!')
+                
+            # Check token type
+            if payload.get('typ') != 'refresh':
+                raise AuthenticationFailed('Invalid token type!')
+                
+            # Get user from payload
+            user = User.objects.filter(id=payload.get('id')).first()
             if not user:
                 raise AuthenticationFailed('User not found!')
+                
+            # Revoke old token
+            revoked = revoke_token(old_refresh_token)
+            if revoked:
+                logging.info('Token revoked successfully.')
+            else:
+                logging.warning('Error while revoking the token.')
+                
+            # Get access token configuration
+            access_config = vault_client.get_jwt_config('jwt-config/frontend-access')
+            
+            # Calculate expiration times based on configured TTL
+            access_ttl_minutes = int(access_config['ttl'].replace('m', ''))
+            refresh_ttl_days = int(refresh_config['ttl'].replace('d', ''))
+            
+            # Create new access token payload
+            access_payload = {
+                'id': user.id,
+                'username': user.username,
+                'exp': int((datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=access_ttl_minutes)).timestamp()),
+                'iat': int(datetime.datetime.now(datetime.timezone.utc).timestamp()),
+                'jti': str(uuid.uuid4()),
+                'typ': "access",
+                'iss': access_config['issuer'],
+                'aud': access_config['audience']
+            }
 
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Refresh token expired!')
-        except jwt.InvalidTokenError:
-            raise AuthenticationFailed('Invalid refresh token!')
-        
-        revoked = revoke_token(old_refresh_token)
-        if revoked:
-            print('Token revoked successfuly.')
-        else:
-            print('Error while revoking the token.')  
+            # Create new refresh token payload
+            refresh_payload = {
+                'id': user.id,
+                'username': user.username,
+                'exp': int((datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=refresh_ttl_days)).timestamp()),
+                'iat': int(datetime.datetime.now(datetime.timezone.utc).timestamp()),
+                'jti': str(uuid.uuid4()),
+                'typ': "refresh",
+                'iss': refresh_config['issuer'],
+                'aud': refresh_config['audience']
+            }
 
-        access_payload = {
-            'id': user.id,
-            'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15),
-            'iat': datetime.datetime.now(datetime.timezone.utc),
-            'jti': str(uuid.uuid4()),
-            'typ': "user"
-        }
+            # Sign new JWTs using Vault
+            new_access_token = vault_client.sign_jwt(access_config['key_name'], access_payload)
+            new_refresh_token = vault_client.sign_jwt(refresh_config['key_name'], refresh_payload)
 
-        refresh_payload = {
-            'id': user.id,
-            'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
-            'iat': datetime.datetime.now(datetime.timezone.utc),
-            'jti': str(uuid.uuid4()),
-            'typ': "user"
-        }
-
-        new_access_token = jwt.encode(access_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
-        new_refresh_token = jwt.encode(refresh_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
-
-        response = Response()
-        response.set_cookie(
-            key='refreshToken',
-            value=new_refresh_token,
-            httponly=True,
-            samesite='Lax',
-            secure=True,
-            path='/'
-        )
-        response.data = {
-            'success': 'true',
-            'accessToken': new_access_token
-        }
-        return response 
+            response = Response()
+            response.set_cookie(
+                key='refreshToken',
+                value=new_refresh_token,
+                httponly=True,
+                samesite='Lax',
+                secure=True,
+                path='/'
+            )
+            response.data = {
+                'success': 'true',
+                'accessToken': new_access_token
+            }
+            return response
+            
+        except Exception as e:
+            logging.error(f"Token refresh error: {str(e)}")
+            raise AuthenticationFailed(f'Token refresh failed: {str(e)}')
+    
 class LogoutView(APIView):
     renderer_classes = [JSONRenderer]
-
 
     def post(self, request):
         refresh_token = request.COOKIES.get('refreshToken')
@@ -248,10 +297,8 @@ class LogoutView(APIView):
                 return response
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        # response = Response()
 class Enroll2FAView(APIView):
     renderer_classes = [JSONRenderer]
-
 
     def post(self, request):
         user = request.user
@@ -289,6 +336,7 @@ class Enroll2FAView(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+        
 class Verify2FAView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -307,6 +355,7 @@ class Verify2FAView(APIView):
             return Response({"success": "true", "message": "2FA has been enabled."}, status=200)
         else:
             return Response({"error": "Invalid or expired 2FA code"}, status=401)          
+            
 class Disable2FAView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -315,6 +364,7 @@ class Disable2FAView(APIView):
         user.is_2fa_enabled = False 
         user.save()
         return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK)  
+        
 class OAuthLoginView(APIView):
     permission_classes = [AllowAny]
 
@@ -322,14 +372,15 @@ class OAuthLoginView(APIView):
         state = generate_state()
         request.session['oauth_state'] = state
         params = {
-            'client_id': settings.OAUTH2_ACF_CLIENT_ID,
-            'redirect_uri': settings.OAUTH2_ACF_REDIRECT_URI,
+            'client_id': settings.OAUTH_CLIENT_ID,
+            'redirect_uri': settings.OAUTH_REDIRECT_URI,
             'response_type': 'code',
             'scope': 'public',
             'state': state,
         }
         url = f'https://api.intra.42.fr/oauth/authorize?{urlencode(params)}'
         return redirect(url)
+        
 class OAuthCallbackView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -340,10 +391,10 @@ class OAuthCallbackView(APIView):
 
         token_data = {
             'grant_type': 'authorization_code',
-            'client_id': settings.OAUTH2_ACF_CLIENT_ID,
-            'client_secret': settings.OAUTH2_ACF_CLIENT_SECRET,
+            'client_id': settings.OAUTH_CLIENT_ID,
+            'client_secret': settings.OAUTH_CLIENT_SECRET,
             'code': code,
-            'redirect_uri': settings.OAUTH2_ACF_REDIRECT_URI,
+            'redirect_uri': settings.OAUTH_REDIRECT_URI,
         }
         token_url = 'https://api.intra.42.fr/oauth/token'
         token_response = requests.post(token_url, data=token_data, timeout=10)
@@ -400,16 +451,51 @@ class OAuthCallbackView(APIView):
         ft_profile.email = ft_email
         ft_profile.save()
 
-        refresh_payload = {
-            'id': user.id,
-            'username': user.username,
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
-            'iat': datetime.datetime.now(datetime.timezone.utc),
-            'jti': str(uuid.uuid4()),
-            'typ': "user"
-        }
+        try:
+            # Get the Vault client - shared instance from settings
+            if hasattr(settings, 'vault_client') and settings.vault_client:
+                vault_client = settings.vault_client
+            else:
+                # Fallback to creating a new client if needed
+                vault_client = VaultClient()
+                
+            # Get JWT configurations from Vault
+            refresh_config = vault_client.get_jwt_config('jwt-config/frontend-refresh')
+            
+            # Calculate expiration time based on configured TTL
+            refresh_ttl_days = int(refresh_config['ttl'].replace('d', ''))
+            
+            # Create refresh token payload
+            refresh_payload = {
+                'id': user.id,
+                'username': user.username,
+                'exp': int((datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=refresh_ttl_days)).timestamp()),
+                'iat': int(datetime.datetime.now(datetime.timezone.utc).timestamp()),
+                'jti': str(uuid.uuid4()),
+                'typ': "refresh",
+                'iss': refresh_config['issuer'],
+                'aud': refresh_config['audience']
+            }
 
-        refresh_token = jwt.encode(refresh_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
+            # Sign JWT using Vault
+            refresh_token = vault_client.sign_jwt(refresh_config['key_name'], refresh_payload)
+            
+        except Exception as e:
+            logging.error(f"OAuth JWT creation error: {str(e)}")
+            # Fallback to legacy token creation if Vault is unavailable
+            refresh_payload = {
+                'id': user.id,
+                'username': user.username,
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
+                'iat': datetime.datetime.now(datetime.timezone.utc),
+                'jti': str(uuid.uuid4()),
+                'typ': "user"
+            }
+            refresh_token = jwt.encode(
+                refresh_payload, 
+                settings.FRONTEND_JWT.get("PRIVATE_KEY", "fallback-secret-key"), 
+                algorithm=settings.FRONTEND_JWT.get("ALGORITHM", "HS256")
+            )
 
         html_content = f"""
                 <!DOCTYPE html>
@@ -437,4 +523,4 @@ class OAuthCallbackView(APIView):
             path='/'
         )
 
-        return response  
+        return response

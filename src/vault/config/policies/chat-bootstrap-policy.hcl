@@ -1,7 +1,7 @@
-path "kv/data/chat-service/creds" {
-    capabilities = ["read"]
+path "auth/approle/role/chat-service/role-id" {
+  capabilities = ["read"]
 }
 
-path "sys/internal/ui/mounts/kv/" {
-    capabilities = ["read"]
+path "auth/approle/role/chat-service/secret-id" {
+  capabilities = ["create", "update"]
 }

@@ -1,23 +1,7 @@
-path "auth/token/lookup-self" {
+path "auth/approle/role/nginx-service/role-id" {
   capabilities = ["read"]
 }
 
-path "kv/data/nginx-service/creds" {
-  capabilities = ["read"]
-}
-
-path "sys/internal/ui/mounts/kv/" {
-  capabilities = ["read"]
-}
-
-path "sys/internal/ui/mounts/kv/data/nginx-service/creds" {
-  capabilities = ["read"]
-}
-
-path "kv/nginx-service/creds" {
-  capabilities = ["read"]
-}
-
-path "sys/internal/ui/mounts/*" {
-  capabilities = ["read"]
+path "auth/approle/role/nginx-service/secret-id" {
+  capabilities = ["create", "update"]
 }
