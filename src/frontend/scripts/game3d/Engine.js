@@ -66,7 +66,6 @@ export class Engine {
 				antialias: true,
 				powerPreference: "high-performance",
 			});
-			this.renderer.setAnimationLoop(this.animationLoop.bind(this))
 			this.renderer.toneMapping = THREE.NoToneMapping;
 			this.renderer.toneMappingExposure = 1;
 
@@ -113,6 +112,8 @@ export class Engine {
 		// Debugging tools
 		window.pause = () => { window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS = true; };
 		window.THREE = THREE;
+
+		requestAnimationFrame(this.animationLoop.bind(this));
 	}
 
 
@@ -143,6 +144,8 @@ export class Engine {
 				state.gameApp.close(true);
 			}
 		}
+
+		requestAnimationFrame(this.animationLoop.bind(this));
 	}
 
 
