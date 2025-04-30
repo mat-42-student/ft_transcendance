@@ -155,9 +155,15 @@ export class Mmaking
 			if (this.salonHost == false && (this.salonInvite == false && this.salonLoad == false && this.SearchRandomGame == false))
 				closeDynamicCard();
 			if (this.salonLoad == true)
+			{
 				await initDynamicCard('load');
+				document.getElementById('close-dynamic-card').style.display = 'none';
+			}
 			else if(this.salonInvite == true && value == true)
+			{
 				await initDynamicCard('salonGuest');
+				document.getElementById('close-dynamic-card').style.display = 'none';
+			}
 
 			const btnHost = document.querySelector(`.btn-match-${key}`);
 			const btnMatchPicture = document.getElementById(`btn-match-picture-${key}`);
@@ -716,6 +722,6 @@ export class Mmaking
         document.getElementById("opponent-name").textContent = name;
         document.getElementById("opponent-photo").src = picture;
 		document.getElementById("random-loader").style.display = "none";
-		document.getElementById('close-dynamic-card').style.display = 'none'
+
     }
 }
