@@ -132,11 +132,8 @@ export class Client{
                 method: 'POST',
                 credentials: 'include'
             });
-            if (!response.ok) {
-                // console.log('request error!');
-                // localStorage.removeItem('cookieSet'); // modfis ajoutées après merge
+            if (!response.ok)
                 throw new Error("Could not refresh token");
-            }
             const data = await response.json();
             localStorage.setItem('cookieSet', true);
             try {

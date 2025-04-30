@@ -120,7 +120,62 @@ function validatePassword(password) {
     
     // If all checks pass
     return null;
-  }
+}
+
+function isValidEmail(email) {
+    // Basic regex for email validation
+    // This checks for:
+    // - One or more characters before the @ symbol
+    // - The @ symbol
+    // - One or more characters for the domain name
+    // - A dot followed by a top-level domain of 2-63 characters
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,63}$/;
+    
+    // Check if email is defined and is a string
+    if (!email || typeof email !== 'string') {
+      return false;
+    }
+    
+    // Trim the email string to remove any leading/trailing whitespace
+    const trimmedEmail = email.trim();
+    
+    // Check if the trimmed email is empty
+    if (trimmedEmail.length === 0) {
+      return false;
+    }
+    
+    // Test the email against the regex pattern
+    return emailRegex.test(trimmedEmail);
+}
+
+function validateEmail(email) {
+    // Check for minimum length
+    if (email.length < 5) {
+        return "Email must be at least 5 characters long.";
+    }
+    
+    // Check for maximum length
+    if (email.length > 100) {
+        return "Email too long.";
+    }
+
+    if (!isValidEmail(email)) {
+        return "Enter a valid email address."
+    }
+}
+
+function validateUsername(username) {
+    // Check for minimum length
+    if (username.length < 2) {
+        return "Username must be at least 5 characters long.";
+    }
+    
+    // Check for maximum length
+    if (username.length > 50) {
+        return "Username too long.";
+    }
+}
+
 
 // Handle API requests for login/registration
 export async function handleAuthSubmit(event) {
@@ -129,6 +184,20 @@ export async function handleAuthSubmit(event) {
 
     const { username, email, password, confirm_password, hash } = getAuthFormData();
 
+    // Validate username requirements
+    const usernameError = validateUsername(username);
+    if (hash === '#register' && usernameError) {
+        displayErrorMessage(usernameError);
+        return;
+    }
+    
+    // Validate email requirements
+    const emailError = validateEmail(email);
+    if (hash === '#register' && emailError) {
+        displayErrorMessage(emailError);
+        return;
+    }
+    
     // Password validation for registration
     if (hash === '#register' && password !== confirm_password) {
         displayErrorMessage("Passwords don't match");
@@ -136,31 +205,22 @@ export async function handleAuthSubmit(event) {
     }
 
     // Validate password requirements
-    // const passwordError = validatePassword(password);
-    // if (passwordError) {
-    //     displayErrorMessage(passwordError);
-    //     return;
-    // }
-    
-    if (email.length < 5) {
-        displayErrorMessage("Email must be at least 5 characters long.");
-    } else if (username.length < 2) {
-        displayErrorMessage("Username must be at least 2 characters long.");
-    } else if (email.length > 100) {
-        displayErrorMessage("Email too long.");
-    } else if (username.length > 50) {
-        displayErrorMessage("Username too long.");
+    const passwordError = validatePassword(password);
+    if (hash === '#register' && passwordError) {
+        displayErrorMessage(passwordError);
+        return;
     }
 
     const { apiUrl, payload } = getApiUrlAndPayload(hash, username, email, password, confirm_password);
 
     if (!apiUrl) {
-        console.error('Unknown action for authentication form.');
+        displayErrorMessage('Invalid authentication action.');
         return;
     }
 
     try {
         const response = await sendAuthRequest(apiUrl, payload);
+
         if (response.ok) {
             const data = await response.json();
             await handleAuthResponse(data);
@@ -168,7 +228,8 @@ export async function handleAuthSubmit(event) {
             await handleAuthError(response);
         }
     } catch (error) {
-        console.error('API request error:', error);
+        console.error('Authentication error:', error.message || 'Unknown error');
+        return { success: false, message: 'Authentication failed' };
     }
 }
 
@@ -204,6 +265,8 @@ async function sendAuthRequest(apiUrl, payload) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        // Add credentials if you're using cookies for auth
+        credentials: 'same-origin'
     });
 }
 
@@ -214,26 +277,41 @@ async function handleAuthResponse(data) {
         window.location.hash = '#profile';
         closeDynamicCard();
     } catch (error) {
-        console.error('Error processing authentication response:', error);
+        displayErrorMessage("Error during login. Please try again.");
+        return { success: false };
     }
 }
-
-// Handle authentication errors (2FA/user errors)
+// Handle backend authentication errors
 async function handleAuthError(response) {
-    const errorData = await response.json();
-    
-    if (errorData.error === '2fa_required') {
-        handle2FA(response);
-    } else if (errorData.detail === 'User not found!' || errorData.detail === 'Incorrect password') {
-        displayErrorMessage("Incorrect username or password.");
-    } else if (errorData.error === 'User already logged in') {
-        displayErrorMessage("User already logged in.");
-    } else {
-        if (errorData.username || errorData.email) {
-            displayErrorMessage("Username or email already taken.");
-        } else {
-            console.error('API Error:', errorData);
+    try {
+        if (response.status === 0) {
+            displayErrorMessage("Network error. Please check your connection and try again.");
+            return { success: false };
         }
+
+        const errorData = await response.json();
+        
+        if (errorData.error === '2fa_required') {
+            handle2FA(response);
+        } else if (errorData.detail === 'User not found!' || errorData.detail === 'Incorrect password') {
+            displayErrorMessage("Incorrect username or password.");
+        } else if (errorData.error === 'User already logged in') {
+            displayErrorMessage("User already logged in.");
+        } else if (errorData.username || errorData.email) {
+            if (errorData.email && errorData.email.length > 0) {
+            displayErrorMessage(`Email: ${errorData.email[0]}`);
+            }
+            if (errorData.username && errorData.username.length > 0) {
+            displayErrorMessage(`Username: ${errorData.username[0]}`);
+            }
+        } else {
+            displayErrorMessage("Authentication failed. Please try again.");
+        }
+        
+        return { success: false, error: errorData };
+    } catch (error) {
+      displayErrorMessage("Authentication failed. Please try again.");
+      return { success: false, error: { message: response.statusText || "Unknown error" } };
     }
 }
 
