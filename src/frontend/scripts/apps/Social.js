@@ -1,9 +1,7 @@
 import { state } from '../main.js';
 import { navigator } from '../nav.js';
-import { initProfilePage } from '../pages.js';
 import { updatePendingCountDisplay } from '../components/friend_requests.js';
 import { fetchFriends, fetchPendingCount, fetchReceivedRequests, fetchSentRequests, modifyRelationship } from '../api/users.js';
-import { ft_fetch } from '../main.js';
 
 export class SocialApp{
 
@@ -229,7 +227,6 @@ export class SocialApp{
     }
 
     async notifyUser(userId) {
-        // console.log("Notifying user", userId);
         let data = {
             "header": {
                 "service": "social",

@@ -154,7 +154,7 @@ class Command(BaseCommand):
         try:
             payload = {
                 "service": "social",
-                "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=120),
             }
             
             token = jwt.encode(

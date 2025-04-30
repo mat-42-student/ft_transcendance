@@ -5,14 +5,12 @@ const apiBase = '/api/v1/users';
 
 export async function apiRequest(endpoint, method = 'GET', body = null) {
     if (!state.client.accessToken) {
-        console.error("User is not connected");
+        // console.error("User is not connected");
         return;
     }
     try {
-        const headers = {
-            'Authorization': `Bearer ${state.client.accessToken}`,
-        };
-
+        const headers = {};
+            // 'Authorization': `Bearer ${state.client.accessToken}`,
         // Ajouter l'en-tête Content-Type uniquement si ce n'est pas un FormData
         if (!(body instanceof FormData)) {
             headers['Content-Type'] = 'application/json';
@@ -124,6 +122,7 @@ export async function performUserAction(userId, action) {
 
         if (action === "add-friend")
             await state.socialApp.notifyUser(userId);
+            await state.socialApp.notifyUser(state.client.userId);
         if (action === 'remove-friend') {
             await state.socialApp.notifyUser(userId);
             await state.socialApp.notifyUser(state.client.userId);

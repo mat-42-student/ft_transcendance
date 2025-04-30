@@ -1,4 +1,5 @@
 import { state } from "../main.js";
+import { closeDynamicCard } from "./dynamic_card.js";
 
 export function updatePendingCountDisplay() {
     const pendingBadge = document.getElementById('pending-count');
@@ -62,18 +63,30 @@ function createElement(tag, className, attributes = {}, innerHTML = '', eventHan
 
 // Accepter une demande d'ami et mettre à jour la liste
 async function acceptFriendRequest(userId, listItem) {
-    await state.socialApp.acceptFriendRequest(userId);  // Fonction de la logique de backend pour accepter
-    listItem.remove();  // Retirer l'élément de la liste
+    await state.socialApp.acceptFriendRequest(userId);
+    listItem.remove();
     state.socialApp.notifyUser(userId);
     state.socialApp.notifyUser(state.client.userId);
+
+    // Fermer la carte s'il n'y a plus d'autres requêtes
+    checkIfNoPendingRequests();
 }
 
 // Refuser une demande d'ami et mettre à jour la liste
 async function rejectFriendRequest(userId, listItem) {
-    await state.socialApp.rejectFriendRequest(userId);  // Fonction de la logique de backend pour refuser
-    listItem.remove();  // Retirer l'élément de la liste
-    // console.log("Demande d'ami refusée pour l'utilisateur:", userId);
+    await state.socialApp.rejectFriendRequest(userId);
+    listItem.remove();
     state.socialApp.notifyUser(userId);
     state.socialApp.notifyUser(state.client.userId);
-    // state.socialApp.getPendingCount();
+
+    // Fermer la carte s'il n'y a plus d'autres requêtes
+    checkIfNoPendingRequests();
+}
+
+// Fonction utilitaire pour fermer la carte si aucune requête restante
+function checkIfNoPendingRequests() {
+    const container = document.getElementById('requests-list');
+    if (container && container.children.length === 0) {
+        closeDynamicCard();
+    }
 }

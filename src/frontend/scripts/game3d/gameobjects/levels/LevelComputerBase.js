@@ -162,9 +162,9 @@ export default class LevelComputerBase extends LevelBase {
 		const screenMaterial = UTILS.findMaterialInHierarchy(this, "Screen");
 		if (!(screenMaterial instanceof THREE.MeshStandardMaterial))  throw Error("screen't");
 
-		if (this === window.idleLevel) {
+		if (this === state.levelLoadingTempStorage) {
 			state.engine.scene = this;
-			window.idleLevel = null;
+			state.levelLoadingTempStorage = null;
 		} else {
 			state.engine.scene = this;
 		}

@@ -163,7 +163,7 @@ class Command(BaseCommand):
                 "jti": str(uuid.uuid4()),
                 "typ": "service",
                 "iss": "internal-services",
-                "aud": "internal-api"
+                "aud": "internal-api",
             }
             
             # Get service JWT configuration
@@ -195,7 +195,6 @@ class Command(BaseCommand):
         except ValueError as e:
             print(f"JSON decode error: {e}")
             return None
-
 
     # def recipient_exists(self, user):
     #     """Does user exist ?"""

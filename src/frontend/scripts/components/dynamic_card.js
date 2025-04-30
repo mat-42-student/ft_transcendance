@@ -6,6 +6,7 @@ import { createRequestItem } from './friend_requests.js';
 import { navigator as appNavigator } from '../nav.js';
 import { updateProfile } from '../api/users.js';
 import { initProfilePage } from '../pages.js';
+import { showErrorMessage } from '../utils.js';
 
 const dynamicCardRoutes = {
     'auth': './partials/cards/auth.html',
@@ -21,13 +22,6 @@ const dynamicCardRoutes = {
 	'tournament': './partials/cards/tournament.html',
     'update': './partials/cards/update_profile.html',
 };
-
-const closeDynamicCardHidden = [
-    'salonHost',
-    'salonGuest',
-    'load',
-    'versus'
-]
 
 const cardInitializers = {
     '2fa': () => {
@@ -56,11 +50,14 @@ const cardInitializers = {
         const requestList = document.getElementById('requests-list');
         if (!requestList) return;
 
+        if (!(await state.client.isAuthenticated())) {
+            showErrorMessage("Vous devez vous connecter pour accéder à cette fonctionnalité");
+            return closeDynamicCard();
+        }
+
         try {
-            if (!state.socialApp) {
-                console.error("state.socialApp is not initialized");
-                return;
-            }
+            if (!state.socialApp)
+                throw error
 
             await state.socialApp.getReceivedRequests();
             requestList.innerHTML = '';
@@ -76,7 +73,8 @@ const cardInitializers = {
                 }
             }
         } catch (error) {
-            console.error("Error loading friend requests:", error);
+            showErrorMessage("SocialApp is not initialized.");
+            closeDynamicCard();
         }
     },
     'update': async () => {
@@ -128,22 +126,22 @@ const cardInitializers = {
     },
     // Add other specific initializations here
 };
+
 export async function initDynamicCard(routeKey) {
     const cardContainer = document.getElementById('dynamic-card-container');
     const cardContent = document.getElementById('dynamic-card-content');
     const cancelButton = document.getElementById('close-dynamic-card');
 
-    if (!dynamicCardRoutes[routeKey]) {
-        console.error(`Aucune route trouvée pour la clé : ${routeKey}`);
-        return;
-    }
+    if (!dynamicCardRoutes[routeKey])
+        return showErrorMessage(`Aucune route trouvée pour la clé '${routeKey}'`);
 
     if (cancelButton.style.display === 'none')
         cancelButton.style.display = 'inline';
 
     try {
         const response = await ft_fetch(dynamicCardRoutes[routeKey]);
-        if (!response.ok) throw new Error(`Impossible de charger : ${dynamicCardRoutes[routeKey]}`);
+        if (!response.ok)
+            throw error;
 
         cardContent.innerHTML = await response.text();
         cardContainer.classList.remove('hidden');
@@ -152,7 +150,8 @@ export async function initDynamicCard(routeKey) {
             await cardInitializers[routeKey]();
         }
     } catch (error) {
-        console.error("Erreur lors du chargement de la carte dynamique :", error);
+        showErrorMessage("Erreur lors du chargement de la carte dynamique");
+        closeDynamicCard();
     }
 }
 
@@ -160,7 +159,7 @@ export function closeDynamicCard() {
     const cardContainer = document.getElementById('dynamic-card-container');
     if (cardContainer)
         cardContainer.classList.add('hidden');
-    window.history.replaceState({}, '', `#home`);
+    // window.history.replaceState({}, '', `#home`);
 }
 
 function displayErrorMessage(message) {

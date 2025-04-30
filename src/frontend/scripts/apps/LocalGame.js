@@ -231,7 +231,7 @@ export class LocalGame extends GameBase {
         let bounces = 0;
         for (; true; bounces++) {
             if (bounces > 2) {
-                console.error(`Bounced ${bounces} times in a single frame, game appears to be lagging.`);
+                // console.error(`Bounced ${bounces} times in a single frame, game appears to be lagging.`);
             }
 
             let collisionAxis = null;
@@ -272,9 +272,9 @@ export class LocalGame extends GameBase {
                         1
                     );
 
-                    const error = Math.round(Math.abs(hitPosition) * 100);
-                    if (this.isCPU && collisionSide == 1 && error > (window.CPU_INACCURACY*100 + 5))
-                        console.warn('Bot accuracy low:', error, '% error.');
+                    // const error = Math.round(Math.abs(hitPosition) * 100);
+                    // if (this.isCPU && collisionSide == 1 && error > (window.CPU_INACCURACY*100 + 5))
+                    //     console.warn('Bot accuracy low:', error, '% error.');
 
                     let angle = this.ballDirection.angle();
                     if (angle > UTILS.RAD180) {
@@ -321,12 +321,12 @@ export class LocalGame extends GameBase {
             this.ballDirection[collisionAxis] *= -1;
         }
 
-        if (bounces >= 2) {
-            console.warn(
-    `Ball bounced ${bounces} times in a single frame, which is unusual.
-    Did the game freeze long enough for the ball to travel to multiple borders?`
-            );
-        }
+    //     if (bounces >= 2) {
+    //         console.warn(
+    // `Ball bounced ${bounces} times in a single frame, which is unusual.
+    // Did the game freeze long enough for the ball to travel to multiple borders?`
+    //         );
+    //     }
     }
 
     scoreup(side) {

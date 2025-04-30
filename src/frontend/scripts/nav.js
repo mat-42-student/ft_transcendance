@@ -55,13 +55,22 @@ class Navigator {
         const isAuth = await state.client.isAuthenticated();
     
         if (hash === '#register' || hash === '#signin') {
-            if (isAuth) return this.goToPage('profile');
-            if (this.cardContainer.classList.contains('hidden')) initDynamicCard('auth');
-            return updateAuthForm(hash);
+            if (isAuth)
+                return this.goToPage('profile');
+            if (this.cardContainer.classList.contains('hidden')) {
+                // Charge dynamiquement la carte auth ; le updateAuthForm est géré dans le cardInitializer
+                return initDynamicCard('auth');
+            } else {
+                // La carte est déjà affichée, donc on peut mettre à jour directement
+                return updateAuthForm(hash);
+            }
         }
     
         if (!this.cardContainer.classList.contains('hidden'))
             closeDynamicCard();
+
+		if(state.mmakingApp != null)
+			await state.mmakingApp.cancelGame_with_pending_status();
     
         // Parsing du hash
         const hashMatch = hash.match(/^#(\w+)(?:\/(\d+))?$/);
