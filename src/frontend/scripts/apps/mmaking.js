@@ -519,16 +519,16 @@ export class Mmaking
 						{
 							winnerContainer.innerHTML = `Of course, the biggest loser is you! 💩`
 						}
+						card_of_bracket.appendChild(winnerContainer)
+						return 
 					}
 					else if (player.user_id == this.winnerId_of_tournament)
 					{
-						{
-							winnerContainer.innerHTML = `The Winner of tournament is ${player.username} 👑`
-
-						}
+						winnerContainer.innerHTML = `The Winner of tournament is ${player.username} 👑`
+						card_of_bracket.appendChild(winnerContainer)
+						return 
 					}
-					card_of_bracket.appendChild(winnerContainer)
-					return 
+
 				}
 
 

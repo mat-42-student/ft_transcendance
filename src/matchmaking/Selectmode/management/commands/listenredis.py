@@ -1319,22 +1319,25 @@ class Command(BaseCommand):
             if (round <= self.roundMax + 1):
                 await self.sendNextRoundToClient(all_games_of_tournament_are_Finished)
             elif (round > self.roundMax + 1): # if 2 player quit the same game, i come here 
-                await self.endGame(game)
-
                 # set winner of tournament
                 player = await sync_to_async(getattr)(game, 'winner')
                 await sync_to_async(self.setTournament_winner_db)(tournament.id, player.id)
+                await self.endGame(game)
+
+
  
                 del self.games['tournament'][tournament.id]
         elif(game.round >= self.roundMax + 1):
+            # set the winner of tournament !!!!!
+
+            
             if (all_games_of_tournament_are_Finished is not None):
                 self.setScoreSalonsCacheTournament(tournament.id, all_games_of_tournament_are_Finished)
-            await self.endGame(game)
             
-            # set the winner of tournament !!!!!
             player = await sync_to_async(getattr)(game, 'winner')
             await sync_to_async(self.setTournament_winner_db)(tournament.id, player.id)
-
+                
+            await self.endGame(game)
             try:
                 if (self.games['tournament'][tournament.id][game.id]):
                     del self.games['tournament'][tournament.id]
