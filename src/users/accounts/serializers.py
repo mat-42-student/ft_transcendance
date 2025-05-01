@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from django.contrib.auth.hashers import check_password
+from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.core.exceptions import ValidationError
 
@@ -147,19 +148,24 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Le fichier de l'avatar doit être une image valide.")
         
         return avatar
+    
+    @staticmethod
+    def get_file_extension(filename):
+        return filename.split('.')[-1].lower()
         
     def update(self, instance, validated_data):
         validated_data.pop('password', None)
         validated_data.pop('confirm_password', None)
+        new_avatar = validated_data.pop('avatar', None)
 
-        # Suppression de l'ancien fichier avatar si un nouvel avatar est uploadé ??? -> voir si problème avec `default.png` réglé
-        # Gestion du nouvel avatar
-        new_avatar = validated_data.get('avatar', None)
         if new_avatar is not None:
-            if instance.avatar.name != 'default.png':
-                if default_storage.exists(instance.avatar.path):  # Vérifie si le fichier existe
-                    default_storage.delete(instance.avatar.path)  # Supprime le fichier
-            instance.avatar = new_avatar
+            if instance.avatar.name != 'default.png' and default_storage.exists(instance.avatar.path):
+                default_storage.delete(instance.avatar.path)
+
+            ext = self.get_file_extension(new_avatar.name)
+            new_filename = f"avatars/user{instance.id:02d}.{ext}"
+            new_avatar.name = new_filename  # renomme simplement
+            instance.avatar = new_avatar    # affecte directement à l'instance
         
         # Gestion du nouveau mot de passe
         new_password = validated_data.pop('new_password', None)

@@ -17,19 +17,38 @@ export function resetPendingCountDisplay() {
     }
 }
 
-// Création de l'élément <li> pour chaque utilisateur
 export async function createRequestItem(user) {
     const listItem = createElement('li', 'request-item');
 
-    // Créer l'avatar
-    const avatar = createElement('img', 'avatar', { src: `/media/avatars/${user.avatar}`, alt: `${user.username}'s avatar` });
+    // Déterminer le bon chemin pour l'avatar
+    const avatarPath = (user.avatar === 'default.png')
+        ? `/media/${user.avatar}`
+        : `/media/avatars/${user.avatar}`;
+
+    // Créer l'avatar avec le bon chemin
+    const avatar = createElement('img', 'avatar', {
+        src: avatarPath,
+        alt: `${user.username}'s avatar`
+    });
 
     // Créer le nom d'utilisateur
     const username = createElement('span', 'username', {}, user.username);
 
     // Créer les boutons Accepter et Refuser
-    const acceptButton = createElement('button', 'accept-btn', {}, 'Accepter', { click: () => acceptFriendRequest(user.id, listItem) });
-    const rejectButton = createElement('button', 'reject-btn', {}, 'Refuser', { click: () => rejectFriendRequest(user.id, listItem) });
+    const acceptButton = createElement(
+        'button',
+        'accept-btn',
+        {},
+        'Accepter',
+        { click: () => acceptFriendRequest(user.id, listItem) }
+    );
+    const rejectButton = createElement(
+        'button',
+        'reject-btn',
+        {},
+        'Refuser',
+        { click: () => rejectFriendRequest(user.id, listItem) }
+    );
 
     // Ajouter les éléments à listItem
     listItem.appendChild(avatar);
