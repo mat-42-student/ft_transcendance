@@ -160,7 +160,6 @@ function setupSearchInput() {
 window.addEventListener('unload', function() {
     state.mainSocket?.close();
     state.gameApp?.close();
-    state.engine.scene = null;
 });
 
 export async function ft_fetch(url, options = {}) {
@@ -206,6 +205,7 @@ export function deleteCookie(name, path = '/') {
 const buttonQuit = document.getElementById('btn-quit-game');
 const buttonLocalBot = document.getElementById('btn-local-bot');
 const buttonLocalVersus = document.getElementById('btn-local-versus');
+const buttonLocalSisyphus = document.getElementById('btn-local-sisyphus');
 const buttonVersus = document.getElementById('versus');
 const buttonTournament = document.getElementsByClassName('btn-tournament')[0];
 
@@ -226,7 +226,7 @@ selectVisibleHeader(false);  // hide quit button for the first time
 buttonLocalBot.addEventListener('click', async () => {
     if (state.gameApp == null) {
         await navigator.goToPage('');
-        state.gameApp = new LocalGame(true);
+        state.gameApp = new LocalGame(true, false);
     }
     selectVisibleHeader(true);
 });
@@ -234,7 +234,15 @@ buttonLocalBot.addEventListener('click', async () => {
 buttonLocalVersus.addEventListener('click', async () => {
     if (state.gameApp == null) {
         await navigator.goToPage('');
-        state.gameApp = new LocalGame(false);
+        state.gameApp = new LocalGame(false, false);
+    }
+    selectVisibleHeader(true);
+});
+
+buttonLocalSisyphus.addEventListener('click', async () => {
+    if (state.gameApp == null) {
+        await navigator.goToPage('');
+        state.gameApp = new LocalGame(true, true);
     }
     selectVisibleHeader(true);
 });
