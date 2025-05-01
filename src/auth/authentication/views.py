@@ -133,7 +133,8 @@ class LoginView(APIView):
                 'typ': "access",
                 'iss': access_config['issuer'],
                 'aud': access_config['audience'],
-                'oauth': False
+                'oauth': False,
+                'avatar': user.avatar.url if user.avatar else None
             }
 
             # Create refresh token payload
@@ -146,22 +147,36 @@ class LoginView(APIView):
                 'typ': "refresh",
                 'iss': refresh_config['issuer'],
                 'aud': refresh_config['audience'],
-                'oauth': False
+                'oauth': False,
+                'avatar': user.avatar.url if user.avatar else None
+            }
+
+            witness_payload = {
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
             }
 
             # Sign JWTs using Vault
             access_token = vault_client.sign_jwt(access_config['key_name'], access_payload)
             refresh_token = vault_client.sign_jwt(refresh_config['key_name'], refresh_payload)
+            witness_token = vault_client.sign_jwt(access_config['key_name'], witness_payload)
 
             response = Response()
             response.set_cookie(
                 key='refreshToken',
-                value=refresh_token, 
+                value=refresh_token,
+                expires=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
                 httponly=True,
                 samesite='Lax',
                 secure=True,
                 path='/'
             )
+
+            response.set_cookie(
+                key='witnessToken',
+                value=witness_token, 
+                expires=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
+            )
+
             response.data = {
                 'success': 'true',
                 'accessToken': access_token
@@ -246,7 +261,8 @@ class RefreshTokenView(APIView):
                 'typ': "access",
                 'iss': access_config['issuer'],
                 'aud': access_config['audience'],
-                'oauth': True if isOauth else False
+                'oauth': True if isOauth else False,
+                'avatar': user.avatar.url if user.avatar else None
             }
 
             # Create new refresh token payload
@@ -259,22 +275,36 @@ class RefreshTokenView(APIView):
                 'typ': "refresh",
                 'iss': refresh_config['issuer'],
                 'aud': refresh_config['audience'],
-                'oauth': True if isOauth else False
+                'oauth': True if isOauth else False,
+                'avatar': user.avatar.url if user.avatar else None
+            }
+
+            witness_payload = {
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
             }
 
             # Sign new JWTs using Vault
             new_access_token = vault_client.sign_jwt(access_config['key_name'], access_payload)
             new_refresh_token = vault_client.sign_jwt(refresh_config['key_name'], refresh_payload)
+            witness_token = vault_client.sign_jwt(access_config['key_name'], witness_payload)
 
             response = Response()
             response.set_cookie(
                 key='refreshToken',
                 value=new_refresh_token,
+                expires=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
                 httponly=True,
                 samesite='Lax',
                 secure=True,
                 path='/'
             )
+
+            response.set_cookie(
+                key='witnessToken',
+                value=witness_token, 
+                expires=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
+            )
+
             response.data = {
                 'success': 'true',
                 'accessToken': new_access_token
@@ -479,11 +509,17 @@ class OAuthCallbackView(APIView):
                 'typ': "refresh",
                 'iss': refresh_config['issuer'],
                 'aud': refresh_config['audience'],
-                'oauth': True
+                'oauth': True,
+                'avatar': user.avatar.url if user.avatar else None
+            }
+
+            witness_payload = {
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
             }
 
             # Sign JWT using Vault
             refresh_token = vault_client.sign_jwt(refresh_config['key_name'], refresh_payload)
+            witness_token = vault_client.sign_jwt(refresh_config['key_name'], witness_payload)
             
         except Exception as e:
             logging.error(f"OAuth JWT creation error: {str(e)}")
@@ -521,11 +557,18 @@ class OAuthCallbackView(APIView):
 
         response.set_cookie(
             key='refreshToken',
-            value=refresh_token, 
+            value=refresh_token,
+            expires=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
             httponly=True,
             samesite='Lax',
             secure=True,
             path='/'
+        )
+
+        response.set_cookie(
+            key='witnessToken',
+            value=witness_token, 
+            expires=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
         )
 
         return response

@@ -111,6 +111,7 @@ export class ChatApp{
         myDiv.className = "chat-message error-message";
         myDiv.textContent = "Error: " + data.body.message;
         this.chatBody.appendChild(myDiv);
+        this.scrollToBottom();
     }
 
     postFriendMessage(data){
@@ -118,6 +119,7 @@ export class ChatApp{
         myDiv.className = "chat-message friend-message";
         myDiv.textContent = data;
         this.chatBody.appendChild(myDiv);
+        this.scrollToBottom();
     }
 
     postMyMessage(msg) {
@@ -125,8 +127,13 @@ export class ChatApp{
         myDiv.className = "chat-message user-message";
         myDiv.textContent = msg;
         this.chatBody.appendChild(myDiv);
+        this.scrollToBottom();
     }
 
+    scrollToBottom() {
+        this.chatBody.scrollTop = this.chatBody.scrollHeight;
+    }
+    
     async changeChatUser(friendId){
         friendId = Number(friendId);
         if(friendId === this.activeChatUserId)
@@ -165,7 +172,7 @@ export class ChatApp{
         const friend = state.socialApp.getFriend(this.activeChatUserId);
         if (!friend)
             return;
-        this.chatUser.innerText = friend.username + '(' + this.activeChatUserId + ')';
+        this.chatUser.innerText = friend.username;
         this.noUnreadMessage();
         this.loadHistory();
         this.chatInput.disabled = false;

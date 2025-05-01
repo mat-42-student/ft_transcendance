@@ -7,6 +7,13 @@ import { Engine } from './game3d/Engine.js';
 import LevelIdle from './game3d/gameobjects/levels/idle/LevelIdle.js';
 import { LocalGame } from './apps/LocalGame.js';
 
+// Optionally can be enabled for debugging
+// if (!localStorage.getItem("keepLogs")) {
+//     console.log = () => {};
+//     console.warn = () => {};
+//     console.error = () => {};
+// }
+
 export const state = {
     client: new Client(),
     mainSocket: null,
@@ -46,7 +53,7 @@ async function initApp() {
 }
 
 function setupEventListeners() {
-    addClickEvent('btn-home', () => navigator.goToPage('home'));
+    addClickEvent('btn-home', () => navigator.goToPage(''));
     addClickEvent('btn-profile', handleProfileClick);
     addClickEvent('close-dynamic-card', closeDynamicCard);
     addClickEvent('.btn-friend-requests', () => initDynamicCard('requests'));
@@ -150,10 +157,9 @@ function setupSearchInput() {
 }
 
 // page unload
-window.addEventListener('beforeunload', function() {
+window.addEventListener('unload', function() {
     state.mainSocket?.close();
     state.gameApp?.close();
-    state.engine.scene = null;
 });
 
 export async function ft_fetch(url, options = {}) {
@@ -184,6 +190,15 @@ export function delay(n) {
     return new Promise(resolve => setTimeout(resolve, n * 1000));
 }
 
+export function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+export function deleteCookie(name, path = '/') {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${path}`;
+}
 
 // --⬇️-- Header play buttons --⬇️--
 
@@ -193,34 +208,61 @@ const buttonLocalVersus = document.getElementById('btn-local-versus');
 const buttonVersus = document.getElementById('versus');
 const buttonTournament = document.getElementsByClassName('btn-tournament')[0];
 
-/** @param {boolean} isInGame Selects which header become visible. */
-export function selectVisibleHeader(isInGame = false) {
-    let show = document.getElementById("header-notplaying");
-    let hide = document.getElementById("header-ingame");
+/** @param {'default' | 'loading' | 'ingame'} mode */
+export function chooseHeader(mode) {
+    const h_default = document.getElementById("header-default");
+    const h_loading = document.getElementById("header-loading");
+    const h_ingame = document.getElementById("header-ingame");
 
-    if (isInGame)
-        [hide, show] = [show, hide];
+    let show, hide;
 
-    hide.style.display = "none";
+    switch (mode) {
+        case 'default':
+            show = h_default;
+            hide = [h_loading, h_ingame];
+            break;
+        case 'loading':
+            show = h_loading;
+            hide = [h_default, h_ingame];
+            break;
+        case 'ingame':
+            show = h_ingame;
+            hide = [h_default, h_loading];
+            break;
+        default:
+            throw Error("Bad argument");
+    }
+
     show.style.display = null;
+    for (const element of hide) {
+        element.style.display = "none";
+    }
 }
-window.toggleHeaderButtons = selectVisibleHeader;  //debug
-selectVisibleHeader(false);  // hide quit button for the first time
+chooseHeader('default');  // hide quit button for the first time
 
 buttonLocalBot.addEventListener('click', async () => {
     if (state.gameApp == null) {
-        await navigator.goToPage('home');
-        state.gameApp = new LocalGame(true);
+        await navigator.goToPage('');
+        state.gameApp = new LocalGame(true, false);
     }
-    selectVisibleHeader(true);
+    chooseHeader('loading');
+});
+
+buttonLocalBot.addEventListener('contextmenu', async (event) => {
+    event.preventDefault();
+    if (state.gameApp == null) {
+        await navigator.goToPage('');
+        state.gameApp = new LocalGame(true, true);
+    }
+    chooseHeader('loading');
 });
 
 buttonLocalVersus.addEventListener('click', async () => {
     if (state.gameApp == null) {
-        await navigator.goToPage('home');
-        state.gameApp = new LocalGame(false);
+        await navigator.goToPage('');
+        state.gameApp = new LocalGame(false, false);
     }
-    selectVisibleHeader(true);
+    chooseHeader('loading');
 });
 
 buttonQuit.addEventListener('click', () => {
@@ -228,7 +270,7 @@ buttonQuit.addEventListener('click', () => {
         state.gameApp.close(true);
         state.gameApp = null;
     }
-    selectVisibleHeader(false);
+    chooseHeader('default');
 });
 
 // --⬆️-- Header play buttons --⬆️--

@@ -45,8 +45,6 @@ class Command(BaseCommand):
                     data = json.loads(msg['data'])
                     if self.valid_chat_json(data):
                         await self.process_message(data)
-                    # else:
-                    #     print(f"Error parsing : {data}")
                 except Exception as e:
                     print(e)
 
@@ -62,8 +60,6 @@ class Command(BaseCommand):
 
     async def process_message(self, data):
         data['header']['dest'] = 'front' # data destination after deep processing
-        # print(f"getting {data['body']}")
-        # if self.recipient_exists(data['body']['to']):
         exp = data['header']['id']
         recipient = data['body']['to']
         try:
@@ -78,7 +74,6 @@ class Command(BaseCommand):
         except Exception as e:
             print(e)
             data['body']['message'] = str(e)
-        print(f"Sending back : {data}")
         await self.redis_client.publish(self.group_name, json.dumps(data))
 
     async def is_muted(self, exp, recipient) -> bool:
@@ -209,6 +204,46 @@ class Command(BaseCommand):
     #             if data.get('id') == user:
     #               return True
     #             return False
+    #         except requests.exceptions.RequestException as e:
+    #             print(f"Error in request : {e}")
+    #         except ValueError as e:
+    #             print("JSON conversion error :", e)
+    #     else:
+    #         print(f"Request failed (status {response.status_code})")
+    #     return False
+
+    # async def is_muted(self, exp, recipient) -> bool :
+    #     """is exp muted by recipient ? Raises an UserNotFoundException if recipient doesnt exist"""
+        
+    #     payload = {
+    #         "service": "chat",
+    #         "exp": datetime.now(timezone.utc) + timedelta(minutes=120),
+    #     }
+        
+    #     token = jwt.encode(
+    #         payload,
+    #         settings.BACKEND_JWT["PRIVATE_KEY"],
+    #         algorithm=settings.BACKEND_JWT["ALGORITHM"],
+    #     )
+
+    #     url = f"https://nginx:8443/api/v1/users/{recipient}/blocks/"
+    #     headers = {"Authorization": f"Service {token}"}
+
+    #     response = requests.get(
+    #         url,
+    #         headers=headers,
+    #         timeout=10,
+    #         cert=("/etc/ssl/chat.crt", "/etc/ssl/chat.key"),
+    #         verify="/etc/ssl/ca.crt"
+    #     )
+
+    #     if response.status_code == 200:
+    #         try:
+    #             data = response.json()
+    #             if not isinstance(data, list):
+    #                 raise ValueError("Invalid JSON response")
+    #             if any(d['id'] == exp for d in data):
+    #                 return True
     #         except requests.exceptions.RequestException as e:
     #             print(f"Error in request : {e}")
     #         except ValueError as e:

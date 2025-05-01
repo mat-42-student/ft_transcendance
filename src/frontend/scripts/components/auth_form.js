@@ -13,44 +13,46 @@ export function cleanErrorMessage() {
 export function initAuthFormListeners() {
     const authForm = document.querySelector('#auth-form form');
     authForm?.addEventListener('submit', handleAuthSubmit);
+    updateAuthForm("signin");
+    document.getElementById("register-link").onclick = () => { updateAuthForm("register"); };
+    document.getElementById("signin-link").onclick = () => { updateAuthForm("signin"); };
 }
 
 // Met à jour le formulaire en fonction du mode (inscription ou connexion)
-export function updateAuthForm(mode = window.location.hash || '#signin') {
-    cleanErrorMessage();
-    updateFormTitleAndButton(mode);
-    togglePasswordAndUsernameFields(mode);
-    toggleExternalLinks(mode);
+export function updateAuthForm(mode) {
+    window.authMode = mode;
 
-    // Mise à jour de l'URL sans recharger la page
-    window.history.replaceState({}, '', mode);
+    cleanErrorMessage();
+    updateFormTitleAndButton();
+    togglePasswordAndUsernameFields();
+    toggleExternalLinks();
 }
 
 // Met à jour le titre et le bouton de soumission en fonction du mode
-function updateFormTitleAndButton(mode) {
+function updateFormTitleAndButton() {
     const formTitle = document.getElementById('form-title');
     const authSubmit = document.getElementById('auth-submit');
     
-    if (mode === '#register') {
+    if (window.authMode === 'register') {
         formTitle.textContent = 'Sign Up';
         authSubmit.textContent = 'Sign Up';
-    } else if (mode === '#signin') {
+    } else if (window.authMode === 'signin') {
         formTitle.textContent = 'Sign In';
         authSubmit.textContent = 'Sign In';
     }
 }
 
 // Gère la visibilité des champs de mot de passe et de nom d'utilisateur
-function togglePasswordAndUsernameFields(mode) {
+function togglePasswordAndUsernameFields() {
     const confirmPasswordContainer = document.getElementById('confirm-password-container');
     const confirmUsernameContainer = document.getElementById('username-container');
     const confirmPasswordInput = document.getElementById('auth-confirm-password');
     
-    if (mode === '#register') {
+    if (window.authMode === 'register') {
         confirmPasswordContainer.classList.remove('hidden');
         confirmUsernameContainer.classList.remove('hidden');
         confirmPasswordInput.required = true;
-    } else if (mode === '#signin') {
+    } else if (window.authMode === 'signin') {
         confirmPasswordContainer.classList.add('hidden');
         confirmUsernameContainer.classList.add('hidden');
         confirmPasswordInput.removeAttribute('required');
@@ -58,16 +60,16 @@ function togglePasswordAndUsernameFields(mode) {
 }
 
 // Gère la visibilité des liens et des boutons externes
-function toggleExternalLinks(mode) {
+function toggleExternalLinks() {
     const signInWith42Button = document.getElementById('oauth-submit');
-    const registerLink = document.querySelector('a[data-action="register"]');
-    const signinLink = document.querySelector('a[data-action="signin"]');
+    const registerLink = document.querySelector('button[data-action="register"]');
+    const signinLink = document.querySelector('button[data-action="signin"]');
     
-    if (mode === '#register') {
+    if (window.authMode === 'register') {
         registerLink.classList.add('hidden');
         signinLink.classList.remove('hidden');
         signInWith42Button.classList.add('hidden');
-    } else if (mode === '#signin') {
+    } else if (window.authMode === 'signin') {
         registerLink.classList.remove('hidden');
         signinLink.classList.add('hidden');
         signInWith42Button.classList.remove('hidden');

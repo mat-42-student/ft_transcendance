@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import Ball from '../../gameplay/Ball.js';
+import { state } from '../../../../main.js';
 
 
 export default class RetroBall extends Ball {
@@ -20,7 +21,8 @@ export default class RetroBall extends Ball {
 		super.onFrame(delta, time);
 
 		if (this.visible) {
-			this.#cubeMesh.visible = this.velocity.lengthSq() < 0.01 ? this.computer.getBlink() : true;
+			const isPaused = Boolean(state.engine.scene?.isPaused);
+			this.#cubeMesh.visible = isPaused ? this.computer.getBlink() : true;
 		}
 	}
 

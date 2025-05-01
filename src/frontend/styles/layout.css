@@ -28,7 +28,7 @@ main {
     padding: 2rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     background-color: #dbe4f388;
-    overflow: scroll;
+    overflow: auto;
 }
 .main-content:empty {
     background-color: transparent;
@@ -58,6 +58,7 @@ header .container {
 
 /* Home Button */
 .header-left #btn-home,
+.main-content #btn-404-return,
 .header-right #btn-profile {
     display: flex;
     flex-direction: row;
@@ -86,7 +87,7 @@ header .container {
     background-color: green; /* vert */
 }
 .user-status.ingame {
-    background-color: blue; /* orange */
+    background-color: darkred; /* orange */
 }
 .user-status.offline {
     background-color: gray; /* gris */
@@ -164,6 +165,12 @@ header .container {
 
 .header-center .search-form button:hover {
     background: #45a049;
+}
+
+#header-loading p {
+    text-align: center;
+    font-style: italic;
+    width: 100%;
 }
 
 .search-results {

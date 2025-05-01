@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from django.contrib.auth.hashers import check_password
+from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.core.exceptions import ValidationError
 
@@ -83,7 +84,6 @@ class UserBlockedSerializer(serializers.ModelSerializer):
         else:
             return "Cet utilisateur vous a bloqué."
 
-# User 'update' & 'partial_update' serializer
 class UserUpdateSerializer(serializers.ModelSerializer):
     new_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
     confirm_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
@@ -98,14 +98,12 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             },
             'new_password': {
                 'write_only': True,
-                'min_length': 5,
+                'min_length': 8,
                 'max_length': 128,
                 'label': 'New password'
             },
             'confirm_password': {
                 'write_only': True,
-                'min_length': 5,
-                'max_length': 128,
                 'label': 'Confirm new password'
             },
         }
@@ -113,9 +111,9 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user = self.context['user']
 
-        password = data.get('password', None)
-        new_password = data.get('new_password', None)
-        confirm_password = data.get('confirm_password', None)
+        password = data.get('password')
+        new_password = data.get('new_password')
+        confirm_password = data.get('confirm_password')
 
         if (new_password or confirm_password) and not password:
             raise serializers.ValidationError({"password": "Your current password is needed to update it."})
@@ -126,7 +124,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         if (new_password and not confirm_password) or (confirm_password and not new_password):
             raise serializers.ValidationError({"new_password": "You must fill both `new_password` and `confirm_password` to update your password."})
 
-        if (new_password and confirm_password) and (new_password != confirm_password):
+        if new_password and confirm_password and new_password != confirm_password:
             raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
 
         if password and not user.check_password(password):
@@ -134,34 +132,50 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
         return data
 
+    def validate_new_password(self, value):
+        # Password policy (identique à celle du UserRegistrationSerializer)
+        if not any(char.isupper() for char in value):
+            raise serializers.ValidationError("Password must contain at least one uppercase letter.")
+        if not any(char.islower() for char in value):
+            raise serializers.ValidationError("Password must contain at least one lowercase letter.")
+        if not any(char.isdigit() for char in value):
+            raise serializers.ValidationError("Password must contain at least one number.")
+        if not any(char in "!@#$%^&*()-_=+[]{}|;:'\",.<>/?" for char in value):
+            raise serializers.ValidationError("Password must contain at least one special character.")
+        if any(pattern in value.lower() for pattern in ['password', '123456', 'qwerty', 'admin']):
+            raise serializers.ValidationError("Password contains a common pattern and is too weak.")
+        return value
+
     def validate_avatar(self, avatar):
         try:
             img = Image.open(avatar)
-            img.verify()  # Vérifie que le fichier est bien une image
-            if img.format not in ['JPEG', 'PNG']:  # Formats acceptés
+            img.verify()
+            if img.format not in ['JPEG', 'PNG']:
                 raise serializers.ValidationError("Seuls les formats JPEG et PNG sont autorisés.")
-            # Recharger l'image pour s'assurer qu'elle est valide
             img = Image.open(avatar)
             img.load()
         except (IOError, ValidationError):
             raise serializers.ValidationError("Le fichier de l'avatar doit être une image valide.")
-        
         return avatar
-        
+
+    @staticmethod
+    def get_file_extension(filename):
+        return filename.split('.')[-1].lower()
+
     def update(self, instance, validated_data):
         validated_data.pop('password', None)
         validated_data.pop('confirm_password', None)
+        new_avatar = validated_data.pop('avatar', None)
 
-        # Suppression de l'ancien fichier avatar si un nouvel avatar est uploadé ??? -> voir si problème avec `default.png` réglé
-        # Gestion du nouvel avatar
-        new_avatar = validated_data.get('avatar', None)
         if new_avatar is not None:
-            if instance.avatar.name != 'default.png':
-                if default_storage.exists(instance.avatar.path):  # Vérifie si le fichier existe
-                    default_storage.delete(instance.avatar.path)  # Supprime le fichier
+            if instance.avatar.name != 'default.png' and default_storage.exists(instance.avatar.path):
+                default_storage.delete(instance.avatar.path)
+
+            ext = self.get_file_extension(new_avatar.name)
+            new_filename = f"avatars/user{instance.id:02d}.{ext}"
+            new_avatar.name = new_filename
             instance.avatar = new_avatar
-        
-        # Gestion du nouveau mot de passe
+
         new_password = validated_data.pop('new_password', None)
         if new_password:
             instance.set_password(new_password)

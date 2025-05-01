@@ -1,4 +1,4 @@
-import { state } from '../main.js';
+import { chooseHeader, state } from '../main.js';
 import { GameBase } from './GameBase.js';
 import * as LEVELS from '../game3d/gameobjects/levels/levels.js';
 import { navigator } from '../nav.js'
@@ -8,10 +8,6 @@ export class WebGame extends GameBase {
 
     constructor() {
         super();
-
-        try {
-            document.getElementById("keyhint-versus").style.display = null;
-        } catch {}
 
         this.socket = null;
 
@@ -44,10 +40,6 @@ export class WebGame extends GameBase {
         } catch {}
 
         try {
-            document.getElementById("keyhint-versus").style.display = "none";
-        } catch {}
-
-        try {
             if (youCancelled) {
                 this.level.endShowYouRagequit();
             }
@@ -59,7 +51,7 @@ export class WebGame extends GameBase {
 
     async launchGameSocket(gameId) {
         await state.client.refreshSession();
-		await navigator.goToPage('home');
+		await navigator.goToPage('');
         let socketURL = "wss://" + window.location.hostname + ":3000/game/" + gameId + "/?t=" + state.client.accessToken;
         // websocat ws://pong:8006/game/1234/?t=
 
@@ -172,6 +164,7 @@ export class WebGame extends GameBase {
             return;
         }
 
+        chooseHeader('ingame');
         this.needToReportLoaded = false;
         this.socket.send(JSON.stringify({
             "action": "load_complete",
