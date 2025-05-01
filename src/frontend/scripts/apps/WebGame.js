@@ -9,10 +9,6 @@ export class WebGame extends GameBase {
     constructor() {
         super();
 
-        try {
-            document.getElementById("keyhint-versus").style.display = null;
-        } catch {}
-
         this.socket = null;
 
         this.side = 2;  // Set to neutral until server tells us
@@ -41,10 +37,6 @@ export class WebGame extends GameBase {
         try {
             this.socket.close();
             this.socket = null;
-        } catch {}
-
-        try {
-            document.getElementById("keyhint-versus").style.display = "none";
         } catch {}
 
         try {

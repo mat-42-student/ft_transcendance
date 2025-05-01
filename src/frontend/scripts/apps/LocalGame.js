@@ -32,12 +32,17 @@ window.CPU_INACCURACY = 0.5;
 
 export class LocalGame extends GameBase {
 
-    constructor (isCPU = false) {
+    constructor (isCPU = false, sisyphus = false) {
         super();
 
         this.isCPU = isCPU;
-        this.cpuMoveDirection = 0;
-        this.cpuMoveCountdown = 0;
+        sisyphus = this.sisyphus = isCPU && sisyphus;
+        this.bots = [];
+        if (sisyphus)
+            this.bots.push(new Cpu(0, this));
+        if (isCPU)
+            this.bots.push(new Cpu(1, this));
+
         this.waitTime = 0;
 
         // game simulation stats - might want to keep these numbers synced with web game
@@ -46,20 +51,22 @@ export class LocalGame extends GameBase {
         this.paddleHeights = [STATS.initialPadSize, STATS.initialPadSize];
         this.maxScore = STATS.maxScore;
 
+        if (sisyphus) {
+            this.ballSpeed *= 5;
+            this.paddleSpeeds[0] = this.paddleSpeeds[1] *= 5;
+            this.paddleHeights[0] = this.paddleHeights[1] = 0.1;
+            this.maxScore = 1;
+        }
+
         this.roundStartSide = Math.random() > 0.5 ? 1 : 0;
 
-        this.playerNames[0] = 'Player 1';
+        this.playerNames[0] = sisyphus ? this.generateRandomNick() : 'Player 1';
         this.playerNames[1] = isCPU ? this.generateRandomNick() : 'Player 2';
 
         this.side = isCPU ? 0 : 2;  // Neutral (2) if keyboard PVP
 
         /** @type {LevelBase} */
         this.level = new (LEVELS.pickRandomLevel())();  // randomly select class, then construct it
-
-        try {
-            const id = isCPU && !this.level.forceVerticalInputs ? "keyhint-versus" : "keyhint-local";
-            document.getElementById(id).style.display = null;
-        } catch {}
 
     }
 
@@ -75,10 +82,9 @@ export class LocalGame extends GameBase {
             if (this.waitTime <= 0 && document.hasFocus()) {
                 if (this.level)  this.level.unpause();
 
-                if (this.cpuDecideIn != NaN)
-                    this.cpuDecideIn = Math.max(0, this.cpuDecideIn - delta);
-                if (this.cpuDecideIn === 0)
-                    this.cpuDecide();
+                for (const bot of this.bots) {
+                    bot.frame(delta);
+                }
 
                 this.movePaddles(delta);
                 this.moveBall(delta);
@@ -101,11 +107,6 @@ export class LocalGame extends GameBase {
                 [...this.playerNames]
             );
         }
-
-        try {
-            const id = this.isCPU ? "keyhint-versus" : "keyhint-local";
-            document.getElementById(id).style.display = "none";
-        } catch {}
 
         super.close(youCancelled);
     }
@@ -138,7 +139,9 @@ export class LocalGame extends GameBase {
         this.ballPosition = new Vector2(0, 0);
         this.ballDirection = new Vector2(this.roundStartSide ? -1 : 1, 1).normalize()
         this.paddlePositions[0] = this.paddlePositions[1] = 0;
-        this.cpuDecideIn = 0.1;
+        for (const bot of this.bots) {
+            bot.decideCountdown = 0.1;
+        }
     }
 
 
@@ -153,62 +156,15 @@ export class LocalGame extends GameBase {
         this.pause();
     }
 
-    cpuDecide() {
-        this.cpuDecideIn = NaN;
-        if (this.ballDirection.x < 0)
-            this.cpuFindTarget();
-        else
-            this.cpuStartMove(0);
-    }
-
-    cpuFindTarget() {
-        // This function is a port of https://www.desmos.com/calculator/revv9si2to
-
-        let a = this.ballPosition.clone();
-        let b = this.ballPosition.clone().add(this.ballDirection);
-
-        let slope = (b.y - a.y) / (b.x - a.x)
-        let offset = a.y - slope * a.x;
-
-        // Reimplementing a modulo function, because JS % is not the intended behaviour of modulo.
-        // This way, it matches my Desmos visualization.
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Remainder#description
-        let mod = (n, d) => { return ((n % d) + d) % d; }
-
-        let line = (x) => { return slope * x + offset; };
-        let sawWave = (x) => { return mod(line(x) + 0.5, 1) - 0.5; };
-        let squareWave = (x) => { return -Math.sign(mod(0.5 * slope * x + 0.5 * offset + 0.25, 1) - 0.5); };
-        let triangleWave = (x) => { return sawWave(x) * squareWave(x); };
-
-        // Assumes bot player is always player index 1
-        let wallX = -(this.level.boardSize.x / 2);
-        let target = triangleWave(wallX);
-
-        const randomizer = window.CPU_INACCURACY
-            * (this.paddleHeights[1] / 2)
-            * (Math.random() * 2 - 1);
-        target += randomizer;
-
-        this.cpuStartMove(target);
-    }
-
-    cpuStartMove(destination) {
-        const neededMovement = destination - this.paddlePositions[1];
-        this.cpuMoveDirection = Math.sign(neededMovement);
-        if (this.paddleSpeeds[1] > 0 && Math.abs(neededMovement) > 0.01)
-            this.cpuMoveCountdown = Math.abs(neededMovement / this.paddleSpeeds[1]);
-        else
-            this.cpuMoveCountdown = 0;
-    }
-
     movePaddles(delta) {
-        let inputs = [
+        const inputs = [
             state.input.getPaddleInput(0),
-            this.isCPU ? this.cpuMoveDirection * Number(this.cpuMoveCountdown > 0) : state.input.getPaddleInput(1)
+            state.input.getPaddleInput(1)
         ];
-        this.cpuMoveCountdown = Math.max(0, this.cpuMoveCountdown - delta);
-        if (this.cpuMoveCountdown <= 0)
-            this.cpuMoveDirection = 0;
+        for (const bot of this.bots) {
+            inputs[bot.side] = bot.moveDirection * (bot.moveCountdown > 0 ? 1 : 0);
+            bot.moveCountdown = Math.max(0, bot.moveCountdown - delta);
+        }
 
         const limit = this.level.boardSize.y / 2;
         for (let i = 0; i < 2; i++) {
@@ -261,7 +217,9 @@ export class LocalGame extends GameBase {
                     break;
                 } else {
 
-                    this.cpuDecideIn = 0.1;
+                    for (const bot of this.bots) {
+                        bot.decideCountdown = 0.1;
+                    }
 
                     const signedSide = collisionSide == 0 ? 1 : -1;
 
@@ -271,10 +229,6 @@ export class LocalGame extends GameBase {
                         -1,
                         1
                     );
-
-                    // const error = Math.round(Math.abs(hitPosition) * 100);
-                    // if (this.isCPU && collisionSide == 1 && error > (window.CPU_INACCURACY*100 + 5))
-                    //     console.warn('Bot accuracy low:', error, '% error.');
 
                     let angle = this.ballDirection.angle();
                     if (angle > UTILS.RAD180) {
@@ -346,6 +300,79 @@ export class LocalGame extends GameBase {
         if (this.level) {
             this.level.pause(time);
         }
+    }
+
+}
+
+
+class Cpu {
+
+    /**
+     * @param {0 | 1} side
+     * @param {LocalGame} game
+     */
+    constructor(side, game) {
+        this.side = side;
+        this.game = game;
+
+        this.moveDirection = 0;
+        this.moveCountdown = 0;
+        this.decideCountdown = NaN;
+    }
+
+    frame(delta) {
+        if (this.decideCountdown != NaN)
+            this.decideCountdown = Math.max(0, this.decideCountdown - delta);
+        if (this.decideCountdown <= 0)
+            this.#decide();
+    }
+
+    #decide() {
+        this.decideCountdown = NaN;
+        if ((this.side == 0 && this.game.ballDirection.x > 0)
+            || (this.side == 1 && this.game.ballDirection.x < 0))
+            this.#findTarget();
+        else
+            this.#startMove(0);
+    }
+
+    #findTarget() {
+        // This function is a port of https://www.desmos.com/calculator/revv9si2to
+
+        let a = this.game.ballPosition.clone();
+        let b = this.game.ballPosition.clone().add(this.game.ballDirection);
+
+        let slope = (b.y - a.y) / (b.x - a.x)
+        let offset = a.y - slope * a.x;
+
+        // Reimplementing a modulo function, because JS % is not the intended behaviour of modulo.
+        // This way, it matches my Desmos visualization.
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Remainder#description
+        let mod = (n, d) => { return ((n % d) + d) % d; }
+
+        let line = (x) => { return slope * x + offset; };
+        let sawWave = (x) => { return mod(line(x) + 0.5, 1) - 0.5; };
+        let squareWave = (x) => { return -Math.sign(mod(0.5 * slope * x + 0.5 * offset + 0.25, 1) - 0.5); };
+        let triangleWave = (x) => { return sawWave(x) * squareWave(x); };
+
+        let wallX = (this.game.level.boardSize.x / 2) * (this.side == 0 ? 1 : -1);
+        let target = triangleWave(wallX);
+
+        const randomizer = window.CPU_INACCURACY
+            * (this.game.paddleHeights[this.side] / 2)
+            * (Math.random() * 2 - 1);
+        target += randomizer;
+
+        this.#startMove(target);
+    }
+
+    #startMove(destination) {
+        const neededMovement = destination - this.game.paddlePositions[this.side];
+        this.moveDirection = Math.sign(neededMovement);
+        if (this.game.paddleSpeeds[this.side] > 0)
+            this.moveCountdown = Math.abs(neededMovement / this.game.paddleSpeeds[this.side]);
+        else  // just protecting against divide by 0
+            this.moveCountdown = 0;
     }
 
 }
