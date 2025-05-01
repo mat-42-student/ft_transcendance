@@ -1,4 +1,4 @@
-import { delay, state } from '../main.js';
+import { delay, state, getCookie, deleteCookie } from '../main.js';
 import { MainSocket } from './MainSocket.js';
 import { verifyToken } from '../api/auth.js';
 import { resetPendingCountDisplay } from '../components/friend_requests.js';
@@ -27,7 +27,7 @@ export class Client{
             console.error(error);
             throw error;
         }
-        localStorage.setItem('cookieSet', true); // modfis ajoutées après merge
+        // localStorage.setItem('cookieSet', true); // modfis ajoutées après merge
 		if (this.state.mainSocket == null) {
         	this.state.mainSocket = new MainSocket();
         	this.state.mainSocket.init();
@@ -63,8 +63,8 @@ export class Client{
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Logout failed');
             }
-              
-            localStorage.removeItem('cookieSet'); // modfis ajoutées après merge
+            deleteCookie('witnessToken');  
+            // localStorage.removeItem('cookieSet'); // modfis ajoutées après merge
             window.location.hash = '#home';
         } catch (error) {
             console.error('Error:', error);
@@ -125,8 +125,9 @@ export class Client{
     }
 
     async refreshSession(location = null) {
-        if (!localStorage.getItem('cookieSet')) // modfis ajoutées après merge
-            return;                              // modfis ajoutées après merge
+        const witness = getCookie('witnessToken');
+        if (!witness)
+            return;
         try {
             const response = await fetch('api/v1/auth/refresh/', {
                 method: 'POST',
@@ -135,7 +136,6 @@ export class Client{
             if (!response.ok)
                 throw new Error("Could not refresh token");
             const data = await response.json();
-            localStorage.setItem('cookieSet', true);
             try {
                 await this.login(data.accessToken);
             }
