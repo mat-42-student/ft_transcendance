@@ -80,7 +80,7 @@ export function verify2fa() {
     .catch(error => console.error('Error:', error));
 }
 
-function validatePassword(password) {
+export function validatePassword(password) {
     // Check for minimum length
     if (password.length < 8) {
       return "Password must be at least 8 characters long.";

@@ -7,6 +7,7 @@ import { navigator as appNavigator } from '../nav.js';
 import { updateProfile } from '../api/users.js';
 import { initProfilePage } from '../pages.js';
 import { showErrorMessage } from '../utils.js';
+import { validatePassword } from '../api/auth.js'
 
 const dynamicCardRoutes = {
     'auth': './partials/cards/auth.html',
@@ -30,7 +31,7 @@ const cardInitializers = {
     },
     'auth': () => {
         document.getElementById('oauth-submit')?.addEventListener('click', () => {
-            localStorage.setItem('cookieSet', true);
+            // localStorage.setItem('cookieSet', true);
             // How do we know if OAuth is denied?
             // Ideally in that case we should localStorage.removeItem('cookieSet');
             window.location.href = 'https://localhost:3000/api/v1/auth/oauth/login/';
@@ -94,23 +95,45 @@ const cardInitializers = {
         updateForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const formData = new FormData(updateForm);
-
+            const new_password = document.getElementById('new_password').value.trim();
+            const confirm_password = document.getElementById('confirm_password').value.trim();
+            
             // Remove empty fields from FormData
-            for (const [key, value] of formData.entries())
-                if (!value)
+            for (const [key, value] of formData.entries()) {
+                if (!value) {
                     formData.delete(key);
-
+                }
+            }
+            
+            if (new_password || confirm_password) {
+                if (!new_password || !confirm_password) {
+                    displayErrorMessage("Both password fields must be filled");
+                    return;
+                }
+                
+                // Validate password requirements
+                const passwordError = validatePassword(new_password);
+                if (passwordError) {
+                    displayErrorMessage(passwordError);
+                    return;
+                }
+                
+                if (new_password !== confirm_password) {
+                    displayErrorMessage("Passwords don't match");
+                    return;
+                }
+            }
+            
             try {
                 const response = await updateProfile(formData, state.client.userId);
-
                 if (response) {
                     initProfilePage(state.client.userId);
                     closeDynamicCard();
                 } else {
-                    displayErrorMessage("Update failed.") // adapter au type d'erreur
+                    displayErrorMessage("Update failed"); // Consider more specific error messages
                 }
             } catch (error) {
-                displayErrorMessage("An error occurred during the update.")
+                displayErrorMessage("An error occurred during the update");
                 console.error("Error updating profile:", error);
             }
         });
