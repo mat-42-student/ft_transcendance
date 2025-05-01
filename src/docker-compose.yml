@@ -36,7 +36,7 @@ services:
     expose:
       - "8000"
     volumes:
-      - ./media:/media
+      - media:/media
       - ./certs/services/users/users.crt:/etc/ssl/users.crt:ro
       - ./certs/services/users/users.key:/etc/ssl/users.key:ro
       - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
