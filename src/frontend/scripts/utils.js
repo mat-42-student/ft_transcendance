@@ -7,6 +7,22 @@ export const RAD180 = THREE.MathUtils.degToRad(180);
 export const RAD270 = THREE.MathUtils.degToRad(270);
 export const RAD360 = THREE.MathUtils.degToRad(360);
 
+export function getAvatarPath(avatar, mode) {
+    let avatarPath
+    if (mode == 1) {
+        avatarPath = (avatar === 'default.png')
+        ? `/media/${avatar}`
+        : `/media/avatars/${avatar}`;
+    } else if (mode == 2) {
+        avatarPath = (state.client.userAvatar === '/default.png')
+        ? `/media${state.client.userAvatar}`
+        : `/media${state.client.userAvatar}`;
+    } else
+        return console.error("wrong function mode: usage: getAvatarPath(avatar, mode(1/2))");
+
+    return avatarPath;
+}
+
 export function showErrorMessage(message) {
     let errorBox = document.getElementById('global-error-box');
 

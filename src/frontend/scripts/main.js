@@ -53,7 +53,7 @@ async function initApp() {
 }
 
 function setupEventListeners() {
-    addClickEvent('btn-home', () => navigator.goToPage('home'));
+    addClickEvent('btn-home', () => navigator.goToPage(''));
     addClickEvent('btn-profile', handleProfileClick);
     addClickEvent('close-dynamic-card', closeDynamicCard);
     addClickEvent('.btn-friend-requests', () => initDynamicCard('requests'));
@@ -191,6 +191,15 @@ export function delay(n) {
     return new Promise(resolve => setTimeout(resolve, n * 1000));
 }
 
+export function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+export function deleteCookie(name, path = '/') {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${path}`;
+}
 
 // --⬇️-- Header play buttons --⬇️--
 
@@ -216,7 +225,7 @@ selectVisibleHeader(false);  // hide quit button for the first time
 
 buttonLocalBot.addEventListener('click', async () => {
     if (state.gameApp == null) {
-        await navigator.goToPage('home');
+        await navigator.goToPage('');
         state.gameApp = new LocalGame(true);
     }
     selectVisibleHeader(true);
@@ -224,7 +233,7 @@ buttonLocalBot.addEventListener('click', async () => {
 
 buttonLocalVersus.addEventListener('click', async () => {
     if (state.gameApp == null) {
-        await navigator.goToPage('home');
+        await navigator.goToPage('');
         state.gameApp = new LocalGame(false);
     }
     selectVisibleHeader(true);

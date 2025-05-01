@@ -30,20 +30,11 @@ const cardInitializers = {
         document.getElementById('btn-verify-2fa')?.addEventListener('click', verify2fa);
     },
     'auth': () => {
-        window.location.hash = '#signin';
         document.getElementById('oauth-submit')?.addEventListener('click', () => {
-            localStorage.setItem('cookieSet', true);
+            // localStorage.setItem('cookieSet', true);
             // How do we know if OAuth is denied?
             // Ideally in that case we should localStorage.removeItem('cookieSet');
             window.location.href = 'https://localhost:3000/api/v1/auth/oauth/login/';
-        });
-        document.querySelectorAll('#auth-form a[data-action]').forEach(link => {
-            link.addEventListener('click', (event) => {
-                event.preventDefault();
-                const action = link.getAttribute('data-action');
-                history.pushState(action, '', `#${action}`);
-                appNavigator.handleHashChange();
-            });
         });
         initAuthFormListeners();
     },
@@ -182,7 +173,7 @@ export function closeDynamicCard() {
     const cardContainer = document.getElementById('dynamic-card-container');
     if (cardContainer)
         cardContainer.classList.add('hidden');
-    // window.history.replaceState({}, '', `#home`);
+    // window.history.replaceState({}, '', `#`);
 }
 
 function displayErrorMessage(message) {

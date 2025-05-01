@@ -1,6 +1,5 @@
 import { state } from './main.js';
 import { initHomePage, initProfilePage } from "./pages.js";
-import { updateAuthForm } from "./components/auth_form.js";
 import { closeDynamicCard, initDynamicCard } from './components/dynamic_card.js';
 import { ft_fetch } from './main.js';
 
@@ -19,15 +18,15 @@ class Navigator {
         }
     
         const pageFiles = {
-            home: { url: './partials/home.html', setup: initHomePage },
-            profile: { url: './partials/profile.html', setup: initProfilePage }
+            '': { url: './partials/home.html', setup: initHomePage },
+            profile: { url: './partials/profile.html', setup: initProfilePage },
+            "404": { url: './partials/404.html', setup: null },
         };
     
         if (!pageFiles[page]) return console.error('Page not found:', page);
     
         if (page === 'profile' && !(await state.client.isAuthenticated())) {
-            return window.history.pushState({}, '', `#signin`);
-            // return initDynamicCard('auth');
+            return initDynamicCard('auth');
         }
     
         const hash = page === 'profile'
@@ -44,9 +43,11 @@ class Navigator {
                 window.history.pushState({}, '', hash);
             }
 
-            requestAnimationFrame(() => {
-                pageFiles[page].setup(userId);
-            });
+            if (pageFiles[page].setup) {
+                requestAnimationFrame(() => {
+                    pageFiles[page].setup(userId);
+                });
+            }
         } catch (error) {
             console.error('Error loading page:', error);
         }
@@ -61,38 +62,29 @@ class Navigator {
         const hash = window.location.hash;
         const isAuth = await state.client.isAuthenticated();
     
-        if (hash === '#register' || hash === '#signin') {
-            if (isAuth)
-                return this.goToPage('profile');
-            if (this.cardContainer.classList.contains('hidden')) {
-                // Charge dynamiquement la carte auth ; le updateAuthForm est géré dans le cardInitializer
-                return initDynamicCard('auth');
-            } else {
-                // La carte est déjà affichée, donc on peut mettre à jour directement
-                return updateAuthForm(hash);
-            }
-        }
-    
         if (!this.cardContainer.classList.contains('hidden'))
             closeDynamicCard();
 
 		if(state.mmakingApp != null)
 			await state.mmakingApp.cancelGame_with_pending_status();
     
+
+        if (window.location.hash == '')
+            return this.goToPage('', null, true);
+
         // Parsing du hash
         const hashMatch = hash.match(/^#(\w+)(?:\/(\d+))?$/);
-        if (!hashMatch) return this.goToPage('home');
     
-        const page = hashMatch[1];
-        const userId = hashMatch[2];
+        const page = hashMatch.length >= 2 ? hashMatch[1] : null;
+        const userId = hashMatch.length >= 3 ? hashMatch[2] : null;
     
         switch (page) {
-            case 'home':
-                return this.goToPage('home', null, true);
+            case '':
+                return this.goToPage('', null, true);
             case 'profile':
                 return this.goToPage('profile', userId || null, true);
             default:
-                return this.goToPage('home', null, true);
+                return this.goToPage('404', null, true);
         }
     }
 }
