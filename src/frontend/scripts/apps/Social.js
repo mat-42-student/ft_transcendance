@@ -165,10 +165,13 @@ export class SocialApp{
     }
 
     addFriendEntry(friend, parent) {
+        const avatarPath = (friend.avatar === 'default.png')
+        ? `/media/${friend.avatar}`
+        : `/media/avatars/${friend.avatar}`;
         const friendItem = document.createElement('li');
         friendItem.classList.add('friend-item');
         friendItem.innerHTML = `
-            <img class="friend-avatar" src="/media/avatars/${friend.avatar}" alt="${friend.username}">
+            <img class="friend-avatar" src="${avatarPath}" alt="${friend.username}">
             <div class="friend-info">
                 <span class="friend-name">${friend.username}</span>
                 <div class="friend-detail" data-user-id="${friend.id}">

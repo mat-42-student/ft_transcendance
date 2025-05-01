@@ -21,6 +21,9 @@ db.sqlite3
 *.log
 logs/
 
+# Avatars
+/src/media/avatars/user*
+
 # IDEs et outils
 .vscode/
 
