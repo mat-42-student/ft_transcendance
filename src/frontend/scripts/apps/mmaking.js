@@ -1,4 +1,4 @@
-import { state, selectVisibleHeader } from '../main.js';
+import { state, chooseHeader } from '../main.js';
 import { initDynamicCard, closeDynamicCard } from '../components/dynamic_card.js';
 import { WebGame } from './WebGame.js';
 import { getAvatarPath } from '../utils.js';
@@ -390,7 +390,7 @@ export class Mmaking
 						state.gameApp.close(true);
 					state.gameApp = new WebGame();
 					state.gameApp.launchGameSocket(this.gameId);
-					selectVisibleHeader(true);
+					chooseHeader('loading');
 					this.game = false;
 					btnTournament[0].removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);
 					btnRandom.removeEventListener('click', this.boundEventListenersClient.btnSearchRandomGame);

@@ -1,4 +1,4 @@
-import { state } from '../main.js';
+import { chooseHeader, state } from '../main.js';
 import { GameBase } from './GameBase.js';
 import * as LEVELS from '../game3d/gameobjects/levels/levels.js';
 import { navigator } from '../nav.js'
@@ -164,6 +164,7 @@ export class WebGame extends GameBase {
             return;
         }
 
+        chooseHeader('ingame');
         this.needToReportLoaded = false;
         this.socket.send(JSON.stringify({
             "action": "load_complete",
