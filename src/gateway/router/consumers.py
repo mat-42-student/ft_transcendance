@@ -1,11 +1,8 @@
 from json import dumps, loads
 from channels.generic.websocket import AsyncJsonWebsocketConsumer # type: ignore
 from redis.asyncio import from_url
-from asyncio import create_task, sleep as asleep
-from .consts import REDIS_GROUPS
+from asyncio import create_task
 from datetime import datetime, timezone
-from urllib.parse import parse_qs
-import jwt
 import requests
 import time
 from collections import deque
@@ -16,6 +13,11 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
     MESSAGE_LIMIT = 10 # per second
     TIME_WINDOW = 1 # seconds
     MAX_MESSAGE_SIZE = 50
+    REDIS_GROUPS = {
+        'chat': 'deep_chat',
+        'mmaking': 'deep_mmaking',
+        'social': 'deep_social',
+    }
 
     async def connect(self):
         self.message_timestamps = deque(maxlen=self.MESSAGE_LIMIT) # collecting message's timestamp
@@ -48,7 +50,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         try:
             self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
-            await self.pubsub.subscribe(*REDIS_GROUPS.values())  # Subscribe all channels
+            await self.pubsub.subscribe(*self.REDIS_GROUPS.values())  # Subscribe all channels
             self.listen_task = create_task(self.listen_to_channels())
         except Exception as e:
             print(e)
@@ -67,7 +69,6 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
     async def disconnect(self, close_code):
         if not self.connected:
             return
-        # await asleep(0.5)
         await self.send_online_status('offline')
         await self.send_mmaking_disconnection()
         await self.pubsub.unsubscribe() # unsubscribe all channels
@@ -82,23 +83,6 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             self.consumer_name = data.get('username')
         else:
             return None
-
-    # def checkAuth(self):
-    #     try:
-    #         self.get_public_key()
-    #     except Exception as e:
-    #         print(e)
-    #         return
-    #     params = parse_qs(self.scope['query_string'].decode())
-    #     self.token = params.get('t', [None])[0]
-    #     try:
-    #         payload = jwt.decode(self.token, self.public_key, algorithms=['RS256'])
-    #         return payload
-    #     except jwt.ExpiredSignatureError as e:
-    #         print(e)
-    #     except jwt.InvalidTokenError as e:
-    #         print(e)
-    #     return None
 
     def get_public_key(self):
         try:
@@ -118,16 +102,6 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         except RuntimeError as e:
             raise(e)
         
-    # def get_public_key(self):
-    #     try:
-    #         response = requests.get(f"http://auth:8000/api/v1/auth/public-key/")
-    #         if response.status_code == 200:
-    #             self.public_key = response.json().get("public_key") # Ou response.json() si c'est un JSON
-    #         else:
-    #             raise RuntimeError("Impossible de récupérer la clé publique JWT")
-    #     except RuntimeError as e:
-    #         raise(e)
-
     async def receive_json(self, data):
         """Data incoming from client ws => publish to concerned redis group.\n
         Possible 'service' values are 'mmaking', 'chat', 'social'"""
@@ -135,7 +109,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
             return
         if not await self.valid_json_header(data):
             return
-        group = REDIS_GROUPS.get(data['header']['service'])
+        group = self.REDIS_GROUPS.get(data['header']['service'])
         if group:
             data['header']['dest'] = 'back'
             data['header']['id'] = self.consumer_id
@@ -146,7 +120,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         await self.kick()
 
     async def kick(self, close_code=1008, message="kick"):
-        print(self.consumer_name, message)
+        print("KICK! ", self.consumer_name, message)
         try:
             await self.send(text_data=dumps({"action": "disconnect"}))
         except:
@@ -209,7 +183,6 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
 
     async def forward_with_redis(self, data, group):
             try:
-                # print(f"Sending data to {group}: {data}")
                 await self.redis_client.publish(group, dumps(data))
             except Exception as e:
                 print(f"Publish error : {e}")
@@ -226,8 +199,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 "status": "info"
             }
         }
-        # print(f"Sending data to {REDIS_GROUPS.get("social")}: {data}")
-        await self.redis_client.publish(REDIS_GROUPS.get("social"), dumps(data))
+        await self.redis_client.publish(self.REDIS_GROUPS.get("social"), dumps(data))
 
     async def send_online_status(self, status):
         """Send all friends our status"""
@@ -241,8 +213,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 "status": status
             }
         }
-        # print(f"Sending data to {REDIS_GROUPS.get("social")}: {data}")
-        await self.redis_client.publish(REDIS_GROUPS.get("social"), dumps(data))
+        await self.redis_client.publish(self.REDIS_GROUPS.get("social"), dumps(data))
 
     async def send_mmaking_disconnection(self):
         """Send mmaking disco info"""
@@ -256,5 +227,4 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 "disconnect": True
             }
         }
-        # print(f"Sending data to {REDIS_GROUPS.get("mmaking")}: {data}")
-        await self.redis_client.publish(REDIS_GROUPS.get("mmaking"), dumps(data))
+        await self.redis_client.publish(self.REDIS_GROUPS.get("mmaking"), dumps(data))
