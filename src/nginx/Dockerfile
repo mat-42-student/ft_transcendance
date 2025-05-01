@@ -5,6 +5,8 @@ RUN addgroup -S nginxgroup && adduser -S nginxuser -G nginxgroup && \
 
 COPY certs/services/nginx/nginx.crt /etc/nginx/ssl/nginx.crt
 COPY certs/services/nginx/nginx.key /etc/nginx/ssl/nginx.key
+COPY frontend/ /usr/share/nginx/frontend
+COPY media/ /media
 
 RUN chown -R nginxuser:nginxgroup /etc/nginx/ssl /var/log/nginx /var/cache/nginx && \
     chmod 644 /etc/nginx/ssl/nginx.crt && \
