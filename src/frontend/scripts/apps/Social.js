@@ -2,6 +2,7 @@ import { state } from '../main.js';
 import { navigator } from '../nav.js';
 import { updatePendingCountDisplay } from '../components/friend_requests.js';
 import { fetchFriends, fetchPendingCount, fetchReceivedRequests, fetchSentRequests, modifyRelationship } from '../api/users.js';
+import { getAvatarPath } from '../utils.js';
 
 export class SocialApp{
 
@@ -165,9 +166,7 @@ export class SocialApp{
     }
 
     addFriendEntry(friend, parent) {
-        const avatarPath = (friend.avatar === 'default.png')
-        ? `/media/${friend.avatar}`
-        : `/media/avatars/${friend.avatar}`;
+        const avatarPath = getAvatarPath(friend.avatar, 1);
         const friendItem = document.createElement('li');
         friendItem.classList.add('friend-item');
         friendItem.innerHTML = `
