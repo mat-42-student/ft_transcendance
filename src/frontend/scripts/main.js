@@ -150,7 +150,7 @@ function setupSearchInput() {
 }
 
 // page unload
-window.addEventListener('beforeunload', function() {
+window.addEventListener('unload', function() {
     state.mainSocket?.close();
     state.gameApp?.close();
     state.engine.scene = null;
