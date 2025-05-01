@@ -58,6 +58,7 @@ header .container {
 
 /* Home Button */
 .header-left #btn-home,
+.main-content #btn-404-return,
 .header-right #btn-profile {
     display: flex;
     flex-direction: row;
