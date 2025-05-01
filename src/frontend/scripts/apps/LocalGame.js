@@ -140,7 +140,7 @@ export class LocalGame extends GameBase {
         this.ballDirection = new Vector2(this.roundStartSide ? -1 : 1, 1).normalize()
         this.paddlePositions[0] = this.paddlePositions[1] = 0;
         for (const bot of this.bots) {
-            bot.decideCountdown = 0.1;
+            bot.decideCountdown = 0.01;
         }
     }
 
@@ -218,7 +218,7 @@ export class LocalGame extends GameBase {
                 } else {
 
                     for (const bot of this.bots) {
-                        bot.decideCountdown = 0.1;
+                        bot.decideCountdown = 0.01;
                     }
 
                     const signedSide = collisionSide == 0 ? 1 : -1;
@@ -321,10 +321,10 @@ class Cpu {
     }
 
     frame(delta) {
-        if (this.decideCountdown != NaN)
-            this.decideCountdown = Math.max(0, this.decideCountdown - delta);
         if (this.decideCountdown <= 0)
             this.#decide();
+        if (this.decideCountdown != NaN)
+            this.decideCountdown = Math.max(0, this.decideCountdown - delta);
     }
 
     #decide() {
