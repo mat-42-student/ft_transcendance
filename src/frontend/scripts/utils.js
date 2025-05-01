@@ -260,7 +260,6 @@ export function getTexturesInMaterial(mat)
     return [];
 }
 
-
 /**
  * Fully dispose a material and any textures it uses.
  * Assumes that the material owns those textures.
