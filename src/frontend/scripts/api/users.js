@@ -50,26 +50,51 @@ export async function apiRequest(endpoint, method = 'GET', body = null) {
     return responseData;
 }
 
-// export async function apiRequest(endpoint, method = 'GET', body = null) {
-//     if (!state.client.accessToken) {
-//         // console.error("User is not connected");
-//         return;
+// export async function apiRequest(endpoint, options = {}) {
+//     if (!state.client.accessToken) return;
+
+//     const { method = 'GET', body = null, headers = {} } = options;
+
+//     const finalHeaders = { ...headers };
+//     if (!(body instanceof FormData)) {
+//         finalHeaders['Content-Type'] = 'application/json';
 //     }
-//         const headers = {};
-//         if (!(body instanceof FormData)) {
-//             headers['Content-Type'] = 'application/json';
+
+//     const response = await ft_fetch(endpoint, {
+//         method,
+//         headers: finalHeaders,
+//         body: body instanceof FormData
+//             ? body
+//             : (body ? (typeof body === 'string' ? body : JSON.stringify(body)) : null),
+//     });
+
+//     const contentType = response.headers.get('content-type') || '';
+//     const isJson = contentType.includes('application/json');
+
+//     const responseData = isJson ? await response.json() : await response.text();
+
+//     if (!response.ok) {
+//         let errorMessages = [];
+
+//         if (response.status === 413) {
+//             errorMessages.push("Le fichier est trop volumineux.");
+//         } else if (isJson && typeof responseData === 'object') {
+//             for (const field in responseData) {
+//                 const messages = responseData[field];
+//                 if (Array.isArray(messages)) {
+//                     errorMessages.push(...messages);
+//                 } else if (typeof messages === 'string') {
+//                     errorMessages.push(messages);
+//                 }
+//             }
+//         } else {
+//             errorMessages.push(responseData);
 //         }
 
-//         const response = await ft_fetch(endpoint, {
-//             method: method,
-//             headers: headers,
-//             body: body instanceof FormData ? body : (body ? (typeof body === 'string' ? body : JSON.stringify(body)) : null),
-//         });
+//         throw new Error(errorMessages.join('\n'));
+//     }
 
-//         if (!response.ok)
-//             throw new Error(await response.text());
-
-//         return await response.json();
+//     return responseData;
 // }
 
 export async function updateProfile(formData, userId) {

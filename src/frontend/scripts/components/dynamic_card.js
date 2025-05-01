@@ -8,6 +8,7 @@ import { updateProfile } from '../api/users.js';
 import { initProfilePage } from '../pages.js';
 import { mainErrorMessage } from '../utils.js';
 import { validatePassword } from '../api/auth.js'
+import { apiRequest } from '../api/users.js';
 
 const dynamicCardRoutes = {
     'auth': './partials/cards/auth.html',
@@ -154,23 +155,39 @@ const cardInitializers = {
                 return displayErrorMessage("Password is required to delete the profile", 'delete-profile-error');
 
             try {
-                const response = await ft_fetch(`/api/users/${state.client.userId}/`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password }),
-                });
-
-                if (!response.ok) {
-                    const data = await response.json();
-                    throw new Error(data.detail || "Failed to delete profile.");
-                }
+                await apiRequest(`/api/v1/users/${state.client.userId}/`, 'DELETE',JSON.stringify({ password }))
 
                 state.client.logout(); // ou window.location.reload()
-            } catch (err) {
-                displayErrorMessage(err.message, 'delete-profile-error');
+            } catch (error) {
+                displayErrorMessage(error);
             }
         });
     }
+    // 'delete': () => {
+    //     const form = document.getElementById('delete-profile-form');
+    //     if (!form)
+    //         return mainErrorMessage("Delete form not found.");
+
+    //     form.addEventListener('submit', async (e) => {
+    //         e.preventDefault();
+
+    //         const password = document.getElementById('delete-password').value.trim();
+    //         if (!password)
+    //             return displayErrorMessage("Password is required to delete the profile", 'delete-profile-error');
+
+    //         try {
+    //             await apiRequest(`/api/v1/users/${state.client.userId}/`, {
+    //                 method: 'DELETE',
+    //                 headers: { 'Content-Type': 'application/json' },
+    //                 body: { password },
+    //             });
+
+    //             state.client.logout(); // ou window.location.reload()
+    //         } catch (err) {
+    //             displayErrorMessage(err.message, 'delete-profile-error');
+    //         }
+    //     });
+    // }
 };
 
 export async function initDynamicCard(routeKey) {
