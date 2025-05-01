@@ -160,7 +160,6 @@ function setupSearchInput() {
 window.addEventListener('unload', function() {
     state.mainSocket?.close();
     state.gameApp?.close();
-    state.engine.scene = null;
 });
 
 export async function ft_fetch(url, options = {}) {
