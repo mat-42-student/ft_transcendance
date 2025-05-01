@@ -122,7 +122,7 @@ export class Client{
         const parsedPayload = JSON.parse(decodedPayload);
         this.state.client.userId = parsedPayload.id;
         this.state.client.userName = parsedPayload.username;
-        this.state.client.avatar = parsedPayload.avatar;
+        this.state.client.userAvatar = parsedPayload.avatar;
         this.state.client.isOauth = parsedPayload.oauth ?? false;
     }
 

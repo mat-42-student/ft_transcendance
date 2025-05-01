@@ -44,7 +44,6 @@ function updateProfileUI(data) {
         document.getElementById("profile-actions").innerHTML = "<p>Impossible de charger le profil.</p>";
         return;
     }
-    console.log(data.avatar);
     document.getElementById("profile-username").textContent = data.username;
     document.getElementById("profile-avatar").src = data.avatar;
 

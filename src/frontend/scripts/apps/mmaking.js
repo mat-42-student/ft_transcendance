@@ -403,9 +403,9 @@ export class Mmaking
 		{
 			await initDynamicCard('versus');
 
-			const avatar = (state.client.userAvatar === 'default.png')
-			? `/media/${state.client.userAvatar}`
-			: `/media/avatars/${state.client.userAvatar}`;
+			const avatar = (state.client.userAvatar === '/default.png')
+			? `/media${state.client.userAvatar}`
+			: `/media${state.client.userAvatar}`;
 
 			document.getElementById('player-photo').src = avatar;
 			document.getElementById('player-name').textContent = state.client.userName;
@@ -452,9 +452,9 @@ export class Mmaking
 		{
 			await initDynamicCard('versus');
 
-			const avatar = (state.client.userAvatar === 'default.png')
-			? `/media/${state.client.userAvatar}`
-			: `/media/avatars/${state.client.userAvatar}`;
+			const avatar = (state.client.userAvatar === '/default.png')
+			? `/media${state.client.userAvatar}`
+			: `/media${state.client.userAvatar}`;
 
 			document.getElementById('player-photo').src = avatar;
 			document.getElementById('close-dynamic-card').style.display = 'none'
