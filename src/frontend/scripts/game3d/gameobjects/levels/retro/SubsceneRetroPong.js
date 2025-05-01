@@ -182,6 +182,8 @@ export default class SubsceneRetroPong extends THREE.Scene {
 			scoreIndicator.scoreChanged(scores[i]);
 		});
 
+		this.timerIndicator?.setCancel();
+
 		this.trophy = this.parentScene.trophyModel;
 		this.add(this.trophy);
 		this.trophy.position.set(scores[0] > scores[1] ? 0.333 : -0.333, 0, -0.1);

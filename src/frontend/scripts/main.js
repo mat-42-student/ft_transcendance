@@ -53,7 +53,7 @@ async function initApp() {
 }
 
 function setupEventListeners() {
-    addClickEvent('btn-home', () => navigator.goToPage('home'));
+    addClickEvent('btn-home', () => navigator.goToPage(''));
     addClickEvent('btn-profile', handleProfileClick);
     addClickEvent('close-dynamic-card', closeDynamicCard);
     addClickEvent('.btn-friend-requests', () => initDynamicCard('requests'));
@@ -160,7 +160,6 @@ function setupSearchInput() {
 window.addEventListener('unload', function() {
     state.mainSocket?.close();
     state.gameApp?.close();
-    state.engine.scene = null;
 });
 
 export async function ft_fetch(url, options = {}) {
@@ -225,16 +224,25 @@ selectVisibleHeader(false);  // hide quit button for the first time
 
 buttonLocalBot.addEventListener('click', async () => {
     if (state.gameApp == null) {
-        await navigator.goToPage('home');
-        state.gameApp = new LocalGame(true);
+        await navigator.goToPage('');
+        state.gameApp = new LocalGame(true, false);
+    }
+    selectVisibleHeader(true);
+});
+
+buttonLocalBot.addEventListener('contextmenu', async (event) => {
+    event.preventDefault();
+    if (state.gameApp == null) {
+        await navigator.goToPage('');
+        state.gameApp = new LocalGame(true, true);
     }
     selectVisibleHeader(true);
 });
 
 buttonLocalVersus.addEventListener('click', async () => {
     if (state.gameApp == null) {
-        await navigator.goToPage('home');
-        state.gameApp = new LocalGame(false);
+        await navigator.goToPage('');
+        state.gameApp = new LocalGame(false, false);
     }
     selectVisibleHeader(true);
 });
