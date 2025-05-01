@@ -53,7 +53,7 @@ async function initApp() {
 }
 
 function setupEventListeners() {
-    addClickEvent('btn-home', () => navigator.goToPage('home'));
+    addClickEvent('btn-home', () => navigator.goToPage(''));
     addClickEvent('btn-profile', handleProfileClick);
     addClickEvent('close-dynamic-card', closeDynamicCard);
     addClickEvent('.btn-friend-requests', () => initDynamicCard('requests'));
@@ -225,7 +225,7 @@ selectVisibleHeader(false);  // hide quit button for the first time
 
 buttonLocalBot.addEventListener('click', async () => {
     if (state.gameApp == null) {
-        await navigator.goToPage('home');
+        await navigator.goToPage('');
         state.gameApp = new LocalGame(true);
     }
     selectVisibleHeader(true);
@@ -233,7 +233,7 @@ buttonLocalBot.addEventListener('click', async () => {
 
 buttonLocalVersus.addEventListener('click', async () => {
     if (state.gameApp == null) {
-        await navigator.goToPage('home');
+        await navigator.goToPage('');
         state.gameApp = new LocalGame(false);
     }
     selectVisibleHeader(true);

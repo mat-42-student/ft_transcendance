@@ -59,7 +59,7 @@ export class WebGame extends GameBase {
 
     async launchGameSocket(gameId) {
         await state.client.refreshSession();
-		await navigator.goToPage('home');
+		await navigator.goToPage('');
         let socketURL = "wss://" + window.location.hostname + ":3000/game/" + gameId + "/?t=" + state.client.accessToken;
         // websocat ws://pong:8006/game/1234/?t=
 

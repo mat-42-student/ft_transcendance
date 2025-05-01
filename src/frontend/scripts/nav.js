@@ -18,8 +18,9 @@ class Navigator {
         }
     
         const pageFiles = {
-            home: { url: './partials/home.html', setup: initHomePage },
-            profile: { url: './partials/profile.html', setup: initProfilePage }
+            '': { url: './partials/home.html', setup: initHomePage },
+            profile: { url: './partials/profile.html', setup: initProfilePage },
+            "404": { url: './partials/404.html', setup: null },
         };
     
         if (!pageFiles[page]) return console.error('Page not found:', page);
@@ -42,9 +43,11 @@ class Navigator {
                 window.history.pushState({}, '', hash);
             }
 
-            requestAnimationFrame(() => {
-                pageFiles[page].setup(userId);
-            });
+            if (pageFiles[page].setup) {
+                requestAnimationFrame(() => {
+                    pageFiles[page].setup(userId);
+                });
+            }
         } catch (error) {
             console.error('Error loading page:', error);
         }
@@ -65,20 +68,23 @@ class Navigator {
 		if(state.mmakingApp != null)
 			await state.mmakingApp.cancelGame_with_pending_status();
     
+
+        if (window.location.hash == '')
+            return this.goToPage('', null, true);
+
         // Parsing du hash
         const hashMatch = hash.match(/^#(\w+)(?:\/(\d+))?$/);
-        if (!hashMatch) return this.goToPage('home');
     
-        const page = hashMatch[1];
-        const userId = hashMatch[2];
+        const page = hashMatch.length >= 2 ? hashMatch[1] : null;
+        const userId = hashMatch.length >= 3 ? hashMatch[2] : null;
     
         switch (page) {
-            case 'home':
-                return this.goToPage('home', null, true);
+            case '':
+                return this.goToPage('', null, true);
             case 'profile':
                 return this.goToPage('profile', userId || null, true);
             default:
-                return this.goToPage('home', null, true);
+                return this.goToPage('404', null, true);
         }
     }
 }

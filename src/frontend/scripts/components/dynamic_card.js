@@ -173,7 +173,7 @@ export function closeDynamicCard() {
     const cardContainer = document.getElementById('dynamic-card-container');
     if (cardContainer)
         cardContainer.classList.add('hidden');
-    // window.history.replaceState({}, '', `#home`);
+    // window.history.replaceState({}, '', `#`);
 }
 
 function displayErrorMessage(message) {

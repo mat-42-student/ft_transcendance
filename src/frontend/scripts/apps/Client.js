@@ -66,7 +66,7 @@ export class Client{
             }
             deleteCookie('witnessToken');  
             // localStorage.removeItem('cookieSet'); // modfis ajoutées après merge
-            window.location.hash = '#home';
+            window.location.hash = '#';
         } catch (error) {
             console.error('Error:', error);
         }
