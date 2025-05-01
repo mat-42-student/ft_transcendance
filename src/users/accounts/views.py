@@ -85,6 +85,7 @@ class UserRegisterView(APIView):
             response.set_cookie(
                 key='witnessToken',
                 value=witness_token, 
+                expires=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
             )
 
             response.data = {

@@ -171,6 +171,7 @@ class LoginView(APIView):
         response.set_cookie(
             key='witnessToken',
             value=witness_token, 
+            expires=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
         )
 
         response.data = {
@@ -255,7 +256,8 @@ class RefreshTokenView(APIView):
 
         response.set_cookie(
             key='witnessToken',
-            value=witness_token,
+            value=witness_token, 
+            expires=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
         )
 
         response.data = {
@@ -469,7 +471,7 @@ class OAuthCallbackView(APIView):
 
         response.set_cookie(
             key='refreshToken',
-            value=refresh_token, 
+            value=refresh_token,
             httponly=True,
             samesite='Lax',
             secure=True,
@@ -479,6 +481,7 @@ class OAuthCallbackView(APIView):
         response.set_cookie(
             key='witnessToken',
             value=witness_token, 
+            expires=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
         )
 
         return response  
