@@ -1,14 +1,11 @@
 import json
-# import jwt
 import requests
 import time
 from asyncio import create_task, sleep as asleep
 from redis.asyncio import from_url #type: ignore
 from channels.generic.websocket import AsyncWebsocketConsumer #type: ignore
-# from urllib.parse import parse_qs
 from .Game import Game
 from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT, LEVELS
-import time
 from collections import deque
 import random
 import math
@@ -47,12 +44,10 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.init()
         if not self.scope["payload"]:
-            print("1")
             await self.kick(message="Unauthentified")
             return
         self.get_user_infos()
         if self.player_id is None:
-            print("2")
             await self.kick(message="Unauthentified")
             return
         try:
@@ -187,11 +182,9 @@ class PongConsumer(AsyncWebsocketConsumer):
             if self.game != None:
                 await self.send(json.dumps({"action": "game_cancelled"}))
         except Exception as e:
-            # print(e)
             pass
         finally:
             self.connected = False
-            # await self.send_online_status('online')
             await self.close(code=close_code)
 
     async def load_valid_json(self, data):
@@ -222,7 +215,6 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     async def handle_message(self, data):
         data = data.get("message")
-        # print(f'handle data {type(data)}, {data}')
         if not data:
             return
         if data["action"] == "move":
@@ -237,11 +229,9 @@ class PongConsumer(AsyncWebsocketConsumer):
         if data["action"] == "info":
             return await self.send(json.dumps(data))
         if data["action"] == "wannaplay!":
-            print("wannaplay: ", data)
             return await self.wannaplay(data.get("id"), data.get("username"))
 
     async def wannaplay(self, opponent_id, opponent_name):
-        # print(f"{GREEN}Player {self.player_id}({self.player_name}) wants to play with {opponent_id}({opponent_name}){RESET}")
         self.nb_players += 1
         if self.player_id < opponent_id:
             self.master = True
@@ -293,20 +283,16 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     # client ws was closed, sending disconnection to other client
     async def disconnect(self, close_code):
-        print(f"{YELLOW}Player {self.player_id} disconnecting{RESET}")
         if not self.connected:
             # await self.send_online_status('online')
             return
         who = "master" if self.master else "guest"
-        print(f"{RED}Player {self.player_id}({who}) has left{RESET}")
         if self.master and self.game and not self.game.over:
-            print(f"{RED}Game #{self.game.id} over (player {self.player_id} left){RESET}")
             await self.disconnect_endgame(self.player_id)
         if self.room_group_name:
             await self.channel_layer.group_send(
                 self.room_group_name, {"type": "disconnect.now", "side": self.player_id}
             )
-        # await self.send_online_status('online')
 
     async def disconnect_now(self, event):
     # If self.game.over, game was stopped beacuse maxscore has been reached
@@ -317,17 +303,13 @@ class PongConsumer(AsyncWebsocketConsumer):
             await self.send(json.dumps({"action": "game_cancelled"}))
         self.connected = False
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-        print(f"Disco_now event: {event}")
         user_id = event.get("side")
-        print(f"{YELLOW}Disconnect_now from {user_id}{RESET}")
         if user_id is None:
             await self.kick(message="Disconnect_now")
             return
         if self.master and self.game.over: # game ended normally
-            print(f"{RED}Game #{self.game.id} over (maxscore reached){RESET}")
             await self.send_score()
         elif self.master and not self.game.over: # game is ending because one player left
-            print(f"{RED}Game #{self.game.id} over (player {user_id} left){RESET}")
             await self.disconnect_endgame(user_id)
         try:
             await self.send(text_data=json.dumps({"action": "disconnect"}))
@@ -338,7 +320,6 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.game.players[0].score = 1 if self.player_id != user else 0
         self.game.players[1].score = 1 - self.game.players[0].score
         self.game.over = True
-        print(f"{RED}Player {user} left")
         # await self.send(json.dumps({"action": "game_cancelled"}))
         await self.send_score()
         self.game = None
