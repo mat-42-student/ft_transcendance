@@ -26,7 +26,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('POSTGRES_DB', 'ft_transcendance'),
-        'USER': os.getenv('POSTGRES_USER', 'postgres'),  # Default value until Vault sets it
+        'USER': os.getenv('POSTGRES_USER', 'alice'),  # Default value until Vault sets it
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),  # Default value until Vault sets it
         'HOST': os.getenv('POSTGRES_HOST', 'postgres'),
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
@@ -152,8 +152,8 @@ import atexit
 def init_vault():
     try:
         # Import Vault modules
-        from auth.utils.vault_client import VaultClient
-        from auth.utils.vault_db import VaultDBManager
+        from utils.vault_client import VaultClient
+        from utils.vault_db import VaultDBManager
         
         # Initialize Vault client (uses VAULT_TOKEN from environment)
         global vault_client

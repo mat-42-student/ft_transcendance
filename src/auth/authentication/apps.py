@@ -14,14 +14,14 @@ class AuthConfig(AppConfig):
         if os.environ.get('RUN_MAIN') == 'true' or os.environ.get('RUN_MAIN') is None:
             try:
                 # Import and initialize Django config from Vault
-                from auth.utils.vault_config import initialize_django_config
+                from utils.vault_config import initialize_django_config
                 
                 # Store the vault client in settings for reuse across views
                 settings.vault_client = initialize_django_config()
                 
                 # Initialize DB manager if needed
                 if hasattr(settings, 'vault_client') and settings.vault_client:
-                    from auth.utils.vault_db import VaultDBManager
+                    from utils.vault_db import VaultDBManager
                     settings.db_manager = VaultDBManager(settings.vault_client)
                     
                     # Register cleanup handlers

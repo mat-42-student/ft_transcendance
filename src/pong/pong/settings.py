@@ -78,14 +78,15 @@ CHANNEL_LAYERS = {
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 
+# Database configuration
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'transcendance',
-        'USER': 'toto',
-        'PASSWORD': 'test',
-        'HOST': 'postgres',
-        'PORT': '5432',
+        'NAME': os.getenv('POSTGRES_DB', 'ft_transcendance'),
+        'USER': os.getenv('POSTGRES_USER', 'alice'),  # Default value until Vault sets it
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),  # Default value until Vault sets it
+        'HOST': os.getenv('POSTGRES_HOST', 'postgres'),
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
 

@@ -33,7 +33,7 @@ fi
 UNSEAL_KEY=$(jq -r '.unseal_keys_b64[0]' /vault/file/init.json)
 ROOT_TOKEN=$(jq -r '.root_token' /vault/file/init.json)
 
-# Unseal Vault FIRST
+# Unseal Vault
 echo "Unsealing Vault with provided key"
 vault operator unseal $UNSEAL_KEY
 
@@ -143,7 +143,7 @@ vault secrets enable database
 vault write database/config/postgres \
     plugin_name=postgresql-database-plugin \
     allowed_roles="auth,users,chat,social,matchmaking,pong,gateway,nginx" \
-    connection_url="postgresql://{{username}}:{{password}}@postgres:5432/transcendance?sslmode=disable" \
+    connection_url="postgresql://{{username}}:{{password}}@postgres:5432/ft_transcendance?sslmode=disable" \
     username="${POSTGRES_USER}" \
     password="${POSTGRES_PASSWORD}"
 
@@ -168,7 +168,9 @@ for service in auth users chat social matchmaking pong gateway nginx; do
   vault write database/roles/${service} \
     db_name=postgres \
     creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
-                        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO \"{{name}}\";" \
+                        GRANT USAGE, CREATE ON SCHEMA public TO \"{{name}}\"; \
+                        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO \"{{name}}\"; \
+                        GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO \"{{name}}\";" \
     default_ttl="1h" \
     max_ttl="24h"
 done

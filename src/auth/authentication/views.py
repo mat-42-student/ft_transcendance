@@ -29,7 +29,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.http import HttpResponse
 from django.core.cache import cache
-from auth.utils.vault_client import VaultClient  # Update import path to match your project structure
+from utils.vault_client import VaultClient
 
 
 class VerifyTokenView(APIView):
