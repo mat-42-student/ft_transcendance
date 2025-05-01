@@ -172,7 +172,7 @@ export class ChatApp{
         const friend = state.socialApp.getFriend(this.activeChatUserId);
         if (!friend)
             return;
-        this.chatUser.innerText = friend.username + '(' + this.activeChatUserId + ')';
+        this.chatUser.innerText = friend.username;
         this.noUnreadMessage();
         this.loadHistory();
         this.chatInput.disabled = false;

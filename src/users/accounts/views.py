@@ -75,7 +75,8 @@ class UserRegisterView(APIView):
             response = Response()
             response.set_cookie(
                 key='refreshToken',
-                value=refresh_token, 
+                value=refresh_token,
+                expires=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
                 httponly=True,
                 samesite='Lax',
                 secure=True,
