@@ -53,8 +53,7 @@ class Navigator {
     async handleHashChange() {
         // Don't leave #home while playing!
         if (state.gameApp != null) {
-            window.location.hash = '#home';
-            return;
+            state.gameApp.close();
         }
 
         const hash = window.location.hash;
