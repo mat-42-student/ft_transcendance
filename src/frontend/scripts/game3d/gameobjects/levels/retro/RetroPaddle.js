@@ -15,9 +15,11 @@ export default class RetroPaddle extends Paddle {
 		this.#mesh = new THREE.Mesh(this.#geo, this.#material);
 		this.add(this.#mesh);
 		this.#mesh.position.x = 0.02;
-		const isBotVsBotMatch = state.gameApp.bots != null && state.gameApp.bots.length == 2;
-		if (!isBotVsBotMatch)
-			this.#setup3dKeyHints();
+		if (state.gameApp) {
+			const isBotVsBotMatch = state.gameApp.bots != null && state.gameApp.bots.length == 2;
+			if (!isBotVsBotMatch)
+				this.#setup3dKeyHints();
+		}
 	}
 
 	onFrame(delta, time) {
