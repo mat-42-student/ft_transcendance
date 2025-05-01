@@ -15,6 +15,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+MIGRATION_MODULES = {
+    'accounts': None,
+}
+
 FRONTEND_JWT = {
     "PUBLIC_KEY": os.getenv("JWT_PUBLIC_KEY"),
     "PRIVATE_KEY": os.getenv("JWT_PRIVATE_KEY"),

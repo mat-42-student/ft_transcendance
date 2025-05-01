@@ -1,5 +1,6 @@
 import { state } from '../main.js';
 import { apiRequest } from '../api/users.js';
+import { mainErrorMessage } from '../utils.js';
 
 export class ChatApp{
 
@@ -21,21 +22,30 @@ export class ChatApp{
     }
 
     async isChatUserMuted() {
-        const response = await apiRequest(`/api/v1/users/${this.activeChatUserId}/muted/`);
-        if (response == null || typeof response.is_blocked !== 'boolean')
-            return false;
-        return response.is_blocked;
+        try {
+            const response = await apiRequest(`/api/v1/users/${this.activeChatUserId}/muted/`);
+            if (response == null || typeof response.is_blocked !== 'boolean')
+                return false;
+            return response.is_blocked;
+        }
+        catch (error) {
+            return mainErrorMessage(error);
+        }
     }    
 
     async chatMuteListener(event) {
-        if (this.activeChatUserId == null)
-            return;
-        const muted = await this.isChatUserMuted();
-        if (!muted)
-            await apiRequest(`/api/v1/users/${this.activeChatUserId}/block/`, "POST");
-        else
-            await apiRequest(`/api/v1/users/${this.activeChatUserId}/unblock/`, "DELETE");
-        await this.renderMute();
+        try {
+            if (this.activeChatUserId == null)
+                return;
+            const muted = await this.isChatUserMuted();
+            if (!muted)
+                await apiRequest(`/api/v1/users/${this.activeChatUserId}/block/`, "POST");
+            else
+                await apiRequest(`/api/v1/users/${this.activeChatUserId}/unblock/`, "DELETE");
+            await this.renderMute();
+        } catch (error) {
+            return mainErrorMessage(error);
+        }
     }
 
     async renderMute() {

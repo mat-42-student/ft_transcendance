@@ -199,13 +199,13 @@ export async function handleAuthSubmit(event) {
     }
     
     // Password validation for registration
-    if (hash === '#register' && password !== confirm_password) {
+    if (hash === '#register' && password !== confirm_password) { //voir pour changer la detection par hash en vue du nouveau nav
         displayErrorMessage("Passwords don't match");
         return;
     }
 
     // Validate password requirements
-    const passwordError = validatePassword(password);
+    const passwordError = validatePassword(password); //voir pour changer la detection par hash en vue du nouveau nav
     if (hash === '#register' && passwordError) {
         displayErrorMessage(passwordError);
         return;

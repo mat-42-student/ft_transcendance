@@ -23,7 +23,7 @@ export function getAvatarPath(avatar, mode) {
     return avatarPath;
 }
 
-export function showErrorMessage(message) {
+export function mainErrorMessage(message) {
     let errorBox = document.getElementById('global-error-box');
 
     if (!errorBox) {
