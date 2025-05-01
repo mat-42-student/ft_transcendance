@@ -205,7 +205,6 @@ export function deleteCookie(name, path = '/') {
 const buttonQuit = document.getElementById('btn-quit-game');
 const buttonLocalBot = document.getElementById('btn-local-bot');
 const buttonLocalVersus = document.getElementById('btn-local-versus');
-const buttonLocalSisyphus = document.getElementById('btn-local-sisyphus');
 const buttonVersus = document.getElementById('versus');
 const buttonTournament = document.getElementsByClassName('btn-tournament')[0];
 
@@ -231,18 +230,19 @@ buttonLocalBot.addEventListener('click', async () => {
     selectVisibleHeader(true);
 });
 
-buttonLocalVersus.addEventListener('click', async () => {
+buttonLocalBot.addEventListener('contextmenu', async (event) => {
+    event.preventDefault();
     if (state.gameApp == null) {
         await navigator.goToPage('');
-        state.gameApp = new LocalGame(false, false);
+        state.gameApp = new LocalGame(true, true);
     }
     selectVisibleHeader(true);
 });
 
-buttonLocalSisyphus.addEventListener('click', async () => {
+buttonLocalVersus.addEventListener('click', async () => {
     if (state.gameApp == null) {
         await navigator.goToPage('');
-        state.gameApp = new LocalGame(true, true);
+        state.gameApp = new LocalGame(false, false);
     }
     selectVisibleHeader(true);
 });

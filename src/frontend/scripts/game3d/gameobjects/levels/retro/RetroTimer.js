@@ -43,6 +43,11 @@ export default class RetroTimer extends THREE.Object3D {
 		this.#textMesh.setText('GO!');
 	}
 
+	setCancel() {
+		this.#timeout = 0;
+		this.#isCountingDown = false;
+	}
+
 	#material;
 	#textMesh;
 	#timeout = 0;
