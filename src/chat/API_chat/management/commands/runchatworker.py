@@ -9,8 +9,9 @@ from django.conf import settings
 from django.core.cache import cache
 from redis.asyncio import Redis
 from datetime import datetime, timedelta, timezone
-from utils.vault import VaultClient
+from utils.vault_client import VaultClient
 import uuid
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class Command(BaseCommand):
@@ -133,7 +134,7 @@ class Command(BaseCommand):
             return False
         except ValueError as e:
             print("JSON conversion error:", e)
-            raise UserNotFoundException(f"User {recipient} not found")
+            raise ObjectDoesNotExist(f"User {recipient} not found")
         
     async def is_friend(self, exp, recipient) -> bool :
         friends_data = self.get_friend_list(recipient)

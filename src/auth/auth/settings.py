@@ -145,7 +145,6 @@ logging.basicConfig(
 )
 
 # Initialize Vault clients after settings are loaded
-# This should be at the end of the file
 import atexit
 
 # Deferred import to avoid circular import issues

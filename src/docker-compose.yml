@@ -15,6 +15,7 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+      - vault/.env
     volumes:
       - ./vault/logs:/var/log
       - vault_data:/vault/file
@@ -206,8 +207,6 @@ services:
     volumes:
       - ./media:/media
       - ./frontend:/usr/share/nginx/frontend
-      - static_volume:/app/staticfiles
-      # - ./certs/ca/ca.crt:/etc/nginx/ssl/ca.crt:ro
       - vault_data:/vault/file
     networks:
       - dev-network

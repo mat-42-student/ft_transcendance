@@ -77,7 +77,6 @@ class VerifyTokenView(APIView):
             logging.error(f"Token verification error: {str(e)}")
             raise AuthenticationFailed(f'Token verification failed: {str(e)}')
 
-
 class LoginView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -151,6 +150,7 @@ class LoginView(APIView):
                 'avatar': user.avatar.url if user.avatar else None
             }
 
+            # Create witness token payload
             witness_payload = {
                 'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
             }
@@ -402,11 +402,17 @@ class Disable2FAView(APIView):
 class OAuthLoginView(APIView):
     permission_classes = [AllowAny]
 
-    def get(self, request):        
+    def get(self, request):
+        # Get the Vault client
+        vault_client = settings.vault_client if hasattr(settings, 'vault_client') and settings.vault_client else VaultClient()
+        
+        # Get OAuth credentials from Vault
+        oauth_creds = vault_client.get_kv_secret('oauth')
+        
         state = generate_state()
         request.session['oauth_state'] = state
         params = {
-            'client_id': settings.OAUTH_CLIENT_ID,
+            'client_id': oauth_creds['client_id'],
             'redirect_uri': settings.OAUTH_REDIRECT_URI,
             'response_type': 'code',
             'scope': 'public',
@@ -419,17 +425,34 @@ class OAuthCallbackView(APIView):
     renderer_classes = [JSONRenderer]
 
     def get(self, request):
+        # Get the Vault client
+        vault_client = settings.vault_client if hasattr(settings, 'vault_client') and settings.vault_client else VaultClient()
+        
+        # Get OAuth credentials from Vault
+        oauth_creds = vault_client.get_kv_secret('oauth')
+
+        # First, validate the state parameter
+        state = request.GET.get('state')
+        stored_state = request.session.get('oauth_state')
+        
+        if not state or not stored_state or state != stored_state:
+            return Response({"error": "Invalid state parameter"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Clear the state from session after use
+        del request.session['oauth_state']
+        
         code = request.GET.get('code')
         if not code:
             return Response({"error": "Missing code"}, status=status.HTTP_400_BAD_REQUEST)
 
         token_data = {
             'grant_type': 'authorization_code',
-            'client_id': settings.OAUTH_CLIENT_ID,
-            'client_secret': settings.OAUTH_CLIENT_SECRET,
+            'client_id': oauth_creds['client_id'],
+            'client_secret': oauth_creds['client_secret'],
             'code': code,
             'redirect_uri': settings.OAUTH_REDIRECT_URI,
         }
+
         token_url = 'https://api.intra.42.fr/oauth/token'
         token_response = requests.post(token_url, data=token_data, timeout=10)
 

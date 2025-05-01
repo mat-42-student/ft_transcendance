@@ -46,6 +46,11 @@ vault login $ROOT_TOKEN
 echo "Enabling KV secrets engine"
 vault secrets enable -version=2 kv
 
+# Store OAuth credentials
+vault kv put kv/oauth \
+  client_id="${OAUTH_CLIENT_ID}" \
+  client_secret="${OAUTH_CLIENT_SECRET}"
+
 ############### ENABLE TRANSIT SECRETS ENGINE ###############
 vault secrets enable transit
 
@@ -85,7 +90,7 @@ vault kv put kv/jwt-config/frontend-access \
   token_type="access" \
   ttl="15m" \
   max_ttl="30m" \
-  allowed_claims="sub,user_id,email,roles"
+  allowed_claims="sub,user_id,email,roles,id,username,oauth,avatar"
 
 # Frontend Refresh Token Configuration
 vault kv put kv/jwt-config/frontend-refresh \
@@ -95,7 +100,7 @@ vault kv put kv/jwt-config/frontend-refresh \
   token_type="refresh" \
   ttl="7d" \
   max_ttl="30d" \
-  allowed_claims="sub,jti,user_id"
+  allowed_claims="sub,user_id,email,roles,id,username,oauth,avatar"
 
 # Backend Service Token Configuration
 vault kv put kv/jwt-config/backend-service \
@@ -105,7 +110,7 @@ vault kv put kv/jwt-config/backend-service \
   token_type="service" \
   ttl="1h" \
   max_ttl="24h" \
-  allowed_claims="service,action,scope"
+  allowed_claims="sub,user_id,email,roles,id,username,oauth,avatar"
 
 # Write the Transit policy for JWT operations
 vault policy write transit-jwt-issuer /vault/config/policies/transit-jwt-issuer.hcl
@@ -164,7 +169,7 @@ vault write database/roles/readwrite \
     max_ttl="24h"
 
 # Create service-specific roles with appropriate permissions
-for service in auth users chat social matchmaking pong gateway nginx; do
+for service in auth users matchmaking; do
   vault write database/roles/${service} \
     db_name=postgres \
     creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
