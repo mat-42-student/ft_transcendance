@@ -100,11 +100,6 @@ export class Engine {
 			}
 		}
 
-		window.addEventListener('beforeunload', () => {
-			state.waitpleasedontfreakout = true;  // maybe dont try to reload the page when the user is trying to get rid of the page
-			this.renderer?.dispose();
-		});
-
 		const resizeCallback = this.#onResize.bind(this);
 		this.#resizeObserver = new ResizeObserver(resizeCallback);
 		this.#resizeObserver.observe(this.#html_mainContent);

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import LevelBase from '../game3d/gameobjects/levels/LevelBase.js';
-import { state, selectVisibleHeader } from '../main.js';
+import { state, chooseHeader } from '../main.js';
 
 
 export class GameBase {
@@ -26,7 +26,7 @@ export class GameBase {
 
 	close(youCancelled) {
 		if (state.gameApp == this)  { state.gameApp = null; }
-		selectVisibleHeader(false);
+		chooseHeader('default');
 		if (state.engine.scene == this)  { state.engine.scene = null; }
 	}
 
