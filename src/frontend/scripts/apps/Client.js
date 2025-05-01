@@ -93,7 +93,7 @@ export class Client{
         let label = "Sign in";
     
         if (this.state.client.userName)
-            label = `${this.state.client.userName} (${this.state.client.userId})`;
+            label = `${this.state.client.userName}`;
     
         if (profileLink)
             profileLink.textContent = label;
