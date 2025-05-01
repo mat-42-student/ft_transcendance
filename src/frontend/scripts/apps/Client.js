@@ -8,6 +8,7 @@ export class Client{
     constructor() {
         this.userId = null;
         this.userName = null;
+        this.userAvatar = null;
         this.accessToken = null;
         this.state = null;
         this.isOauth = null;
@@ -121,6 +122,7 @@ export class Client{
         const parsedPayload = JSON.parse(decodedPayload);
         this.state.client.userId = parsedPayload.id;
         this.state.client.userName = parsedPayload.username;
+        this.state.client.userAvatar = parsedPayload.avatar;
         this.state.client.isOauth = parsedPayload.oauth ?? false;
     }
 

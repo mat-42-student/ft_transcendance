@@ -51,7 +51,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     avatar = models.ImageField(
         upload_to="avatars/", 
-        default='avatars/default.png'
+        default='default.png'
     )
     # status à changer/supprimer -> gestion status via ws dans front
     status = models.CharField(

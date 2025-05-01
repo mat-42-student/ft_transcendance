@@ -151,7 +151,7 @@ export class Mmaking
 				{
 					await initDynamicCard('salonHost');
 					document.getElementById('player-name').textContent = state.client.userName;
-					this.setFriendwithoutLoader(friend.username, `../../../media/${friend.avatar}`)
+					this.setFriendwithoutLoader(friend.username, `${friend.avatar}`)
 
 					const btnstartgame = document.getElementById('start-game');
 					const btncancelGame = document.getElementById('cancel-button');
@@ -217,7 +217,7 @@ export class Mmaking
 					const btncancelGame = document.getElementById('cancel-button');
 
 					document.getElementById('player-name').textContent = state.client.userName;
-					this.setFriendwithoutLoader(friend.username, `../../../media/${friend.avatar}`);
+					this.setFriendwithoutLoader(friend.username, `${friend.avatar}`);
 					btncancelGame.addEventListener('click', (event) => this.cancelGame(event, keyNumber, 'invite'));
 
 				}
@@ -402,6 +402,12 @@ export class Mmaking
 		if (this.SearchRandomGame == true)
 		{
 			await initDynamicCard('versus');
+
+			const avatar = (state.client.userAvatar === '/default.png')
+			? `/media${state.client.userAvatar}`
+			: `/media${state.client.userAvatar}`;
+
+			document.getElementById('player-photo').src = avatar;
 			document.getElementById('player-name').textContent = state.client.userName;
 			document.getElementById('close-dynamic-card').style.display = 'none'
             document.getElementById("cancel-button").addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, '1vs1R'));
@@ -445,6 +451,12 @@ export class Mmaking
 		else if (this.salonTournament == true)
 		{
 			await initDynamicCard('versus');
+
+			const avatar = (state.client.userAvatar === '/default.png')
+			? `/media${state.client.userAvatar}`
+			: `/media${state.client.userAvatar}`;
+
+			document.getElementById('player-photo').src = avatar;
 			document.getElementById('close-dynamic-card').style.display = 'none'
             document.getElementById("cancel-button").addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, 'tournament'));
 
