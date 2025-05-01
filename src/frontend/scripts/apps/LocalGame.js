@@ -27,7 +27,8 @@ const STATS = JSON.parse(`
 // 0: perfect accuracy
 // 1: use the whole paddle (might miss)
 // >1: allow missing
-window.CPU_INACCURACY = 0.5;
+const DEFAULT_CPU_INACCURACY = 1.5;
+window.CPU_INACCURACY = DEFAULT_CPU_INACCURACY;
 
 
 export class LocalGame extends GameBase {
@@ -52,10 +53,13 @@ export class LocalGame extends GameBase {
         this.maxScore = STATS.maxScore;
 
         if (sisyphus) {
+            window.CPU_INACCURACY = 0.1;
             this.ballSpeed *= 5;
             this.paddleSpeeds[0] = this.paddleSpeeds[1] *= 5;
             this.paddleHeights[0] = this.paddleHeights[1] = 0.1;
             this.maxScore = 1;
+        } else {
+            window.CPU_INACCURACY = DEFAULT_CPU_INACCURACY;
         }
 
         this.roundStartSide = Math.random() > 0.5 ? 1 : 0;
