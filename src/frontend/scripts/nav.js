@@ -1,6 +1,5 @@
 import { state } from './main.js';
 import { initHomePage, initProfilePage } from "./pages.js";
-import { updateAuthForm } from "./components/auth_form.js";
 import { closeDynamicCard, initDynamicCard } from './components/dynamic_card.js';
 import { ft_fetch } from './main.js';
 
@@ -26,8 +25,7 @@ class Navigator {
         if (!pageFiles[page]) return console.error('Page not found:', page);
     
         if (page === 'profile' && !(await state.client.isAuthenticated())) {
-            return window.history.pushState({}, '', `#signin`);
-            // return initDynamicCard('auth');
+            return initDynamicCard('auth');
         }
     
         const hash = page === 'profile'
@@ -60,18 +58,6 @@ class Navigator {
 
         const hash = window.location.hash;
         const isAuth = await state.client.isAuthenticated();
-    
-        if (hash === '#register' || hash === '#signin') {
-            if (isAuth)
-                return this.goToPage('profile');
-            if (this.cardContainer.classList.contains('hidden')) {
-                // Charge dynamiquement la carte auth ; le updateAuthForm est géré dans le cardInitializer
-                return initDynamicCard('auth');
-            } else {
-                // La carte est déjà affichée, donc on peut mettre à jour directement
-                return updateAuthForm(hash);
-            }
-        }
     
         if (!this.cardContainer.classList.contains('hidden'))
             closeDynamicCard();
