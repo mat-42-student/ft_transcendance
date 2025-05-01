@@ -8,11 +8,11 @@ import LevelIdle from './game3d/gameobjects/levels/idle/LevelIdle.js';
 import { LocalGame } from './apps/LocalGame.js';
 
 // Optionally can be enabled for debugging
-if (!localStorage.getItem("keepLogs")) {
-    console.log = () => {};
-    console.warn = () => {};
-    console.error = () => {};
-}
+// if (!localStorage.getItem("keepLogs")) {
+//     console.log = () => {};
+//     console.warn = () => {};
+//     console.error = () => {};
+// }
 
 export const state = {
     client: new Client(),
