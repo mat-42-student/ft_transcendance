@@ -21,6 +21,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from .models import User, Relationship, Game
 from .serializers import (
+    PasswordValidationSerializer,
     UserListSerializer, 
     UserMicroSerializer,
     UserMinimalSerializer, 
@@ -186,12 +187,16 @@ class UserViewSet(viewsets.ModelViewSet):
         return self.update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        """Permet à l'utilisateur authentifié de supprimer son compte."""
         user = self.get_object()
         if user != request.user:
             return Response({'detail': 'Vous ne pouvez pas supprimer un autre utilisateur.'}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = PasswordValidationSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticatedOrService], url_path='block')
     def block_user(self, request, pk=None):

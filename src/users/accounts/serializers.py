@@ -9,6 +9,15 @@ from PIL import Image
 
 from .models import User, Relationship, Game, Tournament
 
+class PasswordValidationSerializer(serializers.Serializer):
+    password = serializers.CharField()
+
+    def validate_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Mot de passe incorrect.")
+        return value
+
 
 # User 'list' serializer
 class UserListSerializer(serializers.ModelSerializer):
@@ -109,6 +118,8 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, data):
+        if not data:
+            raise serializers.ValidationError("Le formulaire est vide : aucun champ n’a été renseigné.")
         user = self.context['user']
 
         password = data.get('password')
@@ -123,6 +134,9 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
         if (new_password and not confirm_password) or (confirm_password and not new_password):
             raise serializers.ValidationError({"new_password": "You must fill both `new_password` and `confirm_password` to update your password."})
+        
+        if password and new_password and password == new_password:
+            raise serializers.ValidationError({"new_password": "The new password must be different from the old one."})
 
         if new_password and confirm_password and new_password != confirm_password:
             raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
@@ -133,6 +147,9 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         return data
 
     def validate_new_password(self, value):
+        if not value:
+            return value
+
         # Password policy (identique à celle du UserRegistrationSerializer)
         if not any(char.isupper() for char in value):
             raise serializers.ValidationError("Password must contain at least one uppercase letter.")

@@ -169,13 +169,9 @@ export async function ft_fetch(url, options = {}) {
         ...options.headers,
         Authorization: `Bearer ${state.client.accessToken}`,
     };
-    try {
-        let response = await fetch(url, options);
-        return response;
-    } catch (error) {
-        // console.error("Fetch error:", error);
-        // throw error;
-    }
+    let response = await fetch(url, options);
+    
+    return response;
 }
 
 export function isTokenExpiringSoon() {

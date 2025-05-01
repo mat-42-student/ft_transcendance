@@ -15,6 +15,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+MIGRATION_MODULES = {
+    'accounts': None,
+}
+
 FRONTEND_JWT = {
     "AUTH_HEADER_PREFIX": "Bearer",
 }

@@ -130,6 +130,10 @@ class Ft42Profile(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - 42 ID: {self.ft_id}"
+    
+    class Meta:
+        managed = False
+        db_table = 'authentication_ft42profile'
 
 # BlockedUser model -> personnalisé pour gérer indexation dans db (améliore perf)
 class BlockedUser(models.Model):
