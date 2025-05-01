@@ -11,7 +11,7 @@ class Navigator {
         window.addEventListener('popstate', () => this.handleHashChange());
     }
 
-    async goToPage(page, userId = null) {
+    async goToPage(page, userId = null, dontChangeHistory = false) {
         if (!this.mainContent) return;
     
         if (state && state.engine && state.engine.scene && state.engine.scene.pendingEndHide) {
@@ -39,9 +39,11 @@ class Navigator {
             const html = await response.text();
             this.mainContent.innerHTML = html;
             const hash = userId ? `#${page}/${userId}` : `#${page}`;
-            
-            window.history.pushState({}, '', hash);
-    
+
+            if (dontChangeHistory != true) {
+                window.history.pushState({}, '', hash);
+            }
+
             requestAnimationFrame(() => {
                 pageFiles[page].setup(userId);
             });
@@ -51,6 +53,11 @@ class Navigator {
     }
 
     async handleHashChange() {
+        // Don't leave #home while playing!
+        if (state.gameApp != null) {
+            state.gameApp.close();
+        }
+
         const hash = window.location.hash;
         const isAuth = await state.client.isAuthenticated();
     
@@ -81,11 +88,11 @@ class Navigator {
     
         switch (page) {
             case 'home':
-                return this.goToPage('home');
+                return this.goToPage('home', null, true);
             case 'profile':
-                return this.goToPage('profile', userId || null);
+                return this.goToPage('profile', userId || null, true);
             default:
-                return this.goToPage('home');
+                return this.goToPage('home', null, true);
         }
     }
 }

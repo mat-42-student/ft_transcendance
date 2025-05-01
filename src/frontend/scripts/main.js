@@ -7,6 +7,13 @@ import { Engine } from './game3d/Engine.js';
 import LevelIdle from './game3d/gameobjects/levels/idle/LevelIdle.js';
 import { LocalGame } from './apps/LocalGame.js';
 
+// Optionally can be enabled for debugging
+// if (!localStorage.getItem("keepLogs")) {
+//     console.log = () => {};
+//     console.warn = () => {};
+//     console.error = () => {};
+// }
+
 export const state = {
     client: new Client(),
     mainSocket: null,
@@ -150,7 +157,7 @@ function setupSearchInput() {
 }
 
 // page unload
-window.addEventListener('beforeunload', function() {
+window.addEventListener('unload', function() {
     state.mainSocket?.close();
     state.gameApp?.close();
     state.engine.scene = null;

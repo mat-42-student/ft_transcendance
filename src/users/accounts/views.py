@@ -1,5 +1,6 @@
 import jwt
 import datetime
+import uuid
 import django.db.models as models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -48,6 +49,9 @@ class UserRegisterView(APIView):
                 'username': user.username,
                 'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=120),
                 'iat': datetime.datetime.now(datetime.timezone.utc),
+                'jti': str(uuid.uuid4()),
+                'typ': "user",
+                'oauth': False,
             }
 
             refresh_payload = {
@@ -55,8 +59,16 @@ class UserRegisterView(APIView):
                 'username': user.username,
                 'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
                 'iat': datetime.datetime.now(datetime.timezone.utc),
+                'jti': str(uuid.uuid4()),
+                'typ': "user",
+                'oauth': False,
             }
 
+            witness_payload = {
+                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
+            }
+
+            witness_token = jwt.encode(witness_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
             access_token = jwt.encode(access_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
             refresh_token = jwt.encode(refresh_payload, settings.FRONTEND_JWT["PRIVATE_KEY"], algorithm=settings.FRONTEND_JWT["ALGORITHM"])
 
@@ -69,6 +81,12 @@ class UserRegisterView(APIView):
                 secure=True,
                 path='/'
             )
+
+            response.set_cookie(
+                key='witnessToken',
+                value=witness_token, 
+            )
+
             response.data = {
                 'success': 'true',
                 'accessToken': access_token

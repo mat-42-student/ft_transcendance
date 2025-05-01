@@ -28,7 +28,7 @@ main {
     padding: 2rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     background-color: #dbe4f388;
-    overflow: scroll;
+    overflow: auto;
 }
 .main-content:empty {
     background-color: transparent;
