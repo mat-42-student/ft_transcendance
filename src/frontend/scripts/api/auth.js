@@ -186,32 +186,40 @@ export async function handleAuthSubmit(event) {
 
     // Validate username requirements
     const usernameError = validateUsername(username);
-    if (hash === '#register' && usernameError) {
+    if (window.authMode === 'register' && usernameError) {
         displayErrorMessage(usernameError);
         return;
     }
     
     // Validate email requirements
     const emailError = validateEmail(email);
-    if (hash === '#register' && emailError) {
+    if (window.authMode === 'register' && emailError) {
         displayErrorMessage(emailError);
         return;
     }
     
     // Password validation for registration
-    if (hash === '#register' && password !== confirm_password) {
+    if (window.authMode === 'register' && password !== confirm_password) {
         displayErrorMessage("Passwords don't match");
         return;
     }
 
     // Validate password requirements
     const passwordError = validatePassword(password);
-    if (hash === '#register' && passwordError) {
+    if (window.authMode === 'register' && passwordError) {
         displayErrorMessage(passwordError);
         return;
     }
 
-    const { apiUrl, payload } = getApiUrlAndPayload(hash, username, email, password, confirm_password);
+    let apiUrl = '';
+    let payload = {};
+    if (window.authMode === 'register') {
+        apiUrl = '/api/v1/users/register/';
+        payload = { username, email, password, confirm_password };
+    } else if (window.authMode === 'signin') {
+        apiUrl = '/api/v1/auth/login/';
+        payload = { email, password };
+    }
 
     if (!apiUrl) {
         displayErrorMessage('Invalid authentication action.');
@@ -239,24 +247,8 @@ function getAuthFormData() {
     const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value.trim();
     const confirm_password = document.getElementById('auth-confirm-password').value.trim();
-    const hash = window.location.hash || '#signin';
+    const hash = window.location.hash;
     return { username, email, password, confirm_password, hash };
-}
-
-// Get API URL and payload based on auth mode
-function getApiUrlAndPayload(hash, username, email, password, confirm_password) {
-    let apiUrl = '';
-    let payload = {};
-    
-    if (hash === '#register') {
-        apiUrl = '/api/v1/users/register/';
-        payload = { username, email, password, confirm_password };
-    } else if (hash === '#signin') {
-        apiUrl = '/api/v1/auth/login/';
-        payload = { email, password };
-    }
-
-    return { apiUrl, payload };
 }
 
 // Send authentication request to API
