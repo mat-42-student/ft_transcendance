@@ -134,7 +134,8 @@ class LoginView(APIView):
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user",
-            'oauth': False
+            'oauth': False,
+            'avatar': user.avatar.url if user.avatar else None
         }
 
         refresh_payload = {
@@ -144,7 +145,8 @@ class LoginView(APIView):
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user",
-            'oauth': False
+            'oauth': False,
+            'avatar': user.avatar.url if user.avatar else None
         }
 
         witness_payload = {
@@ -218,7 +220,8 @@ class RefreshTokenView(APIView):
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user",
-            'oauth': True if isOauth else False
+            'oauth': True if isOauth else False,
+            'avatar': user.avatar.url if user.avatar else None
         }
 
         refresh_payload = {
@@ -228,7 +231,8 @@ class RefreshTokenView(APIView):
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user",
-            'oauth': True if isOauth else False
+            'oauth': True if isOauth else False,
+            'avatar': user.avatar.url if user.avatar else None
         }
 
         witness_payload = {
@@ -435,7 +439,8 @@ class OAuthCallbackView(APIView):
             'iat': datetime.datetime.now(datetime.timezone.utc),
             'jti': str(uuid.uuid4()),
             'typ': "user",
-            'oauth': True
+            'oauth': True,
+            'avatar': user.avatar.url if user.avatar else None
         }
 
         witness_payload = {
