@@ -169,13 +169,9 @@ export async function ft_fetch(url, options = {}) {
         ...options.headers,
         Authorization: `Bearer ${state.client.accessToken}`,
     };
-    try {
-        let response = await fetch(url, options);
-        return response;
-    } catch (error) {
-        // console.error("Fetch error:", error);
-        // throw error;
-    }
+    let response = await fetch(url, options);
+    
+    return response;
 }
 
 export function isTokenExpiringSoon() {
@@ -208,26 +204,44 @@ const buttonLocalVersus = document.getElementById('btn-local-versus');
 const buttonVersus = document.getElementById('versus');
 const buttonTournament = document.getElementsByClassName('btn-tournament')[0];
 
-/** @param {boolean} isInGame Selects which header become visible. */
-export function selectVisibleHeader(isInGame = false) {
-    let show = document.getElementById("header-notplaying");
-    let hide = document.getElementById("header-ingame");
+/** @param {'default' | 'loading' | 'ingame'} mode */
+export function chooseHeader(mode) {
+    const h_default = document.getElementById("header-default");
+    const h_loading = document.getElementById("header-loading");
+    const h_ingame = document.getElementById("header-ingame");
 
-    if (isInGame)
-        [hide, show] = [show, hide];
+    let show, hide;
 
-    hide.style.display = "none";
+    switch (mode) {
+        case 'default':
+            show = h_default;
+            hide = [h_loading, h_ingame];
+            break;
+        case 'loading':
+            show = h_loading;
+            hide = [h_default, h_ingame];
+            break;
+        case 'ingame':
+            show = h_ingame;
+            hide = [h_default, h_loading];
+            break;
+        default:
+            throw Error("Bad argument");
+    }
+
     show.style.display = null;
+    for (const element of hide) {
+        element.style.display = "none";
+    }
 }
-window.toggleHeaderButtons = selectVisibleHeader;  //debug
-selectVisibleHeader(false);  // hide quit button for the first time
+chooseHeader('default');  // hide quit button for the first time
 
 buttonLocalBot.addEventListener('click', async () => {
     if (state.gameApp == null) {
         await navigator.goToPage('');
         state.gameApp = new LocalGame(true, false);
     }
-    selectVisibleHeader(true);
+    chooseHeader('loading');
 });
 
 buttonLocalBot.addEventListener('contextmenu', async (event) => {
@@ -236,7 +250,7 @@ buttonLocalBot.addEventListener('contextmenu', async (event) => {
         await navigator.goToPage('');
         state.gameApp = new LocalGame(true, true);
     }
-    selectVisibleHeader(true);
+    chooseHeader('loading');
 });
 
 buttonLocalVersus.addEventListener('click', async () => {
@@ -244,7 +258,7 @@ buttonLocalVersus.addEventListener('click', async () => {
         await navigator.goToPage('');
         state.gameApp = new LocalGame(false, false);
     }
-    selectVisibleHeader(true);
+    chooseHeader('loading');
 });
 
 buttonQuit.addEventListener('click', () => {
@@ -252,7 +266,7 @@ buttonQuit.addEventListener('click', () => {
         state.gameApp.close(true);
         state.gameApp = null;
     }
-    selectVisibleHeader(false);
+    chooseHeader('default');
 });
 
 // --⬆️-- Header play buttons --⬆️--

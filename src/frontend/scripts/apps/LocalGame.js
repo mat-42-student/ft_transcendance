@@ -1,4 +1,4 @@
-import { state } from "../main.js";
+import { chooseHeader, state } from "../main.js";
 import * as UTILS from "../utils.js";
 import {MathUtils, Vector2} from 'three';
 import * as LEVELS from '../game3d/gameobjects/levels/levels.js';
@@ -75,6 +75,7 @@ export class LocalGame extends GameBase {
     }
 
     startLocalGame() {
+        chooseHeader('ingame');
         this.pause(3);
         this.recenter();
     }

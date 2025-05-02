@@ -167,6 +167,12 @@ header .container {
     background: #45a049;
 }
 
+#header-loading p {
+    text-align: center;
+    font-style: italic;
+    width: 100%;
+}
+
 .search-results {
     display: none; /* Caché tant qu'il n'y a pas de résultats */
     position: absolute;

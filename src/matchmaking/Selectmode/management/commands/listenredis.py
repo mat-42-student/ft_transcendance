@@ -593,7 +593,7 @@ class Command(BaseCommand):
                                     
                                     # update status Guest
                                     guest_status = await guest.getStatus(self.redis_client, self.channel_social)
-                                    if ( guest_status == 'online' and await self.checkStatus(guest, 'pending') == False):
+                                    if (guest_status == 'online' and await self.checkStatus(guest, 'pending') == False):
                                         print('invitation -> checkstatus failed')
                                     await self.invitationGameToGuest(guest, host, True)
 
@@ -934,27 +934,17 @@ class Command(BaseCommand):
         for game in previousGames:
             try:
                 salon = self.createSalonRandom('tournament')
-                print('1')
                 if (game.failed == False):
-                    print('2')
                     player = Player()
-                    print('3')
                     next_player = await sync_to_async(getattr)(game, 'winner')
                     player.user_id = next_player.id
-                    print('4')
                     player.type_game = 'tournament'
-                    print('5')
                     player.get_user()
-                    print('6')
                     salon.players.update({player.user_id: player})
-                    print('7')
                 self.salons['tournament'].append(salon)
-                print('8')
                 tournament = await sync_to_async(getattr)(game, 'tournament')
                 tournament_id = tournament.id
-                print('9')
                 round = game.round
-                print('10')
             except Exception as e:
                 print(f'Create new salons failed: {e}')
 
@@ -1031,7 +1021,8 @@ class Command(BaseCommand):
         for i_gamId, salon in self.games[player.type_game][tournamentId].items():
             bracket.update({salonNumber: salon.getDictPlayers()})
             gameDB = await sync_to_async(self.getGame)(i_gamId)
-            bracket[salonNumber].update({'round': gameDB.round})
+            if (gameDB is not None):
+                bracket[salonNumber].update({'round': gameDB.round})
             salonNumber = salonNumber + 1
 
         data['body']['opponents'] = bracket
@@ -1339,14 +1330,13 @@ class Command(BaseCommand):
             tournament = await sync_to_async(getattr)(gameDB, 'tournament')
             winnerTournament = await sync_to_async(getattr)(gameDB, 'winner')
             
-            
             for i_game in allgamesDB:
                 gameInCache = self.getGameInCache(i_game.id, tournament.id)
                 for playerId, player in gameInCache.players.items():
                     if (player.socketGame_is_online == False):
                         await self.JSON_cancelTournament(playerId)
                     else:
-                        if (player.leave_game == False and (player.socketGame_is_online == True or player.socketGame_is_online == True)):
+                        if (player.leave_game == False and (player.socketGame_is_online == True or player.socketGame_is_online == None)):
                             await self.sendEndTournamentWithBracketJSON(playerId, player, None, tournament.id, winnerTournament.id)                            
                         await self.JSON_endgameWithoutError(playerId)
                         
@@ -1433,9 +1423,6 @@ class Command(BaseCommand):
                 return None
         except Exception as e:
             print(f'error in last_game_in_the_same_round_without_errors_db : {e}')
-            
-    def set_winner_of_tournament(self, gameDB):
-        print("Set winnnner !!!")
 
     def getallgamesForTournament(self, game):
         try:
@@ -1518,16 +1505,12 @@ class Command(BaseCommand):
 
     
     def setTournament_winner_db(self, tournamentId, winnerId):
-        print("Set winner of tournament START")
         try:
             tournament = Tournament.objects.get(id=tournamentId)
             winner = User.objects.get(id=winnerId)
 
             tournament.winner = winner
             tournament.save()
-            print("Set winner of tournament END")
-
-
         except Exception as e:
             print(f"set tournament winner in db failed: {e}")       
         
