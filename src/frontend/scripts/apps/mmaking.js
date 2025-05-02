@@ -308,12 +308,13 @@ export class Mmaking
 			}
 		};
 
+
 		this.guests[key] = null;
 		this.invited_by[key] = false;
 		this.host = true;
-
 		await this.sendMsg(data);
 		await this.renderMatchmaking();
+
 	}
 
 	async btnInviteActive(key)
@@ -593,7 +594,7 @@ export class Mmaking
 
     async sendMsg(message)
 	{
-
+		
         const data = {
             'header': {  //Mandatory part
             'service': 'mmaking',
@@ -668,7 +669,9 @@ export class Mmaking
 				else if (invite.guest_id)
 				{
 					this.guests[invite.guest_id] = false;
-					this.salonHost = false;
+					console.log(`salon = ${invite.salon}`);
+					if (invite.salon == false)
+						this.salonHost = false;
 				}
 
 			}
