@@ -112,6 +112,7 @@ services:
       - "8057"
     networks:
       - main-network
+      - db-network
     restart: on-failure
 
   matchmaking:
