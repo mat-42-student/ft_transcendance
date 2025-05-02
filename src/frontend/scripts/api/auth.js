@@ -176,13 +176,46 @@ function validateUsername(username) {
     }
 }
 
-
 // Handle API requests for login/registration
 export async function handleAuthSubmit(event) {
     event.preventDefault();
     cleanErrorMessage();
 
     const { username, email, password, confirm_password, hash } = getAuthFormData();
+    const totp = document.getElementById('auth-totp').value.trim();
+
+    // If we're in 2FA mode, handle it differently
+    if (window.authMode === 'twoFactorAuth') {
+        // Validate TOTP
+        if (!totp || totp.length === 0) {
+            displayErrorMessage("Please enter your 2FA verification code.");
+            return;
+        }
+
+        const payload = { email, password, totp };
+
+        try {
+            const response = await sendAuthRequest('/api/v1/auth/login/', payload);
+            
+            if (response.ok) {
+                const data = await response.json();
+                await handleAuthResponse(data);
+            } else {
+                // Special handling for 2FA errors
+                const errorData = await response.json();
+                if (errorData.detail === "Invalid TOTP") {
+                    displayErrorMessage("Invalid verification code. Please try again.");
+                } else {
+                    displayErrorMessage(errorData.detail || "Verification failed. Please try again.");
+                }
+            }
+        } catch (error) {
+            console.error('2FA verification error:', error.message || 'Unknown error');
+            displayErrorMessage("Error during verification. Please try again.");
+        }
+        
+        return;
+    }
 
     // Validate username requirements
     const usernameError = validateUsername(username);
@@ -247,8 +280,9 @@ function getAuthFormData() {
     const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value.trim();
     const confirm_password = document.getElementById('auth-confirm-password').value.trim();
+    const totp = document.getElementById('auth-totp').value.trim();
     const hash = window.location.hash;
-    return { username, email, password, confirm_password, hash };
+    return { username, email, password, confirm_password, totp, hash };
 }
 
 // Send authentication request to API
@@ -273,6 +307,7 @@ async function handleAuthResponse(data) {
         return { success: false };
     }
 }
+
 // Handle backend authentication errors
 async function handleAuthError(response) {
     try {
@@ -283,18 +318,19 @@ async function handleAuthError(response) {
 
         const errorData = await response.json();
         
-        if (errorData.error === '2fa_required') {
+        if (errorData.error === '2fa_required!') {
             handle2FA(response);
+            return { success: false, twoFactorRequired: true };
         } else if (errorData.detail === 'User not found!' || errorData.detail === 'Incorrect password') {
             displayErrorMessage("Incorrect username or password.");
         } else if (errorData.error === 'User already logged in') {
             displayErrorMessage("User already logged in.");
         } else if (errorData.username || errorData.email) {
             if (errorData.email && errorData.email.length > 0) {
-            displayErrorMessage(`Email: ${errorData.email[0]}`);
+                displayErrorMessage(`Email: ${errorData.email[0]}`);
             }
             if (errorData.username && errorData.username.length > 0) {
-            displayErrorMessage(`Username: ${errorData.username[0]}`);
+                displayErrorMessage(`Username: ${errorData.username[0]}`);
             }
         } else {
             displayErrorMessage("Authentication failed. Please try again.");
@@ -302,8 +338,8 @@ async function handleAuthError(response) {
         
         return { success: false, error: errorData };
     } catch (error) {
-      displayErrorMessage("Authentication failed. Please try again.");
-      return { success: false, error: { message: response.statusText || "Unknown error" } };
+        displayErrorMessage("Authentication failed. Please try again.");
+        return { success: false, error: { message: response.statusText || "Unknown error" } };
     }
 }
 
@@ -311,17 +347,21 @@ async function handleAuthError(response) {
 function handle2FA(response) {
     const totpContainer = document.getElementById('totp-container');
     totpContainer.classList.remove('hidden');
-    
-    const email = document.getElementById('auth-email').value.trim();
-    const password = document.getElementById('auth-password').value.trim();
-    const totp = document.getElementById('auth-totp').value.trim();
 
-    const payload = { email, password, totp };
+    // Update the submit button text to reflect the action
+    const submitButton = document.getElementById('auth-submit');
+    if (submitButton) {
+        submitButton.textContent = 'Verify 2FA';
+    }
 
-    sendAuthRequest('/api/v1/auth/login/', payload)
-        .then(response => response.json())
-        .then(data => handleAuthResponse(data))
-        .catch(error => console.error('Error during 2FA:', error));
+    // Store information that we're in 2FA mode
+    window.authMode = 'twoFactorAuth';
+
+    // Focus the TOTP input for better UX
+    const totpInput = document.getElementById('auth-totp');
+    if (totpInput) {
+        totpInput.focus();
+    }
 }
 
 // Display generic error message in form
