@@ -54,14 +54,6 @@
                 <!-- Conteneur pour les résultats -->
                 <ul id="searchResults" class="search-results"></ul>
             </div>
-
-            <!-- User Profile Button -->
-            <div class="header-right">
-                <div id="btn-profile">
-                    <a id="profile-link"></a>
-                    <span class="user-status"></span>
-                </div>
-            </div>
         </div>
         <div id="header-loading" class="container" style="display: none;">
             <p>Please wait...</p>
@@ -69,6 +61,12 @@
         <div id="header-ingame" class="container" style="display: none;">
             <button id="btn-quit-game" class="selection-item" type="button">Quit Match</button>
         </div>
+
+        <!-- User Profile Button, always visible -->
+        <button id="btn-profile">
+            <div id="profile-link"></div>
+            <span class="user-status"></span>
+        </button>
     </header>
 
     <main>

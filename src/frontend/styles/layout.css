@@ -59,7 +59,7 @@ header .container {
 /* Home Button */
 .header-left #btn-home,
 .main-content #btn-404-return,
-.header-right #btn-profile {
+#btn-profile {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -70,6 +70,14 @@ header .container {
     border-radius: 5px;
     font-size: 1rem;
     transition: background 0.3s;
+    text-wrap-mode: nowrap;
+    border: none;
+}
+
+#btn-profile:disabled:hover,
+#btn-profile:disabled {
+    background: transparent;
+    color: #c0c0c0;
 }
 
 .user-status {
@@ -100,7 +108,7 @@ header .container {
 }
 
 .header-left #btn-home:hover,
-.header-right #btn-profile:hover {
+#btn-profile:hover {
     background: #11008f;
 }
 

@@ -209,19 +209,23 @@ export function chooseHeader(mode) {
     const h_default = document.getElementById("header-default");
     const h_loading = document.getElementById("header-loading");
     const h_ingame = document.getElementById("header-ingame");
+    const profileButton = document.getElementById("btn-profile");
 
     let show, hide;
 
     switch (mode) {
         case 'default':
+            profileButton.disabled = null;
             show = h_default;
             hide = [h_loading, h_ingame];
             break;
         case 'loading':
+            profileButton.disabled = "disabled";
             show = h_loading;
             hide = [h_default, h_ingame];
             break;
         case 'ingame':
+            profileButton.disabled = "disabled";
             show = h_ingame;
             hide = [h_default, h_loading];
             break;
