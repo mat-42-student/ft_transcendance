@@ -10,7 +10,7 @@ services:
   auth:
     container_name: auth
     build:
-      context: ./auth
+      context: auth_service
       dockerfile: Dockerfile
     volumes:
       - ./certs/services/auth/auth.crt:/etc/ssl/auth.crt:ro
@@ -31,7 +31,7 @@ services:
     container_name: users
     image: users
     build:
-      context: ./users
+      context: users_service
       dockerfile: Dockerfile
     expose:
       - "8000"
@@ -57,7 +57,7 @@ services:
   chat:
     container_name: chat
     build:
-      context: chat
+      context: chat_service
       dockerfile: Dockerfile
     stop_grace_period: 2s
     env_file:
@@ -78,7 +78,7 @@ services:
   social:
     container_name: social
     build:
-      context: social_project
+      context: social_service
       dockerfile: Dockerfile
     env_file:
       - .env
@@ -98,7 +98,7 @@ services:
   gateway:
     container_name: gateway
     build:
-      context: gateway
+      context: gateway_service
       dockerfile: Dockerfile
     env_file:
       - .env
@@ -118,7 +118,7 @@ services:
   matchmaking:
     container_name: matchmaking
     build:
-      context: matchmaking
+      context: matchmaking_service
       dockerfile: Dockerfile
     env_file:
       - .env
@@ -162,7 +162,7 @@ services:
   pong:
     container_name: pong
     build:
-      context: pong
+      context: game_service
       dockerfile: Dockerfile
     env_file:
       - .env
