@@ -147,7 +147,7 @@ const cardInitializers = {
 
             try {
                 await apiRequest(`/api/v1/users/${state.client.userId}/`, 'DELETE',JSON.stringify({ password }))
-
+                await state.socialApp.notifyAllFriends();
                 state.client.logout(); // ou window.location.reload()
             } catch (error) {
                 displayErrorMessage(error);

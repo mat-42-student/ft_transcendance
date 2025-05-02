@@ -242,7 +242,13 @@ export class SocialApp{
         };
         await state.mainSocket.send(JSON.stringify(data));
     }
-    
+
+    async notifyAllFriends() {
+        for (const friend of this.friendList.values()) {
+            await this.notifyUser(friend.id);
+        }
+    }
+
     async getInfos() {
         let data = {
             "header": {
