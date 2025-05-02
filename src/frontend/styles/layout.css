@@ -39,13 +39,14 @@ main {
 /* HEADER */
 header {
     display: flex;
-    padding: 1rem 0;
+    padding: 1rem;
     justify-content: center;
     align-items: center;
     position: relative;
     color: #fff;
     background: #333;
     height: 40px;
+    user-select: none;
 }
 
 header .container {
