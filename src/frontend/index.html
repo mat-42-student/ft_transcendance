@@ -36,31 +36,21 @@
             <!-- Homepage Button -->
             <div class="header-left">
                 <a id="btn-home">Home</a>
-            </div>
-
-            <!-- Navbar -->
-            <!-- <nav class="selection-bar"> -->
+                <!-- Navbar -->
                 <button id="btn-local-bot" class="selection-item" type="button">Solo</button>
                 <button id="btn-local-versus" class="selection-item" type="button">Local Versus</button>
                 <button id="versus" class="selection-item" type="button">Versus</button>
                 <button class="selection-item btn-tournament" type="button">Tournament</button>
-            <!-- </nav> -->
+            </div>
+
 
             <!-- Searchbar -->
             <div class="header-center">
                 <form class="search-form" action="#" method="GET" id="search-form">
-                    <input type="text" id="searchInput" name="search" placeholder="Search..." aria-label="Recherche" autocomplete="off">
+                    <input type="text" id="searchInput" name="search" placeholder="Search User..." aria-label="Recherche" autocomplete="off">
                 </form>
                 <!-- Conteneur pour les résultats -->
                 <ul id="searchResults" class="search-results"></ul>
-            </div>
-
-            <!-- User Profile Button -->
-            <div class="header-right">
-                <div id="btn-profile">
-                    <a id="profile-link"></a>
-                    <span class="user-status"></span>
-                </div>
             </div>
         </div>
         <div id="header-loading" class="container" style="display: none;">
@@ -69,6 +59,12 @@
         <div id="header-ingame" class="container" style="display: none;">
             <button id="btn-quit-game" class="selection-item" type="button">Quit Match</button>
         </div>
+
+        <!-- User Profile Button, always visible -->
+        <button id="btn-profile">
+            <div id="profile-link"></div>
+            <span class="user-status"></span>
+        </button>
     </header>
 
     <main>
