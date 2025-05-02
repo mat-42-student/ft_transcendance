@@ -34,7 +34,14 @@ class JWTAuthMiddleware:
 
     def get_public_key(self):
         try:
-            response = requests.get(f"http://auth:8000/api/v1/auth/public-key/")
+            url = "https://nginx:8443/api/v1/auth/public-key/"
+            response = requests.get(
+                url,
+                timeout=10,
+                cert=("/etc/ssl/pong.crt", "/etc/ssl/pong.key"),
+                verify="/etc/ssl/ca.crt"
+            )
+            
             if response.status_code == 200:
                 return response.json().get("public_key")
             else:
