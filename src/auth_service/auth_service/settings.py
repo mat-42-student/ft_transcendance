@@ -57,10 +57,10 @@ REST_FRAMEWORK = {
     ],
 }
 
-# OAuth 2.0 Authorization Code grant
+# OAuth 2.0
 OAUTH2_ACF_REDIRECT_URI = 'https://localhost:3000/api/v1/auth/oauth/callback/'
-OAUTH2_ACF_CLIENT_ID = 'u-s4t2ud-e67daca7ed4b4e6fb9397d6f7b1ee0c2cd81dd3dda313a57d17975145ad21738'
-OAUTH2_ACF_CLIENT_SECRET = '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'
+OAUTH2_ACF_CLIENT_ID = os.getenv("OAUTH2_ACF_CLIENT_ID")
+OAUTH2_ACF_CLIENT_SECRET = os.getenv("OAUTH2_ACF_CLIENT_SECRET")
 
 ROOT_URLCONF = 'auth_service.urls'
 
