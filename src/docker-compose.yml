@@ -1,7 +1,9 @@
 networks:
-  dev-network:
+  main-network:
     driver: bridge
-
+  db-network:
+    driver: bridge
+  
 volumes:
   postgres_data:
   media:
@@ -25,7 +27,8 @@ services:
       - .env
     restart: on-failure
     networks:
-      - dev-network
+      - main-network
+      - db-network
 
   users:
     container_name: users
@@ -43,13 +46,9 @@ services:
     env_file:
       - .env
     networks:
-      - dev-network
+      - main-network
+      - db-network
     restart: on-failure
-    # healthcheck:
-    #   test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 3
     depends_on:
       auth:
         condition: service_started
@@ -72,7 +71,7 @@ services:
       - ./certs/services/chat/chat.key:/etc/ssl/chat.key:ro
       - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
     networks:
-      - dev-network
+      - main-network
     restart: on-failure
 
   social:
@@ -92,7 +91,7 @@ services:
       auth:
         condition: service_started 
     networks:
-      - dev-network
+      - main-network
     restart: on-failure
 
   gateway:
@@ -112,7 +111,7 @@ services:
     expose:
       - "8057"
     networks:
-      - dev-network
+      - main-network
     restart: on-failure
 
   matchmaking:
@@ -136,7 +135,8 @@ services:
     expose:
       - "8000"
     networks:
-      - dev-network
+      - main-network
+      - db-network
     restart: on-failure
 
   nginx:
@@ -156,7 +156,7 @@ services:
     volumes:
       - ./certs/ca/ca.crt:/etc/nginx/ssl/ca.crt:ro,z
     networks:
-      - dev-network
+      - main-network
     restart: on-failure
 
   pong:
@@ -175,7 +175,7 @@ services:
     expose:
       - "8006"
     networks:
-      - dev-network
+      - main-network
     restart: on-failure
 
   cli:
@@ -183,7 +183,7 @@ services:
     image: alpine
     command: sh -c "apk add --no-cache websocat bash && trap 'exit 0' TERM; sleep infinity & wait"
     networks:
-      - dev-network
+      - main-network
 
   postgres:
     container_name: postgres
@@ -195,7 +195,7 @@ services:
     env_file:
       - .env
     networks:
-      - dev-network
+      - db-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d transcendance -U toto"]
       interval: 1s
@@ -209,6 +209,6 @@ services:
     expose:
       - "6379"
     networks:
-      - dev-network
+      - main-network
     restart: on-failure
 
