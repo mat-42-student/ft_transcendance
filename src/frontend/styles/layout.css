@@ -45,8 +45,10 @@ header {
     position: relative;
     color: #fff;
     background: #333;
-    height: 40px;
+    height: fit-content;
     user-select: none;
+    overflow-y: hidden;
+    overflow-x: auto;
 }
 
 header .container {
@@ -57,9 +59,17 @@ header .container {
     padding: 0 1rem;
 }
 
+.header-left {
+    display: flex;
+}
+.header-left>* {
+    margin: 0 0.5rem;
+}
+
 /* Home Button */
 .header-left #btn-home,
 .main-content #btn-404-return,
+.selection-item,
 #btn-profile {
     display: flex;
     flex-direction: row;
@@ -71,7 +81,7 @@ header .container {
     border-radius: 5px;
     font-size: 1rem;
     transition: background 0.3s;
-    text-wrap-mode: nowrap;
+    white-space: nowrap;  /* login button would split its 2 sub elements into lines */
     border: none;
 }
 
@@ -79,6 +89,14 @@ header .container {
 #btn-profile:disabled {
     background: transparent;
     color: #c0c0c0;
+}
+
+.selection-item {
+    background: #444;
+}
+
+.selection-item:hover {
+    background: #222;
 }
 
 .user-status {
@@ -125,22 +143,6 @@ header .container {
     color: #fff;
     border-radius: 5px;
     overflow: hidden;
-}
-
-.selection-item {
-    all: unset; /* Réinitialise tous les styles par défaut des boutons */
-    flex: 1;
-    text-align: center;
-    padding: 0.2rem 0;
-    cursor: pointer;
-    transition: background 0.3s;
-    background: #333;
-    color: #fff;
-    border-radius: 0; /* Préserve le design actuel */
-}
-
-.selection-item:hover {
-    background: #555;
 }
 
 
@@ -240,4 +242,11 @@ header .container {
 
 .friend-status.offline {
     background: grey;
+}
+
+#fps-meter {
+    border-radius:5px;
+    overflow: hidden;
+    min-width: fit-content;
+    margin: -1rem 0;  /* this box is taller than the buttons, and forced the header to get taller. */
 }
