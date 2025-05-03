@@ -33,8 +33,11 @@ export class Client{
         	this.state.mainSocket = new MainSocket();
         	this.state.mainSocket.init();
 		}
-        while (this.state.mainSocket.socket.readyState != WebSocket.OPEN)
+        while ((this.state.mainSocket?.socket?.readyState !== WebSocket.OPEN)
+            && (this.state.mainSocket)  // Fix infinite loop
+        ) {
             await delay(0.1); // don't hit me
+        }
         this.globalRender();
     }
 
@@ -73,9 +76,9 @@ export class Client{
     }
 
     async globalRender() {
-        await this.state?.socialApp.render();
-        this.state?.chatApp.renderChat();
-        await this.state?.mmakingApp.renderMatchmaking();
+        await this.state?.socialApp?.render();
+        this.state?.chatApp?.renderChat();
+        await this.state?.mmakingApp?.renderMatchmaking();
         this.renderProfileBtn();
     }
 

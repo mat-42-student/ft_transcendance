@@ -111,7 +111,7 @@ class Command(BaseCommand):
                 "status": "offline"
             }))
         self.user_status[user_id] = status # Update current user status
-        print(f"User {user_id} is now {status}")
+        # print(f"User {user_id} is now {status}")
         await self.send_me_my_own_status(user_id)
 
     async def info_process(self, data):

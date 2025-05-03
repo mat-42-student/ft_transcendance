@@ -24,7 +24,7 @@ class UserManager(BaseUserManager):
     
 
 
-# User model (inherits Django user model) -> Ajouter: bio, tableaux historique 1à dernières games ???
+# User model (inherits Django user model)
 class User(AbstractBaseUser, PermissionsMixin):
     STATUS_CHOICES = [
         ('online', 'Online'),
@@ -53,7 +53,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         upload_to="avatars/", 
         default='default.png'
     )
-    # status à changer/supprimer -> gestion status via ws dans front
     status = models.CharField(
         max_length=20, 
         choices=STATUS_CHOICES, 
@@ -80,8 +79,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     updated_at = models.DateTimeField(
         auto_now=True
     )
-    
-    # Champs d'authentification standard de Django
     is_active = models.BooleanField(
         default=True
     )
@@ -135,19 +132,19 @@ class Ft42Profile(models.Model):
         managed = False
         db_table = 'authentication_ft42profile'
 
-# BlockedUser model -> personnalisé pour gérer indexation dans db (améliore perf)
+# BlockedUser model
 class BlockedUser(models.Model):
     from_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='blocking',
-        db_index=True  # Ajout de l'index sur la clé étrangère
+        db_index=True
     )
     to_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='blocked',
-        db_index=True  # Ajout de l'index sur la clé étrangère
+        db_index=True
     )
     blocked_at = models.DateTimeField(auto_now_add=True)
 
