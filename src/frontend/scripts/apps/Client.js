@@ -33,7 +33,7 @@ export class Client{
         	this.state.mainSocket = new MainSocket();
         	this.state.mainSocket.init();
 		}
-        while (this.state.mainSocket.socket.readyState != WebSocket.OPEN)
+        while (this.state.mainSocket.socket?.readyState !== WebSocket.OPEN)
             await delay(0.1); // don't hit me
         this.globalRender();
     }
