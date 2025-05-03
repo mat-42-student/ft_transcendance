@@ -138,47 +138,36 @@ const cardInitializers = {
         if (!form)
             return mainErrorMessage("Delete form not found.");
 
+        if (state.client.isOauth) {
+            const passwordInput = document.getElementById('delete-password');
+            const label = form.querySelector(`label[for="password"]`);
+            if (label) label.remove();
+            if (passwordInput) passwordInput.remove();
+        }
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const password = document.getElementById('delete-password').value.trim();
-            if (!password)
-                return displayErrorMessage("Password is required to delete the profile", 'delete-profile-error');
+            let body;
+            if (!state.client.isOauth) {
+                const password = document.getElementById('delete-password')?.value.trim();
+                if (!password)
+                    return displayErrorMessage("Password is required to delete the profile", 'delete-profile-error');
+
+                body = JSON.stringify({ password });
+            } else {
+                body = null;
+            }
 
             try {
-                await apiRequest(`/api/v1/users/${state.client.userId}/`, 'DELETE',JSON.stringify({ password }))
-
-                state.client.logout(); // ou window.location.reload()
+                await apiRequest(`/api/v1/users/${state.client.userId}/`, 'DELETE', body);
+                await state.socialApp.notifyAllFriends();
+                state.client.logout();
             } catch (error) {
-                displayErrorMessage(error);
+                displayErrorMessage(error.message || error, 'delete-profile-error');
             }
         });
     }
-    // 'delete': () => {
-    //     const form = document.getElementById('delete-profile-form');
-    //     if (!form)
-    //         return mainErrorMessage("Delete form not found.");
-
-    //     form.addEventListener('submit', async (e) => {
-    //         e.preventDefault();
-
-    //         const password = document.getElementById('delete-password').value.trim();
-    //         if (!password)
-    //             return displayErrorMessage("Password is required to delete the profile", 'delete-profile-error');
-
-    //         try {
-    //             await apiRequest(`/api/v1/users/${state.client.userId}/`, {
-    //                 method: 'DELETE',
-    //                 headers: { 'Content-Type': 'application/json' },
-    //                 body: { password },
-    //             });
-
-    //             state.client.logout(); // ou window.location.reload()
-    //         } catch (err) {
-    //             displayErrorMessage(err.message, 'delete-profile-error');
-    //         }
-    //     });
-    // }
 };
 
 export async function initDynamicCard(routeKey) {
@@ -204,6 +193,7 @@ export async function initDynamicCard(routeKey) {
             await cardInitializers[routeKey]();
         }
     } catch (error) {
+        console.log(error);
         mainErrorMessage("Erreur lors du chargement de la carte dynamique");
         closeDynamicCard();
     }
@@ -227,59 +217,3 @@ function displaySuccessMessage(message) {
     updateProfileSuccessContainer.textContent = message;
     updateProfileSuccessContainer.classList.remove('hidden');
 }
-
-/*
-    Version de base de la fonction optimisée
-*/
-// export async function initDynamicCard(routeKey) {
-//     const cardContainer = document.getElementById('dynamic-card-container');
-//     const cardContent = document.getElementById('dynamic-card-content');
-
-//     if (!cardContainer || !cardContent) {
-//         console.error("Les éléments dynamiques de la carte sont introuvables.");
-//         return;
-//     }
-
-//     try {
-//         if (!dynamicCardRoutes[routeKey])
-//             throw new Error(`Route inconnue : ${routeKey}`);
-        
-//         const response = await ft_fetch(dynamicCardRoutes[routeKey]);
-//         if (!response.ok)
-//             throw new Error(`Erreur de chargement : ${response.status} ${response.statusText}`);
-        
-//         const content = await response.text();
-//         if (!content.trim())
-//             throw new Error(`Le fichier ${dynamicCardRoutes[routeKey]} est vide.`);
-
-//         cardContent.innerHTML = content;
-//         cardContainer.classList.remove('hidden');
-
-//         // Délégation d'événements
-//         cardContent.addEventListener("click", (event) => {
-//             if (event.target.matches("#btn-enroll-2fa")) {
-//                 enroll2fa();
-//             } else if (event.target.matches("#btn-verify-2fa")) {
-//                 verify2fa();
-//             } else if (event.target.matches("#oauth-submit")) {
-//                 window.location.href = 'https://localhost:3000/api/v1/auth/oauth/login/';
-//             }
-//         });
-
-//         if (routeKey === 'auth') {
-//             window.location.hash = '#signin';
-//             initAuthFormListeners();
-
-//             document.querySelectorAll('#auth-form a[data-action]').forEach(link => {
-//                 link.addEventListener('click', (event) => {
-//                     event.preventDefault();
-//                     const action = link.getAttribute('data-action');
-//                     history.pushState(action, '', `#${action}`);
-//                     appNavigator.handleHashChange();
-//                 });
-//             });
-//         }
-//     } catch (error) {
-//         console.error(`Erreur lors du chargement de la carte dynamique :`, error);
-//     }
-// }
