@@ -16,6 +16,7 @@ export class MainSocket {
 	init() {
 		let socketURL = "wss://" + window.location.hostname + ":3000/ws/?t=" + state.client.accessToken;
 		// ws://localhost:3000/ws/?t=
+		this.didSocketOpen = false;
 		this.socket = new WebSocket(socketURL);
 		state.chatApp = new ChatApp();
 		state.socialApp = new SocialApp();
@@ -24,15 +25,26 @@ export class MainSocket {
 		state.mmakingApp = new Mmaking();
 
 		this.socket.onerror = async (e)=> {
-			console.error(e.message);
+			console.log('MainSocket onError');  //TODO remove log 'onError'
+			if (state.mainSocket == false) {
+				// socket failed to open
+				console.log('MainSocket failed to open, logging out.');  //TODO remove log 'MainSocket failed to open'
+				state.client.logout();
+			} else {
+				console.error(e.message);
+			}
 		};
 
         this.socket.onopen = async function(e) {
+			state.mainSocket = true;
+			console.log('MainSocket onOpen');  //TODO remove log 'onOpen'
 			// console.log("mainSocket connected");
         };
 
 		this.socket.onclose = async (e)=> {
 			// console.log("mainSocket disconnected");
+			state.mainSocket = false;
+			console.log('MainSocket onClose');  //TODO remove log 'onClose'
 		};
 
 		this.socket.onmessage = async (e)=> {
