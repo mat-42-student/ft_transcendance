@@ -198,12 +198,10 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         test = 5
         data = {'user_id': self.consumer_id}
         status = None
-        print(data)  # debug
         await self.redis_client.publish(self.REDIS_GROUPS['auth'], dumps(data))
         while status is None and test >= 0:
             try:
                 status = await self.redis_client.get(f'is_{self.consumer_id}_logged')
-                print(f'GET status = {status}')  # debug
                 if status is not None:
                     return status
             except Exception as e:
