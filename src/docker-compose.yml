@@ -31,12 +31,12 @@ services:
     container_name: users
     image: users
     build:
-      context: users_service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: users_service/Dockerfile
     expose:
       - "8000"
     volumes:
-      - media:/media
+      - media:/media:rw
       - ./certs/services/users/users.crt:/etc/ssl/users.crt:ro
       - ./certs/services/users/users.key:/etc/ssl/users.key:ro
       - ./certs/ca/ca.crt:/etc/ssl/ca.crt:ro
@@ -144,13 +144,17 @@ services:
       - "3000:443"
       - "8443:8443"
     depends_on:
-      - users
-      - auth
-      - matchmaking
-      - gateway
+      users:
+        condition: service_started
+      auth:
+        condition: service_started
+      matchmaking:
+        condition: service_started
+      gateway:
+        condition: service_started
     volumes:
       - ./certs/ca/ca.crt:/etc/nginx/ssl/ca.crt:ro,z
-      - media:/media
+      - media:/media:ro
     networks:
       - main-network
     restart: on-failure
