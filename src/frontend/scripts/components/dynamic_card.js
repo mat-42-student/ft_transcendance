@@ -6,8 +6,9 @@ import { createRequestItem } from './friend_requests.js';
 import { navigator as appNavigator } from '../nav.js';
 import { updateProfile } from '../api/users.js';
 import { initProfilePage } from '../pages.js';
-import { showErrorMessage } from '../utils.js';
+import { mainErrorMessage } from '../utils.js';
 import { validatePassword } from '../api/auth.js'
+import { apiRequest } from '../api/users.js';
 
 const dynamicCardRoutes = {
     'auth': './partials/cards/auth.html',
@@ -22,6 +23,7 @@ const dynamicCardRoutes = {
 	'load': './partials/cards/salonLoad.html',
 	'tournament': './partials/cards/tournament.html',
     'update': './partials/cards/update_profile.html',
+    'delete': './partials/cards/delete_profile.html',
 };
 
 const cardInitializers = {
@@ -43,7 +45,7 @@ const cardInitializers = {
         if (!requestList) return;
 
         if (!(await state.client.isAuthenticated())) {
-            showErrorMessage("Vous devez vous connecter pour accéder à cette fonctionnalité");
+            mainErrorMessage("Vous devez vous connecter pour accéder à cette fonctionnalité");
             return closeDynamicCard();
         }
 
@@ -65,19 +67,17 @@ const cardInitializers = {
                 }
             }
         } catch (error) {
-            showErrorMessage("SocialApp is not initialized.");
+            mainErrorMessage("SocialApp is not initialized.");
             closeDynamicCard();
         }
     },
     'update': async () => {
         const updateForm = document.getElementById('update-profile-form');
 
-        if (!updateForm) {
-            console.error("Update form not found.");
-            return;
-        }
+        if (!updateForm)
+            return mainErrorMessage("Update form not found.");
 
-        // Supprimer les champs password si l'utilisateur est OAuth
+        // Remove password update if user is loged in with Oauth
         if (state.client.isOauth) {
             const passwordFields = ['password', 'new_password', 'confirm_password'];
 
@@ -92,9 +92,14 @@ const cardInitializers = {
             }
         }
 
+        document.getElementById('btn-delete-profile')?.addEventListener('click', () => {
+            initDynamicCard('delete');
+        });
+
         updateForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const formData = new FormData(updateForm);
+            const password = document.getElementById('password').value.trim();
             const new_password = document.getElementById('new_password').value.trim();
             const confirm_password = document.getElementById('confirm_password').value.trim();
             
@@ -105,40 +110,64 @@ const cardInitializers = {
                 }
             }
             
+            // Check password policy
             if (new_password || confirm_password) {
-                if (!new_password || !confirm_password) {
-                    displayErrorMessage("Both password fields must be filled");
-                    return;
-                }
-                
-                // Validate password requirements
+                if (!password)
+                    return displayErrorMessage("You must provide your current password to update it");
+                if (!new_password || !confirm_password)
+                    return displayErrorMessage("Both password fields must be filled");
                 const passwordError = validatePassword(new_password);
-                if (passwordError) {
-                    displayErrorMessage(passwordError);
-                    return;
-                }
-                
-                if (new_password !== confirm_password) {
-                    displayErrorMessage("Passwords don't match");
-                    return;
-                }
+
+                if (passwordError)
+                    return displayErrorMessage(passwordError);
+                if (new_password !== confirm_password)
+                    return displayErrorMessage("Passwords don't match");
             }
             
             try {
                 const response = await updateProfile(formData, state.client.userId);
-                if (response) {
-                    initProfilePage(state.client.userId);
-                    closeDynamicCard();
-                } else {
-                    displayErrorMessage("Update failed"); // Consider more specific error messages
-                }
+                initProfilePage(state.client.userId);
+                closeDynamicCard();
             } catch (error) {
-                displayErrorMessage("An error occurred during the update");
-                console.error("Error updating profile:", error);
+                displayErrorMessage(error);
             }
         });
     },
-    // Add other specific initializations here
+    'delete': () => {
+        const form = document.getElementById('delete-profile-form');
+        if (!form)
+            return mainErrorMessage("Delete form not found.");
+
+        if (state.client.isOauth) {
+            const passwordInput = document.getElementById('delete-password');
+            const label = form.querySelector(`label[for="password"]`);
+            if (label) label.remove();
+            if (passwordInput) passwordInput.remove();
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            let body;
+            if (!state.client.isOauth) {
+                const password = document.getElementById('delete-password')?.value.trim();
+                if (!password)
+                    return displayErrorMessage("Password is required to delete the profile", 'delete-profile-error');
+
+                body = JSON.stringify({ password });
+            } else {
+                body = null;
+            }
+
+            try {
+                await apiRequest(`/api/v1/users/${state.client.userId}/`, 'DELETE', body);
+                await state.socialApp.notifyAllFriends();
+                state.client.logout();
+            } catch (error) {
+                displayErrorMessage(error.message || error, 'delete-profile-error');
+            }
+        });
+    }
 };
 
 export async function initDynamicCard(routeKey) {
@@ -147,7 +176,7 @@ export async function initDynamicCard(routeKey) {
     const cancelButton = document.getElementById('close-dynamic-card');
 
     if (!dynamicCardRoutes[routeKey])
-        return showErrorMessage(`Aucune route trouvée pour la clé '${routeKey}'`);
+        return mainErrorMessage(`Aucune route trouvée pour la clé '${routeKey}'`);
 
     if (cancelButton.style.display === 'none')
         cancelButton.style.display = 'inline';
@@ -164,7 +193,8 @@ export async function initDynamicCard(routeKey) {
             await cardInitializers[routeKey]();
         }
     } catch (error) {
-        showErrorMessage("Erreur lors du chargement de la carte dynamique");
+        console.log(error);
+        mainErrorMessage("Erreur lors du chargement de la carte dynamique");
         closeDynamicCard();
     }
 }
@@ -187,59 +217,3 @@ function displaySuccessMessage(message) {
     updateProfileSuccessContainer.textContent = message;
     updateProfileSuccessContainer.classList.remove('hidden');
 }
-
-/*
-    Version de base de la fonction optimisée
-*/
-// export async function initDynamicCard(routeKey) {
-//     const cardContainer = document.getElementById('dynamic-card-container');
-//     const cardContent = document.getElementById('dynamic-card-content');
-
-//     if (!cardContainer || !cardContent) {
-//         console.error("Les éléments dynamiques de la carte sont introuvables.");
-//         return;
-//     }
-
-//     try {
-//         if (!dynamicCardRoutes[routeKey])
-//             throw new Error(`Route inconnue : ${routeKey}`);
-        
-//         const response = await ft_fetch(dynamicCardRoutes[routeKey]);
-//         if (!response.ok)
-//             throw new Error(`Erreur de chargement : ${response.status} ${response.statusText}`);
-        
-//         const content = await response.text();
-//         if (!content.trim())
-//             throw new Error(`Le fichier ${dynamicCardRoutes[routeKey]} est vide.`);
-
-//         cardContent.innerHTML = content;
-//         cardContainer.classList.remove('hidden');
-
-//         // Délégation d'événements
-//         cardContent.addEventListener("click", (event) => {
-//             if (event.target.matches("#btn-enroll-2fa")) {
-//                 enroll2fa();
-//             } else if (event.target.matches("#btn-verify-2fa")) {
-//                 verify2fa();
-//             } else if (event.target.matches("#oauth-submit")) {
-//                 window.location.href = 'https://localhost:3000/api/v1/auth/oauth/login/';
-//             }
-//         });
-
-//         if (routeKey === 'auth') {
-//             window.location.hash = '#signin';
-//             initAuthFormListeners();
-
-//             document.querySelectorAll('#auth-form a[data-action]').forEach(link => {
-//                 link.addEventListener('click', (event) => {
-//                     event.preventDefault();
-//                     const action = link.getAttribute('data-action');
-//                     history.pushState(action, '', `#${action}`);
-//                     appNavigator.handleHashChange();
-//                 });
-//             });
-//         }
-//     } catch (error) {
-//         console.error(`Erreur lors du chargement de la carte dynamique :`, error);
-//     }
-// }

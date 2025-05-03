@@ -275,8 +275,9 @@ export default class LevelComputerBase extends LevelBase {
 		this.smoothCamera.quaternion.copy(q1);
 		this.smoothCamera.fov = 39.6;
 		this.smoothCamera.smoothSpeed = 20;
-		this.smoothCamera.mousePositionMultiplier.setScalar(2);
-		this.smoothCamera.mouseRotationMultiplier.setScalar(0.5);
+		const reduceY = 0.5;
+		this.smoothCamera.mousePositionMultiplier.set(2, 2 * reduceY);
+		this.smoothCamera.mouseRotationMultiplier.set(0.5, 0.5 * reduceY);
 		this.smoothCamera.diagonal = 36.87;  // 4:3 aspect ratio, arbitrarily
 	}
 

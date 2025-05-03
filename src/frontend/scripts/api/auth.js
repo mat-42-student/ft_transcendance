@@ -2,7 +2,6 @@ import { state } from '../main.js';
 import { cleanErrorMessage } from '../components/auth_form.js';
 import { closeDynamicCard } from '../components/dynamic_card.js';
 
-// Verify token via API
 export async function verifyToken(token) {
     const response = await fetch('/api/v1/auth/verify/', {
         method: 'POST',
@@ -16,12 +15,11 @@ export async function verifyToken(token) {
     if (response.ok) {
         return response;
     } else {
-        state.client.accessToken = null; // Invalidate token if verification fails
+        state.client.accessToken = null;
         return response;
     }
 }
 
-// 2FA
 export function enroll2fa() {
     const token = state.client.accessToken;
     const qrSection = document.getElementById('qr-section');
@@ -69,7 +67,6 @@ export function verify2fa() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // console.log("2FA has been enabled!");
             successPage.style.display = 'block';
             qrSection.style.display = 'none';
             verificationSection.style.display = 'none';
@@ -81,80 +78,60 @@ export function verify2fa() {
 }
 
 export function validatePassword(password) {
-    // Check for minimum length
     if (password.length < 8) {
       return "Password must be at least 8 characters long.";
     }
     
-    // Check for maximum length
     if (password.length > 128) {
       return "Password too long.";
     }
     
-    // Check for at least one uppercase letter
     if (!/[A-Z]/.test(password)) {
       return "Password must contain at least one uppercase letter.";
     }
     
-    // Check for at least one lowercase letter
     if (!/[a-z]/.test(password)) {
       return "Password must contain at least one lowercase letter.";
     }
     
-    // Check for at least one digit
     if (!/[0-9]/.test(password)) {
       return "Password must contain at least one number.";
     }
     
-    // Check for at least one special character
     const specialChars = "!@#$%^&*()-_=+[]{}|;:'\",.<>/?";
     if (!password.split('').some(char => specialChars.includes(char))) {
       return "Password must contain at least one special character.";
     }
     
-    // Check that password doesn't contain common patterns
     const commonPatterns = ['password', '123456', 'qwerty', 'admin'];
     if (commonPatterns.some(pattern => password.toLowerCase().includes(pattern))) {
       return "Password contains a common pattern and is too weak.";
     }
     
-    // If all checks pass
     return null;
 }
 
 function isValidEmail(email) {
-    // Basic regex for email validation
-    // This checks for:
-    // - One or more characters before the @ symbol
-    // - The @ symbol
-    // - One or more characters for the domain name
-    // - A dot followed by a top-level domain of 2-63 characters
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,63}$/;
     
-    // Check if email is defined and is a string
     if (!email || typeof email !== 'string') {
       return false;
     }
     
-    // Trim the email string to remove any leading/trailing whitespace
     const trimmedEmail = email.trim();
     
-    // Check if the trimmed email is empty
     if (trimmedEmail.length === 0) {
       return false;
     }
     
-    // Test the email against the regex pattern
     return emailRegex.test(trimmedEmail);
 }
 
 function validateEmail(email) {
-    // Check for minimum length
     if (email.length < 5) {
         return "Email must be at least 5 characters long.";
     }
     
-    // Check for maximum length
     if (email.length > 100) {
         return "Email too long.";
     }
@@ -165,46 +142,73 @@ function validateEmail(email) {
 }
 
 function validateUsername(username) {
-    // Check for minimum length
     if (username.length < 2) {
         return "Username must be at least 5 characters long.";
     }
-    
-    // Check for maximum length
+
     if (username.length > 50) {
         return "Username too long.";
     }
 }
-
 
 // Handle API requests for login/registration
 export async function handleAuthSubmit(event) {
     event.preventDefault();
     cleanErrorMessage();
 
-    const { username, email, password, confirm_password, hash } = getAuthFormData();
+    const username = document.getElementById('auth-username').value.trim();
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value.trim();
+    const confirm_password = document.getElementById('auth-confirm-password').value.trim();
+    const totp = document.getElementById('auth-totp').value.trim();
 
-    // Validate username requirements
+    if (window.authMode === 'twoFactorAuth') {
+        if (!totp || totp.length === 0) {
+            displayErrorMessage("Please enter your 2FA verification code.");
+            return;
+        }
+
+        const payload = { email, password, totp };
+
+        try {
+            const response = await sendAuthRequest('/api/v1/auth/login/', payload);
+            
+            if (response.ok) {
+                const data = await response.json();
+                await handleAuthResponse(data);
+            } else {
+                const errorData = await response.json();
+                if (errorData.detail === "invalid_totp" || errorData.error === "invalid_totp") {
+                    displayErrorMessage("Invalid verification code. Please try again.");
+                } else {
+                    displayErrorMessage(errorData.detail || "Verification failed. Please try again.");
+                }
+            }
+        } catch (error) {
+            console.error('2FA verification error:', error.message || 'Unknown error');
+            displayErrorMessage("Error during verification. Please try again.");
+        }
+        
+        return;
+    }
+
     const usernameError = validateUsername(username);
     if (window.authMode === 'register' && usernameError) {
         displayErrorMessage(usernameError);
         return;
     }
     
-    // Validate email requirements
     const emailError = validateEmail(email);
     if (window.authMode === 'register' && emailError) {
         displayErrorMessage(emailError);
         return;
     }
     
-    // Password validation for registration
     if (window.authMode === 'register' && password !== confirm_password) {
         displayErrorMessage("Passwords don't match");
         return;
     }
 
-    // Validate password requirements
     const passwordError = validatePassword(password);
     if (window.authMode === 'register' && passwordError) {
         displayErrorMessage(passwordError);
@@ -241,28 +245,15 @@ export async function handleAuthSubmit(event) {
     }
 }
 
-// Get authentication form data
-function getAuthFormData() {
-    const username = document.getElementById('auth-username').value.trim();
-    const email = document.getElementById('auth-email').value.trim();
-    const password = document.getElementById('auth-password').value.trim();
-    const confirm_password = document.getElementById('auth-confirm-password').value.trim();
-    const hash = window.location.hash;
-    return { username, email, password, confirm_password, hash };
-}
-
-// Send authentication request to API
 async function sendAuthRequest(apiUrl, payload) {
     return await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-        // Add credentials if you're using cookies for auth
         credentials: 'same-origin'
     });
 }
 
-// Process authentication response (successful login/registration)
 async function handleAuthResponse(data) {
     try {
         await state.client.login(data.accessToken);
@@ -273,7 +264,7 @@ async function handleAuthResponse(data) {
         return { success: false };
     }
 }
-// Handle backend authentication errors
+
 async function handleAuthError(response) {
     try {
         if (response.status === 0) {
@@ -283,18 +274,19 @@ async function handleAuthError(response) {
 
         const errorData = await response.json();
         
-        if (errorData.error === '2fa_required') {
+        if (errorData.error === '2fa_required!') {
             handle2FA(response);
+            return { success: false, twoFactorRequired: true };
         } else if (errorData.detail === 'User not found!' || errorData.detail === 'Incorrect password') {
             displayErrorMessage("Incorrect username or password.");
         } else if (errorData.error === 'User already logged in') {
             displayErrorMessage("User already logged in.");
         } else if (errorData.username || errorData.email) {
             if (errorData.email && errorData.email.length > 0) {
-            displayErrorMessage(`Email: ${errorData.email[0]}`);
+                displayErrorMessage(`Email: ${errorData.email[0]}`);
             }
             if (errorData.username && errorData.username.length > 0) {
-            displayErrorMessage(`Username: ${errorData.username[0]}`);
+                displayErrorMessage(`Username: ${errorData.username[0]}`);
             }
         } else {
             displayErrorMessage("Authentication failed. Please try again.");
@@ -302,29 +294,28 @@ async function handleAuthError(response) {
         
         return { success: false, error: errorData };
     } catch (error) {
-      displayErrorMessage("Authentication failed. Please try again.");
-      return { success: false, error: { message: response.statusText || "Unknown error" } };
+        displayErrorMessage("Authentication failed. Please try again.");
+        return { success: false, error: { message: response.statusText || "Unknown error" } };
     }
 }
 
-// Handle 2FA activation if required
 function handle2FA(response) {
     const totpContainer = document.getElementById('totp-container');
     totpContainer.classList.remove('hidden');
-    
-    const email = document.getElementById('auth-email').value.trim();
-    const password = document.getElementById('auth-password').value.trim();
-    const totp = document.getElementById('auth-totp').value.trim();
 
-    const payload = { email, password, totp };
+    const submitButton = document.getElementById('auth-submit');
+    if (submitButton) {
+        submitButton.textContent = 'Verify 2FA';
+    }
 
-    sendAuthRequest('/api/v1/auth/login/', payload)
-        .then(response => response.json())
-        .then(data => handleAuthResponse(data))
-        .catch(error => console.error('Error during 2FA:', error));
+    window.authMode = 'twoFactorAuth';
+
+    const totpInput = document.getElementById('auth-totp');
+    if (totpInput) {
+        totpInput.focus();
+    }
 }
 
-// Display generic error message in form
 function displayErrorMessage(message) {
     const loginErrorContainer = document.getElementById('auth-error');
     loginErrorContainer.textContent = message;

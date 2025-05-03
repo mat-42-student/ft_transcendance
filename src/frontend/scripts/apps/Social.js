@@ -242,6 +242,14 @@ export class SocialApp{
         };
         await state.mainSocket.send(JSON.stringify(data));
     }
+
+    async notifyAllFriends() {
+        const promises = [];
+        for (const friendId of this.friendList.keys()) {
+            promises.push(this.notifyUser(friendId));
+        }
+        await Promise.all(promises);
+    }    
     
     async getInfos() {
         let data = {
