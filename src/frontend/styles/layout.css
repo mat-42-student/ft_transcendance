@@ -39,27 +39,38 @@ main {
 /* HEADER */
 header {
     display: flex;
-    padding: 1rem 0;
+    padding: 1rem;
     justify-content: center;
     align-items: center;
     position: relative;
     color: #fff;
     background: #333;
-    height: 40px;
+    height: fit-content;
+    user-select: none;
+    overflow-y: hidden;
+    overflow-x: auto;
 }
 
 header .container {
-    width: 95%;
+    flex-grow: 1;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 1rem;
 }
 
+.header-left {
+    display: flex;
+}
+.header-left>* {
+    margin: 0 0.5rem;
+}
+
 /* Home Button */
 .header-left #btn-home,
 .main-content #btn-404-return,
-.header-right #btn-profile {
+.selection-item,
+#btn-profile {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -70,6 +81,22 @@ header .container {
     border-radius: 5px;
     font-size: 1rem;
     transition: background 0.3s;
+    white-space: nowrap;  /* login button would split its 2 sub elements into lines */
+    border: none;
+}
+
+#btn-profile:disabled:hover,
+#btn-profile:disabled {
+    background: transparent;
+    color: #c0c0c0;
+}
+
+.selection-item {
+    background: #444;
+}
+
+.selection-item:hover {
+    background: #222;
 }
 
 .user-status {
@@ -100,7 +127,7 @@ header .container {
 }
 
 .header-left #btn-home:hover,
-.header-right #btn-profile:hover {
+#btn-profile:hover {
     background: #11008f;
 }
 
@@ -118,22 +145,6 @@ header .container {
     overflow: hidden;
 }
 
-.selection-item {
-    all: unset; /* Réinitialise tous les styles par défaut des boutons */
-    flex: 1;
-    text-align: center;
-    padding: 0.2rem 0;
-    cursor: pointer;
-    transition: background 0.3s;
-    background: #333;
-    color: #fff;
-    border-radius: 0; /* Préserve le design actuel */
-}
-
-.selection-item:hover {
-    background: #555;
-}
-
 
 
 /* Searchbar */
@@ -141,6 +152,7 @@ header .container {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    min-width: 3rem;
 }
 
 .header-center .search-form input {
@@ -231,4 +243,11 @@ header .container {
 
 .friend-status.offline {
     background: grey;
+}
+
+#fps-meter {
+    border-radius:5px;
+    overflow: hidden;
+    min-width: fit-content;
+    margin: -1rem 0;  /* this box is taller than the buttons, and forced the header to get taller. */
 }

@@ -73,16 +73,9 @@ export class Client{
     }
 
     async globalRender() {
-        if (this.state.socialApp) {
-            await this.state.socialApp.render();
-            // await this.state.socialApp.fetchFriends();
-            // await this.state.socialApp.getInfos();
-            // await this.state.socialApp.getPendingCount();
-        }
-        if (this.state.chatApp)
-            this.state.chatApp.renderChat();
-        if (this.state.mmakingApp)
-            await this.state.mmakingApp.renderMatchmaking();
+        await this.state?.socialApp.render();
+        this.state?.chatApp.renderChat();
+        await this.state?.mmakingApp.renderMatchmaking();
         this.renderProfileBtn();
     }
 
@@ -152,11 +145,9 @@ export class Client{
         }
     }
 
-    // Vérifie si l'utilisateur est authentifié par la présence d'un accessToken
     async isAuthenticated() {
-        const token = state.client.accessToken;
-        if (!token) return false;
-        
+        if (!state.client.accessToken)
+            return false;
         try {
             const response = await verifyToken();
             return response.ok;

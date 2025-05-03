@@ -52,6 +52,7 @@ export class Engine {
 			this.#html_mainContent = document.getElementsByClassName('main-content')[0];
 
 			this.stats.dom.style.position = null;
+			this.stats.dom.id = "fps-meter";
 			try {
 				const el = document.getElementsByTagName("header")[0];
 				el.prepend(this.stats.dom);

@@ -47,8 +47,8 @@ await initApp();
 
 // Fonction d'initialisation
 async function initApp() {
-    await state.client.refreshSession();  // Attendre que la session soit restaurée
-    navigator.handleHashChange();  // Ensuite seulement, traiter le changement de hash
+    await state.client.refreshSession();
+    navigator.handleHashChange();
     setupEventListeners();
 }
 
@@ -83,20 +83,12 @@ async function handleProfileClick(e) {
     navigator.goToPage('profile');
 }
 
-function searchFormListener(event) {
-    event.preventDefault(); // J'aimerais bien que ca fasse comme un click (sur un li des suggestions des users)
-                            // mais les fonctions fléchées c'est pas très modulaire (je pense que la fonction intéressante est celle
-                            // de  la ligne 101 ?). Sinon faisons juste rien...
-}
-
 function setupSearchInput() {
     const searchForm = document.getElementById('search-form');;
-    searchForm.addEventListener('submit', searchFormListener);
 
     const searchInput = document.getElementById("searchInput");
     if (!searchInput) return;
 
-    // Création de l'alerte flottante
     const alertBox = document.createElement("div");
     alertBox.style.position = "absolute";
     alertBox.style.backgroundColor = "#fff";
@@ -111,7 +103,6 @@ function setupSearchInput() {
 
     document.body.appendChild(alertBox);
 
-    // Gestion de la recherche au clavier
     searchInput.addEventListener("keydown", async (event) => {
         if (event.key === "Enter") {
             event.preventDefault();
@@ -157,10 +148,10 @@ function setupSearchInput() {
 }
 
 // page unload
-window.addEventListener('unload', function() {
-    state.mainSocket?.close();
-    state.gameApp?.close();
-});
+// window.addEventListener('unload', function() {
+//     state.mainSocket?.close();
+//     state.gameApp?.close();
+// });
 
 export async function ft_fetch(url, options = {}) {
     if (isTokenExpiringSoon())
@@ -209,19 +200,23 @@ export function chooseHeader(mode) {
     const h_default = document.getElementById("header-default");
     const h_loading = document.getElementById("header-loading");
     const h_ingame = document.getElementById("header-ingame");
+    const profileButton = document.getElementById("btn-profile");
 
     let show, hide;
 
     switch (mode) {
         case 'default':
+            profileButton.disabled = null;
             show = h_default;
             hide = [h_loading, h_ingame];
             break;
         case 'loading':
+            profileButton.disabled = "disabled";
             show = h_loading;
             hide = [h_default, h_ingame];
             break;
         case 'ingame':
+            profileButton.disabled = "disabled";
             show = h_ingame;
             hide = [h_default, h_loading];
             break;
