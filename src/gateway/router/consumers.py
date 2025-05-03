@@ -1,7 +1,7 @@
 from json import dumps, loads
 from channels.generic.websocket import AsyncJsonWebsocketConsumer # type: ignore
 from redis.asyncio import from_url
-from asyncio import create_task
+from asyncio import create_task, sleep as asleep
 from datetime import datetime, timezone
 import requests
 import time
@@ -17,6 +17,7 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         'chat': 'deep_chat',
         'mmaking': 'deep_mmaking',
         'social': 'deep_social',
+        'auth': 'auth_social',
     }
 
     async def connect(self):
@@ -28,10 +29,16 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         if not self.scope["payload"]:
             await self.kick(message="Unauthentified")
             return
-
         self.get_user_infos()
         if self.consumer_id is None:
             await self.kick(message="Unauthentified")
+            return
+        try:
+            await self.connect_to_redis()
+        except Exception as e:
+            print(f"Connexion to redis error : {e}")
+        if await self.already_connected():
+            await self.kick(message="Already connected")
             return
 
         try:
@@ -40,11 +47,11 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
         except Exception as e:
             print(e)
         print(f"User {self.consumer_id} is authenticated as {self.consumer_name}")
-        try:
-            await self.connect_to_redis()
-        except Exception as e:
-            print(f"Connexion to redis error : {e}")
         await self.send_online_status('online')
+
+    async def already_connected(self):
+        status = await self.get_own_status()
+        return status != "offline"
 
     async def connect_to_redis(self):
         try:
@@ -186,6 +193,25 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
                 await self.redis_client.publish(group, dumps(data))
             except Exception as e:
                 print(f"Publish error : {e}")
+
+    async def get_own_status(self):
+        test = 5
+        data = {'user_id': self.consumer_id}
+        status = None
+        print(data)  # debug
+        await self.redis_client.publish(self.REDIS_GROUPS['auth'], dumps(data))
+        while status is None and test >= 0:
+            try:
+                status = await self.redis_client.get(f'is_{self.consumer_id}_logged')
+                print(f'GET status = {status}')  # debug
+                if status is not None:
+                    return status
+            except Exception as e:
+                print(f"Error occurred: {str(e)}")
+                return "offline"
+            await asleep(0.1)
+            test -= 1
+        return "offline"
 
     async def get_friends_status(self):
         """get friends status AND publish my own status"""
