@@ -26,7 +26,7 @@ export class MainSocket {
 
 		this.socket.onerror = async (e)=> {
 			console.log('MainSocket onError');  //TODO remove log 'onError'
-			if (state.mainSocket == false) {
+			if (state.mainSocket.didSocketOpen == false) {
 				// socket failed to open
 				console.log('MainSocket failed to open, logging out.');  //TODO remove log 'MainSocket failed to open'
 				state.client.logout();
@@ -36,14 +36,15 @@ export class MainSocket {
 		};
 
         this.socket.onopen = async function(e) {
-			state.mainSocket = true;
+			state.mainSocket.didSocketOpen = true;
 			console.log('MainSocket onOpen');  //TODO remove log 'onOpen'
 			// console.log("mainSocket connected");
         };
 
 		this.socket.onclose = async (e)=> {
 			// console.log("mainSocket disconnected");
-			state.mainSocket = false;
+			if (state.mainSocket)
+				state.mainSocket.didSocketOpen = false;
 			console.log('MainSocket onClose');  //TODO remove log 'onClose'
 		};
 
