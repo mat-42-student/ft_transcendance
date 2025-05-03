@@ -1,7 +1,5 @@
 from rest_framework import serializers
-
 from django.contrib.auth.hashers import check_password
-from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.core.exceptions import ValidationError
 
@@ -18,8 +16,89 @@ class PasswordValidationSerializer(serializers.Serializer):
             raise serializers.ValidationError("Mot de passe incorrect.")
         return value
 
+# User registration serializer
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    confirm_password = serializers.CharField(write_only=True)
 
-# User 'list' serializer
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password', 'confirm_password']
+        extra_kwargs = {
+            'username': {
+                'min_length': 2, 
+                'max_length': 50,
+                'label': 'Username',
+                'error_messages': {
+                    'unique': 'Username is already taken.'
+                }
+            },
+            'email': {
+                'min_length': 5, 
+                'max_length': 100,
+                'label': 'Email',
+                'error_messages': {
+                    'unique': 'Email is already registered.'
+                }
+            },
+            'password': {
+                'write_only': True,
+                'min_length': 8,
+                'max_length': 128,
+                'label': 'Password'
+            },
+            'confirm_password': {
+                'write_only': True,
+                'label': 'Confirm password'
+            },
+        }
+
+    def validate_password(self, value):
+        """
+        Validate that the password meets security requirements.
+        """
+        # Check for at least one uppercase letter
+        if not any(char.isupper() for char in value):
+            raise serializers.ValidationError("Password must contain at least one uppercase letter.")
+        
+        # Check for at least one lowercase letter
+        if not any(char.islower() for char in value):
+            raise serializers.ValidationError("Password must contain at least one lowercase letter.")
+        
+        # Check for at least one digit
+        if not any(char.isdigit() for char in value):
+            raise serializers.ValidationError("Password must contain at least one number.")
+        
+        # Check for at least one special character
+        special_chars = "!@#$%^&*()-_=+[]{}|;:'\",.<>/?"
+        if not any(char in special_chars for char in value):
+            raise serializers.ValidationError("Password must contain at least one special character.")
+        
+        # Check that password doesn't contain common patterns
+        common_patterns = ['password', '123456', 'qwerty', 'admin']
+        if any(pattern in value.lower() for pattern in common_patterns):
+            raise serializers.ValidationError("Password contains a common pattern and is too weak.")
+        
+        return value
+
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError("Passwords don't match.")
+        if 'is_staff' in data or 'is_superuser' in data:
+            raise serializers.ValidationError("La création d'un super utilisateur est interdite via cette API.")
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop('confirm_password')
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            password=validated_data['password'],
+            email=validated_data['email']
+        )
+        user.save()
+        return user
+
+
+# User 'list' serializer (searchbar engine)
 class UserListSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -27,29 +106,6 @@ class UserListSerializer(serializers.ModelSerializer):
         fields = ['id', 'username']
         read_only_fields = ['id', 'username']
 
-
-class UserMicroSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ['id']
-        read_only_fields = ['id']
-
-
-# FrontEnd listing User 'retrieve' serializer
-class UserMinimalSerializer(serializers.ModelSerializer):
-    avatar = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'avatar']
-        read_only_fields = ['id', 'username', 'avatar']
-
-    def get_avatar(self, obj):
-        return obj.avatar.name.split('/')[-1] if obj.avatar else "default.png"
-
-
-# User 'retrieve' serializer
 class UserDetailSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
 
@@ -60,9 +116,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     def get_avatar(self, obj):
         return obj.avatar.name.split('/')[-1] if obj.avatar else "default.png"
+    
 
-
-# User private 'retrieve' serializer
 class UserPrivateDetailSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
 
@@ -75,7 +130,26 @@ class UserPrivateDetailSerializer(serializers.ModelSerializer):
         return obj.avatar.name.split('/')[-1] if obj.avatar else "default.png"
 
 
-# Blocked User 'retrieve' serializer
+class UserMinimalSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'avatar']
+        read_only_fields = ['id', 'username', 'avatar']
+
+    def get_avatar(self, obj):
+        return obj.avatar.name.split('/')[-1] if obj.avatar else "default.png"
+    
+
+class UserMicroSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['id']
+        read_only_fields = ['id']
+
+
 class UserBlockedSerializer(serializers.ModelSerializer):
     message = serializers.SerializerMethodField()
 
@@ -150,7 +224,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         if not value:
             return value
 
-        # Password policy (identique à celle du UserRegistrationSerializer)
+        # Password policy
         if not any(char.isupper() for char in value):
             raise serializers.ValidationError("Password must contain at least one uppercase letter.")
         if not any(char.islower() for char in value):
@@ -198,89 +272,6 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             instance.set_password(new_password)
 
         return super().update(instance, validated_data)
-
-
-# User registration serializer
-class UserRegistrationSerializer(serializers.ModelSerializer):
-    confirm_password = serializers.CharField(write_only=True)
-
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password', 'confirm_password']
-        extra_kwargs = {
-            'username': {
-                'min_length': 2, 
-                'max_length': 50,
-                'label': 'Username',
-                'error_messages': {
-                    'unique': 'Username is already taken.'
-                }
-            },
-            'email': {
-                'min_length': 5, 
-                'max_length': 100,
-                'label': 'Email',
-                'error_messages': {
-                    'unique': 'Email is already registered.'
-                }
-            },
-            'password': {
-                'write_only': True,
-                'min_length': 8,
-                'max_length': 128,
-                'label': 'Password'
-            },
-            'confirm_password': {
-                'write_only': True,
-                'label': 'Confirm password'
-            },
-        }
-
-    def validate_password(self, value):
-        """
-        Validate that the password meets security requirements.
-        """
-        # Check for at least one uppercase letter
-        if not any(char.isupper() for char in value):
-            raise serializers.ValidationError("Password must contain at least one uppercase letter.")
-        
-        # Check for at least one lowercase letter
-        if not any(char.islower() for char in value):
-            raise serializers.ValidationError("Password must contain at least one lowercase letter.")
-        
-        # Check for at least one digit
-        if not any(char.isdigit() for char in value):
-            raise serializers.ValidationError("Password must contain at least one number.")
-        
-        # Check for at least one special character
-        special_chars = "!@#$%^&*()-_=+[]{}|;:'\",.<>/?"
-        if not any(char in special_chars for char in value):
-            raise serializers.ValidationError("Password must contain at least one special character.")
-        
-        # Check that password doesn't contain common patterns
-        common_patterns = ['password', '123456', 'qwerty', 'admin']
-        if any(pattern in value.lower() for pattern in common_patterns):
-            raise serializers.ValidationError("Password contains a common pattern and is too weak.")
-        
-        return value
-
-    def validate(self, data):
-        if data['password'] != data['confirm_password']:
-            raise serializers.ValidationError("Passwords don't match.")
-        # Ne pas accepter `is_staff` ou `is_superuser` dans les données
-        if 'is_staff' in data or 'is_superuser' in data:
-            raise serializers.ValidationError("La création d'un super utilisateur est interdite via cette API.")
-        return data
-
-    def create(self, validated_data):
-        validated_data.pop('confirm_password')  # Supprime `confirm_password` des données validées
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            password=validated_data['password'],
-            email=validated_data['email']
-        )
-        user.save()
-        return user
     
 
 # Relationship 'detail' serializer
@@ -318,10 +309,8 @@ class GameSerializer(serializers.ModelSerializer):
         """
         target_user = self.context.get('target_user')
 
-        # Si le joueur cible est player1
         if target_user == obj.player1:
             return "Victoire" if obj.score_player1 > obj.score_player2 else "Defaite"
-        # Si le joueur cible est player2
         elif target_user == obj.player2:
             return "Victoire" if obj.score_player2 > obj.score_player1 else "Defaite"
 
