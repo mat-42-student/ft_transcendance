@@ -25,10 +25,8 @@ export class MainSocket {
 		state.mmakingApp = new Mmaking();
 
 		this.socket.onerror = async (e)=> {
-			console.log('MainSocket onError');  //TODO remove log 'onError'
 			if (state.mainSocket?.didSocketOpen == false) {
 				// socket failed to open
-				console.log('MainSocket failed to open, logging out.');  //TODO remove log 'MainSocket failed to open'
 				if (state.client)
 					state.client.logout();
 			} else {
@@ -39,7 +37,6 @@ export class MainSocket {
         this.socket.onopen = async function(e) {
 			if (state.mainSocket)
 				state.mainSocket.didSocketOpen = true;
-			console.log('MainSocket onOpen');  //TODO remove log 'onOpen'
 			// console.log("mainSocket connected");
         };
 
@@ -47,7 +44,6 @@ export class MainSocket {
 			// console.log("mainSocket disconnected");
 			if (state.mainSocket)
 				state.mainSocket.didSocketOpen = false;
-			console.log('MainSocket onClose');  //TODO remove log 'onClose'
 		};
 
 		this.socket.onmessage = async (e)=> {
