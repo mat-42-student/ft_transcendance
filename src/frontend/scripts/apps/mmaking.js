@@ -308,12 +308,13 @@ export class Mmaking
 			}
 		};
 
+
 		this.guests[key] = null;
 		this.invited_by[key] = false;
 		this.host = true;
-
 		await this.sendMsg(data);
 		await this.renderMatchmaking();
+
 	}
 
 	async btnInviteActive(key)
@@ -448,7 +449,7 @@ export class Mmaking
 			btnTournament[0].addEventListener('click', this.boundEventListenersClient.eventSearchTournament);
 			this.btnSearchTournamentActive = true;
 		}
-		else if (this.salonTournament == true)
+		else if (this.SearchRandomGame == true)
 		{
 			await initDynamicCard('versus');
 
@@ -586,14 +587,14 @@ export class Mmaking
 
 		btnTournament[0].removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);
 		btnRandom.removeEventListener('click', this.boundEventListenersClient.btnsearchRandomGame);
-		this.salonTournament = true;
+		this.SearchRandomGame = true;
 
 		await this.renderMatchmaking();
 	}
 
     async sendMsg(message)
 	{
-
+		
         const data = {
             'header': {  //Mandatory part
             'service': 'mmaking',
@@ -646,7 +647,8 @@ export class Mmaking
 			{
 				this.bracket = true;
 				this.winnerId_of_tournament = data.body.winnerId
-				this.salonTournament = false;
+				// this.salonTournament = false;
+				this.SearchRandomGame = false;
 			}
 			if (data.body.opponents)
 			{
@@ -668,7 +670,9 @@ export class Mmaking
 				else if (invite.guest_id)
 				{
 					this.guests[invite.guest_id] = false;
-					this.salonHost = false;
+					console.log(`salon = ${invite.salon}`);
+					if (invite.salon == false)
+						this.salonHost = false;
 				}
 
 			}
@@ -707,6 +711,8 @@ export class Mmaking
 				{
 					this.guests[invite.guest_id] = true;
 					this.salonHost = true;
+					if (this.SearchRandomGame == true)
+						this.SearchRandomGame = false;
 
 				}
 				else if (invite.accept == false && this.guests[invite.guest_id] == null)

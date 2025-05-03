@@ -216,11 +216,11 @@ class Command(BaseCommand):
                     try:
                         for guest in gamer.guests.values():
                             if (guest.user_id == playerId):
-                                await self.cancelInvitation(gamer.user_id, guest.user_id, 'guest_id')
+                                await self.cancelSalonInvitation(gamer.user_id, guest.user_id, 'guest_id')
                                 if (status != await gamer.getStatus(self.redis_client, self.channel_social) and await self.checkStatus(gamer, 'online') == False):
                                     print(f'Checkstatus {gamer} is failed')
                             if (gamer.user_id == playerId):
-                                await self.cancelInvitation(guest.user_id, playerId, 'host_id')
+                                await self.cancelSalonInvitation(guest.user_id, playerId, 'host_id')
                                 if (status != await guest.getStatus(self.redis_client, self.channel_social) and await self.checkStatus(guest, 'online') == False):
                                     print(f'Checkstatus {guest} is failed')
                     except Exception as e:
@@ -572,25 +572,28 @@ class Command(BaseCommand):
                     host = salon.players.get(host_id)
                     if (host):
                         try:
-                            check_status = asyncio.create_task(self.while_status_is_different_to_offline(host))
-
+                            if (await host.getStatus(self.redis_client, self.channel_social) != 'online'):
+                                await self.cancelInvitation(player.user_id, host.user_id, 'host_id')
+                                return
                             # Delete everywhere we find guests and host
                             await self.deleteEverywhereGuestAndHost(player, host_id=host_id)
+                            check_status = asyncio.create_task(self.while_status_is_different_to_offline(host))
+
                             # Guest
                             for guestid in list(host.guests):
-                                # Cancel invitation of other guests of host
-                                if (guestid != player.user_id):
-                                    await self.cancelInvitation(guestid, host.user_id, 'host_id')
-                                    await self.cancelInvitation(host_id, guestid, 'guest_id')
-                                    del host.guests[guestid]
-                                # Add guest to salon by Host
-                                else:
+                                # # Cancel invitation of other guests of host
+                                # if (guestid != player.user_id):
+                                #     await self.cancelInvitation(guestid, host.user_id, 'host_id')
+                                #     await self.cancelInvitation(host_id, guestid, 'guest_id')
+                                #     del host.guests[guestid]
+                                # # Add guest to salon by Host
+                                if(guestid == player.user_id):
                                     # Setup Guest
                                     guest = host.guests[guestid]
                                     guest.get_user()
                                     guest.type_game = 'invite'
                                     salon.players.update({guestid: guest })
-                                    
+                                        
                                     # update status Guest
                                     guest_status = await guest.getStatus(self.redis_client, self.channel_social)
                                     if (guest_status == 'online' and await self.checkStatus(guest, 'pending') == False):
@@ -692,6 +695,12 @@ class Command(BaseCommand):
                         await self.cancelInvitation(friendId, player.user_id, 'host_id')
                         await self.cancelInvitation(gamer.user_id, friendId, 'guest_id')
                     salonsTodelete.append(salon)
+                
+                if (gamerId == host_id):
+                    for friendId, friend in gamer.guests.items():
+                        if (friendId != player.user_id):
+                            await self.cancelInvitation(friendId, host_id, 'host_id')
+                            await self.cancelInvitation(gamer.user_id, friendId, 'guest_id')
 
                 if (player.user_id in gamer.guests and gamerId != host_id):
                     await self.cancelInvitation(gamerId, player.user_id, 'guest_id')
@@ -921,10 +930,20 @@ class Command(BaseCommand):
                     notfound = True
             if (notfound):
                 for playerId, player in game.players.items():
+                    if (player.leave_game == True):
+                        gameDB = await sync_to_async(self.getGame)(gameId)
+                        await self.cancelGameWithWinner_player_leave_game(gameDB, game)
+                        return 
                     if (await self.checkStatus(player, 'ingame') == False):
                         print("can't to setup new status")
                     await self.nextRoundTournamentJSON(playerId, player, gameId, tournament.id)
-                        
+      
+    async def getNextPlayer(self, gameDB, winnerId):
+        tournament = await sync_to_async(getattr)(gameDB, 'tournament')
+        gameCache = self.getGameInCache(gameDB.id, tournament.id)
+        
+        return (gameCache.players[winnerId])
+                          
 
     async def nextRoundTournament(self, previousGames):
         tournament_id = None
@@ -935,11 +954,8 @@ class Command(BaseCommand):
             try:
                 salon = self.createSalonRandom('tournament')
                 if (game.failed == False):
-                    player = Player()
-                    next_player = await sync_to_async(getattr)(game, 'winner')
-                    player.user_id = next_player.id
-                    player.type_game = 'tournament'
-                    player.get_user()
+                    winner = await sync_to_async(getattr)(game, 'winner')
+                    player = await self.getNextPlayer(game, winner.id)
                     salon.players.update({player.user_id: player})
                 self.salons['tournament'].append(salon)
                 tournament = await sync_to_async(getattr)(game, 'tournament')
@@ -1121,6 +1137,23 @@ class Command(BaseCommand):
             'body':{
                 'invite':{
                     to: guestid,
+                },
+                'cancel': True
+            }
+        }
+        await self.redis_client.publish(self.channel_front, json.dumps(data))
+
+    async def cancelSalonInvitation(self, hostid, guestid, to):
+        data = {
+            'header':{
+                'service': 'mmaking',
+                'dest': 'front',
+                'id': hostid,
+            },
+            'body':{
+                'invite':{
+                    to: guestid,
+                    'salon': False
                 },
                 'cancel': True
             }
@@ -1336,6 +1369,7 @@ class Command(BaseCommand):
                     if (player.socketGame_is_online == False):
                         await self.JSON_cancelTournament(playerId)
                     else:
+                        print(f'player leave game ->>>>>>>>>>>>{player.leave_game}')
                         if (player.leave_game == False and (player.socketGame_is_online == True or player.socketGame_is_online == None)):
                             await self.sendEndTournamentWithBracketJSON(playerId, player, None, tournament.id, winnerTournament.id)                            
                         await self.JSON_endgameWithoutError(playerId)
