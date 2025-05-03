@@ -930,10 +930,20 @@ class Command(BaseCommand):
                     notfound = True
             if (notfound):
                 for playerId, player in game.players.items():
+                    if (player.leave_game == True):
+                        gameDB = await sync_to_async(self.getGame)(gameId)
+                        await self.cancelGameWithWinner_player_leave_game(gameDB, game)
+                        return 
                     if (await self.checkStatus(player, 'ingame') == False):
                         print("can't to setup new status")
                     await self.nextRoundTournamentJSON(playerId, player, gameId, tournament.id)
-                        
+      
+    async def getNextPlayer(self, gameDB, winnerId):
+        tournament = await sync_to_async(getattr)(gameDB, 'tournament')
+        gameCache = self.getGameInCache(gameDB.id, tournament.id)
+        
+        return (gameCache.players[winnerId])
+                          
 
     async def nextRoundTournament(self, previousGames):
         tournament_id = None
@@ -944,11 +954,8 @@ class Command(BaseCommand):
             try:
                 salon = self.createSalonRandom('tournament')
                 if (game.failed == False):
-                    player = Player()
-                    next_player = await sync_to_async(getattr)(game, 'winner')
-                    player.user_id = next_player.id
-                    player.type_game = 'tournament'
-                    player.get_user()
+                    winner = await sync_to_async(getattr)(game, 'winner')
+                    player = await self.getNextPlayer(game, winner.id)
                     salon.players.update({player.user_id: player})
                 self.salons['tournament'].append(salon)
                 tournament = await sync_to_async(getattr)(game, 'tournament')
@@ -1362,6 +1369,7 @@ class Command(BaseCommand):
                     if (player.socketGame_is_online == False):
                         await self.JSON_cancelTournament(playerId)
                     else:
+                        print(f'player leave game ->>>>>>>>>>>>{player.leave_game}')
                         if (player.leave_game == False and (player.socketGame_is_online == True or player.socketGame_is_online == None)):
                             await self.sendEndTournamentWithBracketJSON(playerId, player, None, tournament.id, winnerTournament.id)                            
                         await self.JSON_endgameWithoutError(playerId)
