@@ -99,39 +99,52 @@ const cardInitializers = {
         updateForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const formData = new FormData(updateForm);
-            const password = document.getElementById('password').value.trim();
-            const new_password = document.getElementById('new_password').value.trim();
-            const confirm_password = document.getElementById('confirm_password').value.trim();
+            
+            // Check if password fields exist before trying to access them
+            const passwordElement = document.getElementById('password');
+            const newPasswordElement = document.getElementById('new_password');
+            const confirmPasswordElement = document.getElementById('confirm_password');
+            
+            // Only process password-related logic if the elements exist
+            if (passwordElement && newPasswordElement && confirmPasswordElement) {
+              const password = passwordElement.value.trim();
+              const new_password = newPasswordElement.value.trim();
+              const confirm_password = confirmPasswordElement.value.trim();
+              
+              // Update formData with trimmed values
+              if (password) formData.set('password', password);
+              if (new_password) formData.set('new_password', new_password);
+              if (confirm_password) formData.set('confirm_password', confirm_password);
+              
+              // Check password policy only if we have password fields
+              if (new_password || confirm_password) {
+                if (!password)
+                  return displayErrorMessage("You must provide your current password to update it");
+                if (!new_password || !confirm_password)
+                  return displayErrorMessage("Both password fields must be filled");
+                const passwordError = validatePassword(new_password);
+                if (passwordError)
+                  return displayErrorMessage(passwordError);
+                if (new_password !== confirm_password)
+                  return displayErrorMessage("Passwords don't match");
+              }
+            }
             
             // Remove empty fields from FormData
             for (const [key, value] of formData.entries()) {
-                if (!value) {
-                    formData.delete(key);
-                }
-            }
-            
-            // Check password policy
-            if (new_password || confirm_password) {
-                if (!password)
-                    return displayErrorMessage("You must provide your current password to update it");
-                if (!new_password || !confirm_password)
-                    return displayErrorMessage("Both password fields must be filled");
-                const passwordError = validatePassword(new_password);
-
-                if (passwordError)
-                    return displayErrorMessage(passwordError);
-                if (new_password !== confirm_password)
-                    return displayErrorMessage("Passwords don't match");
+              if (!value) {
+                formData.delete(key);
+              }
             }
             
             try {
-                const response = await updateProfile(formData, state.client.userId);
-                initProfilePage(state.client.userId);
-                closeDynamicCard();
+              const response = await updateProfile(formData, state.client.userId);
+              initProfilePage(state.client.userId);
+              closeDynamicCard();
             } catch (error) {
-                displayErrorMessage(error);
+              displayErrorMessage(error);
             }
-        });
+          });
     },
     'delete': () => {
         const form = document.getElementById('delete-profile-form');
