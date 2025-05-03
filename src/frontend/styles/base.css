@@ -20,6 +20,10 @@ body {
     line-height: 1.3;
 }
 
+button, input {
+    font-family: Arial, sans-serif;  /* Chrome fix */
+}
+
 .hidden {
     display: none !important;
 }
