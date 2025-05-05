@@ -35,9 +35,16 @@ export class WebGame extends GameBase {
 
     close(youCancelled) {
         try {
-            this.socket.close();
+            if ((this.socket != null)
+                &&(this.socket.readyState !== this.socket.CLOSED)
+                &&(this.socket.readyState !== this.socket.CLOSING)
+            ) {
+                this.socket.close();
+            }
             this.socket = null;
-        } catch {}
+        } catch {
+            console.warn('Double close on WebGame.socket');
+        }
 
         try {
             if (youCancelled) {
@@ -57,6 +64,7 @@ export class WebGame extends GameBase {
 
         try {
             this.socket = new WebSocket(socketURL);
+            this.socket.gameApp = this;
         }
         catch (error) {
             console.error('Failed to create WebSocket:', error);
@@ -81,14 +89,15 @@ export class WebGame extends GameBase {
         };
 
         this.socket.onclose = async function(e) {
-            if (state.gameApp instanceof WebGame) {
-                state.gameApp.close(false);
+            if (this.gameApp instanceof WebGame) {
+                this.gameApp.socket = null;
+                this.gameApp.close(false);
             }
         };
 
         this.socket.onmessage = async function(e) {
             let data = JSON.parse(e.data);
-            const wg = state.gameApp;
+            const wg = this.gameApp;
             if (!(wg instanceof WebGame)) {
                 console.error("WebGame.js: Received message on socket, but the active game app is not a WebGame.\n",
                     "Is an instance of WebGame, and its game socket, still reachable somewhere?\n",
@@ -133,7 +142,7 @@ export class WebGame extends GameBase {
                 wg.close(false);
             }
             if (data.action == "game_cancelled") {
-                const opponentName = state.gameApp?.playerNames[1 - state.gameApp.side];
+                const opponentName = wg?.playerNames[1 - wg.side];
                 wg.level?.endShowWebOpponentQuit(opponentName);
             }
             if (data.action == "game_won") {
