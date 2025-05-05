@@ -1,6 +1,6 @@
 # Fichiers sensibles
-.env
-./django/code/.env
+#.env  #TODO 
+#certs/  #TODO
 
 # Environnement virtuel Python
 **env/
