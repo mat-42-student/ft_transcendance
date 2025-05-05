@@ -204,7 +204,6 @@ class Command(BaseCommand):
     
     # Cancel invitaiton if i receive just "cancel" (offline)
     async def cancelInvitationOfflinePlayer(self, playerId):
-        
         salonTodelete = []
         status = 'offline'
         
@@ -306,12 +305,13 @@ class Command(BaseCommand):
 
             # Cancel invitation if guest and host are in the salon (pending)
             elif (salon.type_game == 'invite'):
+                print("Cancel invitation with status Pending")
                 if (len(salon.players) >= 2):
                     for key, value in salon.players.items():
                         if (not isinstance(value, Guest) and key != player.user_id):
-                            await self.cancelInvitation(key, player.user_id ,'guest_id')
+                            await self.cancelSalonInvitation(key, player.user_id ,'guest_id')
                         elif (key != player.user_id):
-                            await self.cancelInvitation(key, player.user_id, 'host_id')
+                            await self.cancelSalonInvitation(key, player.user_id, 'host_id')
                         if (await self.checkStatus(value, 'online') == False):
                             print('new status is not setup')
                     self.salons[salon.type_game].remove(salon)
