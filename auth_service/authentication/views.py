@@ -406,17 +406,25 @@ class OAuthCallbackView(APIView):
         # if user != None:
         #     user_status = getStatus(user.id)
         #     if user_status != "offline":
-        #         return Response({"success": False, "error": "User already logged in"}, status=400)  
+        #         return Response({"success": False, "error": "User already logged in"}, status=400)
 
         try:
             ft_profile = Ft42Profile.objects.get(ft_id=ft_id)
             user = ft_profile.user
         except Ft42Profile.DoesNotExist:
+            # Check if username already exists
+            if User.objects.filter(username=ft_login).exists():
+                return Response(
+                    {"error": "A user with this username already exists."},
+                    status=status.HTTP_409_CONFLICT
+                )
+                
             user = User.objects.create_user(
                 username=ft_login,
                 email=ft_email,
                 password=None
             )
+
             ft_profile = Ft42Profile.objects.create(
                 user=user,
                 ft_id=ft_id
