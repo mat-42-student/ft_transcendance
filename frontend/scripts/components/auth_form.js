@@ -22,6 +22,20 @@ export function initAuthFormListeners() {
 export function updateAuthForm(mode) {
     window.authMode = mode;
 
+    try {  //TODO delete this block (Dev account)
+        const devAccountButton = document.getElementById('dev-account');
+        devAccountButton.oninput = (e) => {
+            const name = e.target.value;
+            if (name != "") {
+                document.getElementById('auth-username').value = `${name}`;
+                document.getElementById('auth-email').value = `${name}@dev.com`;
+                const pw = 'Test123*';  // cybersecurity is my passion
+                document.getElementById('auth-password').value = pw;
+                document.getElementById('auth-confirm-password').value = pw;
+            }
+        }
+    } catch {} // ^^ delete this block
+
     cleanErrorMessage();
     updateFormTitleAndButton();
     togglePasswordAndUsernameFields();
