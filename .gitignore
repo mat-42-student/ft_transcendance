@@ -1,6 +1,6 @@
 # Fichiers sensibles
 .env
-./src/django/code/.env
+./django/code/.env
 
 # Environnement virtuel Python
 **env/
@@ -22,20 +22,20 @@ db.sqlite3
 logs/
 
 # Avatars
-/src/media/avatars/user*
+/media/avatars/user*
 
 # IDEs et outils
 .vscode/
 
 # Jlecorne
-# src/Makefile
+# Makefile
 .DS_Store
 my_Dockerfile
-src/my_compose.yml
-src/my_frontend
-# src/media
-src/.my_env
-src/nginx/local.conf
+my_compose.yml
+my_frontend
+# media
+.my_env
+nginx/local.conf
 
 # mdjemaa
 *.pdf
