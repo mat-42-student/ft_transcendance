@@ -86,7 +86,7 @@ export class Client{
         const profileLink = document.getElementById('profile-link');
         const statusIndicator = document.querySelector('.user-status');
     
-        let label = "Sign in";
+        let label = "Sign In";
     
         if (this.state.client.userName)
             label = `${this.state.client.userName}`;
