@@ -33,10 +33,7 @@ const cardInitializers = {
     },
     'auth': () => {
         document.getElementById('oauth-submit')?.addEventListener('click', () => {
-            // localStorage.setItem('cookieSet', true);
-            // How do we know if OAuth is denied?
-            // Ideally in that case we should localStorage.removeItem('cookieSet');
-            window.location.href = 'https://localhost:3000/api/v1/auth/oauth/login/';
+            window.location.href = '/api/v1/auth/oauth/login/';
         });
         initAuthFormListeners();
     },
