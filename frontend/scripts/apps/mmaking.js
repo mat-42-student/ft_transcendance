@@ -11,7 +11,6 @@ export class Mmaking
 		this.guests = {};
 		// Store bound functions
 		this.boundEventListenersFriend = {};
-		this.boundEventListenersClient = {};
 		for (let [key, value] of state.socialApp.friendList)
 		{
 			const keyNumber = Number(key);
@@ -24,7 +23,8 @@ export class Mmaking
 			}
 		}
 
-		this.buildEvenbtnClient();
+		document.getElementsByClassName('btn-tournament')[0].addEventListener('click', this.btnSearchTournament.bind(this));
+		document.getElementById('versus').addEventListener('click', this.btnsearchRandomGame.bind(this));
 		this.host = false;
 		this.opponents = {};
 		this.SearchRandomGame = false;
@@ -37,8 +37,6 @@ export class Mmaking
 		this.type_game = null;
 		this.game = null;
 		this.gameId = null;
-		this.btnsearchRandomisActive = false;
-		this.btnSearchTournamentActive = false;
 		this.bracket = false;
 		this.winnerId_of_tournament = null;
     }
@@ -47,15 +45,6 @@ export class Mmaking
 	{
 		Reflect.deleteProperty(this.invited_by, friendId);
 		Reflect.deleteProperty(this.guests, friendId);
-	}
-
-	setBtnVersus_and_Tournament_on_card_login()
-	{
-		const btnTournament = document.getElementsByClassName('btn-tournament');
-		const btnRandom = document.getElementById('versus');
-
-		btnTournament[0]?.removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);
-		btnRandom?.removeEventListener('click', this.boundEventListenersClient.btnsearchRandomGame);
 	}
 
 	async update_friendList()
@@ -87,19 +76,6 @@ export class Mmaking
 			};
 		}
 		btnmatch.addEventListener('click', this.boundEventListenersFriend[keyNumber].btnInviteDesactive);
-	}
-
-	buildEvenbtnClient()
-	{
-		if (state.client.isAuthenticated())
-		{
-			this.boundEventListenersClient = {
-				btnsearchRandomGame: this.btnsearchRandomGame.bind(this),
-				eventSearchTournament: this.eventSearchTournament.bind(this)
-			};
-
-		}
-
 	}
 
 	sleep(ms) {
@@ -290,9 +266,6 @@ export class Mmaking
 		const btnTournament = document.getElementsByClassName('btn-tournament');
 		const btnRandom = document.getElementById('versus');
 
-		btnTournament[0].addEventListener('click', this.boundEventListenersClient.eventSearchTournament);
-		btnRandom.addEventListener('click', this.boundEventListenersClient.btnsearchRandomGame);
-
 		this.cancel = false
 	} 
 
@@ -393,8 +366,6 @@ export class Mmaking
 					state.gameApp.launchGameSocket(this.gameId);
 					chooseHeader('loading');
 					this.game = false;
-					btnTournament[0].removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);
-					btnRandom.removeEventListener('click', this.boundEventListenersClient.btnSearchRandomGame);
 				}
 			}
 	}
@@ -402,8 +373,6 @@ export class Mmaking
 
 	async renderRandom()
 	{
-		const btnRandom = document.getElementById('versus');
-
 		if (this.SearchRandomGame == true)
 		{
 			await initDynamicCard('versus');
@@ -413,27 +382,24 @@ export class Mmaking
 			document.getElementById('close-dynamic-card').style.display = 'none'
             document.getElementById("cancel-button").addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, '1vs1R'));
 		}
-		else if (this.btnsearchRandomisActive == false)
-		{
-			btnRandom.addEventListener('click', this.boundEventListenersClient.btnsearchRandomGame);
-			this.btnsearchRandomisActive = true;
-		}
-
 	}
 
 	async btnsearchRandomGame(event=null)
 	{
+		if (state.mainSocket == null) {
+			initDynamicCard('auth');
+			return;
+		}
+		else if (this.SearchRandomGame == true) { // already searching!
+			return;
+		}
+
 		const data = {
 			'status': "online",
 			'type_game': "1vs1R"
 		};
 		await this.sendMsg(data)
 
-		const btnTournament = document.getElementsByClassName('btn-tournament');
-		const btnRandom = document.getElementById('versus');
-
-		btnTournament[0].removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);
-		btnRandom.removeEventListener('click', this.boundEventListenersClient.btnsearchRandomGame);
 		this.SearchRandomGame = true;
 
 		await this.renderMatchmaking();
@@ -442,14 +408,7 @@ export class Mmaking
 
 	async renderTournament()
 	{
-		const btnTournament = document.getElementsByClassName('btn-tournament');
-
-		if (this.btnSearchTournamentActive == false)
-		{
-			btnTournament[0].addEventListener('click', this.boundEventListenersClient.eventSearchTournament);
-			this.btnSearchTournamentActive = true;
-		}
-		else if (this.SearchRandomGame == true)
+		if (this.SearchRandomGame == true)
 		{
 			await initDynamicCard('versus');
 
@@ -573,8 +532,16 @@ export class Mmaking
 	}
 
 
-	async eventSearchTournament(event=null)
+	async btnSearchTournament(event=null)
 	{
+		if (state.mainSocket == null) {
+			initDynamicCard('auth');
+			return;
+		}
+		else if (this.SearchRandomGame == true) { // already searching!
+			return;
+		}
+
 		const data = {
 			'status': "online",
 			'type_game': "tournament"
@@ -582,11 +549,6 @@ export class Mmaking
 
 		await this.sendMsg(data);
 
-		const btnTournament = document.getElementsByClassName('btn-tournament');
-		const btnRandom = document.getElementById('versus');
-
-		btnTournament[0].removeEventListener('click', this.boundEventListenersClient.eventSearchTournament);
-		btnRandom.removeEventListener('click', this.boundEventListenersClient.btnsearchRandomGame);
 		this.SearchRandomGame = true;
 
 		await this.renderMatchmaking();
@@ -676,12 +638,13 @@ export class Mmaking
 				}
 
 			}
-			else if (data.body.tournament)
-			{
-				this.btnSearchTournamentActive = false;
-				this.btnsearchRandomisActive = false;
-				this.cancel = true
-			}
+			// else if (data.body.tournament)
+			// {
+			// these 2 lines are no longer used:
+			// 	this.btnSearchTournamentActive = false;
+			// 	this.btnsearchRandomisActive = false;
+			// 	this.cancel = true
+			// }
 			else
 				this.cancel = true;
 		}
