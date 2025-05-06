@@ -121,3 +121,6 @@ done
 echo "Certificate generation complete!"
 echo "Certificates location: $(pwd)/certs/"
 echo "Make sure your Docker containers have proper permissions to read these files."
+
+# openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
+# openssl rsa -in private_key.pem -pubout -out public_key.pem
