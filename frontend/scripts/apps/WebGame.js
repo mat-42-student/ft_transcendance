@@ -71,8 +71,6 @@ export class WebGame extends GameBase {
             return;
         }
 
-        // websocat --insecure wss://nginx:3000/game/1234/?t=<state.client.accessToken>
-        // websocat ws://pong:8006/game/1234/?t=<state.client.accessToken>
 
         this.socket.onerror = async function(e) {
             console.error('Game socket: onerror:', e);
@@ -162,6 +160,8 @@ export class WebGame extends GameBase {
                 "action": "move",
                 "key": currentInput
             });
+            if (state.cliDebug)
+                console.log('Game input:', input);
             this.socket.send(input);
             this.previousInput = currentInput;
         }
