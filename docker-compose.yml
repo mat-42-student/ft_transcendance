@@ -61,7 +61,7 @@ services:
       redis:
         condition: service_started 
       auth:
-        condition: service_started 
+        condition: service_started
     volumes:
       - ./certs/services/chat/chat.crt:/etc/ssl/chat.crt:ro
       - ./certs/services/chat/chat.key:/etc/ssl/chat.key:ro

@@ -283,10 +283,10 @@ async function handleAuthError(response) {
             displayErrorMessage("User already logged in.");
         } else if (errorData.username || errorData.email) {
             if (errorData.email && errorData.email.length > 0) {
-                displayErrorMessage(`Email: ${errorData.email[0]}`);
+                displayErrorMessage(`Error: ${errorData.email[0]}`);
             }
             if (errorData.username && errorData.username.length > 0) {
-                displayErrorMessage(`Username: ${errorData.username[0]}`);
+                displayErrorMessage(`Error: ${errorData.username[0]}`);
             }
         } else {
             displayErrorMessage("Authentication failed. Please try again.");

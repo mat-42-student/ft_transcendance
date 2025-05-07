@@ -3,14 +3,11 @@
 
 set -e  # Exit on error
 
-echo "Creating certificates for ft_transcendance services with proper extensions..."
-
 # Create directories
 mkdir -p certs/ca
 mkdir -p certs/services/{auth,chat,gateway,matchmaking,nginx,pong,social,users}
 
 # Generate CA key and certificate with proper key usage extensions
-echo "Generating CA certificate..."
 openssl genrsa -out certs/ca/ca.key 4096
 
 # Create a CA configuration file with key usage extensions
@@ -39,7 +36,6 @@ openssl req -x509 -new -nodes -key certs/ca/ca.key -sha256 -days 3650 \
 # Function to generate certificates for each service
 generate_service_cert() {
   local service=$1
-  echo "Generating certificate for $service service..."
   
   # Generate private key
   openssl genrsa -out "certs/services/$service/$service.key" 2048
@@ -105,10 +101,8 @@ EOF
     -sha256 -extfile "certs/services/$service/signing.cnf" \
     -extensions extensions
   
-  # Clean up
   rm "certs/services/$service/$service.csr" "certs/services/$service/$service.cnf" "certs/services/$service/signing.cnf"
   
-  # Set permissions
   chmod 644 "certs/services/$service/$service.crt"
   chmod 644 "certs/services/$service/$service.key"
 }
@@ -117,10 +111,6 @@ EOF
 for service in auth chat gateway matchmaking nginx pong social users; do
   generate_service_cert "$service"
 done
-
-echo "Certificate generation complete!"
-echo "Certificates location: $(pwd)/certs/"
-echo "Make sure your Docker containers have proper permissions to read these files."
 
 # openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
 # openssl rsa -in private_key.pem -pubout -out public_key.pem
