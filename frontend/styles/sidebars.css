@@ -9,16 +9,26 @@
 }
 
 .chat-header {
-    padding: 0.5rem;
-    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5em;
     font-weight: bold;
-    flex-shrink: 0;
 }
 
-.chat-header img{
-    width: 1.5rem;
-    height: 1.5rem;
-    transition: transform 0.2s;
+.chat-controls {
+    display: flex;
+    align-items: center;
+    gap: 0em;
+}
+
+.chat-mute-txt {
+    font-size: 0.7rem;
+    font-weight: 200;
+}
+
+.chat-mute-checkbox {
+    transform: scale(0.7);
 }
 
 .chat-body {
@@ -40,6 +50,10 @@
     text-align: left;
     margin-right: 1.5rem;
     background: #f0f0f0;
+}
+
+.friend-name {
+    text-align: left;
 }
 
 .user-message {

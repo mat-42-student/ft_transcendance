@@ -53,9 +53,9 @@ export class ChatApp{
             return;
         const muted = await this.isChatUserMuted();
         if (muted)
-            this.chatMute.src = "/ressources/unmute.png";
+            this.chatMute.checked = true;
         else
-            this.chatMute.src = "/ressources/mute.png";
+            this.chatMute.checked = false;
     }
 
     chatFormListener(event) {
