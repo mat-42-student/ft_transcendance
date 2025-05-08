@@ -386,23 +386,26 @@ export class Mmaking
 
 	async btnsearchRandomGame(event=null)
 	{
-		if (state.mainSocket == null) {
-			initDynamicCard('auth');
-			return;
+		if (state.socialApp.myStatus == 'online')
+		{
+			if (state.mainSocket == null) {
+				initDynamicCard('auth');
+				return;
+			}
+			else if (this.SearchRandomGame == true) { // already searching!
+				return;
+			}
+
+			const data = {
+				'status': "online",
+				'type_game': "1vs1R"
+			};
+			await this.sendMsg(data)
+
+			this.SearchRandomGame = true;
+
+			await this.renderMatchmaking();
 		}
-		else if (this.SearchRandomGame == true) { // already searching!
-			return;
-		}
-
-		const data = {
-			'status': "online",
-			'type_game': "1vs1R"
-		};
-		await this.sendMsg(data)
-
-		this.SearchRandomGame = true;
-
-		await this.renderMatchmaking();
 	}
 
 
@@ -720,7 +723,7 @@ export class Mmaking
 
 	cardFriendInvited(friendCard)
 	{
-		friendCard.style.backgroundColor = 'blue';
+		friendCard.style.backgroundColor = '#007bff';
 	}
 
 	cardFriendReset(friendCard)

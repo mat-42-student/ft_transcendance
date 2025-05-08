@@ -77,11 +77,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'gateway_service.wsgi.application'
 ASGI_APPLICATION = 'gateway_service.asgi.application'
 
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis", 6379)],
+            "hosts": [{"host": "redis", "port": 6379, "password": REDIS_PASSWORD}],
         },
     },
 }
@@ -100,11 +102,11 @@ CHANNEL_LAYERS = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'transcendance',
-        'USER': 'toto',
-        'PASSWORD': 'test',
-        'HOST': 'postgres',
-        'PORT': '5432',
+        'NAME': os.getenv("POSTGRES_DB"),
+        'USER': os.getenv("POSTGRES_USER"),
+        'PASSWORD': os.getenv("POSTGRES_PASSWORD"),
+        'HOST': os.getenv("POSTGRES_HOST"),
+        'PORT': os.getenv("POSTGRES_PORT"),
     }
 }
 

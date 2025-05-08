@@ -60,7 +60,6 @@ class UserRegisterView(APIView):
                 'typ': "user",
                 'oauth': False,
                 'avatar': user.avatar.url if user.avatar else None
-
             }
 
             refresh_payload = {
