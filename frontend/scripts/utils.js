@@ -7,19 +7,18 @@ export const RAD180 = THREE.MathUtils.degToRad(180);
 export const RAD270 = THREE.MathUtils.degToRad(270);
 export const RAD360 = THREE.MathUtils.degToRad(360);
 
-export function getAvatarPath(avatar, mode) {
-    let avatarPath
-    if (mode == 1) {
-        avatarPath = (avatar === 'default.png')
-        ? `/media/${avatar}`
-        : `/media/avatars/${avatar}`;
-    } else if (mode == 2) {
-        avatarPath = (state.client.userAvatar === '/default.png')
-        ? `/media${state.client.userAvatar}`
-        : `/media${state.client.userAvatar}`;
-    } else
-        return console.error("wrong function mode: usage: getAvatarPath(avatar, mode(1/2))");
+export function getAvatarPath(avatar) {
+    let avatarPath;
 
+    if (avatar === '/media/default.png') {
+        avatarPath = avatar;
+    } else if (avatar.includes('/media/')) {
+        avatarPath = avatar;
+    } else {
+        avatarPath = `/media${avatar}`;
+    }
+
+    console.log(`avatar og path: ${avatar} -> ${avatarPath}`);
     return avatarPath;
 }
 

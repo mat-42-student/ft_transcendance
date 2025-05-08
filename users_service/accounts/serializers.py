@@ -137,7 +137,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'username', 'avatar', 'is_2fa_enabled']
 
     def get_avatar(self, obj):
-        return obj.avatar.name.split('/')[-1] if obj.avatar else "default.png"
+        return obj.avatar.url if obj.avatar else "/media/default.png"
     
 
 class UserPrivateDetailSerializer(serializers.ModelSerializer):
@@ -149,7 +149,7 @@ class UserPrivateDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'username', 'avatar', 'is_2fa_enabled', 'blocked_users']
 
     def get_avatar(self, obj):
-        return obj.avatar.name.split('/')[-1] if obj.avatar else "default.png"
+        return obj.avatar.url if obj.avatar else "/media/default.png"
 
 
 class UserMinimalSerializer(serializers.ModelSerializer):
@@ -161,7 +161,7 @@ class UserMinimalSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'username', 'avatar']
 
     def get_avatar(self, obj):
-        return obj.avatar.name.split('/')[-1] if obj.avatar else "default.png"
+        return obj.avatar.url if obj.avatar else "/media/default.png"
     
 
 class UserMicroSerializer(serializers.ModelSerializer):
@@ -180,7 +180,7 @@ class UserBlockedSerializer(serializers.ModelSerializer):
         fields = ['username', 'avatar', 'message']
 
     def get_avatar(self, obj):
-        return obj.avatar.name.split('/')[-1] if obj.avatar else "default.png"
+        return obj.avatar.url if obj.avatar else "/media/default.png"
 
     def get_message(self, obj):
         request_user = self.context.get('request').user

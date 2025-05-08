@@ -20,7 +20,7 @@ export function resetPendingCountDisplay() {
 
 export async function createRequestItem(user) {
     const listItem = createElement('li', 'request-item');
-    const avatarPath = getAvatarPath(user.avatar, 1);
+    const avatarPath = getAvatarPath(user.avatar);
     const avatar = createElement('img', 'avatar', {
         src: avatarPath,
         alt: `${user.username}'s avatar`

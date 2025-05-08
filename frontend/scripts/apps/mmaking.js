@@ -128,9 +128,9 @@ export class Mmaking
 				{
 					await initDynamicCard('salonHost');
 
-					document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar, 2);
+					document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar);
 					document.getElementById('player-name').textContent = state.client.userName;
-					this.setFriendwithoutLoader(friend.username, getAvatarPath(friend.avatar, 1));
+					this.setFriendwithoutLoader(friend.username, getAvatarPath(friend.avatar));
 
 					const btnstartgame = document.getElementById('start-game');
 					const btncancelGame = document.getElementById('cancel-button');
@@ -195,9 +195,9 @@ export class Mmaking
 				{
 					const btncancelGame = document.getElementById('cancel-button');
 
-					document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar, 2);
+					document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar);
 					document.getElementById('player-name').textContent = state.client.userName;
-					this.setFriendwithoutLoader(friend.username, getAvatarPath(friend.avatar, 1));
+					this.setFriendwithoutLoader(friend.username, getAvatarPath(friend.avatar));
 					btncancelGame.addEventListener('click', (event) => this.cancelGame(event, keyNumber, 'invite'));
 
 				}
@@ -377,7 +377,7 @@ export class Mmaking
 		{
 			await initDynamicCard('versus');
 
-			document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar, 2);
+			document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar);
 			document.getElementById('player-name').textContent = state.client.userName;
 			document.getElementById('close-dynamic-card').style.display = 'none'
             document.getElementById("cancel-button").addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, '1vs1R'));
@@ -415,7 +415,7 @@ export class Mmaking
 		{
 			await initDynamicCard('versus');
 
-			document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar, 2);
+			document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar);
 			document.getElementById('close-dynamic-card').style.display = 'none'
             document.getElementById("cancel-button").addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, 'tournament'));
 
