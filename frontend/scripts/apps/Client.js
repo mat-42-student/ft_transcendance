@@ -2,6 +2,7 @@ import { delay, state, getCookie, deleteCookie } from '../main.js';
 import { MainSocket } from './MainSocket.js';
 import { verifyToken } from '../api/auth.js';
 import { resetPendingCountDisplay } from '../components/friend_requests.js';
+import { mainErrorMessage } from '../utils.js';
 
 export class Client{
 
@@ -46,6 +47,7 @@ export class Client{
         this.userId = null;
         this.userName = null;
         this.accessToken = null;
+		await state.mmakingApp.setBtnVersus_and_Tournament_on_card_login()
         if (this.state.mainSocket)
             this.state.mainSocket.close(); // handles sub-objects (social, chat, mmaking) closure
         this.state.mainSocket = null;
@@ -154,7 +156,7 @@ export class Client{
             const response = await verifyToken();
             return response.ok;
         } catch (error) {
-            console.error('Erreur lors de la vérification du token:', error);
+            mainErrorMessage(`Erreur lors de la vérification du token: ${error}`);
             return false;
         }
     }

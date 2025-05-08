@@ -1,5 +1,6 @@
 import { state } from './main.js';
 import { initHomePage, initProfilePage } from "./pages.js";
+import { mainErrorMessage } from './utils.js';
 import { closeDynamicCard, initDynamicCard } from './components/dynamic_card.js';
 import { ft_fetch } from './main.js';
 
@@ -23,7 +24,7 @@ class Navigator {
             "404": { url: './partials/404.html', setup: null },
         };
     
-        if (!pageFiles[page]) return console.error('Page not found:', page);
+        if (!pageFiles[page]) return mainErrorMessage(`Page not found: ${page}`);
     
         if (page === 'profile' && !(await state.client.isAuthenticated())) {
             return initDynamicCard('auth');
@@ -49,7 +50,7 @@ class Navigator {
                 });
             }
         } catch (error) {
-            console.error('Error loading page:', error);
+            mainErrorMessage(error);
         }
     }
 

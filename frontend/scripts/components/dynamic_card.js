@@ -203,8 +203,7 @@ export async function initDynamicCard(routeKey) {
             await cardInitializers[routeKey]();
         }
     } catch (error) {
-        console.log(error);
-        mainErrorMessage("Erreur lors du chargement de la carte dynamique");
+        mainErrorMessage(error);
         closeDynamicCard();
     }
 }

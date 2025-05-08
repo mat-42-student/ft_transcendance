@@ -8,9 +8,6 @@ run:
 build:
 	docker compose build
 
-jbuild:
-	docker compose -f my_compose.yml up --build
-
 down:
 	docker compose down
 
