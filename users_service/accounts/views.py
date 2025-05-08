@@ -41,27 +41,38 @@ class UserRegisterView(APIView):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+
+            # Check if the UUID field exists and set it if needed
+            if hasattr(user, 'uuid') and user.uuid is None:
+                user.uuid = uuid.uuid4()
+                user.save(update_fields=['uuid'])
+
             user.refresh_from_db()
 
             # Generate a JWT token for the user
             access_payload = {
                 'id': user.id,
+                'uuid': str(user.uuid),
                 'username': user.username,
                 'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=120),
                 'iat': datetime.datetime.now(datetime.timezone.utc),
                 'jti': str(uuid.uuid4()),
                 'typ': "user",
                 'oauth': False,
+                'avatar': user.avatar.url if user.avatar else None
+
             }
 
             refresh_payload = {
                 'id': user.id,
+                'uuid': str(user.uuid), 
                 'username': user.username,
                 'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
                 'iat': datetime.datetime.now(datetime.timezone.utc),
                 'jti': str(uuid.uuid4()),
                 'typ': "user",
                 'oauth': False,
+                'avatar': user.avatar.url if user.avatar else None
             }
 
             witness_payload = {

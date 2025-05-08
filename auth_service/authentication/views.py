@@ -128,6 +128,7 @@ class LoginView(APIView):
 
         access_payload = {
             'id': user.id,
+            'uuid': str(user.uuid),
             'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=120),
             'iat': datetime.datetime.now(datetime.timezone.utc),
@@ -139,6 +140,7 @@ class LoginView(APIView):
 
         refresh_payload = {
             'id': user.id,
+            'uuid': str(user.uuid), 
             'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
             'iat': datetime.datetime.now(datetime.timezone.utc),
@@ -198,9 +200,15 @@ class RefreshTokenView(APIView):
             raise AuthenticationFailed('Refresh token missing!')
         try:
             old_data = jwt.decode(old_refresh_token, settings.FRONTEND_JWT["PUBLIC_KEY"], algorithms=[settings.FRONTEND_JWT["ALGORITHM"]])
+            # Get the user by ID
             user = User.objects.filter(id=old_data.get("id")).first()
             if not user:
                 raise AuthenticationFailed('User not found!')
+            
+            # Verify the UUID matches
+            token_uuid = old_data.get("uuid")
+            if not token_uuid or str(user.uuid) != token_uuid:
+                raise AuthenticationFailed('Invalid token UUID!')
 
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Refresh token expired!')
@@ -216,6 +224,7 @@ class RefreshTokenView(APIView):
         isOauth = old_data.get('oauth')
         access_payload = {
             'id': user.id,
+            'uuid': str(user.uuid), 
             'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=120),
             'iat': datetime.datetime.now(datetime.timezone.utc),
@@ -227,6 +236,7 @@ class RefreshTokenView(APIView):
 
         refresh_payload = {
             'id': user.id,
+            'uuid': str(user.uuid),
             'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
             'iat': datetime.datetime.now(datetime.timezone.utc),
@@ -441,6 +451,7 @@ class OAuthCallbackView(APIView):
 
         refresh_payload = {
             'id': user.id,
+            'uuid': str(user.uuid),
             'username': user.username,
             'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7),
             'iat': datetime.datetime.now(datetime.timezone.utc),
