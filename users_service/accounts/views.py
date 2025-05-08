@@ -59,6 +59,7 @@ class UserRegisterView(APIView):
                 'jti': str(uuid.uuid4()),
                 'typ': "user",
                 'oauth': False,
+                'avatar': user.avatar.url if user.avatar else None
             }
 
             refresh_payload = {
@@ -70,6 +71,7 @@ class UserRegisterView(APIView):
                 'jti': str(uuid.uuid4()),
                 'typ': "user",
                 'oauth': False,
+                'avatar': user.avatar.url if user.avatar else None
             }
 
             witness_payload = {

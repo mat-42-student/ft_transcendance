@@ -9,6 +9,7 @@ from .const import RESET, RED, YELLOW, GREEN, LEFT, RIGHT, LEVELS
 from collections import deque
 import random
 import math
+from django.conf import settings
 
 class InvalidPacket(Exception):
     pass
@@ -113,7 +114,10 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     async def join_redis_channels(self):
         try:
-            self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
+            REDIS_PASSWORD = settings.REDIS_PASSWORD
+
+            self.redis_client = await from_url(f"redis://:{REDIS_PASSWORD}@redis:6379", decode_responses=True)
+            
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
             # await self.pubsub.subscribe()  # Subscribe all channels
         except Exception as e:

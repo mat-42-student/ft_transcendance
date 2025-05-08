@@ -30,7 +30,10 @@ class Command(BaseCommand):
     async def main(self):
         self.running = True
         try:
-            self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
+            REDIS_PASSWORD = settings.REDIS_PASSWORD
+
+            self.redis_client = await from_url(f"redis://:{REDIS_PASSWORD}@redis:6379", decode_responses=True)
+            
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
             
             # All channels
@@ -292,21 +295,21 @@ class Command(BaseCommand):
         print(f'cancel tournament player turn offline START')
         for tournamentId in self.games['tournament']:
             for gameId, game in self.games['tournament'][tournamentId].items():
-                if (playerId in game.players and await self.score_is_already_set(gameId) == False):
+                if (playerId in game.players ):
                     for gamerId in game.players:
                         if (gamerId == playerId):
                             game.players[gamerId].leave_game = True
                         elif (game.players[gamerId].leave_game == False):
                             game.players[gamerId].leave_game = False
-                            
-                    await self.process_errors_in_tournament(game, gameId)
-                    return True
-        
+
+                    if(await self.score_is_already_set(gameId) == False):
+                        await self.process_errors_in_tournament(game, gameId)
+                        return True
         return False
     
     
     async def cancelRandomGamesPlayerTurnOffline(self, playerId):
-        print(f'cancel Random player turn offline START')
+        print(f'cancel Random player ingame turn offline START')
         for gameId, game in self.games['1vs1R'].items():
                 if (playerId in game.players):
                     for gamerId in game.players:
@@ -317,6 +320,22 @@ class Command(BaseCommand):
                     
                     gameDB = await sync_to_async(self.getGame)(gameId)
                     await self.cancelGameWithWinner_player_leave_game(gameDB, game)
+                    return True
+        
+        return False
+    
+    async def cancelRandomSalonPlayerTurnOffline(self, playerId):
+        print(f'cancel Random player in salon turn offline START')
+        for game in self.salons['1vs1R']:
+                if (playerId in game.players):
+                    for gamerId, gamer in game.players.items():
+                        if (gamerId == playerId):
+                            game.players[gamerId].leave_game = True
+                        elif (game.players[gamerId].leave_game == False):
+                            game.players[gamerId].leave_game = False
+                    if (await self.checkStatus(gamer, 'online') == False):
+                            print(f'Checkstatus {gamer} is failed')
+                    del game.players[playerId]
                     return True
         
         return False
@@ -359,6 +378,8 @@ class Command(BaseCommand):
             # Cancel offline or ingame
             if (salon is None):
                 await self.cancelInvitationOfflinePlayer(player.user_id)
+                if (await self.cancelRandomSalonPlayerTurnOffline(player.user_id)):
+                    return True
                 if (await self.cancelRandomGamesPlayerTurnOffline(player.user_id)):
                     return True
                 if (await self.cancelInviteGamesPlayerTurnOffline(player.user_id)):
@@ -568,6 +589,9 @@ class Command(BaseCommand):
             await self.updateScore(data)
         except Exception as e:
             print(f'Cancel game with winner failed: {e}')
+            
+    
+    
         
             
         

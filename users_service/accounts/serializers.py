@@ -2,6 +2,8 @@ from rest_framework import serializers
 from django.contrib.auth.hashers import check_password
 from django.core.files.storage import default_storage
 from django.core.exceptions import ValidationError
+from django.utils.html import escape
+from django.core.validators import RegexValidator
 
 from PIL import Image
 
@@ -19,6 +21,20 @@ class PasswordValidationSerializer(serializers.Serializer):
 # User registration serializer
 class UserRegistrationSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(write_only=True)
+
+    username = serializers.CharField(
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+$',
+                message="Username may only contain letters, numbers, and @/./+/-/_ characters."
+            )
+        ],
+        min_length=2,
+        max_length=50,
+        error_messages={
+            'unique': 'Username is already taken.'
+        }
+    )
 
     class Meta:
         model = User
@@ -51,6 +67,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                 'label': 'Confirm password'
             },
         }
+
+    def validate_username(self, value):
+        sanitized_value = escape(value)
+        if sanitized_value != value:
+            raise serializers.ValidationError("Username contains invalid characters.")
+        return sanitized_value
 
     def validate_password(self, value):
         """
