@@ -1,6 +1,6 @@
 import { delay, state, getCookie, deleteCookie } from '../main.js';
 import { MainSocket } from './MainSocket.js';
-import { verifyToken } from '../api/auth.js';
+import { verifyToken, displayErrorMessage } from '../api/auth.js';
 import { resetPendingCountDisplay } from '../components/friend_requests.js';
 import { mainErrorMessage } from '../utils.js';
 
@@ -26,7 +26,6 @@ export class Client{
         try {
             this.fillUserDataFromJWT();
         } catch (error) {
-            console.error(error);
             throw error;
         }
         // localStorage.setItem('cookieSet', true); // modfis ajoutées après merge
@@ -113,14 +112,19 @@ export class Client{
         if (parts.length !== 3) {
           throw new Error('Invalid JWT format');
         }
-        const payload = parts[1];
-        const decodedPayload = atob(payload);
-        const parsedPayload = JSON.parse(decodedPayload);
-        this.state.client.userId = parsedPayload.id;
-        this.state.client.userName = parsedPayload.username;
-        console.log(parsedPayload)
-        this.state.client.userAvatar = parsedPayload.avatar ?? '/default.png';
-        this.state.client.isOauth = parsedPayload.oauth ?? false;
+        try{
+            const payload = parts[1];
+            const decodedPayload = atob(payload);
+            const parsedPayload = JSON.parse(decodedPayload);
+            this.state.client.userId = parsedPayload.id;
+            this.state.client.userName = parsedPayload.username;
+            console.log(parsedPayload)
+            this.state.client.userAvatar = parsedPayload.avatar ?? '/default.png';
+            this.state.client.isOauth = parsedPayload.oauth ?? false;
+        }
+        catch (error) {
+            throw new Error(error);
+        }
     }
 
     async refreshSession(location = null) {
@@ -139,7 +143,7 @@ export class Client{
                 await this.login(data.accessToken);
             }
             catch (error) {
-                console.warn(error);
+                displayErrorMessage(error);
             }
             if (location)
                 window.location.hash = location;
