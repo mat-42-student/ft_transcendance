@@ -20,62 +20,75 @@ export async function verifyToken(token) {
     }
 }
 
-export function enroll2fa() {
+export async function enroll2fa() {
     const token = state.client.accessToken;
     const qrSection = document.getElementById('qr-section');
     const verificationSection = document.getElementById('verification-section');
     const infoSection = document.getElementById('info-section');
-
-    fetch('/api/v1/auth/2fa/enroll/', {
+    
+    try {
+      const response = await fetch('/api/v1/auth/2fa/enroll/', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({}),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const qrCodeImage = `data:image/png;base64,${data.qr_code}`;
-            document.getElementById('qr-image').src = qrCodeImage;
-            qrSection.style.display = 'block';
-            verificationSection.style.display = 'block';
-            infoSection.style.display = 'none';
-        } else {
-            console.error("Error", data);
-        }
-    })
-    .catch(error => console.error('Error:', error));
+      });
+      
+      const data = await response.json();
+
+      if (data.message == '2FA is already enabled.') {
+        const loginErrorContainer = document.getElementById('2fa-error');
+        loginErrorContainer.textContent = "2FA is already enabled.";
+        loginErrorContainer.classList.remove('hidden');
+        return;
+      }
+      
+      if (data.success) {
+        const qrCodeImage = `data:image/png;base64,${data.qr_code}`;
+        document.getElementById('qr-image').src = qrCodeImage;
+        qrSection.style.display = 'block';
+        verificationSection.style.display = 'block';
+        infoSection.style.display = 'none';
+      } else {
+        console.error("Error", data);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
 }
 
-export function verify2fa() {
+export async function verify2fa() {
     const token = state.client.accessToken;
     const totp = document.getElementById('totp-code').value;
     const successPage = document.getElementById('2fa-success');
     const qrSection = document.getElementById('qr-section');
     const verificationSection = document.getElementById('verification-section');
-
-    fetch('api/v1/auth/2fa/verify/', {
+    
+    try {
+      const response = await fetch('api/v1/auth/2fa/verify/', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ totp }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            successPage.style.display = 'block';
-            qrSection.style.display = 'none';
-            verificationSection.style.display = 'none';
-        } else {
-            console.error("Error", data);
-        }
-    })
-    .catch(error => console.error('Error:', error));
-}
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        successPage.style.display = 'block';
+        qrSection.style.display = 'none';
+        verificationSection.style.display = 'none';
+      } else {
+        console.error("Error", data);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
 
 export function validatePassword(password) {
     if (password.length < 8) {

@@ -130,7 +130,6 @@ function setupSearchInput() {
                     showAlert(`Aucun utilisateur trouvé avec le nom "${query}".`);
                 }
             } catch (error) {
-                console.error("Erreur lors de la recherche :", error);
                 showAlert("Erreur lors de la recherche.");
             }
         }

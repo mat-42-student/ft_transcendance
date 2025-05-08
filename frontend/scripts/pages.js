@@ -2,6 +2,7 @@ import { state } from './main.js';
 import { initDynamicCard } from "./components/dynamic_card.js";
 import { fetchUserProfile } from "./api/users.js";
 import { performUserAction } from './api/users.js';
+import { mainErrorMessage } from './utils.js';
 
 export function initHomePage() {}
 
@@ -13,16 +14,6 @@ export async function initProfilePage(userId) {
     // Une fois les données chargées, on met en place les événements
     setupProfileEventListeners(userId);
 }
-
-// export function renderFriendProfile(data) {
-//     // Vérifie si le hash correspond à la page profil de l'utilisateur concerné
-//     const currentHash = window.location.hash;
-//     console.log("currentHash: " + currentHash + " data ", data);
-//     if (currentHash === `#profile/${data?.header?.from}`) {
-//         console.log("refresh page")
-//         initProfilePage(data?.header?.from);
-//     }
-// }
 
 export function renderFriendProfile(data) {
     const currentHash = window.location.hash;
@@ -104,8 +95,6 @@ function createGameRow(game) {
 
 // Voir si gestion nécessaire quand user est bloqué && à bloqué
 function generateProfileActions(data) {
-    // console.log("is friend?: " + data.is_friend);
-    // console.log("is blocked?:" + data.is_blocked_by_user);
     if (data.is_self) {
         return `
             <button data-action="2fa" data-user-id="${data.id}" title="Enable Two-Factor Authentication">
@@ -174,70 +163,10 @@ async function handleProfileAction(action, userId) {
             break;
         default:
             if (!userId) {
-                console.error("ID utilisateur manquant pour l'action:", action);
+                mainErrorMessage(`ID utilisateur manquant pour l'action: ${action}`);
                 return;
             }
             await performUserAction(userId, action);
             break;
     }
 }
-
-// function generateProfileActions(data) {
-//     if (data.is_self) {
-//         return `
-//             <button data-action="2fa" data-user-id="${data.id}" title="Enable Two-Factor Authentication">
-//                 <img src="/ressources/2fa.svg" alt="Enable 2fa">
-//             </button>
-//             <button data-action="update" data-user-id="${data.id}" title="Update Profile">
-//                 <img src="/ressources/update.png" alt="Update Profile">
-//             </button>
-//             <button data-action="logout" data-user-id="${data.id}" title="Logout">
-//                 <img src="/ressources/logout.png" alt="Logout">
-//             </button>
-//         `;
-//     } else if (data.has_blocked_user) {
-//         return `<p>Vous avez été mis en sourdine par cet utilisateur.</p>
-//                 <button data-action="match" data-user-id="${data.id}" title="Match">
-//                     <img src="/ressources/vs.png" alt="Match">
-//                 </button>
-//                 <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
-//                     <img src="/ressources/remove-friend.png" alt="Remove Friend">
-//                 </button>
-//         `;
-        
-//     } else if (data.is_blocked_by_user) {
-//         return `
-//             <p>Vous avez mis en sourdine cet utilisateur.</p>
-//             <button data-action="match" data-user-id="${data.id}" title="Match">
-//                 <img src="/ressources/vs.png" alt="Match">
-//             </button>
-//             <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
-//                 <img src="/ressources/remove-friend.png" alt="Remove Friend">
-//             </button>
-//             <button data-action="unblock" data-user-id="${data.id}" title="Unblock">
-//                 <img src="/ressources/unblock.png" alt="Unblock">
-//             </button>
-//         `;
-//     } else if (data.is_friend) {
-//         return `
-//             <button data-action="match" data-user-id="${data.id}" title="Match">
-//                 <img src="/ressources/vs.png" alt="Match">
-//             </button>
-//             <button data-action="chat" data-user-id="${data.id}" title="Chat">
-//                 <img src="/ressources/chat.png" alt="Chat">
-//             </button>
-//             <button data-action="remove-friend" data-user-id="${data.id}" title="Remove Friend">
-//                 <img src="/ressources/remove-friend.png" alt="Remove Friend">
-//             </button>
-//             <button data-action="block" data-user-id="${data.id}" title="Block">
-//                 <img src="/ressources/block.png" alt="Block">
-//             </button>
-//         `;
-//     } else {
-//         return `
-//             <button data-action="add-friend" data-user-id="${data.id}" title="Add Friend">
-//                 <img src="/ressources/add-friend.png" alt="Add a Friend">
-//             </button>
-//         `;
-//     }
-// }
