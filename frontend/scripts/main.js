@@ -6,6 +6,10 @@ import { Input } from './game3d/Input.js';
 import { Engine } from './game3d/Engine.js';
 import LevelIdle from './game3d/gameobjects/levels/idle/LevelIdle.js';
 import { LocalGame } from './apps/LocalGame.js';
+import { MainSocket } from './apps/MainSocket.js';
+import { ChatApp } from './apps/Chat.js';
+import { SocialApp } from './apps/Social.js';
+import { Mmaking } from './apps/mmaking.js';
 
 // Optionally can be enabled for debugging
 // if (!localStorage.getItem("keepLogs")) {
@@ -16,14 +20,15 @@ import { LocalGame } from './apps/LocalGame.js';
 
 export const state = {
     client: new Client(),
-    mainSocket: null,
-    chatApp: null,
-    socialApp: null,
-    mmakingApp: null,
+    /** @type {MainSocket} */ mainSocket: null,
+    /** @type {ChatApp} */ chatApp: null,
+    /** @type {SocialApp} */ socialApp: null,
+    /** @type {Mmaking} */ mmakingApp: null,
     /** @type {GameBase} */ gameApp: null,
     input: new Input(),
     engine: new Engine(),
     levelLoadingTempStorage: null,
+    cliDebug: false,
     get isPlaying() { return this.gameApp != null && this.engine != null && this.engine.scene != null; },
 };
 

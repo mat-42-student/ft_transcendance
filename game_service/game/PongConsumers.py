@@ -131,7 +131,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             expected_players = await self.redis_client.get(f"game_{self.game_id}_players")
             await asleep(0.5)
         if expected_players is None:
-            await self.kick(close_code=1011, message="Internal error")
+            await self.kick(close_code=1011, message="Player not expected on this game")
             return
         try:
             expected_players = json.loads(expected_players)

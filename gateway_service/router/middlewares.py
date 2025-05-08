@@ -17,11 +17,10 @@ class JWTAuthMiddleware:
         if token:
             try:
                 public_key = self.get_public_key()
-                # print(public_key)
                 payload = jwt.decode(token, public_key, algorithms=["RS256"])
                 scope["payload"] = payload
             except jwt.ExpiredSignatureError:
-                print("Token expiré")
+                print("Token expired")
                 scope["payload"] = None
             except jwt.InvalidTokenError:
                 print("Token invalide")
