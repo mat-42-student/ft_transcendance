@@ -50,53 +50,6 @@ export async function apiRequest(endpoint, method = 'GET', body = null) {
     return responseData;
 }
 
-// export async function apiRequest(endpoint, options = {}) {
-//     if (!state.client.accessToken) return;
-
-//     const { method = 'GET', body = null, headers = {} } = options;
-
-//     const finalHeaders = { ...headers };
-//     if (!(body instanceof FormData)) {
-//         finalHeaders['Content-Type'] = 'application/json';
-//     }
-
-//     const response = await ft_fetch(endpoint, {
-//         method,
-//         headers: finalHeaders,
-//         body: body instanceof FormData
-//             ? body
-//             : (body ? (typeof body === 'string' ? body : JSON.stringify(body)) : null),
-//     });
-
-//     const contentType = response.headers.get('content-type') || '';
-//     const isJson = contentType.includes('application/json');
-
-//     const responseData = isJson ? await response.json() : await response.text();
-
-//     if (!response.ok) {
-//         let errorMessages = [];
-
-//         if (response.status === 413) {
-//             errorMessages.push("Le fichier est trop volumineux.");
-//         } else if (isJson && typeof responseData === 'object') {
-//             for (const field in responseData) {
-//                 const messages = responseData[field];
-//                 if (Array.isArray(messages)) {
-//                     errorMessages.push(...messages);
-//                 } else if (typeof messages === 'string') {
-//                     errorMessages.push(messages);
-//                 }
-//             }
-//         } else {
-//             errorMessages.push(responseData);
-//         }
-
-//         throw new Error(errorMessages.join('\n'));
-//     }
-
-//     return responseData;
-// }
-
 export async function updateProfile(formData, userId) {
     const response = await apiRequest(`${apiBase}/${userId}/`, 'PATCH', formData);
     return response;
@@ -104,7 +57,7 @@ export async function updateProfile(formData, userId) {
 
 export async function fetchUserProfile(userId) {
     try {
-        return await apiRequest(`/api/v1/users/${userId}/profile/`);
+        return await apiRequest(`${apiBase}/${userId}/profile/`);
     } catch (error) {
         return mainErrorMessage(error);
     }
@@ -156,12 +109,12 @@ export async function modifyRelationship(userId, action, method) {
 
 export async function performUserAction(userId, action) {
     if (!action) {
-        console.warn("Action non définie.");
+        mainErrorMessage("Action non définie.");
         return;
     }
 
-    const userUrl = `/api/v1/users/${userId}/${action}/`;
-    const relationUrl = `/api/v1/users/relationships/${userId}/${action}/`;
+    const userUrl = `${apiBase}/${userId}/${action}/`;
+    const relationUrl = `${apiBase}/relationships/${userId}/${action}/`;
 
     const actions = {
         "add-friend": { url: relationUrl, method: "POST" },
@@ -171,7 +124,7 @@ export async function performUserAction(userId, action) {
     };
 
     if (!(action in actions)) {
-        console.warn(`Action inconnue : ${action}`);
+        mainErrorMessage(`Action inconnue : ${action}`);
         return;
     }
 

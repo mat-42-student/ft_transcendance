@@ -17,8 +17,7 @@ export function getAvatarPath(avatar, mode) {
         avatarPath = (state.client.userAvatar === '/default.png')
         ? `/media${state.client.userAvatar}`
         : `/media${state.client.userAvatar}`;
-    } else
-        return console.error("wrong function mode: usage: getAvatarPath(avatar, mode(1/2))");
+    }
 
     return avatarPath;
 }

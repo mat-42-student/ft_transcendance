@@ -75,44 +75,6 @@ export class SocialApp{
         this.friendList = null;
     }
 
-    // incomingMsg(data) {
-    //     // Initialisation de la bascule de couleur (bleu / or)
-    //     if (state.client.logColorToggle === undefined)
-    //         state.client.logColorToggle = false;
-    
-    //     const isBlue = state.client.logColorToggle;
-    //     const color = isBlue ? 'blue' : 'gold';
-    //     state.client.logColorToggle = !isBlue;
-    
-    //     const log = (msg, extraData = null) => {
-    //         console.log(`%c${state.client.userName}%c: ${msg}`, `color: ${color}; font-weight: bold;`, 'color: black');
-    //         if (extraData)
-    //             console.log(`%cDonnées reçues:`, `color: ${color}; font-style: italic;`, extraData);
-    //     };
-    
-    //     log('incomingMsg', data);
-    
-    //     if (data.user_id == state.client.userId) {
-    //         this.myStatus = data.status;
-    //         log('renderProfileBtn');
-    //         state.client.renderProfileBtn();
-    //         log("return bc from it's own id");
-    //         return;
-    //     }
-    
-    //     let friend = this.friendList.get(data.user_id);
-    //     if (!friend) {
-    //         log('return bc data from unknown user');
-    //         return;
-    //     }
-    
-    //     friend.status = data.status;
-    //     this.renderFriendStatus(data.user_id);
-    
-    //     if (data.user_id == state.chatApp.activeChatUserId)
-    //         state.chatApp.toggleChatInput(data.status);
-    // }
-
     incomingMsg(data) {
         if (data.user_id == state.client.userId) {
             this.myStatus = data.status;
