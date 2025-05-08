@@ -287,12 +287,11 @@ class LogoutView(APIView):
 class Enroll2FAView(APIView):
     renderer_classes = [JSONRenderer]
 
-
     def post(self, request):
         user = request.user
         
-        # if user.is_2fa_enabled:
-        #     return Response({'message': '2FA is already enabled.'}, status=status.HTTP_400_BAD_REQUEST)
+        if user.is_2fa_enabled:
+            return Response({'message': '2FA is already enabled.'}, status=status.HTTP_400_BAD_REQUEST)
         
         totp_secret = pyotp.random_base32()
         user.totp_secret = totp_secret
@@ -337,11 +336,12 @@ class Verify2FAView(APIView):
         totp = pyotp.TOTP(user.totp_secret)
         
         if totp.verify(code):
-            user.is_2fa_enabled = True 
+            user.is_2fa_enabled = True
             user.save()
             return Response({"success": "true", "message": "2FA has been enabled."}, status=200)
         else:
-            return Response({"error": "Invalid or expired 2FA code"}, status=401)          
+            return Response({"error": "Invalid or expired 2FA code"}, status=401)   
+               
 class Disable2FAView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -349,7 +349,8 @@ class Disable2FAView(APIView):
         user = request.user
         user.is_2fa_enabled = False 
         user.save()
-        return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK)  
+        return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK) 
+    
 class OAuthLoginView(APIView):
     permission_classes = [AllowAny]
 
@@ -365,6 +366,7 @@ class OAuthLoginView(APIView):
         }
         url = f'https://api.intra.42.fr/oauth/authorize?{urlencode(params)}'
         return redirect(url)
+    
 class OAuthCallbackView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -400,12 +402,6 @@ class OAuthCallbackView(APIView):
         ft_id = profile_data["id"]
         ft_email = profile_data.get("email", "")
         ft_login = profile_data.get("login", "")
-
-        # user = User.objects.filter(email=ft_email).first()
-        # if user != None:
-        #     user_status = getStatus(user.id)
-        #     if user_status != "offline":
-        #         return Response({"success": False, "error": "User already logged in"}, status=400)
 
         try:
             ft_profile = Ft42Profile.objects.get(ft_id=ft_id)

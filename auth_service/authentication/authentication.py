@@ -17,7 +17,7 @@ class JWTAuthentication(BaseAuthentication):
 
 
         if not auth_header.startswith(auth_prefix):
-            return None  # Let other auth classes handle it
+            return None
 
         token = auth_header.split(" ")[-1]
 
