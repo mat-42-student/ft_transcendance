@@ -67,7 +67,7 @@ class Navigator {
             closeDynamicCard();
 
 		if(state.mmakingApp != null)
-			await state.mmakingApp.cancelGame_with_pending_status();
+			await state.mmakingApp.cancelGame_with_pending_or_ingame_status();
     
 
         if (window.location.hash == '')

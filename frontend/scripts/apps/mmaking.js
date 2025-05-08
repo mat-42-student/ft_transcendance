@@ -93,9 +93,9 @@ export class Mmaking
 		await this.renderLaunchGame();
 	}
 
-	async cancelGame_with_pending_status()
+	async cancelGame_with_pending_or_ingame_status()
 	{
-		if (state.socialApp?.myStatus != 'pending')
+		if (state.socialApp?.myStatus != 'pending' && state.socialApp?.myStatus != 'ingame' )
 			return
 		let type_game = null
 		if (this.salonInvite == true || this.salonLoad == true)
@@ -534,24 +534,27 @@ export class Mmaking
 
 	async btnSearchTournament(event=null)
 	{
-		if (state.mainSocket == null) {
-			initDynamicCard('auth');
-			return;
+		if (state.socialApp.myStatus == 'online')
+		{
+			if (state.mainSocket == null) {
+				initDynamicCard('auth');
+				return;
+			}
+			else if (this.SearchRandomGame == true) { // already searching!
+				return;
+			}
+
+			const data = {
+				'status': "online",
+				'type_game': "tournament"
+			};
+
+			await this.sendMsg(data);
+
+			this.SearchRandomGame = true;
+
+			await this.renderMatchmaking();
 		}
-		else if (this.SearchRandomGame == true) { // already searching!
-			return;
-		}
-
-		const data = {
-			'status': "online",
-			'type_game': "tournament"
-		};
-
-		await this.sendMsg(data);
-
-		this.SearchRandomGame = true;
-
-		await this.renderMatchmaking();
 	}
 
     async sendMsg(message)

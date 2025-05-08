@@ -48,6 +48,7 @@ export class WebGame extends GameBase {
 
         try {
             if (youCancelled) {
+				state.mmakingApp.cancelGame_with_pending_or_ingame_status()
                 this.level.endShowYouRagequit();
             }
         } catch {}

@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
+import uuid
 
 # User model manager
 class UserManager(BaseUserManager):
@@ -32,6 +33,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         ('in_game', 'In Game'),
     ]
     
+    uuid = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        unique=True
+    )
     username = models.CharField(
         max_length=50,
         unique=True,
