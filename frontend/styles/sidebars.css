@@ -29,6 +29,7 @@
 
 .chat-mute-checkbox {
     transform: scale(0.7);
+    align-items: baseline;
 }
 
 .chat-body {
