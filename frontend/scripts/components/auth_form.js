@@ -22,7 +22,7 @@ export function initAuthFormListeners() {
 export function updateAuthForm(mode) {
     window.authMode = mode;
 
-    try {  //TODO delete this block (Dev account)
+    try {  // Dev account textbox
         const devAccountButton = document.getElementById('dev-account');
         devAccountButton.oninput = (e) => {
             const name = e.target.value;
@@ -34,7 +34,7 @@ export function updateAuthForm(mode) {
                 document.getElementById('auth-confirm-password').value = pw;
             }
         }
-    } catch {} // ^^ delete this block
+    } catch {} // Dev account textbox
 
     cleanErrorMessage();
     updateFormTitleAndButton();
