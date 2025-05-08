@@ -20,11 +20,13 @@ INSTALLED_APPS = [
     'social',
 ]
 
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis", 6379)],
+            "hosts": [{"host": "redis", "port": 6379, "password": REDIS_PASSWORD}],
         },
     },
 }

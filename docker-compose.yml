@@ -154,9 +154,7 @@ services:
         condition: service_started
     volumes:
       - ./certs/ca/ca.crt:/etc/nginx/ssl/ca.crt:ro,z
-      # - media:/media:ro
-      - ./media:/media
-      - ./frontend:/usr/share/nginx/frontend
+      - media:/media:ro
     networks:
       - main-network
     restart: on-failure
@@ -199,7 +197,7 @@ services:
     networks:
       - main-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d transcendance -U toto"]
+      test: ["CMD-SHELL", "pg_isready -d transcendance -U alice"]
       interval: 1s
       timeout: 1s
       retries: 5
@@ -208,9 +206,12 @@ services:
   redis:
     container_name: redis
     image: redis:alpine
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     expose:
       - "6379"
     networks:
       - main-network
     restart: on-failure
+    env_file:
+      - .env
 

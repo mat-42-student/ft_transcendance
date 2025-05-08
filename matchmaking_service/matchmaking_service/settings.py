@@ -75,11 +75,13 @@ TEMPLATES = [
 
 REDIS_URL = "redis://redis:6379/1"
 
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis", 6379)],
+            "hosts": [{"host": "redis", "port": 6379, "password": REDIS_PASSWORD}],
         },
     },
 }
@@ -93,11 +95,11 @@ WSGI_APPLICATION = 'matchmaking_service.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'transcendance',
-        'USER': 'toto',
-        'PASSWORD': 'test',
-        'HOST': 'postgres',
-        'PORT': '5432',
+        'NAME': os.getenv("POSTGRES_DB"),
+        'USER': os.getenv("POSTGRES_USER"),
+        'PASSWORD': os.getenv("POSTGRES_PASSWORD"),
+        'HOST': os.getenv("POSTGRES_HOST"),
+        'PORT': os.getenv("POSTGRES_PORT"),
     }
 }
 

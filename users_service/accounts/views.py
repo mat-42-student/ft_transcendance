@@ -60,7 +60,10 @@ class UserRegisterView(APIView):
                 'typ': "user",
                 'oauth': False,
                 'avatar': user.avatar.url if user.avatar else None
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
             }
 
             refresh_payload = {

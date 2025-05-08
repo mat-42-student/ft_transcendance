@@ -21,7 +21,10 @@ class Command(BaseCommand):
     async def main(self):
         self.running = True
         try:
-            self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
+            REDIS_PASSWORD = settings.REDIS_PASSWORD
+
+            self.redis_client = await from_url(f"redis://:{REDIS_PASSWORD}@redis:6379", decode_responses=True)
+
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
             self.group_name = "deep_chat"
             print(f"Subscribing to channel: {self.group_name}")

@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import requests
 import time
 from collections import deque
+from django.conf import settings
 
 class GatewayConsumer(AsyncJsonWebsocketConsumer):
     """Main websocket"""
@@ -55,7 +56,10 @@ class GatewayConsumer(AsyncJsonWebsocketConsumer):
 
     async def connect_to_redis(self):
         try:
-            self.redis_client = await from_url("redis://redis:6379", decode_responses=True)
+            REDIS_PASSWORD = settings.REDIS_PASSWORD
+
+            self.redis_client = await from_url(f"redis://:{REDIS_PASSWORD}@redis:6379", decode_responses=True)
+            
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
             await self.pubsub.subscribe(*self.REDIS_GROUPS.values())  # Subscribe all channels
             self.listen_task = create_task(self.listen_to_channels())
