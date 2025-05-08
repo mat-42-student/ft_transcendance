@@ -29,7 +29,7 @@ class Salon():
     
     def all_players_have_errors_SocketGame(self):
         for player in self.players.values():
-            print(f'player {player.user_id} error with SocketGame ? {player.socketGame_is_online}')
+            print(f'player {player.user_id} SocketGame is online ? {player.socketGame_is_online}')
             if (player.socketGame_is_online == True or player.socketGame_is_online == None):
                 return False
         return True

@@ -204,6 +204,7 @@ class Command(BaseCommand):
     
     # Cancel invitaiton if i receive just "cancel" (offline)
     async def cancelInvitationOfflinePlayer(self, playerId):
+        print("Cancel invitation offline player START")
         salonTodelete = []
         status = 'offline'
         
@@ -239,7 +240,9 @@ class Command(BaseCommand):
                         return True
         return False
     
-    def search_first_game_without_errors_tournament(self, gamesDB, tournamentId):
+    async def search_first_game_without_errors_tournament(self, gamesDB, tournamentId):
+        print('debug1')
+        print('debug2')
         for game in gamesDB:
             if (game.id in self.games['tournament'][tournamentId]):
                 if (self.games['tournament'][tournamentId][game.id].all_players_have_leave_game() or self.games['tournament'][tournamentId][game.id].all_players_have_errors_SocketGame()):
@@ -249,16 +252,27 @@ class Command(BaseCommand):
         return None
     
     async def process_errors_in_tournament(self, gameIncache, gameId):
+        print("process errors in tournament START")
         gameDatabase = await sync_to_async(self.getGame)(gameId)
-        tournamentId = await sync_to_async(getattr)(gameDatabase, 'tournament')
+        print('1')
+        tournament = await sync_to_async(getattr)(gameDatabase, 'tournament')
+        print('2')
         if (gameDatabase is not None):
+            print('3')
             if (gameIncache.all_players_have_leave_game() == True or gameIncache.all_players_have_errors_SocketGame() == True):
+                print('4')
                 round_finish = await sync_to_async(self.getallgamesForTournament)(gameDatabase)
+                print('5')
                 if (round_finish is not None):
+                    print('6')
                     if (len(round_finish) == 2):
-                        game_without_error = self.search_first_game_without_errors_tournament(round_finish, tournamentId)
+                        print('7')
+                        game_without_error = await self.search_first_game_without_errors_tournament(round_finish, tournament.id)
+                        print('8')
                         if (game_without_error is not None):
-                            self.set_winner_of_tournament(game_without_error)
+                            print('9')
+                            await self.cancelGameWithWinner_player_leave_game(gameDatabase, gameIncache)          
+                            print('10')
                         else:
                             print("Delete tournament because we have no winner")
                     else:
@@ -269,13 +283,16 @@ class Command(BaseCommand):
                     await gameDatabase.asave()
                     # await self.deleteTournament(tournamentId)
             else:
+                print('11')
                 await self.cancelGameWithWinner_player_leave_game(gameDatabase, gameIncache)
+                print('12')
                        
     
     async def cancelTournamentGamesPlayerTurnOffline(self, playerId):
+        print(f'cancel tournament player turn offline START')
         for tournamentId in self.games['tournament']:
             for gameId, game in self.games['tournament'][tournamentId].items():
-                if (playerId in game.players):
+                if (playerId in game.players and await self.score_is_already_set(gameId) == False):
                     for gamerId in game.players:
                         if (gamerId == playerId):
                             game.players[gamerId].leave_game = True
@@ -286,16 +303,66 @@ class Command(BaseCommand):
                     return True
         
         return False
-                                    
     
+    
+    async def cancelRandomGamesPlayerTurnOffline(self, playerId):
+        print(f'cancel Random player turn offline START')
+        for gameId, game in self.games['1vs1R'].items():
+                if (playerId in game.players):
+                    for gamerId in game.players:
+                        if (gamerId == playerId):
+                            game.players[gamerId].leave_game = True
+                        elif (game.players[gamerId].leave_game == False):
+                            game.players[gamerId].leave_game = False
+                    
+                    gameDB = await sync_to_async(self.getGame)(gameId)
+                    await self.cancelGameWithWinner_player_leave_game(gameDB, game)
+                    return True
+        
+        return False
+    
+    async def cancelInviteGamesPlayerTurnOffline(self, playerId):
+        print(f'cancel Invite player turn offline START')
+        for gameId, game in self.games['invite'].items():
+                if (playerId in game.players and await self.score_is_already_set(gameId) == False):
+                    for gamerId in game.players:
+                        if (gamerId == playerId):
+                            game.players[gamerId].leave_game = True
+                        elif (game.players[gamerId].leave_game == False):
+                            game.players[gamerId].leave_game = False
+                    
+                    gameDB = await sync_to_async(self.getGame)(gameId)
+                    await self.cancelGameWithWinner_player_leave_game(gameDB, game)
+                    return True
+        
+        return False
+    
+    
+    async def score_is_already_set(self, gameId):
+        try:
+            gameDB = await sync_to_async(self.getGame)(gameId)
+            winner = await sync_to_async(getattr)(gameDB, 'winner')
+            if (winner is not None):
+                return True
+            else:
+                return False
+        except Exception as e:
+            print(f'Score is already set failed: {e}')              
+    
+        return False
     
     # Delete player somewhere
     async def deletePlayer(self, salon, player):
         copy_salon = salon
+        print(f"Delete {player}")
         try:
             # Cancel offline or ingame
             if (salon is None):
                 await self.cancelInvitationOfflinePlayer(player.user_id)
+                if (await self.cancelRandomGamesPlayerTurnOffline(player.user_id)):
+                    return True
+                if (await self.cancelInviteGamesPlayerTurnOffline(player.user_id)):
+                    return True
                 if (self.cancelTournamentSalonsPlayerTurnOffline(player.user_id) == True):
                     return True
                 if (await self.cancelTournamentGamesPlayerTurnOffline(player.user_id) == False):
@@ -488,6 +555,7 @@ class Command(BaseCommand):
             print(f'Cancel game with winner failed: {e}')
             
     async def cancelGameWithWinner_player_leave_game(self, gameDatabase, gameCache):
+        print("Cancel game with player leave_game")
         data = {}
         for playerId, player in gameCache.players.items():
             if (player.leave_game == False):
@@ -818,10 +886,6 @@ class Command(BaseCommand):
         
         # Create and update Game
         self.salons[player.type_game].append(salon)
-        
-
-
-
         
         # Launch game if Salon has 2 players
         if (salon.type_game == '1vs1R' and len(salon.players) >= 2 and len(self.salons[player.type_game]) == 1 ):
@@ -1294,9 +1358,11 @@ class Command(BaseCommand):
         for player in players:
             if (not await sync_to_async(self.checkPlayerInGame)(player, game)):
                 return False
-            
+        
+        print(f'gameID before update score: {game.id}')
         update = await sync_to_async(self.SetScoreGame)(players, game, score_int)
         if (not update):
+            print("Score is not update")
             return False
         tournament = await sync_to_async(getattr)(game, 'tournament')
         if (tournament is not None):
@@ -1305,13 +1371,15 @@ class Command(BaseCommand):
             await self.endGame(game)
             
     async def create_nextRound_or_finish_tournament(self, game, tournament):
+        print('create_nextRound_or_finish_tournament')
         all_games_of_tournament_are_Finished = await sync_to_async(self.getallgamesForTournament)(game)
         if (all_games_of_tournament_are_Finished is not None and game.round < self.roundMax + 1):
             # Rajouter une verification si une game parmis toutes possede 2 players avec des errors et ensuite le nombre de game % 2 != 0 alors finir le tournois
             round = await self.nextRoundTournament(all_games_of_tournament_are_Finished)
             if (round <= self.roundMax + 1):
                 await self.sendNextRoundToClient(all_games_of_tournament_are_Finished)
-            elif (round > self.roundMax + 1): # if 2 player quit the same game, i come here 
+            elif (round >= self.roundMax + 1): # if 2 player quit the same game, i come here 
+                print("First end tournament")
                 # set winner of tournament
                 player = await sync_to_async(getattr)(game, 'winner')
                 await sync_to_async(self.setTournament_winner_db)(tournament.id, player.id)
@@ -1321,6 +1389,7 @@ class Command(BaseCommand):
  
                 del self.games['tournament'][tournament.id]
         elif(game.round >= self.roundMax + 1):
+            print("second end Tournament")
             # set the winner of tournament !!!!!
 
             
@@ -1338,6 +1407,7 @@ class Command(BaseCommand):
             except Exception as e:
                 print(f'delete tournament at the end failed: {e}')
         else:
+            print('Waitting next game')
             await self.tournament_waitting_next_game(game)
                 
     
@@ -1359,6 +1429,7 @@ class Command(BaseCommand):
 
     async def end_tournament(self, gameDB):
         try:
+            print("End tournament START")
             allgamesDB = await sync_to_async(self.getallgamesForTournament)(gameDB)
             tournament = await sync_to_async(getattr)(gameDB, 'tournament')
             winnerTournament = await sync_to_async(getattr)(gameDB, 'winner')
@@ -1392,9 +1463,9 @@ class Command(BaseCommand):
                     gameInCache = self.games[type_game].get(gameDB.id)
                     if (gameInCache is not None):
                         for playerId, player in gameInCache.players.items():
-                            if (player.socketGame_is_online == True):
+                            if (player.socketGame_is_online == False):
                                 pass
-                            elif(player.socketGame_is_online == False):
+                            elif(player.socketGame_is_online == True):
                                 await self.JSON_endgameWithoutError(playerId)
 
                             if (await self.checkStatus(player, 'online') == False):
@@ -1539,6 +1610,7 @@ class Command(BaseCommand):
 
     
     def setTournament_winner_db(self, tournamentId, winnerId):
+        print("Set winner Tournament in DB START")
         try:
             tournament = Tournament.objects.get(id=tournamentId)
             winner = User.objects.get(id=winnerId)

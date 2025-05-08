@@ -352,7 +352,7 @@ export class Mmaking
 		if (this.bracket == true)
 		{
 			await this.bracketTournament();
-			await this.sleep(5000);
+			await this.sleep(2000);
 			this.bracket = false;
 			closeDynamicCard();
 		}
