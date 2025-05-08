@@ -1416,7 +1416,7 @@ class Command(BaseCommand):
         gameInCache = self.getGameInCache(gameDB.id, tournament.id)
         
         for playerId, player in gameInCache.players.items():
-            if (player.socketGame_is_online == False):
+            if (player.socketGame_is_online == False or player.leave_game == True):
                 await self.JSON_cancelTournament(playerId)
                 if (await self.checkStatus(player, 'online') == False):
                     print('Imposible to set new status')

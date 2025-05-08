@@ -321,7 +321,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.game.players[1].score = 1 - self.game.players[0].score
         self.game.over = True
         # await self.send(json.dumps({"action": "game_cancelled"}))
-        await self.send_score()
+        # await self.send_score()
         self.game = None
 
     async def send_score(self):
