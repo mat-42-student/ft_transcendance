@@ -439,11 +439,11 @@ export class Mmaking
 
 			if (value.round == 1)
 			{
-				roundName.innerHTML = `Round ${value.round}`;
+				roundName.innerText = `Round ${value.round}`;
 			}
 			else if (value.round == 2)
 			{
-				roundName.innerHTML = `Final`;
+				roundName.innerText = `Final`;
 			}
 
 			for (const [id, player] of Object.entries(value))
@@ -508,17 +508,17 @@ export class Mmaking
 					if (this.winnerId_of_tournament == null)
 					{
 						if (this.gameId != null)
-							winnerContainer.innerHTML = `The winner of this tournament could be you?`
+							winnerContainer.innerText = `The winner of this tournament could be you?`
 						else
 						{
-							winnerContainer.innerHTML = `Of course, the biggest loser is you! 💩`
+							winnerContainer.innerText = `Of course, the biggest loser is you! 💩`
 						}
 						card_of_bracket.appendChild(winnerContainer)
 						return 
 					}
 					else if (player.user_id == this.winnerId_of_tournament)
 					{
-						winnerContainer.innerHTML = `The Winner of tournament is ${player.username} 👑`
+						winnerContainer.innerText = `The Winner of tournament is ${player.username} 👑`
 						card_of_bracket.appendChild(winnerContainer)
 						return 
 					}
