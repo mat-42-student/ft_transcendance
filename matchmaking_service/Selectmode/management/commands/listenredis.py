@@ -295,16 +295,16 @@ class Command(BaseCommand):
         print(f'cancel tournament player turn offline START')
         for tournamentId in self.games['tournament']:
             for gameId, game in self.games['tournament'][tournamentId].items():
-                if (playerId in game.players and await self.score_is_already_set(gameId) == False):
+                if (playerId in game.players ):
                     for gamerId in game.players:
                         if (gamerId == playerId):
                             game.players[gamerId].leave_game = True
                         elif (game.players[gamerId].leave_game == False):
                             game.players[gamerId].leave_game = False
-                            
-                    await self.process_errors_in_tournament(game, gameId)
-                    return True
-        
+
+                    if(await self.score_is_already_set(gameId) == False):
+                        await self.process_errors_in_tournament(game, gameId)
+                        return True
         return False
     
     
