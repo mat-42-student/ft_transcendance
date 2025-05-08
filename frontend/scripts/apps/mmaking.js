@@ -129,9 +129,9 @@ export class Mmaking
 				{
 					await initDynamicCard('salonHost');
 
-					document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar, 2);
+					document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar);
 					document.getElementById('player-name').textContent = state.client.userName;
-					this.setFriendwithoutLoader(friend.username, getAvatarPath(friend.avatar, 1));
+					this.setFriendwithoutLoader(friend.username, getAvatarPath(friend.avatar));
 
 					const btnstartgame = document.getElementById('start-game');
 					const btncancelGame = document.getElementById('cancel-button');
@@ -196,9 +196,9 @@ export class Mmaking
 				{
 					const btncancelGame = document.getElementById('cancel-button');
 
-					document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar, 2);
+					document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar);
 					document.getElementById('player-name').textContent = state.client.userName;
-					this.setFriendwithoutLoader(friend.username, getAvatarPath(friend.avatar, 1));
+					this.setFriendwithoutLoader(friend.username, getAvatarPath(friend.avatar));
 					btncancelGame.addEventListener('click', (event) => this.cancelGame(event, keyNumber, 'invite'));
 
 				}
@@ -379,7 +379,7 @@ export class Mmaking
 		{
 			await initDynamicCard('versus');
 
-			document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar, 2);
+			document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar);
 			document.getElementById('player-name').textContent = state.client.userName;
 			document.getElementById('close-dynamic-card').style.display = 'none'
             document.getElementById("cancel-button").addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, '1vs1R'));
@@ -414,7 +414,7 @@ export class Mmaking
 		{
 			await initDynamicCard('versus');
 
-			document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar, 2);
+			document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar);
 			document.getElementById('close-dynamic-card').style.display = 'none'
             document.getElementById("cancel-button").addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, 'tournament'));
 
@@ -443,11 +443,11 @@ export class Mmaking
 
 			if (value.round == 1)
 			{
-				roundName.innerHTML = `Round ${value.round}`;
+				roundName.innerText = `Round ${value.round}`;
 			}
 			else if (value.round == 2)
 			{
-				roundName.innerHTML = `Final`;
+				roundName.innerText = `Final`;
 			}
 
 			for (const [id, player] of Object.entries(value))
@@ -512,17 +512,17 @@ export class Mmaking
 					if (this.winnerId_of_tournament == null)
 					{
 						if (this.gameId != null)
-							winnerContainer.innerHTML = `The winner of this tournament could be you?`
+							winnerContainer.innerText = `The winner of this tournament could be you?`
 						else
 						{
-							winnerContainer.innerHTML = `Of course, the biggest loser is you! 💩`
+							winnerContainer.innerText = `Of course, the biggest loser is you! 💩`
 						}
 						card_of_bracket.appendChild(winnerContainer)
 						return 
 					}
 					else if (player.user_id == this.winnerId_of_tournament)
 					{
-						winnerContainer.innerHTML = `The Winner of tournament is ${player.username} 👑`
+						winnerContainer.innerText = `The Winner of tournament is ${player.username} 👑`
 						card_of_bracket.appendChild(winnerContainer)
 						return 
 					}

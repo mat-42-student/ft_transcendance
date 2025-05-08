@@ -329,7 +329,7 @@ function handle2FA(response) {
     }
 }
 
-function displayErrorMessage(message) {
+export function displayErrorMessage(message) {
     const loginErrorContainer = document.getElementById('auth-error');
     loginErrorContainer.textContent = message;
     loginErrorContainer.classList.remove('hidden');

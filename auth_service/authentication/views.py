@@ -35,7 +35,10 @@ def getStatus(user_id, channel="auth_social"):
     """
     Evaluate if a user is already logged in.
     """
-    redis = Redis.from_url("redis://redis:6379", decode_responses=True)
+
+    REDIS_PASSOWRD = settings.REDIS_PASSWORD
+
+    redis = Redis.from_url(f"redis://:{REDIS_PASSOWRD}@redis:6379", decode_responses=True)
 
     test = 10
     data = {
@@ -65,13 +68,13 @@ class PublicKeyView(APIView):
 
     def get(self, request):
         public_key ="""-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuMD2J7gRJEf326fOhD7i
-vzyXr2YMdA+iWWPkbdRpJKguSdDDz7lYlF+4Pi3rx+r5Sd8bHe/wv3kQCMU2laUa
-YWB3wwaFzjn9G4/6yfhnnA2wX27/eoKBYQrTMh/BHYhAOM7mv243jZEJkZYv2UuW
-OsLleU/CRWxNUIQACAKZ4u5m1GRoJxgLw4jRac1RMMcT9TBuIYGL77UxZrJCIxSj
-WUOpOP/YwwDf/nUKpuX36CCMnnqbGi7xgnY4FQQR+7IFfAQsFQ8PF5+e4vg2k/fp
-OIyBG0+fH0TVW6/nDin+id+jSbg62NSWqnZrJsFscbDwMwbDMNdWig0wZdFCjZqz
-qwIDAQAB
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtmzE1Io/MYqJRY/dUFRO
+2OOYFQtSTZqYbVX+59sqY5755l9b0K44F367XMSr1SbtQUrwd/P0y9iNS9VaszAU
+/fGrNy1cr2ukVXx8zvSAfBtAwiVV+c6ujX6BcPdcGBDn57T++JXpChZEITrXgITq
+pRZSKfKWGn8ouz3zjnZ/V0Eyiaj4rhfknNOVprNu6wyl4lJlHlYSCLRCjLp7Gh01
+w6pZ/QdhmapLnDNuVkLT/5RtJ4yjoC9uPD9ikNQs1VFOYxoIYDxxva0oHpYkfptb
+G1D0ynWSdZt4xHnPVeQkB/gdYTFvDU+wslOxXS8bKKQJcQWBRPRXcPFYtBtTaAA/
+gwIDAQAB
 -----END PUBLIC KEY-----"""
 
         return JsonResponse({'public_key': public_key.strip()}, status=status.HTTP_200_OK)

@@ -128,7 +128,7 @@ export class SocialApp{
     }
 
     addFriendEntry(friend, parent) {
-        const avatarPath = getAvatarPath(friend.avatar, 1);
+        const avatarPath = getAvatarPath(friend.avatar);
         const friendItem = document.createElement('li');
         friendItem.classList.add('friend-item');
         friendItem.innerHTML = `

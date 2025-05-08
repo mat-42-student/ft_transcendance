@@ -3,6 +3,7 @@ import { initDynamicCard } from "./components/dynamic_card.js";
 import { fetchUserProfile } from "./api/users.js";
 import { performUserAction } from './api/users.js';
 import { mainErrorMessage } from './utils.js';
+import { getAvatarPath } from './utils.js';
 
 export function initHomePage() {}
 
@@ -29,18 +30,32 @@ export function renderFriendProfile(data) {
     }
 }
 
-// status perso -> state.socialapp.mystatus
 function updateProfileUI(data) {
     if (!data) {
-        document.getElementById("profile-actions").innerHTML = "<p>Impossible de charger le profil.</p>";
+        const actionsEl = document.getElementById("profile-actions");
+        if (actionsEl) {
+            actionsEl.innerHTML = "<p>Impossible de charger le profil.</p>";
+        }
         return;
     }
-    document.getElementById("profile-username").textContent = data.username;
-    document.getElementById("profile-avatar").src = data.avatar;
 
+    const usernameEl = document.getElementById("profile-username");
+    const avatarEl = document.getElementById("profile-avatar");
     const actionsEl = document.getElementById("profile-actions");
-    actionsEl.innerHTML = generateProfileActions(data);
-    updateGamesHistory(data.last_games);
+
+    if (usernameEl) {
+        usernameEl.textContent = data.username;
+    }
+
+    if (avatarEl) {
+        avatarEl.src = getAvatarPath(data.avatar);
+    }
+
+    if (actionsEl) {
+        actionsEl.innerHTML = generateProfileActions(data);
+    }
+
+    updateGamesHistory(data.last_games); // on suppose qu'elle gère déjà ses vérifs
 }
 
 // Fonction pour mettre à jour l'historique des parties
