@@ -1011,7 +1011,7 @@ class Command(BaseCommand):
                             if (await self.checkStatus(player, 'online') == False):
                                 print("can't to setup new status")
                             if (player.leave_game == False and (player.socketGame_is_online == True or player.socketGame_is_online == None)):
-                                await self.nextRoundTournamentJSON(playerId, player, None, tournament.id)
+                                await self.JSON_cancelTournament(playerId)
                     notfound = False
                     break
                 else:
@@ -1092,6 +1092,7 @@ class Command(BaseCommand):
                 'status': 'ingame',
                 'id_game': gameid,
                 player.type_game: True,
+                'tournament': True,
                 'cancel': False
             }
         }
@@ -1445,7 +1446,7 @@ class Command(BaseCommand):
                 if (await self.checkStatus(player, 'online') == False):
                     print('Imposible to set new status')
             elif (player.socketGame_is_online == True):
-                await self.JSON_endgameWithoutError(playerId)
+                # await self.JSON_endgameWithoutError(playerId)
                 if (await self.checkStatus(player, 'pending') == False):
                     print('Imposible to set new status')
 

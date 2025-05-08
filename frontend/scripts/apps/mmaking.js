@@ -39,6 +39,7 @@ export class Mmaking
 		this.gameId = null;
 		this.bracket = false;
 		this.winnerId_of_tournament = null;
+		this.tournament = false
     }
 
 	remove_friend(friendId)
@@ -262,6 +263,7 @@ export class Mmaking
 		this.game = false;
 		this.gameId = null;
 		this.salonHost = false;
+		this.tournament = false;
 
 		const btnTournament = document.getElementsByClassName('btn-tournament');
 		const btnRandom = document.getElementById('versus');
@@ -357,17 +359,17 @@ export class Mmaking
 			closeDynamicCard();
 		}
 		if (this.game == true)
-			{
-				closeDynamicCard();
-				if (this.gameId != null) {
-					if (state.gameApp != null)
-						state.gameApp.close(true);
-					state.gameApp = new WebGame();
-					state.gameApp.launchGameSocket(this.gameId);
-					chooseHeader('loading');
-					this.game = false;
-				}
+		{
+			closeDynamicCard();
+			if (this.gameId != null) {
+				if (state.gameApp != null)
+					state.gameApp.close(true);
+				state.gameApp = new WebGame();
+				state.gameApp.launchGameSocket(this.gameId);
+				chooseHeader('loading');
+				this.game = false;
 			}
+		}
 	}
 
 
@@ -386,15 +388,12 @@ export class Mmaking
 
 	async btnsearchRandomGame(event=null)
 	{
+		if (state.mainSocket == null) {
+			initDynamicCard('auth');
+			return;
+		}
 		if (state.socialApp.myStatus == 'online')
 		{
-			if (state.mainSocket == null) {
-				initDynamicCard('auth');
-				return;
-			}
-			else if (this.SearchRandomGame == true) { // already searching!
-				return;
-			}
 
 			const data = {
 				'status': "online",
@@ -423,7 +422,9 @@ export class Mmaking
 		else if (!this.salonTournament && !this.salonHost && !this.salonInvite && !this.salonLoad && !this.SearchRandomGame)
 		{
 			closeDynamicCard();
+
 		}
+		this.style_btn_tournament();
 	}
 
 	async bracketTournament()
@@ -537,15 +538,12 @@ export class Mmaking
 
 	async btnSearchTournament(event=null)
 	{
+		if (state.mainSocket == null) {
+			initDynamicCard('auth');
+			return;
+		}
 		if (state.socialApp.myStatus == 'online')
 		{
-			if (state.mainSocket == null) {
-				initDynamicCard('auth');
-				return;
-			}
-			else if (this.SearchRandomGame == true) { // already searching!
-				return;
-			}
 
 			const data = {
 				'status': "online",
@@ -591,7 +589,8 @@ export class Mmaking
 			'GameSocket': true,
 			'gameId': this.gameId
 		};
-		this.cancelState();
+
+		// this.cancelState();
 		this.sendMsg(data);
 
 	}
@@ -617,6 +616,7 @@ export class Mmaking
 				this.winnerId_of_tournament = data.body.winnerId
 				// this.salonTournament = false;
 				this.SearchRandomGame = false;
+				this.tournament = true;
 			}
 			if (data.body.opponents)
 			{
@@ -644,13 +644,6 @@ export class Mmaking
 				}
 
 			}
-			// else if (data.body.tournament)
-			// {
-			// these 2 lines are no longer used:
-			// 	this.btnSearchTournamentActive = false;
-			// 	this.btnsearchRandomisActive = false;
-			// 	this.cancel = true
-			// }
 			else
 				this.cancel = true;
 		}
@@ -729,5 +722,13 @@ export class Mmaking
 	cardFriendReset(friendCard)
 	{
 		friendCard.style.backgroundColor = "#f8f9fa";
+	}
+
+	style_btn_tournament()
+	{
+		if (this.tournament == false)
+			document.getElementsByClassName('btn-tournament')[0].style.backgroundColor = '#444';
+		else if (this.tournament == true)
+			document.getElementsByClassName('btn-tournament')[0].style.backgroundColor = 'red';
 	}
 }

@@ -213,6 +213,7 @@ export function chooseHeader(mode) {
             profileButton.disabled = null;
             show = h_default;
             hide = [h_loading, h_ingame];
+			state.mmakingApp.style_btn_tournament();
             break;
         case 'loading':
             profileButton.disabled = "disabled";
