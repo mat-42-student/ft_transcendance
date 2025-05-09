@@ -39,9 +39,7 @@ export async function enroll2fa() {
       const data = await response.json();
 
       if (data.message == '2FA is already enabled.') {
-        const loginErrorContainer = document.getElementById('2fa-error');
-        loginErrorContainer.textContent = "2FA is already enabled.";
-        loginErrorContainer.classList.remove('hidden');
+        display2faErrorMessage("2FA is already enabled");
         return;
       }
       
@@ -82,13 +80,15 @@ export async function verify2fa() {
         successPage.style.display = 'block';
         qrSection.style.display = 'none';
         verificationSection.style.display = 'none';
+      } else if (data.error == "Invalid or expired 2FA code") {
+        display2faErrorMessage("Invalid or expired 2FA code");
       } else {
         console.error("Error", data);
       }
     } catch (error) {
       console.error('Error:', error);
     }
-  }
+}
 
 export function validatePassword(password) {
     if (password.length < 8) {
@@ -253,7 +253,7 @@ export async function handleAuthSubmit(event) {
             await handleAuthError(response);
         }
     } catch (error) {
-        console.error('Authentication error:', error.message || 'Unknown error');
+        // console.error('Authentication error:', error.message || 'Unknown error');
         return { success: false, message: 'Authentication failed' };
     }
 }
@@ -291,18 +291,28 @@ async function handleAuthError(response) {
             handle2FA(response);
             return { success: false, twoFactorRequired: true };
         } else if (errorData.detail === 'User not found!' || errorData.detail === 'Incorrect password') {
-            displayErrorMessage("Incorrect username or password.");
+            displayErrorMessage("Incorrect email or password.");
         } else if (errorData.error === 'User already logged in') {
             displayErrorMessage("User already logged in.");
         } else if (errorData.username || errorData.email) {
-            if (errorData.email && errorData.email.length > 0) {
-                displayErrorMessage(`Error: ${errorData.email[0]}`);
-            }
             if (errorData.username && errorData.username.length > 0) {
-                displayErrorMessage(`Error: ${errorData.username[0]}`);
+                if (window.authMode === 'signin')
+                    displayErrorMessage("Authentication failed. Please try again.");
+                else
+                    displayErrorMessage("Registration failed. Please try again.");
+            }
+            if (errorData.email && errorData.email.length > 0) {
+                if (window.authMode === 'signin')
+                    displayErrorMessage("Authentication failed. Please try again.");
+                else
+                    displayErrorMessage("Registration failed. Please try again.");
             }
         } else {
-            displayErrorMessage("Authentication failed. Please try again.");
+            if (window.authMode === 'signin')
+                displayErrorMessage("Authentication failed. Please try again.");
+            else
+                displayErrorMessage("Registration failed. Please try again.");
+
         }
         
         return { success: false, error: errorData };
@@ -331,6 +341,12 @@ function handle2FA(response) {
 
 export function displayErrorMessage(message) {
     const loginErrorContainer = document.getElementById('auth-error');
+    loginErrorContainer.textContent = message;
+    loginErrorContainer.classList.remove('hidden');
+}
+
+export function display2faErrorMessage(message) {
+    const loginErrorContainer = document.getElementById('2fa-error');
     loginErrorContainer.textContent = message;
     loginErrorContainer.classList.remove('hidden');
 }

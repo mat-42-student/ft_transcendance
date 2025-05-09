@@ -106,7 +106,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         if data['password'] != data['confirm_password']:
             raise serializers.ValidationError("Passwords don't match.")
         if 'is_staff' in data or 'is_superuser' in data:
-            raise serializers.ValidationError("La création d'un super utilisateur est interdite via cette API.")
+            raise serializers.ValidationError("The creation of a super user is prohibited via this API.")
         return data
 
     def create(self, validated_data):
@@ -215,7 +215,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         if not data:
-            raise serializers.ValidationError("Le formulaire est vide : aucun champ n’a été renseigné.")
+            raise serializers.ValidationError("Empty form detected. Please provide the necessary information.")
         user = self.context['user']
 
         password = data.get('password')
@@ -258,17 +258,17 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         if any(pattern in value.lower() for pattern in ['password', '123456', 'qwerty', 'admin']):
             raise serializers.ValidationError("Password contains a common pattern and is too weak.")
         return value
-
+    
     def validate_avatar(self, avatar):
         try:
             img = Image.open(avatar)
             img.verify()
             if img.format not in ['JPEG', 'PNG']:
-                raise serializers.ValidationError("Seuls les formats JPEG et PNG sont autorisés.")
+                raise serializers.ValidationError("Only JPEG and PNG formats are allowed.")
             img = Image.open(avatar)
             img.load()
         except (IOError, ValidationError):
-            raise serializers.ValidationError("Le fichier de l'avatar doit être une image valide.")
+            raise serializers.ValidationError("The avatar file must be a valid image.")
         return avatar
 
     @staticmethod
@@ -326,8 +326,8 @@ class GameSerializer(serializers.ModelSerializer):
 
     def get_result(self, obj):
         """
-        Détermine si l'utilisateur ciblé par la requête a gagné ou perdu la partie,
-        selon le profil consulté.
+        Determines if the user targeted by the request has won or lost the game,
+        based on the profile being viewed.
         """
         target_user = self.context.get('target_user')
 
@@ -338,6 +338,6 @@ class GameSerializer(serializers.ModelSerializer):
 
     def get_tournament(self, obj):
         """
-        Vérifie si la partie est liée à un tournoi.
+        Checks if the game is linked to a tournament.
         """
         return obj.tournament is not None

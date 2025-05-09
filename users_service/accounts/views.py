@@ -40,6 +40,14 @@ class UserRegisterView(APIView):
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
+        
+        username = request.data.get('username')
+        if username and User.objects.filter(username=username).exists():
+            return Response(
+                {"error": "Registration failed. Please try again."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
