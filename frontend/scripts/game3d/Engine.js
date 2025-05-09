@@ -127,13 +127,11 @@ export class Engine {
 			const delta = this.#clock.getDelta();
 			const time = this.#clock.elapsedTime;
 
-			let isFriendStillInGame = true;
+			let isFriendAvailableForGame = true;
 			try {
-				isFriendStillInGame = state?.socialApp?.friendList?.entries()?.next().value[1].status === 'ingame';
-			} catch {
-				console.warn("Cant tell if friend is online");
-			}
-			if (state.gameApp == null && this.dont !== true && !isFriendStillInGame && state?.socialApp?.myStatus === 'online') {
+				isFriendAvailableForGame = state?.socialApp?.friendList?.entries()?.next().value[1].status === 'online';
+			} catch {}
+			if (state.gameApp == null && this.dont !== true && isFriendAvailableForGame && state?.socialApp?.myStatus === 'online') {
 				this.queueTimeout = Math.max(0, this.queueTimeout - delta);
 				if (this.queueTimeout <= 0) {
 					this.dont = true;
