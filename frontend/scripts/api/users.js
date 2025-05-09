@@ -109,7 +109,7 @@ export async function modifyRelationship(userId, action, method) {
 
 export async function performUserAction(userId, action) {
     if (!action) {
-        mainErrorMessage("Action non définie.");
+        mainErrorMessage("Action not defined");
         return;
     }
 
@@ -124,7 +124,7 @@ export async function performUserAction(userId, action) {
     };
 
     if (!(action in actions)) {
-        mainErrorMessage(`Action inconnue : ${action}`);
+        mainErrorMessage(`Unknown action : ${action}`);
         return;
     }
 

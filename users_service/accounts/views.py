@@ -5,12 +5,13 @@ import django.db.models as models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.conf import settings
+
 from .authentication import (
     JWTAuthentication,
     BackendJWTAuthentication
 )
+
 from .permissions import IsAuthenticatedOrService
-# from .authentication import RemoteOAuth2Authentication
 from django.core.exceptions import PermissionDenied
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
@@ -19,6 +20,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from .models import User, Relationship, Game
+
 from .serializers import (
     PasswordValidationSerializer,
     UserListSerializer, 

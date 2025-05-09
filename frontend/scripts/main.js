@@ -114,7 +114,7 @@ function setupSearchInput() {
             event.preventDefault();
 
             if (!(await state.client.isAuthenticated()))
-                return showAlert(`Vous devez vous connecter pour accéder à cette fonctionnalité`);
+                return showAlert("You need to log in to access this feature");
             const query = searchInput.value.trim();
 
             if (!query) return;
@@ -128,10 +128,10 @@ function setupSearchInput() {
                     searchInput.value = "";
                     alertBox.style.display = "none";
                 } else {
-                    showAlert(`Aucun utilisateur trouvé avec le nom "${query}".`);
+                    showAlert("User not found");
                 }
             } catch (error) {
-                showAlert("Erreur lors de la recherche.");
+                showAlert("Search error");
             }
         }
     });

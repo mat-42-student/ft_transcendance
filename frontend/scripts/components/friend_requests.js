@@ -30,14 +30,14 @@ export async function createRequestItem(user) {
         'button',
         'accept-btn',
         {},
-        'Accepter',
+        'Accept',
         { click: () => acceptFriendRequest(user.id, listItem) }
     );
     const rejectButton = createElement(
         'button',
         'reject-btn',
         {},
-        'Refuser',
+        'Refuse',
         { click: () => rejectFriendRequest(user.id, listItem) }
     );
 
