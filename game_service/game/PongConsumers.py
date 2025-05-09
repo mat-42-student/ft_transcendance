@@ -218,6 +218,9 @@ class PongConsumer(AsyncWebsocketConsumer):
             return None
 
     async def handle_message(self, data):
+        if not self.connected:
+            print(f"{RED}handle_message(): Skipping because this consumer is not connected.{RESET}")
+            return;
         data = data.get("message")
         if not data:
             return
