@@ -1,7 +1,7 @@
 import json
 import requests
 import time
-from asyncio import create_task, sleep as asleep
+from asyncio import create_task, sleep as asleep, CancelledError
 from redis.asyncio import from_url #type: ignore
 from channels.generic.websocket import AsyncWebsocketConsumer #type: ignore
 from .Game import Game
@@ -32,6 +32,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.nb_players = 0
         self.master = False
         self.game = None
+        self.task = None
         self.side = None
         self.room_group_name = None
         self.mute = False
@@ -273,7 +274,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             self.room_group_name, {"type": "handle.message", "message": {"action": "ready"}}
         )
         if self.master:
-            create_task(self.game.play())
+            self.task = create_task(self.game.play())
 
     async def wait_a_bit(self, data):
         time = data.get('time', 1)
@@ -295,11 +296,33 @@ class PongConsumer(AsyncWebsocketConsumer):
         if not self.connected:
             return
         print(f"{self.player_name} Event: {event}")
-        self.connected = False
-        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+        await self.cleanup()
         if not event.get("from"):
             await self.safe_send(json.dumps({"action": "game_cancelled"}))
         await self.safe_send(json.dumps({"action": "disconnect"}))
+
+    async def cleanup(self):
+        self.connected = False
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+        try:
+            if self.pubsub:
+                self.pubsub.unsubscribe()
+                await self.pubsub.close()
+                self.pubsub = None
+            if self.redis_client:
+                await self.redis_client.close()
+                self.redis_client = None
+        except Exception as e:
+            print(f"Erreur lors de la fermeture Redis : {e}")
+        if self.master:
+            if self.task and not self.task.done():
+                self.task.cancel()
+            try:
+                await self.task
+            except CancelledError:
+                pass
+
+
 
     async def send_score(self):
         score = self.game.get_score()

@@ -1,6 +1,5 @@
 from random import choice
 from time import time
-from json import dumps
 from asyncio import sleep as asleep
 from .const import LEFT, RIGHT, FPS, DELTATIME, GREEN, RED, RESET, STATS, LEVELS
 from .bounce import bounce
