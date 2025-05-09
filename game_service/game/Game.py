@@ -23,9 +23,10 @@ class Player:
             or (self.move > 0 and not is_too_high)):
             self.pos += self.move * speed * DELTATIME
 
-    def score_up(self):
+    def score_up(self, game):
         self.score += 1
-        return self.score == STATS['maxScore']
+        if self.score >= STATS['maxScore']:
+            game.over = True
 
 class Game:
 
@@ -82,12 +83,8 @@ class Game:
         # did the ball miss the paddle? -> Score
         if is_ball_below_paddle or is_ball_above_paddle:
             self.round_start_mult = -1 if side == 1 else 1
-            if self.players[1 - side].score_up():
-                self.over = True
+            self.players[1 - side].score_up(self)
             await self.new_round()
-            # await wsh.channel_layer.group_send(
-            #     wsh.room_group_name, {"type": "handle.message", "message": self.get_game_state()}
-            # )
 
         # the ball hit the paddle -> Bounce
         else:
@@ -143,6 +140,9 @@ class Game:
                 self.move_players()
                 await self.move_ball()
             last_frame_time = time()
+        await self.endgame_by_victory()
+
+    async def endgame_by_victory(self):
         await self.wsh.channel_layer.group_send(
             self.wsh.room_group_name, {
                 "type": "declare.winner",
@@ -150,7 +150,7 @@ class Game:
                 "scores":  [self.players[0].score, self.players[1].score]
         })
         await self.wsh.channel_layer.group_send(
-            self.wsh.room_group_name, {"type": "disconnect.now", "side": "server"}
+            self.wsh.room_group_name, {"type": "disconnect.now", "from": "server"}
         )
 
     def get_score(self):
