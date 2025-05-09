@@ -180,16 +180,11 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     async def kick(self, close_code=1008, message="Policy Violation"):
         print(RED, self.player_name, message, RESET)
-        try:
-            # await self.redis_client.delete(f"game_{self.game_id}_players")
-            await self.send(text_data=json.dumps({"action": "disconnect"}))
-            if self.game != None:
-                await self.send(json.dumps({"action": "game_cancelled"}))
-        except Exception as e:
-            pass
-        finally:
-            self.connected = False
-            await self.close(code=close_code)
+        await self.safe_send(json.dumps({"action": "disconnect"}))
+        if self.game != None:
+            await self.safe_send(json.dumps({"action": "game_cancelled"}))
+        self.connected = False
+        await self.close(code=close_code)
 
     async def load_valid_json(self, data):
         if len(data.encode("utf-8")) > self.MAX_MESSAGE_SIZE:
@@ -217,10 +212,13 @@ class PongConsumer(AsyncWebsocketConsumer):
             print(f"{RED}Json error: {e} | data: {data}{RESET}")
             return None
 
+    async def safe_send(self, data):
+        try:
+            await self.send(data)
+        except Exception as e:
+            print(f"{RED}Error while sending data: {e}{RESET}")
+
     async def handle_message(self, data):
-        if not self.connected:
-            print(f"{RED}handle_message(): Skipping because this consumer is not connected.{RESET}")
-            return;
         data = data.get("message")
         if not data:
             return
@@ -234,7 +232,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         if data["action"] == "init":
             return await self.launch_game(data)
         if data["action"] == "info":
-            return await self.send(json.dumps(data))
+            return await self.safe_send(json.dumps(data))
         if data["action"] == "wannaplay!":
             return await self.wannaplay(data.get("id"), data.get("username"))
 
@@ -270,10 +268,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def launch_game(self, data):
         self.side = LEFT if self.master else RIGHT # master player == player[0] == left player
         data.update({ "side": str(self.side) })
-        try:
-            await self.send(json.dumps(data))
-        except:
-            pass
+        await self.safe_send(json.dumps(data))
         await self.channel_layer.group_send( # really useful ? Would be better to send rather than group_send
             self.room_group_name, {"type": "handle.message", "message": {"action": "ready"}}
         )
@@ -282,7 +277,7 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     async def wait_a_bit(self, data):
         time = data.get('time', 1)
-        await self.send(json.dumps({"action":"wait", "time":time}))
+        await self.safe_send(json.dumps({"action":"wait", "time":time}))
 
     async def moveplayer(self, message):
         if self.master: # transmit move to game engine
@@ -305,22 +300,19 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.connected = False
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
         if self.master and self.game and self.game.over: # game ended normally
-            await self.send_score()
+            await self.safe_send_score()
         elif self.master and not self.game.over: # game is ending because one player left
             self.game = None
-        try:
-            if not event.get("from"):
-                await self.send(json.dumps({"action": "game_cancelled"}))
-            await self.send(text_data=json.dumps({"action": "disconnect"}))
-        except Exception as e:
-            print(e)
+        if not event.get("from"):
+            await self.safe_send(json.dumps({"action": "game_cancelled"}))
+        await self.safe_send(json.dumps({"action": "disconnect"}))
 
     async def send_score(self):
         score = self.game.get_score()
         await self.redis_client.publish("info_mmaking", json.dumps(score))
 
     async def declare_winner(self, event):
-        await self.send(json.dumps({
+        await self.safe_send(json.dumps({
             "action": "game_won",
             "winner": event["winner"],
             "scores": event["scores"],
