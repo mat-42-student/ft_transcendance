@@ -18,7 +18,7 @@ export function getAvatarPath(avatar) {
         avatarPath = `/media${avatar}`;
     }
 
-    console.log(`avatar og path: ${avatar} -> ${avatarPath}`);
+    // console.log(`avatar og path: ${avatar} -> ${avatarPath}`);
     return avatarPath;
 }
 
