@@ -18,10 +18,6 @@ export class WebGame extends GameBase {
         // for the initial countdown.
         this.paddleHeights = [0.2, 0.2];
 
-        if (state.client.userId == 2) {
-            console.log("This client will automatically quit for debug.");
-        }
-
         this.moveTimer = 0;
         this.moveDirection = 0;
         this.quitTimer = 3;
@@ -38,7 +34,7 @@ export class WebGame extends GameBase {
         }
 
         this.quitTimer = Math.max(0, this.quitTimer - delta);
-        if (this.quitTimer <= 0 && state.client.userId == 2) {
+        if (this.quitTimer <= 0 && this.side == 0) {
             this.close(true);
         }
 
@@ -133,6 +129,9 @@ export class WebGame extends GameBase {
                 wg.level = new (LEVELS.LIST[data.level_name])();
                 wg.receivedInit = true;
                 wg.side = Number(data.side);
+                if (wg.side == 0) {
+                    console.log("This client will automatically quit for debug.");
+                }
                 wg.playerNames[0] = data.lplayer;
                 wg.playerNames[1] = data.rplayer;
                 // Did we load before the server was ready? Then report it now.
