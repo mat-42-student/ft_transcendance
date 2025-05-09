@@ -295,7 +295,6 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
         return super().update(instance, validated_data)
     
-
 # Relationship 'detail' serializer
 class RelationshipSerializer(serializers.ModelSerializer):
     from_user = UserDetailSerializer(read_only=True)
