@@ -1,6 +1,5 @@
 from random import choice
 from time import time
-from json import dumps
 from asyncio import sleep as asleep
 from .const import LEFT, RIGHT, FPS, DELTATIME, GREEN, RED, RESET, STATS, LEVELS
 from .bounce import bounce
@@ -149,6 +148,7 @@ class Game:
                 "winner": 0 if self.players[0].score > self.players[1].score else 1,
                 "scores":  [self.players[0].score, self.players[1].score]
         })
+        await self.wsh.send_score()
         await self.wsh.channel_layer.group_send(
             self.wsh.room_group_name, {"type": "disconnect.now", "from": "server"}
         )
