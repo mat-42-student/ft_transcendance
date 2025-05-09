@@ -120,7 +120,6 @@ class PongConsumer(AsyncWebsocketConsumer):
             self.redis_client = await from_url(f"redis://:{REDIS_PASSWORD}@redis:6379", decode_responses=True)
             
             self.pubsub = self.redis_client.pubsub(ignore_subscribe_messages=True)
-            # await self.pubsub.subscribe()  # Subscribe all channels
         except Exception as e:
             raise Exception
 
@@ -291,20 +290,19 @@ class PongConsumer(AsyncWebsocketConsumer):
         if self.room_group_name:
             await self.channel_layer.group_send(
                 self.room_group_name, {"type": "disconnect.now"})
+        await self.cleanup()
 
     async def disconnect_now(self, event):
         if not self.connected:
             return
-        print(f"{self.player_name} Event: {event}")
-        await self.cleanup()
         if not event.get("from"):
             await self.safe_send(json.dumps({"action": "game_cancelled"}))
         await self.safe_send(json.dumps({"action": "disconnect"}))
 
     async def cleanup(self):
         self.connected = False
-        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
         try:
+            await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
             if self.pubsub:
                 self.pubsub.unsubscribe()
                 await self.pubsub.close()
