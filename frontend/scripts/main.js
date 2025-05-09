@@ -213,7 +213,9 @@ export function chooseHeader(mode) {
             profileButton.disabled = null;
             show = h_default;
             hide = [h_loading, h_ingame];
-			state.mmakingApp.style_btn_tournament();
+            if (state.mmaking) {
+                state.mmakingApp.style_btn_tournament();
+            }
             break;
         case 'loading':
             profileButton.disabled = "disabled";
@@ -234,6 +236,7 @@ export function chooseHeader(mode) {
         element.style.display = "none";
     }
 }
+
 chooseHeader('default');  // hide quit button for the first time
 
 buttonLocalBot.addEventListener('click', async () => {
