@@ -315,6 +315,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             print(f"Erreur lors de la fermeture Redis : {e}")
         if self.master:
+            self.game = None
             if self.task and not self.task.done():
                 self.task.cancel()
             try:
