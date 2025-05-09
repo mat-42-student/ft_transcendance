@@ -726,9 +726,10 @@ export class Mmaking
 
 	style_btn_tournament()
 	{
-		if (this.tournament == false)
-			document.getElementsByClassName('btn-tournament')[0].style.backgroundColor = '#444';
-		else if (this.tournament == true)
+		if (this.tournament) {
 			document.getElementsByClassName('btn-tournament')[0].style.backgroundColor = 'red';
+		} else {
+			document.getElementsByClassName('btn-tournament')[0].style.backgroundColor = '#444';
+		}
 	}
 }

@@ -1,13 +1,7 @@
-import jwt
-import datetime
-import requests
-import pyotp
-import qrcode
-import uuid
-from io import BytesIO
-import base64
-from qrcode.constants import ERROR_CORRECT_L
-from urllib.parse import urlencode
+from django.conf import settings
+from django.http import JsonResponse
+from django.shortcuts import redirect
+from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
@@ -15,21 +9,24 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.renderers import JSONRenderer
 from rest_framework.permissions import AllowAny
 from rest_framework import status
-from oauth2_provider.contrib.rest_framework import OAuth2Authentication
-from oauth2_provider.contrib.rest_framework import TokenHasScope
 from .models import User
 from .models import Ft42Profile
 from .utils import generate_state
 from .utils import revoke_token
 from .utils import is_token_revoked
-from django.conf import settings
-from django.http import JsonResponse
-from django.shortcuts import redirect
-from django.http import HttpResponse
-from django.core.cache import cache
-import json
-from redis import Redis
+import jwt
+import datetime
+import requests
+import pyotp
+import qrcode
+import uuid
 import time
+import json
+import base64
+from io import BytesIO
+from qrcode.constants import ERROR_CORRECT_L
+from urllib.parse import urlencode
+from redis import Redis
 
 def getStatus(user_id, channel="auth_social"):
     """
@@ -63,6 +60,7 @@ def getStatus(user_id, channel="auth_social"):
         test -= 1
     
     return None
+
 class PublicKeyView(APIView):
     permission_classes = [AllowAny]
 
@@ -78,6 +76,7 @@ gwIDAQAB
 -----END PUBLIC KEY-----"""
 
         return JsonResponse({'public_key': public_key.strip()}, status=status.HTTP_200_OK)
+    
 class VerifyTokenView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -183,7 +182,8 @@ class LoginView(APIView):
             'success': 'true',
             'accessToken': access_token
         }
-        return response 
+        return response
+    
 class RefreshTokenView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -278,7 +278,8 @@ class RefreshTokenView(APIView):
             'success': 'true',
             'accessToken': new_access_token
         }
-        return response 
+        return response
+    
 class LogoutView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -296,7 +297,7 @@ class LogoutView(APIView):
                 return response
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        # response = Response()
+
 class Enroll2FAView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -336,6 +337,7 @@ class Enroll2FAView(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+    
 class Verify2FAView(APIView):
     renderer_classes = [JSONRenderer]
 
@@ -354,6 +356,7 @@ class Verify2FAView(APIView):
             return Response({"success": "true", "message": "2FA has been enabled."}, status=200)
         else:
             return Response({"error": "Invalid or expired 2FA code"}, status=401)   
+        
                
 class Disable2FAView(APIView):
     renderer_classes = [JSONRenderer]
@@ -362,7 +365,8 @@ class Disable2FAView(APIView):
         user = request.user
         user.is_2fa_enabled = False 
         user.save()
-        return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK) 
+        return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK)
+    
     
 class OAuthLoginView(APIView):
     permission_classes = [AllowAny]
@@ -379,6 +383,7 @@ class OAuthLoginView(APIView):
         }
         url = f'https://api.intra.42.fr/oauth/authorize?{urlencode(params)}'
         return redirect(url)
+    
     
 class OAuthCallbackView(APIView):
     renderer_classes = [JSONRenderer]
