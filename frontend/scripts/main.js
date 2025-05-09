@@ -11,6 +11,7 @@ import { ChatApp } from './apps/Chat.js';
 import { SocialApp } from './apps/Social.js';
 import { Mmaking } from './apps/mmaking.js';
 
+//REVIEW uncomment?
 // Optionally can be enabled for debugging
 // if (!localStorage.getItem("keepLogs")) {
 //     console.log = () => {};
