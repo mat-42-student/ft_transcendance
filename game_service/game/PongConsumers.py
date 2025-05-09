@@ -288,45 +288,29 @@ class PongConsumer(AsyncWebsocketConsumer):
     # client ws was closed, sending disconnection to other client
     async def disconnect(self, close_code):
         if not self.connected:
-            # await self.send_online_status('online')
             return
-        who = "master" if self.master else "guest"
         if self.master and self.game and not self.game.over:
-            await self.disconnect_endgame(self.player_id)
+            self.game = None
         if self.room_group_name:
             await self.channel_layer.group_send(
-                self.room_group_name, {"type": "disconnect.now", "side": self.player_id}
-            )
+                self.room_group_name, {"type": "disconnect.now"})
 
     async def disconnect_now(self, event):
-    # If self.game.over, game was stopped beacuse maxscore has been reached
-    # If not, game was stopped because one player left
         if not self.connected:
             return
-        if event["side"] != "server":
-            await self.send(json.dumps({"action": "game_cancelled"}))
+        print(f"{self.player_name} Event: {event}")
         self.connected = False
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-        user_id = event.get("side")
-        if user_id is None:
-            await self.kick(message="Disconnect_now")
-            return
-        if self.master and self.game.over: # game ended normally
+        if self.master and self.game and self.game.over: # game ended normally
             await self.send_score()
         elif self.master and not self.game.over: # game is ending because one player left
-            await self.disconnect_endgame(user_id)
+            self.game = None
         try:
+            if not event.get("from"):
+                await self.send(json.dumps({"action": "game_cancelled"}))
             await self.send(text_data=json.dumps({"action": "disconnect"}))
         except Exception as e:
             print(e)
-
-    async def disconnect_endgame(self, user):
-        self.game.players[0].score = 1 if self.player_id != user else 0
-        self.game.players[1].score = 1 - self.game.players[0].score
-        self.game.over = True
-        # await self.send(json.dumps({"action": "game_cancelled"}))
-        # await self.send_score()
-        self.game = None
 
     async def send_score(self):
         score = self.game.get_score()
