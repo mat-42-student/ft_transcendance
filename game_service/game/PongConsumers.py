@@ -287,8 +287,6 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         if not self.connected:
             return
-        if self.master and self.game and not self.game.over:
-            self.game = None
         if self.room_group_name:
             await self.channel_layer.group_send(
                 self.room_group_name, {"type": "disconnect.now"})
@@ -299,10 +297,6 @@ class PongConsumer(AsyncWebsocketConsumer):
         print(f"{self.player_name} Event: {event}")
         self.connected = False
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-        if self.master and self.game and self.game.over: # game ended normally
-            await self.safe_send_score()
-        elif self.master and not self.game.over: # game is ending because one player left
-            self.game = None
         if not event.get("from"):
             await self.safe_send(json.dumps({"action": "game_cancelled"}))
         await self.safe_send(json.dumps({"action": "disconnect"}))
