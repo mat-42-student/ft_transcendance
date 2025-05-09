@@ -17,12 +17,32 @@ export class WebGame extends GameBase {
         // web game does not send this until game start, so the paddles would be invisible
         // for the initial countdown.
         this.paddleHeights = [0.2, 0.2];
+
+        if (state.client.userId == 2) {
+            console.log("This client will automatically quit for debug.");
+        }
+
+        this.moveTimer = 0;
+        this.moveDirection = 0;
+        this.quitTimer = 3;
     }
 
     frame(delta, time) {
         if (this.needToReportLoaded && state.engine.scene) {
             this.sendLoadReady();
         }
+        
+        this.prevOpponentMoveTimeout = Math.max(0, this.prevOpponentMoveTimeout - delta);
+        if (this.prevOpponentMoveTimeout <= 0) {
+            console.warn("other player is zombie");
+        }
+
+        this.quitTimer = Math.max(0, this.quitTimer - delta);
+        if (this.quitTimer <= 0 && state.client.userId == 2) {
+            this.close(true);
+        }
+
+        this.moveTimer = Math.max(0, this.moveTimer - delta);
 
         try {
             this.#sendInput();
@@ -132,6 +152,12 @@ export class WebGame extends GameBase {
                 wg.scores[0] = data.lscore;
                 wg.scores[1] = data.rscore;
 
+                const newPos = wg.paddlePositions[wg.side];
+                if (newPos !== wg.previousOpponentPos) {
+                    wg.prevOpponentMoveTimeout = 0.3;
+                    wg.previousOpponentPos = newPos;
+                }
+
                 wg.level?.unpause();
             }
             if (data.action == "wait") {
@@ -155,16 +181,15 @@ export class WebGame extends GameBase {
         if (!this.receivedInit || !state.isPlaying || this.socket.readyState != this.socket.OPEN)
             return;
 
-        let currentInput = state.input.getPaddleInput(this.side);
-        if (this.previousInput != currentInput) {
+        if (this.moveTimer <= 0) {
+            this.moveTimer = 0.1;
+            this.moveDirection = this.moveDirection < 0 ? 1 : -1;
+
             let input = JSON.stringify({
                 "action": "move",
-                "key": currentInput
+                "key": this.moveDirection
             });
-            if (state.cliDebug)
-                console.log('Game input:', input);
             this.socket.send(input);
-            this.previousInput = currentInput;
         }
     }
 

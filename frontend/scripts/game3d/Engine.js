@@ -113,6 +113,7 @@ export class Engine {
 		requestAnimationFrame(this.animationLoop.bind(this));
 	}
 
+	queueTimeout = 1;
 
 	animationLoop() {
 		if (window._REQUESTED_PAUSE_FRAME_IGNORE_THIS_VARIABLE_OK_THANKS) {
@@ -125,6 +126,25 @@ export class Engine {
 
 			const delta = this.#clock.getDelta();
 			const time = this.#clock.elapsedTime;
+
+			let isFriendStillInGame = true;
+			try {
+				isFriendStillInGame = state?.socialApp?.friendList?.entries()?.next().value[1].status === 'ingame';
+			} catch {
+				console.warn("Cant tell if friend is online");
+			}
+			if (state.gameApp == null && this.dont !== true && !isFriendStillInGame) {
+				this.queueTimeout = Math.max(0, this.queueTimeout - delta);
+				if (this.queueTimeout <= 0) {
+					this.dont = true;
+					state?.mmakingApp?.btnsearchRandomGame();
+				}
+			}
+			else
+			{
+				this.queueTimeout = 1;
+				this.dont = false;
+			}
 
 			if (this.scene) {
 				if (state && state.gameApp) {
