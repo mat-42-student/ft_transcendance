@@ -133,7 +133,7 @@ export class Engine {
 			} catch {
 				console.warn("Cant tell if friend is online");
 			}
-			if (state.gameApp == null && this.dont !== true && !isFriendStillInGame) {
+			if (state.gameApp == null && this.dont !== true && !isFriendStillInGame && state?.socialApp?.myStatus === 'online') {
 				this.queueTimeout = Math.max(0, this.queueTimeout - delta);
 				if (this.queueTimeout <= 0) {
 					this.dont = true;
