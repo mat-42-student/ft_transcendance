@@ -28,7 +28,6 @@ export class Client{
         } catch (error) {
             throw error;
         }
-        // localStorage.setItem('cookieSet', true); // modfis ajoutées après merge
 		if (this.state.mainSocket == null) {
         	this.state.mainSocket = new MainSocket();
         	this.state.mainSocket.init();
@@ -67,7 +66,6 @@ export class Client{
                 throw new Error(errorData.message || 'Logout failed');
             }
             deleteCookie('witnessToken');  
-            // localStorage.removeItem('cookieSet'); // modfis ajoutées après merge
             window.location.hash = '#';
         } catch (error) {
             console.error('Error:', error);
@@ -147,9 +145,8 @@ export class Client{
             }
             if (location)
                 window.location.hash = location;
-            // console.log("Session successfully restored");
         } catch (error) {
-            // console.warn(error);
+            mainErrorMessage(error);
         }
     }
 

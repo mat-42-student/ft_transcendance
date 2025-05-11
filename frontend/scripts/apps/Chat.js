@@ -167,6 +167,8 @@ export class ChatApp{
     }
 
     close() {
+        this.chatInput.disabled = true;
+        this.chatUser.innerText = "Chat"
         this.chatInput = null;
         this.chatUser = null;
         this.chatForm.removeEventListener('submit', this.chatFormListener.bind(this));
