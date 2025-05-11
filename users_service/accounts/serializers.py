@@ -290,33 +290,6 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     def get_file_extension(filename):
         return filename.split('.')[-1].lower()
     
-    def update(self, instance, validated_data):
-        validated_data.pop('password', None)
-        validated_data.pop('confirm_password', None)
-        new_avatar = validated_data.pop('avatar', None)
-
-        if new_avatar is not None:
-            if instance.avatar.name != 'default.png' and default_storage.exists(instance.avatar.path):
-                default_storage.delete(instance.avatar.path)
-
-            ext = self.get_file_extension(new_avatar.name)
-            new_filename = f"avatars/user{instance.id:02d}.{ext}"
-
-            # Sauvegarder le fichier avatar avec le bon nom
-            content = ContentFile(new_avatar.read())
-            saved_path = default_storage.save(new_filename, content)
-            instance.avatar = saved_path
-
-        new_password = validated_data.pop('new_password', None)
-        if new_password:
-            instance.set_password(new_password)
-
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-
-        instance.save()
-        return instance
-
     # def update(self, instance, validated_data):
     #     validated_data.pop('password', None)
     #     validated_data.pop('confirm_password', None)
@@ -328,15 +301,41 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     #         ext = self.get_file_extension(new_avatar.name)
     #         new_filename = f"avatars/user{instance.id:02d}.{ext}"
-    #         new_avatar.name = new_filename
-    #         instance.avatar = new_avatar
+
+    #         # Sauvegarder le fichier avatar avec le bon nom
+    #         content = ContentFile(new_avatar.read())
+    #         saved_path = default_storage.save(new_filename, content)
+    #         instance.avatar = saved_path
 
     #     new_password = validated_data.pop('new_password', None)
     #     if new_password:
     #         instance.set_password(new_password)
 
+    #     for attr, value in validated_data.items():
+    #         setattr(instance, attr, value)
+
     #     instance.save()
-    #     return super().update(instance, validated_data)
+    #     return instance
+
+    def update(self, instance, validated_data):
+        validated_data.pop('password', None)
+        validated_data.pop('confirm_password', None)
+        new_avatar = validated_data.pop('avatar', None)
+
+        if new_avatar is not None:
+            if instance.avatar.name != 'default.png' and default_storage.exists(instance.avatar.path):
+                default_storage.delete(instance.avatar.path)
+
+            ext = self.get_file_extension(new_avatar.name)
+            new_filename = f"avatars/user{instance.id:02d}.{ext}"
+            new_avatar.name = new_filename
+            instance.avatar = new_avatar
+
+        new_password = validated_data.pop('new_password', None)
+        if new_password:
+            instance.set_password(new_password)
+
+        return super().update(instance, validated_data)
     
 # Relationship 'detail' serializer
 class RelationshipSerializer(serializers.ModelSerializer):
