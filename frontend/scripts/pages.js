@@ -110,8 +110,18 @@ function createGameRow(game) {
 
 // Voir si gestion nécessaire quand user est bloqué && à bloqué
 function generateProfileActions(data) {
-    if (data.is_self) {
+    console.log(state.client.isOauth); //debug
 
+    if (data.is_self && state.client.isOauth) {
+        return `
+            <button data-action="update" data-user-id="${data.id}" title="Update Profile">
+                <img src="/ressources/update.png" alt="Update Profile">
+            </button>
+            <button data-action="logout" data-user-id="${data.id}" title="Logout">
+                <img src="/ressources/logout.png" alt="Logout">
+            </button>
+        `;
+    } else if (data.is_self && !state.client.isOauth) {
         const twoFAButtonText = data.is_2fa_enabled ? "Disable 2FA" : "Enable 2FA";
         const twoFAIconPath = data.is_2fa_enabled ? "/ressources/disable2fa.png" : "/ressources/enable2fa.png";
         const twoFAAction = data.is_2fa_enabled ? "disable-2fa" : "enable-2fa";
@@ -155,8 +165,6 @@ export async function toggle2faButton() {
         const twoFAIconPath = data.is_2fa_enabled ? "/ressources/disable2fa.png" : "/ressources/enable2fa.png";
         const twoFAAction = data.is_2fa_enabled ? "disable-2fa" : "enable-2fa";
         const twoFAButton = document.getElementById("twofa");
-
-        console.log("toggle 2fa called"); // debug
 
         twoFAButton.innerHTML = `<button data-action="${twoFAAction}" data-user-id="${data.id}" data-2fa-enabled="${data.is_2fa_enabled}" title="${twoFAButtonText}">
             <img src="${twoFAIconPath}" alt="${twoFAButtonText}">
