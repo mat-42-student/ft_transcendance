@@ -275,7 +275,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             img = Image.open(avatar)
             img.verify()
 
-            if img.format.lower not in allowed_extensions:
+            if img.format.lower() not in allowed_extensions:
                 raise serializers.ValidationError("Only JPEG, JPG and PNG formats are allowed.")
             
             if avatar.size > max_size_mb * 1024 * 1024:
