@@ -1,6 +1,7 @@
 import { state } from '../main.js';
 import { cleanErrorMessage } from '../components/auth_form.js';
 import { closeDynamicCard } from '../components/dynamic_card.js';
+import { toggle2faButton } from '../pages.js';
 
 export async function verifyToken(token) {
     const response = await fetch('/api/v1/auth/verify/', {
@@ -80,6 +81,7 @@ export async function verify2fa() {
         successPage.style.display = 'block';
         qrSection.style.display = 'none';
         verificationSection.style.display = 'none';
+        toggle2faButton();
       } else if (data.error == "Invalid or expired 2FA code") {
         display2faErrorMessage("Invalid or expired 2FA code");
       } else {
@@ -97,11 +99,6 @@ export async function disable2fa() {
     const formSection = document.getElementById('disable-2fa-form-section');
     const errorSection = document.getElementById('disable-2fa-error');
     const successSection = document.getElementById('disable-2fa-success');
-    
-    if (errorSection) {
-        errorSection.textContent = '';
-        errorSection.style.display = 'none';
-    }
     
     try {
         const response = await fetch('/api/v1/auth/2fa/disable/', {
@@ -122,6 +119,7 @@ export async function disable2fa() {
             if (formSection) formSection.style.display = 'none';
             if (errorSection) errorSection.style.display = 'none';
             if (successSection) successSection.style.display = 'block';
+            toggle2faButton();
         } else {
             if (errorSection) {
                 if (data.error === "Invalid password") {

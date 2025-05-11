@@ -117,7 +117,7 @@ function generateProfileActions(data) {
         const twoFAAction = data.is_2fa_enabled ? "disable-2fa" : "enable-2fa";
 
         return `
-            <button data-action="${twoFAAction}" data-user-id="${data.id}" data-2fa-enabled="${data.is_2fa_enabled}" title="${twoFAButtonText}">
+            <button id="twofa" data-action="${twoFAAction}" data-user-id="${data.id}" data-2fa-enabled="${data.is_2fa_enabled}" title="${twoFAButtonText}">
                 <img src="${twoFAIconPath}" alt="${twoFAButtonText}">
             </button>
             <button data-action="update" data-user-id="${data.id}" title="Update Profile">
@@ -146,6 +146,21 @@ function generateProfileActions(data) {
             </button>
         `;
     }
+}
+
+export async function toggle2faButton() {
+        const data = await fetchUserProfile(state.client.userId);
+
+        const twoFAButtonText = data.is_2fa_enabled ? "Disable 2FA" : "Enable 2FA";
+        const twoFAIconPath = data.is_2fa_enabled ? "/ressources/disable2fa.png" : "/ressources/enable2fa.png";
+        const twoFAAction = data.is_2fa_enabled ? "disable-2fa" : "enable-2fa";
+        const twoFAButton = document.getElementById("twofa");
+
+        console.log("toggle 2fa called"); // debug
+
+        twoFAButton.innerHTML = `<button data-action="${twoFAAction}" data-user-id="${data.id}" data-2fa-enabled="${data.is_2fa_enabled}" title="${twoFAButtonText}">
+            <img src="${twoFAIconPath}" alt="${twoFAButtonText}">
+        </button>`
 }
 
 function setupProfileEventListeners(userId) {
