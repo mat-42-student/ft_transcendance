@@ -64,6 +64,7 @@ export async function verify2fa() {
     const successPage = document.getElementById('2fa-success');
     const qrSection = document.getElementById('qr-section');
     const verificationSection = document.getElementById('verification-section');
+    const twoFAErrorContainer = document.getElementById('2fa-error');
     
     try {
       const response = await fetch('api/v1/auth/2fa/verify/', {
@@ -78,6 +79,7 @@ export async function verify2fa() {
       const data = await response.json();
       
       if (data.success) {
+        twoFAErrorContainer.style.display = 'none'
         successPage.style.display = 'block';
         qrSection.style.display = 'none';
         verificationSection.style.display = 'none';
@@ -399,7 +401,7 @@ export function displayErrorMessage(message) {
 }
 
 export function display2faErrorMessage(message) {
-    const loginErrorContainer = document.getElementById('2fa-error');
-    loginErrorContainer.textContent = message;
-    loginErrorContainer.classList.remove('hidden');
+    const twofaErrorContainer = document.getElementById('2fa-error');
+    twofaErrorContainer.textContent = message;
+    twofaErrorContainer.classList.remove('hidden');
 }
