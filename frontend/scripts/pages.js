@@ -110,8 +110,6 @@ function createGameRow(game) {
 
 // Voir si gestion nécessaire quand user est bloqué && à bloqué
 function generateProfileActions(data) {
-    console.log(state.client.isOauth); //debug
-
     if (data.is_self && state.client.isOauth) {
         return `
             <button data-action="update" data-user-id="${data.id}" title="Update Profile">
