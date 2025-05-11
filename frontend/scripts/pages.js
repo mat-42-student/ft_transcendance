@@ -156,8 +156,6 @@ export async function toggle2faButton() {
         const twoFAAction = data.is_2fa_enabled ? "disable-2fa" : "enable-2fa";
         const twoFAButton = document.getElementById("twofa");
 
-        console.log("toggle 2fa called"); // debug
-
         twoFAButton.innerHTML = `<button data-action="${twoFAAction}" data-user-id="${data.id}" data-2fa-enabled="${data.is_2fa_enabled}" title="${twoFAButtonText}">
             <img src="${twoFAIconPath}" alt="${twoFAButtonText}">
         </button>`
