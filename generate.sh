@@ -1,16 +1,11 @@
-#!/bin/bash
-# filepath: generate_proper_certs.sh
+#!/usr/bin/env bash
+set -e
 
-set -e  # Exit on error
-
-# Create directories
 mkdir -p certs/ca
 mkdir -p certs/services/{auth,chat,gateway,matchmaking,nginx,pong,social,users}
 
-# Generate CA key and certificate with proper key usage extensions
 openssl genrsa -out certs/ca/ca.key 4096
 
-# Create a CA configuration file with key usage extensions
 cat > certs/ca/ca.cnf << EOF
 [req]
 distinguished_name = req_distinguished_name
@@ -29,18 +24,14 @@ basicConstraints = critical, CA:true
 keyUsage = critical, digitalSignature, cRLSign, keyCertSign
 EOF
 
-# Generate CA certificate with extensions
 openssl req -x509 -new -nodes -key certs/ca/ca.key -sha256 -days 3650 \
   -out certs/ca/ca.crt -config certs/ca/ca.cnf -extensions v3_ca
 
-# Function to generate certificates for each service
 generate_service_cert() {
   local service=$1
   
-  # Generate private key
   openssl genrsa -out "certs/services/$service/$service.key" 2048
   
-  # Create config file for the service
   cat > "certs/services/$service/$service.cnf" << EOF
 [req]
 distinguished_name = req_distinguished_name
@@ -63,13 +54,11 @@ DNS.1 = $service
 DNS.2 = localhost
 EOF
   
-  # Create certificate signing request (CSR) with extensions
   openssl req -new -key "certs/services/$service/$service.key" \
     -out "certs/services/$service/$service.csr" \
     -config "certs/services/$service/$service.cnf" \
     -extensions v3_req
   
-  # Create a config file for signing
   cat > "certs/services/$service/signing.cnf" << EOF
 [ca]
 default_ca = CA_default
@@ -94,7 +83,6 @@ DNS.1 = $service
 DNS.2 = localhost
 EOF
   
-  # Sign the CSR with our CA
   openssl x509 -req -in "certs/services/$service/$service.csr" \
     -CA certs/ca/ca.crt -CAkey certs/ca/ca.key -CAcreateserial \
     -out "certs/services/$service/$service.crt" -days 730 \
@@ -107,7 +95,6 @@ EOF
   chmod 644 "certs/services/$service/$service.key"
 }
 
-# Generate certificates for all services
 for service in auth chat gateway matchmaking nginx pong social users; do
   generate_service_cert "$service"
 done
