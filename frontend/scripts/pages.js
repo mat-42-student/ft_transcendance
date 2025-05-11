@@ -49,6 +49,7 @@ function updateProfileUI(data) {
 
     if (avatarEl) {
         avatarEl.src = getAvatarPath(data.avatar);
+        state.client.userAvatar = getAvatarPath(data.avatar);
     }
 
     if (actionsEl) {
