@@ -10,6 +10,7 @@ urlpatterns = [
     path('api/v1/auth/2fa/enroll/', Enroll2FAView.as_view(), name='2fa-enroll'),
     path('api/v1/auth/2fa/verify/', Verify2FAView.as_view(), name='2fa-verify'),
     path('api/v1/auth/2fa/disable/', Disable2FAView.as_view(), name='2fa-disable'),
+    path('api/v1/auth/2fa/status/', Get2FAStatusView.as_view(), name='2fa-status'),
     path('api/v1/auth/oauth/login/', OAuthLoginView.as_view(), name='oauth-login'),
     path('api/v1/auth/oauth/callback/', OAuthCallbackView.as_view(), name='oauth-callback'),
 ]

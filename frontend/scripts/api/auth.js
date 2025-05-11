@@ -1,6 +1,7 @@
 import { state } from '../main.js';
 import { cleanErrorMessage } from '../components/auth_form.js';
 import { closeDynamicCard } from '../components/dynamic_card.js';
+import { toggle2faButton } from '../pages.js';
 
 export async function verifyToken(token) {
     const response = await fetch('/api/v1/auth/verify/', {
@@ -80,6 +81,7 @@ export async function verify2fa() {
         successPage.style.display = 'block';
         qrSection.style.display = 'none';
         verificationSection.style.display = 'none';
+        toggle2faButton();
       } else if (data.error == "Invalid or expired 2FA code") {
         display2faErrorMessage("Invalid or expired 2FA code");
       } else {
@@ -87,6 +89,57 @@ export async function verify2fa() {
       }
     } catch (error) {
       console.error('Error:', error);
+    }
+}
+
+export async function disable2fa() {
+    const token = state.client.accessToken;
+    const password = document.getElementById('disable-2fa-password').value;
+    const totp = document.getElementById('disable-2fa-totp').value;
+    const formSection = document.getElementById('disable-2fa-form-section');
+    const errorSection = document.getElementById('disable-2fa-error');
+    const successSection = document.getElementById('disable-2fa-success');
+    
+    try {
+        const response = await fetch('/api/v1/auth/2fa/disable/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ 
+                password: password,
+                totp: totp 
+            }),
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            if (formSection) formSection.style.display = 'none';
+            if (errorSection) errorSection.style.display = 'none';
+            if (successSection) successSection.style.display = 'block';
+            toggle2faButton();
+        } else {
+            if (errorSection) {
+                if (data.error === "Invalid password") {
+                        const errorSection = document.getElementById('disable-2fa-error');
+                        errorSection.textContent = "The password you entered is incorrect.";
+                        errorSection.classList.remove('hidden');
+                } else if (data.error === "Invalid 2FA code") {
+                        const errorSection = document.getElementById('disable-2fa-error');
+                        errorSection.textContent = "The verification code is invalid or has expired.";
+                        errorSection.classList.remove('hidden');
+                } else {
+                    errorSection.textContent = data.error || 'Failed to disable 2FA';
+                }
+            }
+        }
+    } catch (error) {
+        if (errorSection) {
+            errorSection.textContent = 'An error occurred while disabling 2FA';
+            errorSection.style.display = 'block';
+        }
     }
 }
 

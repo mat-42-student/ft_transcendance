@@ -6,10 +6,10 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.conf import settings
 
-from .authentication import (
-    JWTAuthentication,
-    BackendJWTAuthentication
-)
+# from .authentication import (
+#     JWTAuthentication,
+#     BackendJWTAuthentication
+# )
 
 from .permissions import IsAuthenticatedOrService
 from django.core.exceptions import PermissionDenied
@@ -32,7 +32,7 @@ from .serializers import (
     UserUpdateSerializer, 
     UserRegistrationSerializer,
     GameSerializer,
-    RelationshipSerializer
+    # RelationshipSerializer
 )
 
 class UserRegisterView(APIView):
@@ -129,7 +129,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         """Returns the appropriate serializer depending on the action."""
-        if self.action == 'list':
+        if self.action in ['list', 'list_all_users']:
             return UserListSerializer
         elif self.action in ['update', 'partial_update']:
             return UserUpdateSerializer
@@ -232,12 +232,10 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_user_contacts(self, request, pk=None):
         """
         Endpoint to retrieve the user's friends and blocked contacts.
-        - Normal users can retrieve only their own contacts.
-        - Superusers can retrieve anyone's contacts.
         """
         requested_user = self.get_object()
 
-        if request.user != requested_user and not request.user.is_superuser:
+        if request.user != requested_user:
             raise PermissionDenied("You do not have permission to access this user's contacts.")
 
         friends = User.objects.filter(
@@ -279,7 +277,7 @@ class UserViewSet(viewsets.ModelViewSet):
             if not request.user.is_authenticated:
                 raise PermissionDenied("Authentication required")
 
-            if request.user != requested_user and not request.user.is_superuser:
+            if request.user != requested_user:
                 raise PermissionDenied("You do not have permission to access these contacts")
             
             try:
@@ -339,14 +337,14 @@ class UserViewSet(viewsets.ModelViewSet):
             "has_blocked_user": False,
             "is_pending": False,
             "message": None,
-            "2fa": False,
+            "is_2fa_enabled": False,
             "last_games": [],
         }
 
         if user == target_user:
             response_data.update({"is_self": True})
             if user.is_2fa_enabled:
-                response_data.update({"2fa": True})
+                response_data.update({"is_2fa_enabled": user.is_2fa_enabled})
 
         if target_user in user.blocked_users.all():
             response_data.update({
