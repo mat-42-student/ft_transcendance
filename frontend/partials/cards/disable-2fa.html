@@ -1,0 +1,19 @@
+<div class="two-factor-card" id="two-factor-card">    
+    <div class="verification-section" id="disable-2fa-form-section">
+        <h2>Multi-factor authentication</h2>
+        <br>
+        <p>Disable Multi-factor authentication for your account.</p>
+        <p>2FA is currently enabled</p>
+        <label for="disable-2fa-password">Please enter your password:</label>
+        <input type="password" id="disable-2fa-password" name="password" required />
+        <label for="disable-2fa-totp">Enter the code currently displayed on your Authenticator app:</label>
+        <input type="text" id="disable-2fa-totp" name="totp-code" maxlength="6" pattern="[0-9]*" required />
+        <button type="button" id="btn-disable-2fa" class="submit-btn">Disable</button>
+    </div>
+    
+    <div id="disable-2fa-error" class="error-message hidden"></div>
+    
+    <div class="twofa-success" id="disable-2fa-success" style="display: none; margin-top: 1em;">
+        <h1>2FA Disabled!</h1>
+    </div>
+</div>

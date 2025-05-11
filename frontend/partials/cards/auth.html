@@ -1,0 +1,34 @@
+<!-- Auth Card Content -->
+<div id="auth-form">
+    <h2 id="form-title">Sign In</h2>
+    <form>
+        <div id="username-container" class="hidden">
+            <input type="text" id="auth-username" placeholder="Username">
+        </div>
+
+        <input type="email" id="auth-email" placeholder="Email" required>
+        <input type="password" id="auth-password" placeholder="Password" required>
+
+        <div id="confirm-password-container" class="hidden">
+            <input type="password" id="auth-confirm-password" placeholder="Confirm Password">
+        </div>
+
+        <div id="totp-container" class="hidden">
+            <input type="number" id="auth-totp" placeholder="TOTP">
+        </div>
+
+        <input type="text" id="dev-account" style="background-color: rgba(255, 0, 255, 0.189);" placeholder="Autofill Dev Account"/>
+
+        <button type="submit" id="auth-submit">Sign In</button>
+    </form>
+
+    <div class="oauth-section">
+        <button type="button" id="oauth-submit">Sign In with 42</button>
+    </div>
+    <p>
+        <button data-action="register" id="register-link">Not registered yet? Register</button>
+        <button data-action="signin" id="signin-link" class="hidden">Already registered? Sign In</button>
+    </p>
+
+    <div id="auth-error" class="error-message hidden"></div>
+</div>

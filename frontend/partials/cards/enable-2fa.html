@@ -1,0 +1,30 @@
+<div class="two-factor-card" id="two-factor-card">
+    <div class="info-section" id="info-section">
+        <h2>Multi-factor authentication</h2>
+        <br>
+        <p>Manage your Multi-factor authentication with an Authenticator app.</p>
+        <p>2FA</p>
+        <button type="button" id="btn-enroll-2fa">Enable</button>
+    </div>
+  
+    <!-- Section to display the QR image once generated -->
+    <div class="qr-section" id="qr-section" style="display: none; margin-top: 1em;">
+      <img src="" id="qr-image" style="width: 250px; height: auto;" alt="2FA QR Code" />
+    </div>
+  
+    <!-- Form to verify user’s TOTP code -->
+    <div class="verification-section" id="verification-section" style="display: none; margin-top: 1em;">
+      <label for="totp-code">Please scan this QR code and enter the code currently displayed on your Authenticator app:</label>
+      <input type="text" id="totp-code" name="totp-code" required />
+      
+      <button type="button" id="btn-verify-2fa" class="submit-btn">Enable</button>
+    </div>
+
+    <div id="2fa-error" class="error-message hidden"></div>
+
+    <!-- Section to display the success page-->
+    <div class="2fa-success" id="2fa-success" style="display: none; margin-top: 1em;">
+      <h1>2FA Enabled!</h1>
+    </div>
+</div>
+

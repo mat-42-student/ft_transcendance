@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles/base.css">
+    <link rel="stylesheet" href="./styles/layout.css">
+    <link rel="stylesheet" href="./styles/sidebars.css">
+    <link rel="stylesheet" href="./styles/components.css">
+    <link rel="stylesheet" href="./styles/form.css">
+    <link rel="stylesheet" href="./styles/versus.css">
+    <link rel="stylesheet" href="./styles/pages/home.css">
+    <link rel="stylesheet" href="./styles/pages/profile.css">
+    <link rel="stylesheet" href="./styles/salon.css">
+    <link rel="stylesheet" href="./styles/errors.css">
+    <link rel="stylesheet" href="./styles/invitation.css">
+    <link rel="stylesheet" href="./styles/salonInvite.css">
+    <link rel="stylesheet" href="./styles/tournament.css">
+    <link rel="stylesheet" href="./styles/engine.css">
+    <title>Transcendance</title>
+
+    <script type="importmap">
+        { "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }}
+    </script>
+</head>
+
+
+<body>
+    <header>
+        <div id="header-default" class="container">
+            <!-- Homepage Button -->
+            <div class="header-left">
+                <a id="btn-home">Home</a>
+                <!-- Navbar -->
+                <button id="btn-local-bot" class="selection-item" type="button">Solo</button>
+                <button id="btn-local-versus" class="selection-item" type="button">Local Versus</button>
+                <button id="versus" class="selection-item" type="button">Versus</button>
+                <button class="selection-item btn-tournament" type="button">Tournament</button>
+            </div>
+
+
+            <!-- Searchbar -->
+            <div class="header-center">
+                <form class="search-form" action="#" method="GET" id="search-form">
+                    <input type="text" id="searchInput" name="search" placeholder="Search User..." aria-label="Recherche" autocomplete="off">
+                </form>
+                <!-- Conteneur pour les résultats -->
+                <ul id="searchResults" class="search-results"></ul>
+            </div>
+        </div>
+        <div id="header-loading" class="container" style="display: none;">
+            <p>Please wait...</p>
+        </div>
+        <div id="header-ingame" class="container" style="display: none;">
+            <button id="btn-quit-game" class="selection-item" type="button">Quit Match</button>
+        </div>
+
+        <!-- User Profile Button, always visible -->
+        <button id="btn-profile">
+            <div id="profile-link"></div>
+            <span class="user-status"></span>
+        </button>
+    </header>
+
+    <main>
+        <!-- CHAT (Left) -->
+        <aside class="sidebar left-sidebar">
+            <!-- Chat Interface -->
+            <div class="chat-interface">
+                <!-- Contact Username -->
+                <div class="chat-header">
+                    <span class="friend-name" id="chat-user" userId="0">Chat</span>
+                    <div class="chat-controls">
+                        <input type="checkbox" id="chat-mute" class="chat-mute-checkbox">
+                        <span class="chat-mute-txt">Mute</span>
+                    </div>
+                  </div>
+                                  <!-- Messages -->
+                <div class="chat-body" id="chat-body">
+                </div>
+                <!-- Prompt -->
+                <div class="chat-footer" id="chat-footer">
+                    <form class="chat-form" id="chat-form">
+                        <input type="text" autocomplete="off" id="chat-input" placeholder="Send a message..." aria-label="Zone de message" disabled>
+                    </form>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN (Home/Profile) -->
+        <section class="main-content"></section>
+
+        <!-- SOCIAL (Right) -->
+        <aside class="sidebar right-sidebar">
+            <!-- Interface -->
+            <div class="friends-interface">
+                <!-- Friend Requests Button -->
+                <div class="friend-requests">
+                    <button class="btn-friend-requests" type="button">Friend Requests</button>
+                    <span id="pending-count" class="request-count"></span>
+                    <!-- (JS) Dynamically change on pending requests for authentified User -->
+                </div>
+                <!-- Friends List -->
+                <ul class="friends-list">
+                    Sign in to see your friends
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 3d Canvas Background -->
+        <div id="engine">
+            <canvas id="engine-canvas"></canvas>
+        </div>
+        <div id="engine-loading" class="engine-loading">Loading...</div>
+        <div id="engine-loading-error" class="engine-loading" style="display: none;">
+            Loading Error
+        </div>
+    </main>
+
+    <!-- Dynamic Card -->
+    <div id="dynamic-card-container" class="hidden">
+        <!-- Background Opacity Overlay -->
+        <div class="overlay"></div>
+        <div class="card">
+            <button id="close-dynamic-card" class="close-btn">X</button>
+            <div id="dynamic-card-content"></div>
+        </div>
+    </div>
+
+    <script type="module" src="./scripts/main.js"></script>
+</body>
+
+
+</html>

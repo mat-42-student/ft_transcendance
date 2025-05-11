@@ -1,18 +1,16 @@
-# Fichiers sensibles
-.env
-./src/django/code/.env
+# .env
+# certs/
 
-# Environnement virtuel Python
 **env/
 
-# Fichiers générés par Django
+# Django generated files
 **/__pycache__/
 **/*.pyc
 **/*.pyo
 db.sqlite3
 **/migrations/
 
-# Fichiers statiques et médias
+# Static files and media
 **/staticfiles/
 # static/
 # media/
@@ -22,21 +20,21 @@ db.sqlite3
 logs/
 
 # Avatars
-/src/media/avatars/user*
+/media/avatars/user*
 
-# IDEs et outils
+# IDEs and tools
 .vscode/
 
-# Jlecorne
-# src/Makefile
-.DS_Store
-my_Dockerfile
-src/my_compose.yml
-src/my_frontend
-# src/media
-src/.my_env
-src/nginx/local.conf
+# media
+.my_env
+nginx/local.conf
 
 # mdjemaa
 *.pdf
 psql_friends_cmd.txt
+
+# jlecorne
+.DS_Store
+my_Dockerfile
+my_compose.yml
+my_frontend
