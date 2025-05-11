@@ -18,7 +18,6 @@ router.register('users', UserViewSet, basename='users')
 router.register('users/relationships', RelationshipViewSet, basename='relationships')
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('api/v1/users/register/', UserRegisterView.as_view(), name='register'),
     path('api/v1/', include(router.urls)),
 ]

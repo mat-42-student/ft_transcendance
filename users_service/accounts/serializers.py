@@ -4,6 +4,8 @@ from django.core.files.storage import default_storage
 from django.core.exceptions import ValidationError
 from django.utils.html import escape
 from django.core.validators import RegexValidator
+from django.utils.html import strip_tags
+from django.utils.text import slugify
 
 from PIL import Image
 
@@ -73,6 +75,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         if sanitized_value != value:
             raise serializers.ValidationError("Username contains invalid characters.")
         return sanitized_value
+
+    def validate_email(self, value):
+        clean_value = strip_tags(value).strip()
+        if clean_value != value:
+            raise serializers.ValidationError("Email contains invalid characters.")
+        return clean_value.lower()
 
     def validate_password(self, value):
         """
@@ -258,13 +266,21 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         if any(pattern in value.lower() for pattern in ['password', '123456', 'qwerty', 'admin']):
             raise serializers.ValidationError("Password contains a common pattern and is too weak.")
         return value
-    
+
     def validate_avatar(self, avatar):
+        max_size_mb = 5
+        allowed_extensions = ['jpeg', 'jpg', 'png']
+    
         try:
             img = Image.open(avatar)
             img.verify()
-            if img.format not in ['JPEG', 'PNG']:
-                raise serializers.ValidationError("Only JPEG and PNG formats are allowed.")
+
+            if img.format.lower not in allowed_extensions:
+                raise serializers.ValidationError("Only JPEG, JPG and PNG formats are allowed.")
+            
+            if avatar.size > max_size_mb * 1024 * 1024:
+                raise serializers.ValidationError(f"Image size must be under {max_size_mb}MB.")
+            
             img = Image.open(avatar)
             img.load()
         except (IOError, ValidationError):
@@ -285,8 +301,11 @@ class UserUpdateSerializer(serializers.ModelSerializer):
                 default_storage.delete(instance.avatar.path)
 
             ext = self.get_file_extension(new_avatar.name)
-            new_filename = f"avatars/user{instance.id:02d}.{ext}"
+            safe_filename = slugify(instance.username)  # ou un ID pour éviter conflits
+            # new_filename = f"avatars/user{instance.id:02d}.{ext}"
+            new_filename = f"avatars/user{instance.id:02d}_{safe_filename}.{ext}"
             new_avatar.name = new_filename
+
             instance.avatar = new_avatar
 
         new_password = validated_data.pop('new_password', None)
