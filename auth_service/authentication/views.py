@@ -380,16 +380,6 @@ class Disable2FAView(APIView):
         user.totp_secret = None
         user.save()
 
-        # Send notification email
-        # send_mail(
-        #     'Two-Factor Authentication Disabled',
-        #     f'2FA was disabled for your account on {datetime.timezone.now().strftime("%Y-%m-%d %H:%M:%S")}. ' +
-        #     'If you did not authorize this change, please contact support immediately.',
-        #     'security@myapp.com',
-        #     [user.email],
-        #     fail_silently=False,
-        # )
-
         return Response({'message': '2FA has been disabled and secret key removed.'}, status=status.HTTP_200_OK)
     
 class Get2FAStatusView(APIView):
