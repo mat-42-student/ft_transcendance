@@ -5,7 +5,8 @@ from django.core.exceptions import ValidationError
 from django.utils.html import escape
 from django.core.validators import RegexValidator
 from django.utils.html import strip_tags
-from django.utils.text import slugify
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
 from PIL import Image
 
@@ -269,14 +270,12 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     def validate_avatar(self, avatar):
         max_size_mb = 5
-        allowed_extensions = ['jpeg', 'jpg', 'png']
-    
         try:
             img = Image.open(avatar)
             img.verify()
 
-            if img.format.lower() not in allowed_extensions:
-                raise serializers.ValidationError("Only JPEG, JPG and PNG formats are allowed.")
+            if img.format.lower() not in ['jpeg', 'jpg', 'png']:
+                raise serializers.ValidationError("Seuls les formats JPEG et PNG sont autorisés.")
             
             if avatar.size > max_size_mb * 1024 * 1024:
                 raise serializers.ValidationError(f"Image size must be under {max_size_mb}MB.")
@@ -284,13 +283,13 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             img = Image.open(avatar)
             img.load()
         except (IOError, ValidationError):
-            raise serializers.ValidationError("The avatar file must be a valid image.")
+            raise serializers.ValidationError("Le fichier de l'avatar doit être une image valide.")
         return avatar
 
     @staticmethod
     def get_file_extension(filename):
         return filename.split('.')[-1].lower()
-
+    
     def update(self, instance, validated_data):
         validated_data.pop('password', None)
         validated_data.pop('confirm_password', None)
@@ -301,18 +300,43 @@ class UserUpdateSerializer(serializers.ModelSerializer):
                 default_storage.delete(instance.avatar.path)
 
             ext = self.get_file_extension(new_avatar.name)
-            safe_filename = slugify(instance.username)  # ou un ID pour éviter conflits
-            # new_filename = f"avatars/user{instance.id:02d}.{ext}"
-            new_filename = f"avatars/user{instance.id:02d}_{safe_filename}.{ext}"
-            new_avatar.name = new_filename
+            new_filename = f"avatars/user{instance.id:02d}.{ext}"
 
-            instance.avatar = new_avatar
+            # Sauvegarder le fichier avatar avec le bon nom
+            content = ContentFile(new_avatar.read())
+            saved_path = default_storage.save(new_filename, content)
+            instance.avatar = saved_path
 
         new_password = validated_data.pop('new_password', None)
         if new_password:
             instance.set_password(new_password)
 
-        return super().update(instance, validated_data)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
+
+    # def update(self, instance, validated_data):
+    #     validated_data.pop('password', None)
+    #     validated_data.pop('confirm_password', None)
+    #     new_avatar = validated_data.pop('avatar', None)
+
+    #     if new_avatar is not None:
+    #         if instance.avatar.name != 'default.png' and default_storage.exists(instance.avatar.path):
+    #             default_storage.delete(instance.avatar.path)
+
+    #         ext = self.get_file_extension(new_avatar.name)
+    #         new_filename = f"avatars/user{instance.id:02d}.{ext}"
+    #         new_avatar.name = new_filename
+    #         instance.avatar = new_avatar
+
+    #     new_password = validated_data.pop('new_password', None)
+    #     if new_password:
+    #         instance.set_password(new_password)
+
+    #     instance.save()
+    #     return super().update(instance, validated_data)
     
 # Relationship 'detail' serializer
 class RelationshipSerializer(serializers.ModelSerializer):
