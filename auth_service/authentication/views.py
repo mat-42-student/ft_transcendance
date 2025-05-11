@@ -27,6 +27,7 @@ from io import BytesIO
 from qrcode.constants import ERROR_CORRECT_L
 from urllib.parse import urlencode
 from redis import Redis
+from django.core.mail import send_mail
 
 def getStatus(user_id, channel="auth_social"):
     """
@@ -309,11 +310,10 @@ class Enroll2FAView(APIView):
         
         totp_secret = pyotp.random_base32()
         user.totp_secret = totp_secret
-        # user.is_2fa_enabled = True
         user.save()
 
         totp = pyotp.TOTP(totp_secret)
-        provisioning_uri = totp.provisioning_uri(user.email, issuer_name="MyPongApp")
+        provisioning_uri = totp.provisioning_uri(user.email, issuer_name="ft_tr")
 
         qr = qrcode.QRCode(
             version=1,
@@ -363,9 +363,43 @@ class Disable2FAView(APIView):
 
     def post(self, request):
         user = request.user
-        user.is_2fa_enabled = False 
+
+        code = request.data.get('totp')
+        password = request.data.get('password')
+        
+        # Verify password
+        if not user.check_password(password):
+            return Response({"error": "Invalid password"}, status=401)
+            
+        # Verify TOTP code
+        totp = pyotp.TOTP(user.totp_secret)
+        if not totp.verify(code):
+            return Response({"error": "Invalid 2FA code"}, status=401)
+        
+        user.is_2fa_enabled = False
+        user.totp_secret = None
         user.save()
-        return Response({'message': '2FA has been disabled.'}, status=status.HTTP_200_OK)
+
+        # Send notification email
+        # send_mail(
+        #     'Two-Factor Authentication Disabled',
+        #     f'2FA was disabled for your account on {datetime.timezone.now().strftime("%Y-%m-%d %H:%M:%S")}. ' +
+        #     'If you did not authorize this change, please contact support immediately.',
+        #     'security@myapp.com',
+        #     [user.email],
+        #     fail_silently=False,
+        # )
+
+        return Response({'message': '2FA has been disabled and secret key removed.'}, status=status.HTTP_200_OK)
+    
+class Get2FAStatusView(APIView):
+    renderer_classes = [JSONRenderer]
+    
+    def get(self, request):
+        user = request.user
+        return Response({
+            'is_2fa_enabled': user.is_2fa_enabled
+        }, status=status.HTTP_200_OK)
     
     
 class OAuthLoginView(APIView):

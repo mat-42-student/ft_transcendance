@@ -339,14 +339,14 @@ class UserViewSet(viewsets.ModelViewSet):
             "has_blocked_user": False,
             "is_pending": False,
             "message": None,
-            "2fa": False,
+            "is_2fa_enabled": False,
             "last_games": [],
         }
 
         if user == target_user:
             response_data.update({"is_self": True})
             if user.is_2fa_enabled:
-                response_data.update({"2fa": True})
+                response_data.update({"is_2fa_enabled": user.is_2fa_enabled})
 
         if target_user in user.blocked_users.all():
             response_data.update({

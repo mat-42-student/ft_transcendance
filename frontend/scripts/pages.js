@@ -111,9 +111,14 @@ function createGameRow(game) {
 // Voir si gestion nécessaire quand user est bloqué && à bloqué
 function generateProfileActions(data) {
     if (data.is_self) {
+
+        const twoFAButtonText = data.is_2fa_enabled ? "Disable 2FA" : "Enable 2FA";
+        const twoFAIconPath = data.is_2fa_enabled ? "/ressources/disable2fa.png" : "/ressources/enable2fa.png";
+        const twoFAAction = data.is_2fa_enabled ? "disable-2fa" : "enable-2fa";
+
         return `
-            <button data-action="2fa" data-user-id="${data.id}" title="Enable Two-Factor Authentication">
-                <img src="/ressources/2fa.svg" alt="Enable 2fa">
+            <button data-action="${twoFAAction}" data-user-id="${data.id}" data-2fa-enabled="${data.is_2fa_enabled}" title="${twoFAButtonText}">
+                <img src="${twoFAIconPath}" alt="${twoFAButtonText}">
             </button>
             <button data-action="update" data-user-id="${data.id}" title="Update Profile">
                 <img src="/ressources/update.png" alt="Update Profile">
@@ -170,8 +175,11 @@ async function handleProfileAction(action, userId) {
         case "logout":
             state.client.logout();
             break;
-        case "2fa":
-            initDynamicCard('2fa');
+        case "enable-2fa":
+            initDynamicCard('enable-2fa');
+            break;
+        case "disable-2fa":
+            initDynamicCard('disable-2fa');
             break;
         case "update":
             initDynamicCard('update');

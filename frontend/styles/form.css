@@ -12,6 +12,11 @@
     box-sizing: border-box;
 }
 
+#disable-2fa-form-section.show,
+#disable-2fa-success.show {
+    display: block !important;
+}
+
 #auth-form form {
     display: flex;
     flex-direction: column;

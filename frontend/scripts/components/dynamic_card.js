@@ -1,6 +1,7 @@
 import { state, ft_fetch } from '../main.js';
 import { enroll2fa } from '../api/auth.js';
 import { verify2fa } from '../api/auth.js';
+import { disable2fa } from '../api/auth.js';
 import { initAuthFormListeners } from './auth_form.js';
 import { createRequestItem } from './friend_requests.js';
 import { navigator as appNavigator } from '../nav.js';
@@ -16,7 +17,8 @@ const dynamicCardRoutes = {
     'requests': './partials/cards/friend_requests.html',
     'block': './partials/cards/block.html',
     'unblock': './partials/cards/unblock.html',
-    '2fa': './partials/cards/2fa.html',
+    'enable-2fa': './partials/cards/enable-2fa.html',
+    'disable-2fa': './partials/cards/disable-2fa.html',
     'vs_active': './partials/cards/vs_active.html',
 	'salonHost': './partials/cards/salonHost.html',
 	'salonGuest': './partials/cards/salonGuest.html',
@@ -27,9 +29,12 @@ const dynamicCardRoutes = {
 };
 
 const cardInitializers = {
-    '2fa': () => {
+    'enable-2fa': () => {
         document.getElementById('btn-enroll-2fa')?.addEventListener('click', enroll2fa);
         document.getElementById('btn-verify-2fa')?.addEventListener('click', verify2fa);
+    },
+    'disable-2fa': () => {
+        document.getElementById('btn-disable-2fa')?.addEventListener('click', disable2fa);
     },
     'auth': () => {
         document.getElementById('oauth-submit')?.addEventListener('click', () => {
