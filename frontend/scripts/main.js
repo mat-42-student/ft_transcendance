@@ -90,8 +90,7 @@ async function handleProfileClick(e) {
 }
 
 function setupSearchInput() {
-    const searchForm = document.getElementById('search-form');;
-
+    // const searchForm = document.getElementById('search-form');
     const searchInput = document.getElementById("searchInput");
     if (!searchInput) return;
 

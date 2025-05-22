@@ -20,12 +20,12 @@ class Navigator {
     
         const pageFiles = {
             '': { url: './partials/home.html', setup: initHomePage },
-            profile: { url: './partials/profile.html', setup: initProfilePage },
-            "404": { url: './partials/404.html', setup: null },
+            'profile': { url: './partials/profile.html', setup: initProfilePage },
+            '404': { url: './partials/404.html', setup: null },
         };
     
         if (!pageFiles[page]) return mainErrorMessage(`Page not found: ${page}`);
-    
+
         if (page === 'profile' && !(await state.client.isAuthenticated())) {
             return initDynamicCard('auth');
         }
@@ -36,6 +36,8 @@ class Navigator {
     
         try {
             const response = await ft_fetch(pageFiles[page].url);
+            // if (!response.ok)
+            //     throw new Error(`Page partial not found: ${pageFiles[page].url}`);
             const html = await response.text();
             this.mainContent.innerHTML = html;
             const hash = userId ? `#${page}/${userId}` : `#${page}`;
@@ -76,8 +78,16 @@ class Navigator {
         // Parsing du hash
         const hashMatch = hash.match(/^#(\w+)(?:\/(\d+))?$/);
     
-        const page = hashMatch.length >= 2 ? hashMatch[1] : null;
-        const userId = hashMatch.length >= 3 ? hashMatch[2] : null;
+        let page;
+        let userId;
+
+        if (hashMatch) {
+            page = hashMatch.length >= 2 ? hashMatch[1] : null;
+            userId = hashMatch.length >= 3 ? hashMatch[2] : null;
+        } else {
+            page = '';
+            userId = null;
+        }
     
         switch (page) {
             case '':

@@ -191,7 +191,10 @@ export async function initDynamicCard(routeKey) {
     const cancelButton = document.getElementById('close-dynamic-card');
 
     if (!dynamicCardRoutes[routeKey])
-        return mainErrorMessage(`Aucune route trouvée pour la clé '${routeKey}'`);
+        return;
+
+    if (!cancelButton)
+        return;
 
     if (cancelButton.style.display === 'none')
         cancelButton.style.display = 'inline';
@@ -200,6 +203,9 @@ export async function initDynamicCard(routeKey) {
         const response = await ft_fetch(dynamicCardRoutes[routeKey]);
         if (!response.ok)
             throw error;
+
+        if (!cardContent || !cardContainer)
+            return;
 
         cardContent.innerHTML = await response.text();
         cardContainer.classList.remove('hidden');
