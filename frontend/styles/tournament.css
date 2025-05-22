@@ -38,3 +38,13 @@
     font-weight: bold;
     margin: 5px;
 }
+
+.btn-tournament-inactive
+{
+	background-color: red;
+}
+
+.btn-tournament-inactive:hover
+{
+	background-color: red;
+}

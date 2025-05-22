@@ -23,8 +23,8 @@ export class Mmaking
 			}
 		}
 
-		document.getElementsByClassName('btn-tournament')[0].addEventListener('click', this.btnSearchTournament.bind(this));
-		document.getElementById('versus').addEventListener('click', this.btnsearchRandomGame.bind(this));
+		document.getElementsByClassName('btn-tournament')[0]?.addEventListener('click', this.btnSearchTournament.bind(this));
+		document.getElementById('versus')?.addEventListener('click', this.btnsearchRandomGame.bind(this));
 		this.host = false;
 		this.opponents = {};
 		this.SearchRandomGame = false;
@@ -69,6 +69,8 @@ export class Mmaking
 	async buildEventsbtnInvite(keyNumber)
 	{
 		const btnmatch = document.querySelector(`.btn-match-${keyNumber}`);
+        if (!btnmatch)
+            return
 
 		if (!this.boundEventListenersFriend[keyNumber]) {
 			this.boundEventListenersFriend[keyNumber] = {
@@ -129,15 +131,24 @@ export class Mmaking
 				{
 					await initDynamicCard('salonHost');
 
-					document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar);
-					document.getElementById('player-name').textContent = state.client.userName;
-					this.setFriendwithoutLoader(friend.username, getAvatarPath(friend.avatar));
+					const player_picture = document.getElementById('player-photo');
+                    const player_name = document.getElementById('player-name');
+                    if (!player_name || !player_picture)
+                        constinue;
+                    else
+                    {
+                        player_picture .src = getAvatarPath(state.client.userAvatar);
+                        player_name.textContent = state.client.userName;
+                        this.setFriendwithoutLoader(friend.username, getAvatarPath(friend.avatar));
 
-					const btnstartgame = document.getElementById('start-game');
-					const btncancelGame = document.getElementById('cancel-button');
-
-					btnstartgame.addEventListener('click', (event) => this.startGame(event, keyNumber));
-					btncancelGame.addEventListener('click', (event) => this.cancelGame(event, keyNumber, 'invite'));
+                        const btnstartgame = document.getElementById('start-game');
+                        const btncancelGame = document.getElementById('cancel-button');
+                        
+                        if (btnstartgame)
+                            btnstartgame.addEventListener('click', (event) => this.startGame(event, keyNumber));
+                        if (btncancelGame)
+                            btncancelGame.addEventListener('click', (event) => this.cancelGame(event, keyNumber, 'invite'));
+                    }
 
 				}
 
@@ -161,12 +172,15 @@ export class Mmaking
 			if (this.salonLoad == true)
 			{
 				await initDynamicCard('load');
-				document.getElementById('close-dynamic-card').style.display = 'none';
+                const close_card = document.getElementById('close-dynamic-card');
+                if (close_card)
+				    close_card.style.display = 'none';
 			}
 			else if(this.salonInvite == true && value == true)
 			{
 				await initDynamicCard('salonGuest');
-				document.getElementById('close-dynamic-card').style.display = 'none';
+                const close_card = document.getElementById('close-dynamic-card')
+				    close_card.style.display = 'none';
 			}
 
 			const btnHost = document.querySelector(`.btn-match-${key}`);
@@ -195,11 +209,15 @@ export class Mmaking
 				if (value == true)
 				{
 					const btncancelGame = document.getElementById('cancel-button');
-
-					document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar);
-					document.getElementById('player-name').textContent = state.client.userName;
+                    const player_picture = document.getElementById('player-photo');
+                    const player_name = document.getElementById('player-name');
+                    if (player_picture)
+					    player_picture.src = getAvatarPath(state.client.userAvatar);
+                    if (player_name)
+					    player_name.textContent = state.client.userName;
 					this.setFriendwithoutLoader(friend.username, getAvatarPath(friend.avatar));
-					btncancelGame.addEventListener('click', (event) => this.cancelGame(event, keyNumber, 'invite'));
+                    if (btncancelGame)
+					    btncancelGame.addEventListener('click', (event) => this.cancelGame(event, keyNumber, 'invite'));
 
 				}
 			}
@@ -265,9 +283,6 @@ export class Mmaking
 		this.salonHost = false;
 		this.tournament = false;
 
-		const btnTournament = document.getElementsByClassName('btn-tournament');
-		const btnRandom = document.getElementById('versus');
-
 		this.cancel = false
 	} 
 
@@ -300,8 +315,10 @@ export class Mmaking
 
 		await initDynamicCard('vs_active');
 
-		btnInviteAccept[0].addEventListener('click', (event) => this.btnInviteAccept(event, friendId));
-		btnInviteRefuse[0].addEventListener('click', (event) => this.btnInviteRefuse(event, friendId));
+        if (btnInviteAccept && btnInviteAccept[0])
+		    btnInviteAccept[0].addEventListener('click', (event) => this.btnInviteAccept(event, friendId));
+        if (btnInviteRefuse && btnInviteRefuse[0])
+		    btnInviteRefuse[0].addEventListener('click', (event) => this.btnInviteRefuse(event, friendId));
 	}
 
 	async btnInviteAccept(event, friendId)
@@ -348,8 +365,6 @@ export class Mmaking
 
 	async renderLaunchGame()
 	{
-		const btnTournament = document.getElementsByClassName('btn-tournament');
-		const btnRandom = document.getElementById('versus');
 
 		if (this.bracket == true)
 		{
@@ -379,10 +394,18 @@ export class Mmaking
 		{
 			await initDynamicCard('versus');
 
-			document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar);
-			document.getElementById('player-name').textContent = state.client.userName;
-			document.getElementById('close-dynamic-card').style.display = 'none'
-            document.getElementById("cancel-button").addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, '1vs1R'));
+            const player_picture = document.getElementById('player-photo');
+            const player_name = document.getElementById('player-name');
+            const close_card = document.getElementById('close-dynamic-card');
+            const cancelBtn = document.getElementById("cancel-button");
+            if (player_picture)
+			    player_picture.src = getAvatarPath(state.client.userAvatar);
+            if (player_name)
+			    player_name.textContent = state.client.userName;
+            if (close_card)
+			    close_card.style.display = 'none'
+            if (cancelBtn)
+                cancelBtn.addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, '1vs1R'));
 		}
 	}
 
@@ -414,9 +437,16 @@ export class Mmaking
 		{
 			await initDynamicCard('versus');
 
-			document.getElementById('player-photo').src = getAvatarPath(state.client.userAvatar);
-			document.getElementById('close-dynamic-card').style.display = 'none'
-            document.getElementById("cancel-button").addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, 'tournament'));
+            const player_picture = document.getElementById('player-photo');
+            const cancelBtn = document.getElementById("cancel-button");
+            const close_card = document.getElementById('close-dynamic-card');
+
+            if (player_picture)
+			    player_picture.src = getAvatarPath(state.client.userAvatar);
+            if (close_card)
+			    close_card.style.display = 'none'
+            if (cancelBtn)
+                cancelBtn.addEventListener("click", (event)=> this.cancelGame(event, state.client.userId, 'tournament'));
 
 		}
 		else if (!this.salonTournament && !this.salonHost && !this.salonInvite && !this.salonLoad && !this.SearchRandomGame)
@@ -432,6 +462,8 @@ export class Mmaking
 		closeDynamicCard();
 		await initDynamicCard('tournament');
 		const bracketContainer = document.getElementById('tournamentBracket');
+		if (!bracketContainer)
+			return
 
 		for (const [key, value] of Object.entries(this.opponents))
 		{
@@ -689,47 +721,82 @@ export class Mmaking
     }
 
 	setOpponentInvite(name, photo) {
-        document.getElementById("opponent-info").style.display = "block";
-        document.getElementById("opponent-name").textContent = name;
-        document.getElementById("opponent-photo").src = photo;
-        document.getElementById("cancel-button").style.display = "none";
-		document.getElementById('close-dynamic-card').style.display = 'none'
+
+        const opponent_info =  document.getElementById("opponent-info");
+        const opponent_name = document.getElementById("opponent-name");
+        const opponent_picture = document.getElementById("opponent-photo");
+        const opponent_cancelbtn = document.getElementById("cancel-button")
+        const opponent_cards = document.getElementById('close-dynamic-card');
+
+        if (!opponent_info || !opponent_name || !opponent_picture || !opponent_cancelbtn || !opponent_cards)
+            return
+        
+        opponent_info.style.display = "block";
+        opponent_name.textContent = name;
+        opponent_picture.src = photo;
+        opponent_cancelbtn.style.display = "none";
+		opponent_cards.style.display = 'none'
+
 
     }
 
     setFriendwithoutLoader(name, picture)
     {
-        document.getElementById("opponent-info").style.display = "block";
-        document.getElementById("opponent-name").textContent = name;
-        document.getElementById("opponent-photo").src = picture;
-		document.getElementById('close-dynamic-card').style.display = 'none'
+        const opponent_info =  document.getElementById("opponent-info");
+        const opponent_name = document.getElementById("opponent-name");
+        const opponent_picture = document.getElementById("opponent-photo");
+        const opponent_cards = document.getElementById('close-dynamic-card');
+
+        if (!opponent_info || !opponent_name || !opponent_picture || !opponent_cards)
+            return
+
+        opponent_info.style.display = "block";
+        opponent_name.textContent = name;
+        opponent_picture.src = picture;
+		opponent_cards.style.display = 'none'
     }
 
     setFriendwithLoader(name, picture)
     {
+        const opponent_info =  document.getElementById("opponent-info");
+        const opponent_name = document.getElementById("opponent-name");
+        const opponent_picture = document.getElementById("opponent-photo");
+        const loader = document.getElementById("random-loader");
+
+        if (!opponent_info || !opponent_name || !opponent_picture || !loader)
+            return
+
         document.getElementById("opponent-info").style.display = "block";
         document.getElementById("opponent-name").textContent = name;
         document.getElementById("opponent-photo").src = picture;
-		document.getElementById("random-loader").style.display = "none";
+		loader.style.display = "none";
 
     }
 
 	cardFriendInvited(friendCard)
 	{
+        if (!friendCard)
+            return
 		friendCard.style.backgroundColor = '#007bff';
 	}
 
 	cardFriendReset(friendCard)
 	{
+        if (!friendCard)
+            return
 		friendCard.style.backgroundColor = "#f8f9fa";
 	}
 
 	style_btn_tournament()
 	{
+        const btnTournament = document.getElementsByClassName('btn-tournament');
+        if (!btnTournament)
+            return
+
 		if (this.tournament) {
-			document.getElementsByClassName('btn-tournament')[0].style.backgroundColor = 'red';
+			btnTournament[0].classList.add('btn-tournament-inactive');
 		} else {
-			document.getElementsByClassName('btn-tournament')[0].style.backgroundColor = '#444';
+            btnTournament[0].classList.remove('btn-tournament-inactive');
 		}
 	}
 }
