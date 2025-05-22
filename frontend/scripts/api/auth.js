@@ -26,6 +26,10 @@ export async function enroll2fa() {
     const qrSection = document.getElementById('qr-section');
     const verificationSection = document.getElementById('verification-section');
     const infoSection = document.getElementById('info-section');
+
+    if (!qrSection || !verificationSection || !infoSection) {
+        return;
+    }
     
     try {
       const response = await fetch('/api/v1/auth/2fa/enroll/', {
@@ -65,6 +69,10 @@ export async function verify2fa() {
     const qrSection = document.getElementById('qr-section');
     const verificationSection = document.getElementById('verification-section');
     const twoFAErrorContainer = document.getElementById('2fa-error');
+
+    if (!totp || !successPage || !qrSection || !verificationSection || !twoFAErrorContainer) {
+        return;
+    }
     
     try {
       const response = await fetch('api/v1/auth/2fa/verify/', {
@@ -101,6 +109,10 @@ export async function disable2fa() {
     const formSection = document.getElementById('disable-2fa-form-section');
     const errorSection = document.getElementById('disable-2fa-error');
     const successSection = document.getElementById('disable-2fa-success');
+
+    if (!password || !totp || !formSection || !errorSection || !successSection) {
+        return;
+    }
     
     try {
         const response = await fetch('/api/v1/auth/2fa/disable/', {
@@ -224,11 +236,11 @@ export async function handleAuthSubmit(event) {
     event.preventDefault();
     cleanErrorMessage();
 
-    const username = document.getElementById('auth-username').value.trim();
-    const email = document.getElementById('auth-email').value.trim();
-    const password = document.getElementById('auth-password').value.trim();
-    const confirm_password = document.getElementById('auth-confirm-password').value.trim();
-    const totp = document.getElementById('auth-totp').value.trim();
+    const username = document.getElementById('auth-username')?.value.trim();
+    const email = document.getElementById('auth-email')?.value.trim();
+    const password = document.getElementById('auth-password')?.value.trim();
+    const confirm_password = document.getElementById('auth-confirm-password')?.value.trim();
+    const totp = document.getElementById('auth-totp')?.value.trim();
 
     if (window.authMode === 'twoFactorAuth') {
         if (!totp || totp.length === 0) {
@@ -308,7 +320,6 @@ export async function handleAuthSubmit(event) {
             await handleAuthError(response);
         }
     } catch (error) {
-        // console.error('Authentication error:', error.message || 'Unknown error');
         return { success: false, message: 'Authentication failed' };
     }
 }
@@ -379,9 +390,19 @@ async function handleAuthError(response) {
 
 function handle2FA(response) {
     const totpContainer = document.getElementById('totp-container');
+
+    if (!totpContainer) {
+        return;
+    }
+
     totpContainer.classList.remove('hidden');
 
     const submitButton = document.getElementById('auth-submit');
+
+    if (!submitButton) {
+        return;
+    }
+
     if (submitButton) {
         submitButton.textContent = 'Verify 2FA';
     }
@@ -389,6 +410,11 @@ function handle2FA(response) {
     window.authMode = 'twoFactorAuth';
 
     const totpInput = document.getElementById('auth-totp');
+
+    if (!totpInput) {
+        return;
+    }
+
     if (totpInput) {
         totpInput.focus();
     }
@@ -396,12 +422,22 @@ function handle2FA(response) {
 
 export function displayErrorMessage(message) {
     const loginErrorContainer = document.getElementById('auth-error');
+
+    if (!loginErrorContainer) {
+        return;
+    }
+
     loginErrorContainer.textContent = message;
     loginErrorContainer.classList.remove('hidden');
 }
 
 export function display2faErrorMessage(message) {
     const twofaErrorContainer = document.getElementById('2fa-error');
+
+    if (!twofaErrorContainer) {
+        return;
+    }
+    
     twofaErrorContainer.textContent = message;
     twofaErrorContainer.classList.remove('hidden');
 }

@@ -156,7 +156,6 @@ export class Client{
             const response = await verifyToken();
             return response.ok;
         } catch (error) {
-            mainErrorMessage(`Erreur lors de la vérification du token: ${error}`);
             return false;
         }
     }

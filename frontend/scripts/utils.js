@@ -26,6 +26,10 @@ export function mainErrorMessage(message) {
     let errorBox = document.getElementById('global-error-box');
 
     if (!errorBox) {
+        return;
+    }
+
+    if (!errorBox) {
         errorBox = document.createElement('div');
         errorBox.id = 'global-error-box';
         errorBox.style.position = 'fixed';
@@ -55,6 +59,11 @@ export function mainErrorMessage(message) {
 
 export function cleanErrorMessage() {
     const loginErrorContainer = document.getElementById('auth-error');
+
+    if (!loginErrorContainer) {
+        return;
+    }
+
     loginErrorContainer.textContent = "";
     loginErrorContainer.classList.add('hidden');
 }

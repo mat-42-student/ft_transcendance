@@ -43,9 +43,6 @@ export class Engine {
 	async init() {
 		{  // Setup DOM elements
 			this.#html_container = document.getElementById("engine");
-			if (this.DEBUG_MODE) {
-				this.#html_container.classList.add('debug-mode');
-			}
 			this.#html_canvas = document.getElementById("engine-canvas");
 			this.#html_canvas.style.display = 'none';  // Hide by default, shows up again when a scene exists.
 

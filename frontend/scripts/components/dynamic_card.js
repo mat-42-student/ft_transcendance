@@ -47,7 +47,6 @@ const cardInitializers = {
         if (!requestList) return;
 
         if (!(await state.client.isAuthenticated())) {
-            mainErrorMessage("Vous devez vous connecter pour accéder à cette fonctionnalité");
             return closeDynamicCard();
         }
 
@@ -69,7 +68,6 @@ const cardInitializers = {
                 }
             }
         } catch (error) {
-            mainErrorMessage("SocialApp is not initialized.");
             closeDynamicCard();
         }
     },
@@ -191,7 +189,10 @@ export async function initDynamicCard(routeKey) {
     const cancelButton = document.getElementById('close-dynamic-card');
 
     if (!dynamicCardRoutes[routeKey])
-        return mainErrorMessage(`Aucune route trouvée pour la clé '${routeKey}'`);
+        return;
+
+    if (!cancelButton)
+        return;
 
     if (cancelButton.style.display === 'none')
         cancelButton.style.display = 'inline';
@@ -201,6 +202,9 @@ export async function initDynamicCard(routeKey) {
         if (!response.ok)
             throw error;
 
+        if (!cardContent || !cardContainer)
+            return;
+
         cardContent.innerHTML = await response.text();
         cardContainer.classList.remove('hidden');
 
@@ -208,7 +212,6 @@ export async function initDynamicCard(routeKey) {
             await cardInitializers[routeKey]();
         }
     } catch (error) {
-        mainErrorMessage(error);
         closeDynamicCard();
     }
 }
@@ -222,12 +225,22 @@ export function closeDynamicCard() {
 
 function displayErrorMessage(message) {
     const updateProfileErrorContainer = document.getElementById('update-profile-error');
+
+    if (!updateProfileErrorContainer) {
+        return;
+    }
+
     updateProfileErrorContainer.textContent = message;
     updateProfileErrorContainer.classList.remove('hidden');
 }
 
 function displaySuccessMessage(message) {
     const updateProfileSuccessContainer = document.getElementById('update-profile-success');
+
+    if (!updateProfileSuccessContainer) {
+        return;
+    }
+    
     updateProfileSuccessContainer.textContent = message;
     updateProfileSuccessContainer.classList.remove('hidden');
 }

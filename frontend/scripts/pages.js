@@ -62,10 +62,11 @@ function updateProfileUI(data) {
 // Fonction pour mettre à jour l'historique des parties
 function updateGamesHistory(games) {
     const gamesList = document.getElementById("games-history-list");
+
 	if (!gamesList) {
-        mainErrorMessage("Element not found");
         return;
     }
+
     gamesList.innerHTML = "";
 
     if (!games || games.length === 0) {
@@ -179,7 +180,7 @@ function setupProfileEventListeners(userId) {
     if (!actionsEl) return;
 
     // Vérifie si l'écouteur est déjà attaché
-    if (actionsEl.dataset.listenerAttached === "true") return;
+    if (!actionsEl || actionsEl.dataset.listenerAttached === "true") return;
 
     actionsEl.addEventListener("click", (event) => {
         const button = event.target.closest("button");
@@ -212,7 +213,6 @@ async function handleProfileAction(action, userId) {
             break;
         default:
             if (!userId) {
-                mainErrorMessage(`ID utilisateur manquant pour l'action: ${action}`);
                 return;
             }
             await performUserAction(userId, action);
