@@ -760,6 +760,9 @@ class Command(BaseCommand):
             if (status != 'online' or status is None or not self.checkFriendships(player, guest.user_id)):
                 await self.cancelInvitation(player.user_id, guest.user_id, 'guest_id')
                 return 
+            
+            if (await self.already_invite(guest, player) == False):
+                return
 
             # Add to dict of Host the guests
             player.guests.update({guest.user_id: guest})
@@ -777,7 +780,18 @@ class Command(BaseCommand):
             # Send invitation to guest
             await self.invitationGameToGuest(guest, player, None)
             await self.confirmSendInvitationGame(player.user_id, guest.user_id, None)
-        
+
+
+    async def already_invite(self, guest, host):
+        for salon in self.salons['invite']:
+            if (guest.user_id in salon.players):
+                print("guest has already host")
+                guest_is_host_now = salon.players[guest.user_id]
+                if (host.user_id in guest_is_host_now.guests):
+                    print(f"Host is already invite by {guest_is_host_now}")
+                    await self.cancelInvitation(host.user_id, guest_is_host_now.user_id, 'guest_id')
+                    return False
+        return True
 
     async def deleteEverywhereGuestAndHost(self, player, host_id=-1):
         '''Delete the players (player and host_id) in all guests tab of all Hosts, all guests in this tab.  \n
