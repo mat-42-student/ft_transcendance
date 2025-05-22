@@ -154,9 +154,9 @@ services:
         condition: service_started
     volumes:
       - ./certs/ca/ca.crt:/etc/nginx/ssl/ca.crt:ro,z
-      - media:/media:ro
-      # - ./media:/media/
-      # - ./frontend:/usr/share/nginx/frontend/
+      # - media:/media:ro
+      - ./media:/media/
+      - ./frontend:/usr/share/nginx/frontend/
     networks:
       - main-network
     restart: on-failure
