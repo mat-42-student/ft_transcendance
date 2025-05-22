@@ -344,11 +344,19 @@ class Command(BaseCommand):
         print(f'cancel Invite player turn offline START')
         for gameId, game in self.games['invite'].items():
                 if (playerId in game.players and await self.score_is_already_set(gameId) == False):
-                    for gamerId in game.players:
+                    for gamerId, gamer in game.players.items():
                         if (gamerId == playerId):
                             game.players[gamerId].leave_game = True
                         elif (game.players[gamerId].leave_game == False):
                             game.players[gamerId].leave_game = False
+                        if ((gameId != playerId) and isinstance(gamer, Guest)):
+                            await self.cancelSalonInvitation(gamerId, playerId, 'host_id')
+                            await self.cancelSalonInvitation(playerId, gamerId, 'guest_id')
+                        elif ((gameId != playerId) and not isinstance(gamer, Guest)):
+                            await self.cancelSalonInvitation(gamerId, playerId, 'guest_id')
+                            await self.cancelSalonInvitation(playerId, gamerId, 'host_id')
+                            
+                            
                     
                     gameDB = await sync_to_async(self.getGame)(gameId)
                     await self.cancelGameWithWinner_player_leave_game(gameDB, game)
@@ -804,7 +812,7 @@ class Command(BaseCommand):
                     await self.cancelInvitation(host_id, gamerId, 'host_id')
                     del gamer.guests[host_id]
 
-                if (len(gamer.guests) == 0):
+                if (len(gamer.guests) == 0) and not isinstance(gamer, Guest):
                     salonsTodelete.append(salon)
         for salon in salonsTodelete:
             try:
@@ -819,6 +827,7 @@ class Command(BaseCommand):
         for salon in self.salons[type_game]:
             player = salon.players.get(host.user_id)
             if (player):
+                print(f"is instance of Guest: {isinstance(player, Guest)}")
                 if (not isinstance(player, Guest)):
                     return salon
                 else:

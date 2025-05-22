@@ -62,6 +62,10 @@ function updateProfileUI(data) {
 // Fonction pour mettre à jour l'historique des parties
 function updateGamesHistory(games) {
     const gamesList = document.getElementById("games-history-list");
+	if (!gamesList) {
+        mainErrorMessage("Element not found");
+        return;
+    }
     gamesList.innerHTML = "";
 
     if (!games || games.length === 0) {
