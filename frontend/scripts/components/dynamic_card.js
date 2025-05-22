@@ -225,12 +225,22 @@ export function closeDynamicCard() {
 
 function displayErrorMessage(message) {
     const updateProfileErrorContainer = document.getElementById('update-profile-error');
+
+    if (!updateProfileErrorContainer) {
+        return;
+    }
+
     updateProfileErrorContainer.textContent = message;
     updateProfileErrorContainer.classList.remove('hidden');
 }
 
 function displaySuccessMessage(message) {
     const updateProfileSuccessContainer = document.getElementById('update-profile-success');
+
+    if (!updateProfileSuccessContainer) {
+        return;
+    }
+    
     updateProfileSuccessContainer.textContent = message;
     updateProfileSuccessContainer.classList.remove('hidden');
 }
