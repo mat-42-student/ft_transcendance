@@ -47,7 +47,6 @@ const cardInitializers = {
         if (!requestList) return;
 
         if (!(await state.client.isAuthenticated())) {
-            mainErrorMessage("Vous devez vous connecter pour accéder à cette fonctionnalité");
             return closeDynamicCard();
         }
 
@@ -69,7 +68,6 @@ const cardInitializers = {
                 }
             }
         } catch (error) {
-            mainErrorMessage("SocialApp is not initialized.");
             closeDynamicCard();
         }
     },
@@ -214,7 +212,6 @@ export async function initDynamicCard(routeKey) {
             await cardInitializers[routeKey]();
         }
     } catch (error) {
-        mainErrorMessage(error);
         closeDynamicCard();
     }
 }

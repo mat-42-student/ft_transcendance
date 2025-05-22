@@ -213,7 +213,6 @@ async function handleProfileAction(action, userId) {
             break;
         default:
             if (!userId) {
-                mainErrorMessage(`ID utilisateur manquant pour l'action: ${action}`);
                 return;
             }
             await performUserAction(userId, action);
