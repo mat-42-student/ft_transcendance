@@ -14,8 +14,8 @@ export function initAuthFormListeners() {
     const authForm = document.querySelector('#auth-form form');
     authForm?.addEventListener('submit', handleAuthSubmit);
     updateAuthForm("signin");
-    document.getElementById("register-link").onclick = () => { updateAuthForm("register"); };
-    document.getElementById("signin-link").onclick = () => { updateAuthForm("signin"); };
+    document.getElementById("register-link")?.onclick = () => { updateAuthForm("register"); };
+    document.getElementById("signin-link")?.onclick = () => { updateAuthForm("signin"); };
 }
 
 // Met à jour le formulaire en fonction du mode (inscription ou connexion)
@@ -24,14 +24,14 @@ export function updateAuthForm(mode) {
 
     try {  // Dev account textbox
         const devAccountButton = document.getElementById('dev-account');
-        devAccountButton.oninput = (e) => {
+        devAccountButton?.oninput = (e) => {
             const name = e.target.value;
             if (name != "") {
-                document.getElementById('auth-username').value = `${name}`;
-                document.getElementById('auth-email').value = `${name}@dev.com`;
+                document.getElementById('auth-username')?.value = `${name}`;
+                document.getElementById('auth-email')?.value = `${name}@dev.com`;
                 const pw = 'Test123*';  // cybersecurity is my passion
-                document.getElementById('auth-password').value = pw;
-                document.getElementById('auth-confirm-password').value = pw;
+                document.getElementById('auth-password')?.value = pw;
+                document.getElementById('auth-confirm-password')?.value = pw;
             }
         }
     } catch {} // Dev account textbox
@@ -46,6 +46,10 @@ export function updateAuthForm(mode) {
 function updateFormTitleAndButton() {
     const formTitle = document.getElementById('form-title');
     const authSubmit = document.getElementById('auth-submit');
+
+    if (!formTitle || !authSubmit) {
+        return;
+    }
     
     if (window.authMode === 'register') {
         formTitle.textContent = 'Sign Up';
@@ -61,6 +65,10 @@ function togglePasswordAndUsernameFields() {
     const confirmPasswordContainer = document.getElementById('confirm-password-container');
     const confirmUsernameContainer = document.getElementById('username-container');
     const confirmPasswordInput = document.getElementById('auth-confirm-password');
+
+    if (!confirmPasswordContainer || !confirmUsernameContainer || !confirmPasswordInput) {
+        return;
+    }
     
     if (window.authMode === 'register') {
         confirmPasswordContainer.classList.remove('hidden');
@@ -78,6 +86,10 @@ function toggleExternalLinks() {
     const signInWith42Button = document.getElementById('oauth-submit');
     const registerLink = document.querySelector('button[data-action="register"]');
     const signinLink = document.querySelector('button[data-action="signin"]');
+
+    if (!signInWith42Button || !registerLink || !signinLink) {
+        return;
+    }
     
     if (window.authMode === 'register') {
         registerLink.classList.add('hidden');
