@@ -236,15 +236,11 @@ export async function handleAuthSubmit(event) {
     event.preventDefault();
     cleanErrorMessage();
 
-    const username = document.getElementById('auth-username').value.trim();
-    const email = document.getElementById('auth-email').value.trim();
-    const password = document.getElementById('auth-password').value.trim();
-    const confirm_password = document.getElementById('auth-confirm-password').value.trim();
-    const totp = document.getElementById('auth-totp').value.trim();
-
-    if (!username || !email || !password || !confirm_password || !totp) {
-        return;
-    }
+    const username = document.getElementById('auth-username')?.value.trim();
+    const email = document.getElementById('auth-email')?.value.trim();
+    const password = document.getElementById('auth-password')?.value.trim();
+    const confirm_password = document.getElementById('auth-confirm-password')?.value.trim();
+    const totp = document.getElementById('auth-totp')?.value.trim();
 
     if (window.authMode === 'twoFactorAuth') {
         if (!totp || totp.length === 0) {
@@ -324,7 +320,6 @@ export async function handleAuthSubmit(event) {
             await handleAuthError(response);
         }
     } catch (error) {
-        // console.error('Authentication error:', error.message || 'Unknown error');
         return { success: false, message: 'Authentication failed' };
     }
 }
